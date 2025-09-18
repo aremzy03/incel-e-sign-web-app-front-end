@@ -78,12 +78,14 @@ const getStatusColor = (status: string) => {
 
 export default function EnvelopeDetailPage() {
   const params = useParams()
-  const envelopeId = parseInt(params.id as string)
+  const envelopeId = params?.id ? parseInt(params.id as string) : null
   
   const [envelope, setEnvelope] = useState<any>(null)
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([])
 
   useEffect(() => {
+    if (!envelopeId) return
+    
     // Find envelope by ID
     const foundEnvelope = dummyEnvelopes.find(env => env.id === envelopeId)
     if (foundEnvelope) {

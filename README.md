@@ -12,6 +12,17 @@ A modern Next.js 14 frontend application for the Incel eSign digital document si
 - **Axios** for API client
 - **React Hook Form + Zod** for form validation
 - **ESLint + Prettier** for code quality
+- **Dashboard landing page** with quick actions and recent activity
+- **Profile page** for user information management
+- **Document Upload Page** with drag-and-drop functionality
+- **Documents List Page** with table layout and status tracking
+- **Document Preview Modal** with PDF preview and metadata
+- **Envelope Creation Page** with document selection and signer management
+- **Envelope List Page** with status tracking and management
+- **Envelope Detail & Signing Simulation** with progress tracking and audit trail
+- **Signature Management Page** (UI only) for uploading and managing reusable signatures
+- **Signature Placement UI** (UI only) for drag-and-drop signature placement on documents
+- **Signing Simulation Page** (UI only) for document signing with reusable signatures
 
 ## 📁 Project Structure
 

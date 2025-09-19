@@ -7,6 +7,16 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Bell, Send, PenTool, XCircle } from 'lucide-react'
 
 interface NavigationItem {
   name: string
@@ -30,12 +40,62 @@ interface DashboardClientLayoutProps {
   user: User
 }
 
+// Dummy notifications data
+const dummyNotifications = [
+  {
+    id: 1,
+    type: 'envelope_sent',
+    title: 'Envelope NDA sent',
+    message: 'Your envelope "Contract NDA" has been sent to 2 recipients.',
+    timestamp: '2025-09-16',
+    isRead: false
+  },
+  {
+    id: 2,
+    type: 'signature_completed',
+    title: 'John Doe signed doc',
+    message: 'John Doe has successfully signed the document.',
+    timestamp: '2025-09-15',
+    isRead: false
+  },
+  {
+    id: 3,
+    type: 'envelope_rejected',
+    title: 'Signer declined doc',
+    message: 'The envelope was declined by the recipient.',
+    timestamp: '2025-09-14',
+    isRead: false
+  }
+]
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'envelope_sent':
+      return <Send className="h-4 w-4 text-blue-600" />
+    case 'signature_completed':
+      return <PenTool className="h-4 w-4 text-green-600" />
+    case 'envelope_rejected':
+      return <XCircle className="h-4 w-4 text-red-600" />
+    default:
+      return <Bell className="h-4 w-4 text-gray-600" />
+  }
+}
+
 export function DashboardClientLayout({ children, navigation, user }: DashboardClientLayoutProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [notifications, setNotifications] = useState(dummyNotifications)
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' })
+  }
+
+  const handleMarkAsRead = (notificationId: number) => {
+    setNotifications(notifications.map(notification => 
+      notification.id === notificationId 
+        ? { ...notification, isRead: true }
+        : notification
+    ))
   }
 
   const getUserInitials = () => {
@@ -45,6 +105,8 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
   const getFullName = () => {
     return `${user.first_name} ${user.last_name}`
   }
+
+  const unreadCount = notifications.filter(n => !n.isRead).length
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -142,6 +204,61 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
               {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
             </h1>
             <div className="flex items-center space-x-4">
+              {/* Notification Bell */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs"
+                      >
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notifications.length > 0 ? (
+                    notifications.slice(0, 5).map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className="flex items-start space-x-3 p-3 cursor-pointer"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">
+                            {notification.title}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {notification.timestamp}
+                          </p>
+                          {!notification.isRead && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled className="text-center py-4">
+                      <p className="text-sm text-gray-500">No notifications</p>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/notifications" className="text-center">
+                      View all notifications
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{getFullName()}</p>
                 <p className="text-xs text-gray-500">{user.email}</p>

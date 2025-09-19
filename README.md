@@ -23,6 +23,42 @@ A modern Next.js 14 frontend application for the Incel eSign digital document si
 - **Signature Management Page** (UI only) for uploading and managing reusable signatures
 - **Signature Placement UI** (UI only) for drag-and-drop signature placement on documents
 - **Signing Simulation Page** (UI only) for document signing with reusable signatures
+- **Notifications Page** (UI only) for viewing and managing user notifications
+- **Notification Bell with Dropdown** (UI only) for quick access to recent notifications
+- **Audit Log UI Page** (Admin only, UI only) for viewing system audit trails and activity logs
+- **Document Review Page** (UI only) for reviewing individual documents with preview and actions
+- **Envelope Review Page** (UI only) for reviewing envelopes before sending with document preview and recipient management
+- **Commenting UI for Envelope Review** (UI only) for leaving notes and comments before sending envelopes
+- **Final Sign-Off UI** (UI only) for signers to confirm and apply their signature to documents
+- **Review Actions Integration** (UI only) for triggering notifications and audit logs on envelope and document review actions
+- **Workflow Integration** with notifications and audit trails in document upload, envelope creation, and envelope detail pages
+
+## 🔧 Tech Notes
+
+### Notifications & Audit Logs
+- **Notifications and Audit Logs** are mock-only implementations for now; backend integration coming in future sprints.
+- **Audit Log UI** is only visible for admin users with proper access control.
+- **Notification Bell** shows real-time unread count and integrates with workflow pages.
+- **Workflow Integration** provides inline alerts and dummy audit trail updates for user actions.
+
+### Sprint 4 Features
+- ✅ **Notifications Page** - Complete UI for viewing and managing notifications
+- ✅ **Notification Bell with Dropdown** - Quick access to recent notifications in header
+- ✅ **Audit Log UI (Admin only)** - System audit trails and activity logs
+- ✅ **Workflow Integration** - Inline alerts and dummy audit trail in document/envelope flows
+
+### Sprint 5 Features
+- ✅ **Document Review Page** - Preview documents with metadata and admin audit trail access
+- ✅ **Envelope Review Page** - Review envelopes before sending with document preview and recipient management
+- ✅ **Commenting UI on Envelopes** - Leave notes and comments before sending envelopes
+- ✅ **Final Sign-Off UI** - Signer confirmation/decline interface with legal compliance messaging
+- ✅ **Review Actions Integration** - Notifications and audit logs triggered by review actions (mock-only)
+
+### Review Flows & Mock Integration
+- **Review Actions** are mock-only implementations for now; no backend calls made.
+- **Audit Trail + Notifications** updated via local state arrays for testing purposes.
+- **Admin Role Checks** implemented for audit trail button visibility.
+- **Inline Alerts** provide immediate user feedback for all review actions.
 
 ## 📁 Project Structure
 
@@ -135,6 +171,13 @@ All dashboard routes are wrapped with a `DashboardLayout` that includes:
 - `/dashboard/notifications` - User notifications and alerts
 - `/dashboard/audit` - System audit trails and activity logs
 - `/dashboard/settings` - User preferences and account settings
+
+#### Admin Features:
+- **Admin Dashboard** (`/dashboard/admin`) - System overview with statistics, charts, and quick links
+- **User Management** (`/dashboard/admin/users`) - Manage user accounts, roles, and permissions with search and filtering
+- **System Settings** (`/dashboard/admin/settings`) - Configure global app-wide settings including max upload size, allowed file types, branding, and notifications. Currently uses dummy data; will connect to backend APIs later.
+- **Audit Log Viewer** (`/dashboard/admin/audit`) - Displays a searchable and filterable list of audit logs with details on actor, action, target, and message. Currently uses dummy data; will connect to backend audit API later.
+- **Notifications Center** (`/dashboard/admin/notifications`) - Provides an overview of all system notifications. Admins can filter, search, and manage notifications. Currently uses dummy data; will connect to backend notification API later.
 
 ### Route Structure Mapping
 ```
@@ -474,6 +517,31 @@ Test coverage reports are generated in multiple formats:
 - **Text:** Console output during test runs
 - **LCOV:** For CI/CD integration
 - **HTML:** Detailed coverage reports in `coverage/` directory
+
+### Admin Dashboard Integration Tests
+
+Frontend integration tests validate that all admin dashboard pages (users, settings, audit logs, notifications) work as expected with dummy data. Uses Jest + React Testing Library.
+
+#### Test Coverage:
+- **Dashboard Overview** - Renders system metrics and charts correctly
+- **User Management** - Table display, search, block/unblock, delete functionality
+- **System Settings** - Form rendering, field updates, save operations
+- **Audit Log Viewer** - Log display, search filtering, pagination
+- **Notifications Center** - Notification list, status toggles, mark all as read
+
+#### Example Test:
+```typescript
+it('displays user management table with dummy data', async () => {
+  render(<UserManagementPage />)
+  
+  await waitFor(() => {
+    expect(screen.getByText('User Management')).toBeInTheDocument()
+  })
+
+  expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
+  expect(screen.getByText('alice@test.com')).toBeInTheDocument()
+})
+```
 
 ## 🚀 Getting Started
 

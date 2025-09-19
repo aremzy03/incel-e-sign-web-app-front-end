@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { jest } from '@jest/globals'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -27,14 +28,21 @@ jest.mock('next-auth/react', () => ({
 }))
 
 // Mock react-hot-toast
-jest.mock('react-hot-toast', () => ({
-  toast: {
+jest.mock('react-hot-toast', () => {
+  const mockToast = {
     success: jest.fn(),
     error: jest.fn(),
     loading: jest.fn(),
-  },
-  Toaster: () => null,
-}))
+    dismiss: jest.fn(),
+  }
+  
+  return {
+    __esModule: true,
+    default: mockToast,
+    toast: mockToast,
+    Toaster: () => null,
+  }
+})
 
 // Mock axios
 jest.mock('axios', () => ({
@@ -53,6 +61,35 @@ jest.mock('axios', () => ({
   put: jest.fn(),
   delete: jest.fn(),
 }))
+
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+})) as any
+
+// Mock IntersectionObserver
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+})) as any
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+})
 
 // Mock environment variables
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000/api'

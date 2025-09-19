@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Select,
   SelectContent,
@@ -12,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
 // Dummy documents for selection
 const dummyDocuments = [
@@ -34,6 +36,9 @@ export default function CreateEnvelopePage() {
   const [signerOrder, setSignerOrder] = useState<number>(1)
   const [signers, setSigners] = useState<Signer[]>([])
   const [nextSignerId, setNextSignerId] = useState(1)
+  const [isCreating, setIsCreating] = useState(false)
+  const [createSuccess, setCreateSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleAddSigner = () => {
     if (signerEmail.trim() && signerOrder > 0) {
@@ -53,13 +58,49 @@ export default function CreateEnvelopePage() {
     setSigners(signers.filter(signer => signer.id !== signerId))
   }
 
-  const handleCreateEnvelope = () => {
-    const selectedDoc = dummyDocuments.find(doc => doc.id.toString() === selectedDocument)
-    console.log('Creating envelope:', {
-      document: selectedDoc,
-      signers: signers,
-    })
-    // TODO: Implement actual envelope creation logic
+  const handleCreateEnvelope = async () => {
+    if (!selectedDocument || signers.length === 0) {
+      setError('Please select a document and add at least one signer.')
+      return
+    }
+
+    setIsCreating(true)
+    setError(null)
+
+    try {
+      const selectedDoc = dummyDocuments.find(doc => doc.id.toString() === selectedDocument)
+      
+      // Simulate creation delay
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      console.log('Creating envelope:', {
+        document: selectedDoc,
+        signers: signers,
+      })
+
+      // Mock notification trigger
+      const notification = {
+        id: Date.now(),
+        type: 'envelope_created',
+        title: 'Envelope created successfully',
+        message: `Envelope "${selectedDoc?.name}" has been created and sent to ${signers.length} recipient(s).`,
+        timestamp: new Date().toISOString().split('T')[0],
+        isRead: false
+      }
+      
+      // In a real app, this would be sent to a notification service
+      console.log('Notification triggered:', notification)
+      
+      setCreateSuccess(true)
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setCreateSuccess(false), 5000)
+      
+    } catch (err) {
+      setError('Failed to create envelope. Please try again.')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const selectedDocumentData = dummyDocuments.find(doc => doc.id.toString() === selectedDocument)
@@ -73,6 +114,26 @@ export default function CreateEnvelopePage() {
           Set up a new document envelope for digital signing
         </p>
       </div>
+
+      {/* Success Alert */}
+      {createSuccess && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            Envelope created successfully! The document has been sent to all recipients for signing.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card className="bg-white shadow-sm">
         <CardHeader>
@@ -217,10 +278,10 @@ export default function CreateEnvelopePage() {
           <div className="flex justify-end pt-6 border-t">
             <Button
               onClick={handleCreateEnvelope}
-              disabled={!selectedDocument || signers.length === 0}
+              disabled={!selectedDocument || signers.length === 0 || isCreating}
               className="px-8"
             >
-              Create Envelope
+              {isCreating ? 'Creating...' : 'Create Envelope'}
             </Button>
           </div>
         </CardContent>

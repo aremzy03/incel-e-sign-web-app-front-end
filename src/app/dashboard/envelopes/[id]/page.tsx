@@ -142,6 +142,19 @@ export default function EnvelopeDetailPage() {
       }
       
       setAuditTrail([...auditTrail, newAuditEntry])
+
+      // Mock notification trigger
+      const notification = {
+        id: Date.now(),
+        type: 'signature_completed',
+        title: `${signer.email} signed the document`,
+        message: `Signer ${signer.email} has successfully signed the document "${envelope.documentName}".`,
+        timestamp: new Date().toISOString().split('T')[0],
+        isRead: false
+      }
+      
+      // In a real app, this would be sent to a notification service
+      console.log('Notification triggered:', notification)
     }
   }
 

@@ -4,12 +4,16 @@ import { useState, useRef, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function DocumentUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const validateFile = (file: File): string | null => {
@@ -70,10 +74,44 @@ export default function DocumentUploadPage() {
     fileInputRef.current?.click()
   }
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (selectedFile) {
-      console.log(`Uploading ${selectedFile.name}`)
-      // TODO: Implement actual upload logic
+      setIsUploading(true)
+      setError(null)
+      
+      try {
+        // Simulate upload delay
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        console.log(`Uploading ${selectedFile.name}`)
+        
+        // Mock notification trigger
+        const notification = {
+          id: Date.now(),
+          type: 'document_uploaded',
+          title: 'Document uploaded successfully',
+          message: `Document "${selectedFile.name}" has been uploaded and is ready for signing.`,
+          timestamp: new Date().toISOString().split('T')[0],
+          isRead: false
+        }
+        
+        // In a real app, this would be sent to a notification service
+        console.log('Notification triggered:', notification)
+        
+        setUploadSuccess(true)
+        setSelectedFile(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => setUploadSuccess(false), 5000)
+        
+      } catch (err) {
+        setError('Upload failed. Please try again.')
+      } finally {
+        setIsUploading(false)
+      }
     }
   }
 
@@ -96,6 +134,25 @@ export default function DocumentUploadPage() {
         </CardHeader>
         
         <CardContent className="space-y-6">
+          {/* Success Alert */}
+          {uploadSuccess && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Document uploaded successfully! You can now use it to create envelopes.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Drag and Drop Zone */}
           <div
             className={cn(
@@ -176,10 +233,10 @@ export default function DocumentUploadPage() {
           <div className="flex justify-center">
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || !!error}
+              disabled={!selectedFile || !!error || isUploading}
               className="w-full max-w-xs"
             >
-              Upload Document
+              {isUploading ? 'Uploading...' : 'Upload Document'}
             </Button>
           </div>
         </CardContent>

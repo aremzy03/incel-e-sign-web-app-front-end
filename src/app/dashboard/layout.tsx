@@ -10,6 +10,7 @@ const dashboardNav = [
   { name: 'Signatures', href: '/dashboard/signatures', icon: '✍️' },
   { name: 'Notifications', href: '/dashboard/notifications', icon: '🔔' },
   { name: 'Audit Logs', href: '/dashboard/audit', icon: '📋' },
+  { name: 'Admin', href: '/dashboard/admin', icon: '🛡️' },
   { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
 ]
 

@@ -9,16 +9,10 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-interface Document {
-  id: number
-  fileName: string
-  status: string
-  uploadedAt: string
-  size: string
-}
+import { Document as ApiDocument } from '@/lib/api/documents'
 
 interface DocumentPreviewModalProps {
-  document: Document | null
+  document: ApiDocument | null
   isOpen: boolean
   onClose: () => void
 }
@@ -44,7 +38,7 @@ export function DocumentPreviewModal({ document, isOpen, onClose }: DocumentPrev
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900">
-            {document.fileName}
+            {document.file_name}
           </DialogTitle>
           <DialogDescription>
             Document preview and details
@@ -93,18 +87,27 @@ export function DocumentPreviewModal({ document, isOpen, onClose }: DocumentPrev
             </div>
             
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">Uploaded At</h4>
-              <p className="text-sm text-gray-600">{document.uploadedAt}</p>
+              <h4 className="text-sm font-medium text-gray-700">Created At</h4>
+              <p className="text-sm text-gray-600">
+                {document.created_at ? new Date(document.created_at).toLocaleDateString() : 'Unknown'}
+              </p>
             </div>
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-700">File Size</h4>
-              <p className="text-sm text-gray-600">{document.size}</p>
+              <p className="text-sm text-gray-600">
+                {document.file_size ? `${(document.file_size / (1024 * 1024)).toFixed(2)} MB` : 'Unknown'}
+              </p>
             </div>
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-700">File Type</h4>
               <p className="text-sm text-gray-600">PDF Document</p>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-700">Owner</h4>
+              <p className="text-sm text-gray-600">You</p>
             </div>
           </div>
 

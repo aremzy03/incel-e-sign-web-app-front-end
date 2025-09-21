@@ -29,12 +29,24 @@ export default function LoginPage() {
     },
   })
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated with valid session
   useEffect(() => {
     const checkSession = async () => {
       const session = await getSession()
-      if (session) {
-        router.push('/dashboard')
+      if (session?.accessToken) {
+        // Check if token is valid (not expired)
+        try {
+          const payload = JSON.parse(atob(session.accessToken.split('.')[1]))
+          const currentTime = Math.floor(Date.now() / 1000)
+          
+          // Only redirect if token is valid and not expired
+          if (payload.exp > currentTime) {
+            router.push('/dashboard')
+          }
+        } catch (error) {
+          console.error('Error checking token validity:', error)
+          // Don't redirect if we can't parse the token
+        }
       }
     }
     checkSession()
@@ -52,14 +64,17 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError('Invalid email or password')
-        toast.error('Login failed. Please check your credentials.')
+        setError('Invalid credentials')
+        toast.error('Invalid credentials')
       } else {
         // Check if session was created successfully
         const session = await getSession()
         if (session) {
           toast.success('Welcome back!')
           router.push('/dashboard')
+        } else {
+          setError('Login failed - no session created')
+          toast.error('Login failed - no session created')
         }
       }
     } catch (error) {

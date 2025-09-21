@@ -14,9 +14,11 @@ A modern Next.js 14 frontend application for the Incel eSign digital document si
 - **ESLint + Prettier** for code quality
 - **Dashboard landing page** with quick actions and recent activity
 - **Profile page** for user information management
-- **Document Upload Page** with drag-and-drop functionality
-- **Documents List Page** with table layout and status tracking
-- **Document Preview Modal** with PDF preview and metadata
+- **Upload Document** (`/documents/upload`) → integrates with backend API
+- **List Documents** (`/documents`) → fetches and displays documents
+- **Document Detail** (`/documents/{id}`) → shows preview + metadata
+- **Delete Document** (`/documents/{id}/delete/`) → delete support
+- **Download Document** (`/documents/{id}/download`) → download document
 - **Envelope Creation Page** with document selection and signer management
 - **Envelope List Page** with status tracking and management
 - **Envelope Detail & Signing Simulation** with progress tracking and audit trail
@@ -234,22 +236,41 @@ Strict TypeScript configuration with:
 
 ## 🔐 Authentication
 
-The application uses **NextAuth.js** for authentication with JWT tokens from the backend API.
+The application uses **NextAuth.js** for authentication with JWT tokens from the Django backend API.
+
+### Authentication Features
+
+- **Register Page** (`/auth/register`) → integrates with backend API
+- **Login Page** (`/auth/login`) → uses NextAuth with Django API
+- **Token Refresh** handled via `/auth/refresh/`
+- **Profile Fetch** integrated with `/auth/profile/`
 
 ### Authentication Flow
 
-1. **Login Process:**
-   - User submits credentials via `/login` page
+1. **Registration Process:**
+   - User submits form via `/auth/register` page
+   - Frontend calls backend `/auth/register/` endpoint
+   - Backend returns success response
+   - User is redirected to login page with success message
+
+2. **Login Process:**
+   - User submits credentials via `/auth/login` page
    - NextAuth calls backend `/auth/login/` endpoint
    - Backend returns `access_token`, `refresh_token`, and `user` object
    - Tokens are stored in NextAuth session
+   - User is redirected to dashboard
 
-2. **Token Management:**
+3. **Token Management:**
    - Access tokens expire after 15 minutes
    - Automatic token refresh using `/auth/refresh/` endpoint
    - Failed refresh attempts redirect to login page
 
-3. **Protected Routes:**
+4. **Profile Management:**
+   - Profile data fetched from `/auth/profile/` endpoint
+   - Cached in React Query for performance
+   - Displayed in dashboard header/sidebar
+
+5. **Protected Routes:**
    - All `/dashboard/*` routes require authentication
    - Server-side session validation using `getServerSession`
    - Unauthenticated users are redirected to `/login`
@@ -272,14 +293,17 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 - **Axios Client:** Automatically attaches `Authorization: Bearer <token>` headers
 - **401 Handling:** Automatically refreshes tokens on authentication errors
 - **Session Management:** NextAuth handles token storage and refresh logic
+- **Profile Fetching:** React Query manages profile data caching
 
 ### Backend Endpoints
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/auth/login/` | POST | User authentication |
-| `/auth/register/` | POST | User registration |
-| `/auth/refresh/` | POST | Token refresh |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `POST` | `/api/auth/register/` | User registration | ❌ |
+| `POST` | `/api/auth/login/` | User login (JWT tokens) | ❌ |
+| `POST` | `/api/auth/logout/` | User logout (blacklist token) | ✅ |
+| `GET` | `/api/auth/profile/` | Get user profile | ✅ |
+| `POST` | `/api/auth/refresh/` | Refresh access token | ❌ |
 
 ## 🎨 Authentication UI
 

@@ -5,9 +5,8 @@ declare module 'next-auth' {
     user: {
       id: string
       email: string
-      first_name: string
-      last_name: string
-      role: string
+      full_name: string
+      is_active: boolean
       created_at: string
       updated_at: string
     }
@@ -25,9 +24,8 @@ declare module 'next-auth' {
     user: {
       id: string
       email: string
-      first_name: string
-      last_name: string
-      role: string
+      full_name: string
+      is_active: boolean
       created_at: string
       updated_at: string
     }
@@ -42,9 +40,8 @@ declare module 'next-auth/jwt' {
     user: {
       id: string
       email: string
-      first_name: string
-      last_name: string
-      role: string
+      full_name: string
+      is_active: boolean
       created_at: string
       updated_at: string
     }

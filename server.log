@@ -1,0 +1,62 @@
+
+> incel-esign-frontend@0.1.0 dev
+> next dev
+
+   ▲ Next.js 14.0.4
+   - Local:        http://localhost:3000
+   - Environments: .env.local
+
+ ✓ Ready in 5.2s
+ ○ Compiling /api/proxy/[...path] ...
+ ✓ Compiled /api/proxy/[...path] in 505ms (38 modules)
+=== Proxy GET Request ===
+Path: documents
+Target URL: http://localhost:8000/api/documents
+Authorization: Missing
+Backend response status: 401
+ ✓ Compiled in 399ms (38 modules)
+=== Proxy GET Request ===
+Path: documents
+Target URL: http://localhost:8000/api/documents
+Authorization: Present
+All headers: {
+  accept: '*/*',
+  authorization: 'Bearer test-token',
+  'content-type': 'application/json',
+  host: 'localhost:3000',
+  'user-agent': 'curl/8.5.0',
+  'x-forwarded-for': '::1',
+  'x-forwarded-host': 'localhost:3000',
+  'x-forwarded-port': '3000',
+  'x-forwarded-proto': 'http'
+}
+Backend response status: 401
+ ✓ Compiled in 4.6s (222 modules)
+ ○ Compiling /api/test-session ...
+ ✓ Compiled /api/test-session in 2.8s (274 modules)
+=== Test Session Endpoint ===
+Session: Missing
+Access Token: Missing
+ ✓ Compiled in 760ms (274 modules)
+ ⨯ ./src/app/api/test-session/route.ts
+Error: Failed to read source code from /home/aremzy03/Document/cursor_projects/incel_apps/incel_esign_app/incel-e-sign-web-app-front-end/src/app/api/test-session/route.ts
+
+Caused by:
+    No such file or directory (os error 2)
+
+Import trace for requested module:
+./src/app/api/test-session/route.ts
+ ✓ Compiled in 737ms (222 modules)
+ ✓ Compiled in 66ms (38 modules)
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 8.7s (844 modules)
+ ✓ Compiled in 790ms (457 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 562ms (825 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1048ms (883 modules)
+ ✓ Compiled in 2.2s (873 modules)
+ ✓ Compiled /api/auth/[...nextauth] in 268ms (64 modules)
+   Reload env: .env.local
+ ✓ Compiled in 319ms (534 modules)
+[?25h

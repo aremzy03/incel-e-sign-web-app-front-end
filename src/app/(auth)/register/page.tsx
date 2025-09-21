@@ -8,16 +8,14 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
-import { getSession } from 'next-auth/react'
-import axios from 'axios'
+import { getSession, signIn } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { InputWithIcon } from '@/components/ui/input-with-icon'
 import { registerSchema, type RegisterFormData } from '@/lib/validations'
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+import { authAPI } from '@/lib/api/auth'
 
 export default function RegisterPage() {
   const [error, setError] = useState('')
@@ -51,18 +49,36 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/register/`, {
+      // Register the user
+      await authAPI.register({
         email: data.email,
         password: data.password,
-        first_name: data.firstName,
-        last_name: data.lastName,
+        full_name: `${data.firstName} ${data.lastName}`,
       })
 
-      if (response.status === 201) {
-        toast.success('Account created! Redirecting to login...')
-        setTimeout(() => {
+      toast.success('Registration successful! Logging you in...')
+      
+      // Automatically log the user in after successful registration
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        // If auto-login fails, redirect to login page
+        toast.error('Registration successful, but auto-login failed. Please log in manually.')
+        router.push('/login')
+      } else {
+        // Check if session was created successfully
+        const session = await getSession()
+        if (session) {
+          toast.success('Welcome! Redirecting to dashboard...')
+          router.push('/dashboard')
+        } else {
+          toast.error('Registration successful, but session creation failed. Please log in manually.')
           router.push('/login')
-        }, 2000)
+        }
       }
     } catch (error: any) {
       let errorMessage = 'An error occurred during registration'
@@ -73,6 +89,8 @@ export default function RegisterPage() {
         errorMessage = 'Email already exists'
       } else if (error.response?.data?.password) {
         errorMessage = 'Password does not meet requirements'
+      } else if (error.response?.data?.full_name) {
+        errorMessage = 'Full name is required'
       }
       
       setError(errorMessage)
@@ -92,10 +110,10 @@ export default function RegisterPage() {
             </div>
             <CardTitle className="text-2xl font-bold">Incel eSign</CardTitle>
             <CardDescription className="text-gray-600">
-              Create your account
+              Create your account and get started
             </CardDescription>
             <p className="text-sm text-gray-500 mt-2">
-              Sign, send, and manage documents digitally
+              You&apos;ll be automatically logged in after registration
             </p>
           </CardHeader>
           <CardContent>
@@ -210,7 +228,7 @@ export default function RegisterPage() {
                   {isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating account...
+                      Creating account and logging in...
                     </>
                   ) : (
                     'Register'

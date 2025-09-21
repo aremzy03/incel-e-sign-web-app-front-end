@@ -27,9 +27,8 @@ interface NavigationItem {
 interface User {
   id: string
   email: string
-  first_name: string
-  last_name: string
-  role: string
+  full_name: string
+  is_active: boolean
   created_at: string
   updated_at: string
 }
@@ -99,11 +98,16 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
   }
 
   const getUserInitials = () => {
-    return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+    if (!user?.full_name) return 'U'
+    const names = user.full_name.split(' ')
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase()
+    }
+    return user.full_name.charAt(0).toUpperCase()
   }
 
   const getFullName = () => {
-    return `${user.first_name} ${user.last_name}`
+    return user?.full_name || 'User'
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length

@@ -1,73 +1,101 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Download, FileText, Calendar, User } from 'lucide-react'
-
-// Dummy document data - in a real app this would come from an API
-const dummyDocuments = [
-  {
-    id: 1,
-    fileName: 'contract.pdf',
-    status: 'Draft',
-    uploadedAt: '2025-09-16',
-    size: '2.3 MB',
-    uploadedBy: 'John Doe'
-  },
-  {
-    id: 2,
-    fileName: 'nda.pdf',
-    status: 'Sent',
-    uploadedAt: '2025-09-15',
-    size: '1.8 MB',
-    uploadedBy: 'Jane Smith'
-  },
-  {
-    id: 3,
-    fileName: 'invoice.pdf',
-    status: 'Signed',
-    uploadedAt: '2025-09-14',
-    size: '0.9 MB',
-    uploadedBy: 'Bob Johnson'
-  }
-]
-
-// Mock user data - in a real app this would come from auth context
-const mockUser = {
-  id: '1',
-  email: 'admin@example.com',
-  first_name: 'Admin',
-  last_name: 'User',
-  role: 'admin', // Change to 'user' to test non-admin behavior
-  created_at: '2025-01-01',
-  updated_at: '2025-01-01'
-}
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Download, FileText, Calendar, User, Trash2, AlertCircle, Loader2 } from 'lucide-react'
+import { getDocument, type Document } from '@/lib/api/documents'
+import { useDeleteDocument, useDownloadDocument } from '@/hooks/useDocuments'
+import toast from 'react-hot-toast'
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Draft':
+  switch (status.toLowerCase()) {
+    case 'draft':
       return 'bg-gray-100 text-gray-800'
-    case 'Sent':
+    case 'sent':
       return 'bg-blue-100 text-blue-800'
-    case 'Signed':
+    case 'completed':
+    case 'signed':
       return 'bg-green-100 text-green-800'
+    case 'rejected':
+      return 'bg-red-100 text-red-800'
     default:
       return 'bg-gray-100 text-gray-800'
   }
 }
 
-export default function DocumentReviewPage() {
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+export default function DocumentDetailPage() {
   const params = useParams()
-  const documentId = parseInt(params?.id as string)
-  
-  // Find the document by ID
-  const document = dummyDocuments.find(doc => doc.id === documentId)
-  
-  // If document not found, show error state
-  if (!document) {
+  const router = useRouter()
+  const documentId = params?.id as string
+
+  // Fetch document from API
+  const { data: documentData, isLoading, error } = useQuery({
+    queryKey: ['document', documentId],
+    queryFn: () => getDocument(documentId),
+    enabled: !!documentId,
+  })
+
+  // Use the hooks for mutations
+  const deleteDocumentMutation = useDeleteDocument()
+  const downloadDocumentMutation = useDownloadDocument()
+
+  const handleDownload = () => {
+    if (documentId) {
+      downloadDocumentMutation.mutate(documentId)
+    }
+  }
+
+  const handleDelete = () => {
+    if (documentId && confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      deleteDocumentMutation.mutate(documentId, {
+        onSuccess: () => {
+          router.push('/dashboard/documents')
+        }
+      })
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card className="bg-white shadow-sm">
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading document...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error || !documentData) {
     return (
       <div className="max-w-4xl mx-auto">
         <Card className="bg-white shadow-sm">
@@ -88,18 +116,6 @@ export default function DocumentReviewPage() {
     )
   }
 
-  const handleDownload = () => {
-    console.log(`Downloading ${document.fileName}`)
-    // In a real app, this would trigger the actual download
-  }
-
-  const handleViewAuditTrail = () => {
-    console.log(`Viewing audit trail for ${document.fileName}`)
-    // In a real app, this would navigate to the audit trail page
-  }
-
-  const isAdmin = mockUser.role === 'admin'
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Document Header */}
@@ -111,24 +127,63 @@ export default function DocumentReviewPage() {
                 <span className="text-red-600 text-sm font-bold">PDF</span>
               </div>
               <div>
-                <CardTitle className="text-xl">Document: {document.fileName}</CardTitle>
+                <CardTitle className="text-xl">Document: {documentData.file_name}</CardTitle>
                 <div className="flex items-center space-x-4 mt-2">
-                  <Badge className={getStatusColor(document.status)}>
-                    {document.status}
+                  <Badge className={getStatusColor(documentData.status)}>
+                    {documentData.status}
                   </Badge>
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="h-4 w-4 mr-1" />
-                    Uploaded: {document.uploadedAt}
+                    Created: {documentData.created_at ? formatDate(documentData.created_at) : 'Unknown'}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <User className="h-4 w-4 mr-1" />
-                    {document.uploadedBy}
+                    You
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </CardHeader>
+      </Card>
+
+      {/* Document Metadata */}
+      <Card className="bg-white shadow-sm">
+        <CardHeader>
+          <CardTitle>Document Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">File Name</label>
+              <p className="text-gray-900">{documentData.file_name}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">File Size</label>
+              <p className="text-gray-900">{formatFileSize(documentData.file_size)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">File Type</label>
+              <p className="text-gray-900">PDF</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Status</label>
+              <Badge className={getStatusColor(documentData.status)}>
+                {documentData.status}
+              </Badge>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Owner</label>
+              <p className="text-gray-900">You</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Created</label>
+              <p className="text-gray-900">
+                {documentData.created_at ? formatDate(documentData.created_at) : 'Unknown'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       {/* PDF Preview */}
@@ -139,12 +194,12 @@ export default function DocumentReviewPage() {
             <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 min-h-[500px] flex items-center justify-center">
               <div className="text-center">
                 <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">PDF Preview Placeholder</p>
+                <p className="text-gray-600 font-medium">Document Preview Placeholder</p>
                 <p className="text-sm text-gray-500 mt-2">
                   In a real implementation, this would show an embedded PDF viewer
                 </p>
                 <div className="mt-4 text-xs text-gray-400">
-                  File: {document.fileName} ({document.size})
+                  File: {documentData.file_name} ({formatFileSize(documentData.file_size)})
                 </div>
               </div>
             </div>
@@ -159,24 +214,35 @@ export default function DocumentReviewPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Actions</h3>
               <p className="text-sm text-gray-600">
-                Download the document or view its audit trail
+                Download the document or delete it
               </p>
             </div>
             <div className="flex space-x-3">
-              <Button onClick={handleDownload} className="flex items-center space-x-2">
-                <Download className="h-4 w-4" />
+              <Button 
+                onClick={handleDownload} 
+                disabled={downloadDocumentMutation.isPending}
+                className="flex items-center space-x-2"
+              >
+                {downloadDocumentMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
                 <span>Download</span>
               </Button>
-              {isAdmin && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleViewAuditTrail}
-                  className="flex items-center space-x-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>View Audit Trail</span>
-                </Button>
-              )}
+              <Button 
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteDocumentMutation.isPending}
+                className="flex items-center space-x-2"
+              >
+                {deleteDocumentMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                <span>Delete</span>
+              </Button>
             </div>
           </div>
         </CardContent>

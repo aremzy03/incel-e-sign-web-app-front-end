@@ -1,19 +1,25 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { CheckCircle, AlertCircle } from 'lucide-react'
+import { uploadDocument } from '@/lib/api/documents'
+import toast from 'react-hot-toast'
 
 export default function DocumentUploadPage() {
+  const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const validateFile = (file: File): string | null => {
@@ -78,25 +84,32 @@ export default function DocumentUploadPage() {
     if (selectedFile) {
       setIsUploading(true)
       setError(null)
+      setUploadProgress(0)
       
       try {
-        // Simulate upload delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval)
+              return prev
+            }
+            return prev + 10
+          })
+        }, 200)
         
         console.log(`Uploading ${selectedFile.name}`)
         
-        // Mock notification trigger
-        const notification = {
-          id: Date.now(),
-          type: 'document_uploaded',
-          title: 'Document uploaded successfully',
-          message: `Document "${selectedFile.name}" has been uploaded and is ready for signing.`,
-          timestamp: new Date().toISOString().split('T')[0],
-          isRead: false
-        }
+        // Call the actual API
+        const response = await uploadDocument(selectedFile)
         
-        // In a real app, this would be sent to a notification service
-        console.log('Notification triggered:', notification)
+        clearInterval(progressInterval)
+        setUploadProgress(100)
+        
+        console.log('Upload successful:', response)
+        
+        // Show success toast
+        toast.success(`Document "${response.data.file_name}" has been uploaded and is ready for signing.`)
         
         setUploadSuccess(true)
         setSelectedFile(null)
@@ -104,13 +117,21 @@ export default function DocumentUploadPage() {
           fileInputRef.current.value = ''
         }
         
-        // Hide success message after 5 seconds
-        setTimeout(() => setUploadSuccess(false), 5000)
+        // Redirect to documents list after a short delay
+        setTimeout(() => {
+          router.push('/dashboard/documents')
+        }, 2000)
         
-      } catch (err) {
-        setError('Upload failed. Please try again.')
+      } catch (err: any) {
+        console.error('Upload error:', err)
+        
+        // Show error toast
+        toast.error(err.message || 'Upload failed. Please try again.')
+        
+        setError(err.message || 'Upload failed. Please try again.')
       } finally {
         setIsUploading(false)
+        setUploadProgress(0)
       }
     }
   }
@@ -224,9 +245,20 @@ export default function DocumentUploadPage() {
             </div>
           )}
 
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Uploading...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="w-full" />
+            </div>
+          )}
+
           {/* File requirements */}
           <div className="text-center text-sm text-gray-500">
-            <p>Supported: PDF only, Max 20MB</p>
+            <p>Supported: PDF only • Max 20MB</p>
           </div>
 
           {/* Upload button */}

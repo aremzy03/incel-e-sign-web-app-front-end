@@ -305,6 +305,14 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 | `GET` | `/api/auth/profile/` | Get user profile | ✅ |
 | `POST` | `/api/auth/refresh/` | Refresh access token | ❌ |
 
+## Frontend Features → Envelopes
+
+- **Create Envelope** (`/envelopes/create`)
+- **Send Envelope** (`/envelopes/{id}/send`)
+- **List Envelopes** (`/envelopes`)
+- **Envelope Detail** (`/envelopes/{id}`)
+- **Reject Envelope** (`/envelopes/{id}/reject`)
+
 ## 🎨 Authentication UI
 
 The application features polished authentication pages built with **shadcn/ui** components and **React Hook Form** with **Zod** validation.

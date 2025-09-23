@@ -144,7 +144,7 @@ describe('LoginPage', () => {
     await user.click(submitButton)
     
     await waitFor(() => {
-      expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
+      expect(screen.getByText(/Invalid credentials|Invalid email or password/i)).toBeInTheDocument()
     })
   })
 

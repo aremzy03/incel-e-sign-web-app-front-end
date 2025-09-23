@@ -70,7 +70,17 @@ export const getDocuments = async (): Promise<DocumentsListResponse> => {
 // Get a specific document by ID
 export const getDocument = async (id: string): Promise<Document> => {
   const response = await apiClient.get(`/api/proxy/documents/${id}/`)
-  return response.data
+  const payload = response.data
+  const doc: any = (payload && payload.data) || payload
+  return {
+    id: doc.id,
+    file_name: doc.file_name,
+    file_url: doc.file_url || '',
+    file_size: doc.file_size ?? 0,
+    status: doc.status || 'draft',
+    created_at: doc.created_at || '',
+    updated_at: doc.updated_at || '',
+  }
 }
 
 // Delete a document

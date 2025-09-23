@@ -99,9 +99,16 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
       }))
     })
     
-    const response = await apiClient.post('/envelopes/create/', data)
+    // Use Next.js proxy to reach Django backend
+    const response = await apiClient.post('/api/proxy/envelopes/create/', data)
     console.log('Create envelope response:', response.data)
-    return response.data
+    // Normalize possible response wrappers
+    const payload = response.data
+    const unwrapped = payload?.data?.envelope || payload?.data || payload
+    if (!unwrapped?.id) {
+      console.warn('Create envelope: unexpected response shape, missing id')
+    }
+    return unwrapped
   } catch (error: any) {
     console.error('Create envelope error details:', {
       status: error.response?.status,
@@ -140,32 +147,82 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
   console.log('Attempting to fetch envelopes from backend...')
   
   try {
-    const response = await apiClient.get('/envelopes/', {
+    const response = await apiClient.get('/api/proxy/envelopes/', {
       params: {
         page,
         page_size: pageSize,
       },
     })
     
-    console.log('Envelopes response:', response.data)
-    console.log('Envelopes count:', response.data?.count)
-    console.log('Envelopes results:', response.data?.results?.length)
-    
-    // Handle both paginated and direct array responses
-    if (Array.isArray(response.data)) {
-      // Backend returns direct array
-      console.log('Backend returns direct array, converting to paginated format')
-      return {
-        count: response.data.length,
-        next: null,
-        previous: null,
-        results: response.data
-      }
+    console.log('Envelopes raw response:', response.data)
+    const payload = response.data
+    const unwrapped: any = (payload && payload.data) || payload
+
+    let results: any[] = []
+    let count = 0
+    let next: string | null = null
+    let previous: string | null = null
+
+    if (Array.isArray(unwrapped)) {
+      results = unwrapped
+      count = unwrapped.length
+    } else if (unwrapped && Array.isArray(unwrapped.results)) {
+      results = unwrapped.results
+      count = typeof unwrapped.count === 'number' ? unwrapped.count : results.length
+      next = unwrapped.next ?? null
+      previous = unwrapped.previous ?? null
     } else {
-      // Backend returns paginated response
-      console.log('Backend returns paginated response')
-      return response.data
+      console.warn('Unexpected envelopes list shape, defaulting to empty list')
+      results = []
+      count = 0
     }
+
+    // Normalize result items to Envelope shape consumed by UI
+    const normalizedResults: Envelope[] = results.map((r: any) => {
+      const document = r.document && typeof r.document === 'object'
+        ? r.document
+        : {
+            id: r.document,
+            file_name: r.document_file_name || r.document?.file_name || 'Document',
+            file_url: r.document_file_url || '',
+            file_size: r.document_file_size || 0,
+          }
+
+      const creator = r.creator && typeof r.creator === 'object'
+        ? r.creator
+        : {
+            id: r.creator,
+            email: r.creator_email || r.creator?.email || '',
+            full_name: r.creator_full_name || r.creator?.full_name || (r.creator_email || ''),
+          }
+
+      const recipients: EnvelopeRecipient[] = Array.isArray(r.recipients)
+        ? r.recipients
+        : Array.isArray(r.signing_order)
+          ? r.signing_order.map((s: any, idx: number) => ({
+              id: s.signer_id || String(idx),
+              email: s.email || '',
+              name: s.name || '',
+              order: s.order ?? idx + 1,
+              status: (s.status || 'pending') as any,
+            }))
+          : []
+
+      return {
+        id: r.id,
+        document,
+        creator,
+        recipients,
+        status: r.status || 'draft',
+        created_at: r.created_at || '',
+        updated_at: r.updated_at || '',
+        sent_at: r.sent_at,
+        completed_at: r.completed_at,
+        rejected_at: r.rejected_at,
+      }
+    })
+
+    return { count, next, previous, results: normalizedResults }
   } catch (error: any) {
     console.error('Get envelopes error details:', {
       status: error.response?.status,
@@ -188,9 +245,53 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
   console.log('Full URL:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/envelopes/${id}/`)
   
   try {
-    const response = await apiClient.get(`/envelopes/${id}/`)
-    console.log('Envelope response:', response.data)
-    return response.data
+    const response = await apiClient.get(`/api/proxy/envelopes/${id}/`)
+    console.log('Envelope raw response:', response.data)
+    const payload = response.data
+    const r: any = (payload && (payload.data?.envelope || payload.data)) || payload
+
+    // Normalize to Envelope shape
+    const document = r.document && typeof r.document === 'object'
+      ? r.document
+      : {
+          id: r.document,
+          file_name: r.document_file_name || r.document?.file_name || 'Document',
+          file_url: r.document_file_url || '',
+          file_size: r.document_file_size || 0,
+        }
+
+    const creator = r.creator && typeof r.creator === 'object'
+      ? r.creator
+      : {
+          id: r.creator,
+          email: r.creator_email || r.creator?.email || '',
+          full_name: r.creator_full_name || r.creator?.full_name || (r.creator_email || ''),
+        }
+
+    const recipients: EnvelopeRecipient[] = Array.isArray(r.recipients)
+      ? r.recipients
+      : Array.isArray(r.signing_order)
+        ? r.signing_order.map((s: any, idx: number) => ({
+            id: s.signer_id || String(idx),
+            email: s.email || '',
+            name: s.name || '',
+            order: s.order ?? idx + 1,
+            status: (s.status || 'pending') as any,
+          }))
+        : []
+
+    return {
+      id: r.id,
+      document,
+      creator,
+      recipients,
+      status: r.status || 'draft',
+      created_at: r.created_at || '',
+      updated_at: r.updated_at || '',
+      sent_at: r.sent_at,
+      completed_at: r.completed_at,
+      rejected_at: r.rejected_at,
+    }
   } catch (error: any) {
     console.error('Get envelope error details:', {
       status: error.response?.status,
@@ -213,7 +314,7 @@ export const sendEnvelope = async (id: string): Promise<ApiResponse<Envelope>> =
   console.log('Send URL:', `/envelopes/${id}/send/`)
   
   try {
-    const response = await apiClient.post(`/envelopes/${id}/send/`)
+    const response = await apiClient.post(`/api/proxy/envelopes/${id}/send/`)
     console.log('Send envelope response:', response.data)
     return response.data
   } catch (error: any) {
@@ -238,7 +339,7 @@ export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>>
   console.log('Reject URL:', `/envelopes/${id}/reject/`)
   
   try {
-    const response = await apiClient.post(`/envelopes/${id}/reject/`)
+    const response = await apiClient.post(`/api/proxy/envelopes/${id}/reject/`)
     console.log('Reject envelope response:', response.data)
     return response.data
   } catch (error: any) {
@@ -263,7 +364,7 @@ export const deleteEnvelope = async (id: string): Promise<void> => {
   console.log('Delete URL:', `/envelopes/${id}/delete/`)
   
   try {
-    const response = await apiClient.delete(`/envelopes/${id}/delete/`)
+    const response = await apiClient.delete(`/api/proxy/envelopes/${id}/delete/`)
     console.log('Delete envelope response:', response.status)
     console.log('Delete successful')
   } catch (error: any) {

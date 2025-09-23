@@ -91,6 +91,53 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
+// Mock Radix UI Select to simplify interaction in tests
+jest.mock('@radix-ui/react-select', () => {
+  const React = require('react')
+  const make = (role?: string) => {
+    const Cmp = ({ children, ...props }: any) => React.createElement(role ? 'div' : 'div', role ? { role, ...props } : props, children)
+    Cmp.displayName = 'Mock'
+    return Cmp
+  }
+  const Root = make()
+  const Trigger = ({ children, ...props }: any) => React.createElement('button', { role: 'combobox', ...props }, children)
+  Trigger.displayName = 'Trigger'
+  const Content = make('listbox')
+  Content.displayName = 'Content'
+  const Item = ({ children, value, onSelect, ...props }: any) => React.createElement('div', { role: 'option', onClick: () => (onSelect ? onSelect(value) : null), ...props }, children)
+  Item.displayName = 'Item'
+  const ItemIndicator = make()
+  const ItemText = ({ children }: any) => React.createElement('span', null, children)
+  const Value = ({ placeholder }: any) => React.createElement('span', null, placeholder)
+  Value.displayName = 'Value'
+  const ScrollUpButton = make()
+  const ScrollDownButton = make()
+  const Group = make()
+  const Label = make()
+  const Separator = make()
+  const Icon = make()
+  const Portal = ({ children }: any) => React.createElement(React.Fragment, null, children)
+  const Viewport = make()
+  return {
+    __esModule: true,
+    Root,
+    Trigger,
+    Content,
+    Item,
+    ItemIndicator,
+    ItemText,
+    Value,
+    ScrollUpButton,
+    ScrollDownButton,
+    Group,
+    Label,
+    Separator,
+    Icon,
+    Portal,
+    Viewport,
+  }
+})
+
 // Mock environment variables
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000/api'
 process.env.NEXTAUTH_SECRET = 'test-secret'

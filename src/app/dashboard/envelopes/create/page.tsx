@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,275 +15,229 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CheckCircle, AlertCircle } from 'lucide-react'
+import { useDocuments } from '@/hooks/useDocuments'
+import { useCreateEnvelope } from '@/hooks/useEnvelopes'
+import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 
-// Dummy documents for selection
-const dummyDocuments = [
-  { id: 1, name: 'contract.pdf', status: 'Draft' },
-  { id: 2, name: 'nda.pdf', status: 'Draft' },
-  { id: 3, name: 'invoice.pdf', status: 'Draft' },
-  { id: 4, name: 'agreement.pdf', status: 'Draft' },
-  { id: 5, name: 'proposal.pdf', status: 'Draft' },
-]
-
-interface Signer {
+interface RecipientInput {
   id: number
+  name: string
   email: string
   order: number
 }
 
 export default function CreateEnvelopePage() {
-  const [selectedDocument, setSelectedDocument] = useState<string>('')
-  const [signerEmail, setSignerEmail] = useState('')
-  const [signerOrder, setSignerOrder] = useState<number>(1)
-  const [signers, setSigners] = useState<Signer[]>([])
-  const [nextSignerId, setNextSignerId] = useState(1)
-  const [isCreating, setIsCreating] = useState(false)
-  const [createSuccess, setCreateSuccess] = useState(false)
+  const router = useRouter()
+  const { data: documents, isLoading: loadingDocs } = useDocuments()
+  const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
+  const { validateRecipients, isValidating } = useEnvelopeUserValidation()
+
+  const [step, setStep] = useState(1)
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string>('')
+  const [recipientName, setRecipientName] = useState('')
+  const [recipientEmail, setRecipientEmail] = useState('')
+  const [recipients, setRecipients] = useState<RecipientInput[]>([])
+  const [nextId, setNextId] = useState(1)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-  const handleAddSigner = () => {
-    if (signerEmail.trim() && signerOrder > 0) {
-      const newSigner: Signer = {
-        id: nextSignerId,
-        email: signerEmail.trim(),
-        order: signerOrder,
-      }
-      setSigners([...signers, newSigner])
-      setSignerEmail('')
-      setSignerOrder(signers.length + 2)
-      setNextSignerId(nextSignerId + 1)
+  const sortedRecipients = useMemo(
+    () => recipients.slice().sort((a, b) => a.order - b.order),
+    [recipients]
+  )
+
+  const handleAddRecipient = () => {
+    if (!recipientEmail.trim()) return
+    const newRecipient: RecipientInput = {
+      id: nextId,
+      name: recipientName.trim(),
+      email: recipientEmail.trim(),
+      order: recipients.length + 1,
     }
+    setRecipients((prev) => [...prev, newRecipient])
+    setNextId(nextId + 1)
+    setRecipientName('')
+    setRecipientEmail('')
   }
 
-  const handleRemoveSigner = (signerId: number) => {
-    setSigners(signers.filter(signer => signer.id !== signerId))
+  const handleRemoveRecipient = (id: number) => {
+    setRecipients((prev) => prev.filter((r) => r.id !== id).map((r, idx) => ({ ...r, order: idx + 1 })))
   }
 
-  const handleCreateEnvelope = async () => {
-    if (!selectedDocument || signers.length === 0) {
-      setError('Please select a document and add at least one signer.')
-      return
-    }
+  const moveRecipient = (id: number, direction: 'up' | 'down') => {
+    const index = recipients.findIndex((r) => r.id === id)
+    if (index < 0) return
+    const newOrder = recipients.slice()
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= newOrder.length) return
+    ;[newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]]
+    setRecipients(newOrder.map((r, idx) => ({ ...r, order: idx + 1 })))
+  }
 
-    setIsCreating(true)
-    setError(null)
+  const nextStep = () => {
+    if (step === 1 && !selectedDocumentId) return
+    if (step === 2 && recipients.length === 0) return
+    setStep(step + 1)
+  }
 
+  const prevStep = () => setStep(Math.max(1, step - 1))
+
+  const handleCreate = async () => {
     try {
-      const selectedDoc = dummyDocuments.find(doc => doc.id.toString() === selectedDocument)
-      
-      // Simulate creation delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log('Creating envelope:', {
-        document: selectedDoc,
-        signers: signers,
+      setError(null)
+      console.log('[CreateEnvelope] Clicked create, starting validation')
+      // Validate users exist and get their IDs
+      const emails = sortedRecipients.map((r) => r.email)
+      const { valid, invalid } = await validateRecipients(emails)
+      console.log('[CreateEnvelope] Validation result:', { validCount: valid.length, invalid })
+      if (invalid.length > 0) {
+        setError(`These emails are not registered: ${invalid.join(', ')}`)
+        return
+      }
+
+      // Map order to signer_id using validated users
+      const signing_order = sortedRecipients.map((r) => {
+        const found = valid.find((v) => v.email.toLowerCase() === r.email.toLowerCase())
+        return { signer_id: found!.user.id, order: r.order }
       })
 
-      // Mock notification trigger
-      const notification = {
-        id: Date.now(),
-        type: 'envelope_created',
-        title: 'Envelope created successfully',
-        message: `Envelope "${selectedDoc?.name}" has been created and sent to ${signers.length} recipient(s).`,
-        timestamp: new Date().toISOString().split('T')[0],
-        isRead: false
+      const payload = {
+        document_id: selectedDocumentId,
+        signing_order,
       }
-      
-      // In a real app, this would be sent to a notification service
-      console.log('Notification triggered:', notification)
-      
-      setCreateSuccess(true)
-      
-      // Hide success message after 5 seconds
-      setTimeout(() => setCreateSuccess(false), 5000)
-      
-    } catch (err) {
-      setError('Failed to create envelope. Please try again.')
-    } finally {
-      setIsCreating(false)
+      console.log('[CreateEnvelope] Submitting payload:', payload)
+      const created = await createAsync(payload as any)
+      console.log('[CreateEnvelope] Created envelope:', created)
+      setSuccess('Envelope created successfully!')
+      router.push(`/dashboard/envelopes/${created.id}`)
+    } catch (e: any) {
+      setError(e?.message || 'Failed to create envelope')
     }
   }
-
-  const selectedDocumentData = dummyDocuments.find(doc => doc.id.toString() === selectedDocument)
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Create Envelope</h1>
-        <p className="text-gray-600 mt-1">
-          Set up a new document envelope for digital signing
-        </p>
+        <p className="text-gray-600 mt-1">Set up a new document envelope for digital signing</p>
       </div>
 
-      {/* Success Alert */}
-      {createSuccess && (
+      {success && (
         <Alert className="border-green-200 bg-green-50">
           <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            Envelope created successfully! The document has been sent to all recipients for signing.
-          </AlertDescription>
+          <AlertDescription className="text-green-800">{success}</AlertDescription>
         </Alert>
       )}
-
-      {/* Error Alert */}
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       <Card className="bg-white shadow-sm">
         <CardHeader>
-          <CardTitle>Envelope Setup</CardTitle>
-          <CardDescription>
-            Follow the steps below to create your envelope
-          </CardDescription>
+          <CardTitle>Wizard</CardTitle>
+          <CardDescription>Follow the steps below to create your envelope</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-          {/* Step 1: Select Document */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Step 1: Select Document</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Choose a document from your uploaded files
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="document-select">Document</Label>
-              <Select value={selectedDocument} onValueChange={setSelectedDocument}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a document" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dummyDocuments.map((document) => (
-                    <SelectItem key={document.id} value={document.id.toString()}>
-                      {document.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex gap-2 text-sm">
+            <span className={`px-2 py-1 rounded ${step === 1 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Select Document</span>
+            <span className={`px-2 py-1 rounded ${step === 2 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Add Recipients</span>
+            <span className={`px-2 py-1 rounded ${step === 3 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Review & Create</span>
           </div>
 
-          {/* Step 2: Add Signers */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Step 2: Add Signers</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Add signers and define their signing order
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {step === 1 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Step 1: Select Document</h3>
               <div className="space-y-2">
-                <Label htmlFor="signer-email">Signer Email</Label>
-                <Input
-                  id="signer-email"
-                  type="email"
-                  placeholder="signer@example.com"
-                  value={signerEmail}
-                  onChange={(e) => setSignerEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signer-order">Signing Order</Label>
-                <Input
-                  id="signer-order"
-                  type="number"
-                  min="1"
-                  placeholder="1"
-                  value={signerOrder}
-                  onChange={(e) => setSignerOrder(parseInt(e.target.value) || 1)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>&nbsp;</Label>
-                <Button onClick={handleAddSigner} className="w-full">
-                  + Add Signer
-                </Button>
-              </div>
-            </div>
-
-            {/* Signers List */}
-            {signers.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">Signers List:</h4>
-                <div className="space-y-2">
-                  {signers
-                    .sort((a, b) => a.order - b.order)
-                    .map((signer) => (
-                      <div
-                        key={signer.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm font-medium text-gray-600">
-                            Order {signer.order}
-                          </span>
-                          <span className="text-sm text-gray-900">{signer.email}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRemoveSigner(signer.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </Button>
-                      </div>
+                <Label htmlFor="document-select">Document</Label>
+                <Select value={selectedDocumentId} onValueChange={setSelectedDocumentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingDocs ? 'Loading...' : 'Select a document'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(documents || []).map((doc) => (
+                      <SelectItem key={doc.id} value={doc.id}>{`${doc.file_name} (${doc.status})`}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Step 2: Add Recipients</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="recipient-name">Recipient Name</Label>
+                  <Input id="recipient-name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="recipient-email">Recipient Email</Label>
+                  <Input id="recipient-email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>&nbsp;</Label>
+                  <Button onClick={handleAddRecipient} className="w-full">+ Add Recipient</Button>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Step 3: Review */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Step 3: Review</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Review your envelope details before creating
-              </p>
-            </div>
-            
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Selected Document:</span>
-                <span className="text-sm text-gray-900">
-                  {selectedDocumentData ? selectedDocumentData.name : 'None selected'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Total Signers:</span>
-                <span className="text-sm text-gray-900">{signers.length}</span>
-              </div>
-              {signers.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-700">Signing Order:</span>
-                  <span className="text-sm text-gray-900">
-                    {signers
-                      .sort((a, b) => a.order - b.order)
-                      .map(signer => signer.email)
-                      .join(' → ')}
-                  </span>
+              {sortedRecipients.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">Recipients:</h4>
+                  {sortedRecipients.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-600">Order {r.order}</span>
+                        <span className="text-sm text-gray-900">{r.name} ({r.email})</span>
+                      </div>
+                      <div className="space-x-2">
+                        <Button size="sm" variant="outline" onClick={() => moveRecipient(r.id, 'up')}>Up</Button>
+                        <Button size="sm" variant="outline" onClick={() => moveRecipient(r.id, 'down')}>Down</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleRemoveRecipient(r.id)} className="text-red-600">Remove</Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          </div>
+          )}
 
-          {/* Create Button */}
-          <div className="flex justify-end pt-6 border-t">
-            <Button
-              onClick={handleCreateEnvelope}
-              disabled={!selectedDocument || signers.length === 0 || isCreating}
-              className="px-8"
-            >
-              {isCreating ? 'Creating...' : 'Create Envelope'}
-            </Button>
+          {step === 3 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Step 3: Review & Create</h3>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-700">Selected Document:</span>
+                  <span className="text-sm text-gray-900">
+                    {documents?.find((d) => d.id === selectedDocumentId)?.file_name || 'None selected'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-700">Total Recipients:</span>
+                  <span className="text-sm text-gray-900">{sortedRecipients.length}</span>
+                </div>
+                {sortedRecipients.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-700">Signing Order:</span>
+                    <span className="text-sm text-gray-900">{sortedRecipients.map((r) => r.email).join(' → ')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" onClick={prevStep} disabled={step === 1}>Previous</Button>
+            {step < 3 ? (
+              <Button onClick={nextStep} disabled={(step === 1 && !selectedDocumentId) || (step === 2 && sortedRecipients.length === 0)}>Next</Button>
+            ) : (
+              <Button onClick={handleCreate} disabled={creating || isValidating}>
+                {creating || isValidating ? 'Creating...' : 'Create Envelope'}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

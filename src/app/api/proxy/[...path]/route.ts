@@ -45,8 +45,15 @@ export async function GET(
       })
     }
     
-    const data = await response.json()
-    
+    // Try to parse JSON; fall back to text for HTML error pages
+    let data: any
+    const raw = await response.text()
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      data = raw
+    }
+
     return NextResponse.json(data, {
       status: response.status,
       headers: {
@@ -92,14 +99,13 @@ export async function POST(
       ))
       
       const outgoingForm = new FormData()
-      for (const [key, value] of incomingForm.entries()) {
-        // Check if it's a file-like object (has name, size, stream properties)
+      Array.from(incomingForm.entries()).forEach(([key, value]) => {
         if (typeof value === 'object' && value && 'name' in value && 'size' in value) {
           outgoingForm.append(key, value as any, (value as any).name)
         } else {
           outgoingForm.append(key, String(value))
         }
-      }
+      })
 
       console.log('Making request to Django...')
       console.log('Request details:', {

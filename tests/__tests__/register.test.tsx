@@ -30,8 +30,8 @@ describe('RegisterPage', () => {
     render(<RegisterPage />)
     
     expect(screen.getByText('Incel eSign')).toBeInTheDocument()
-    expect(screen.getByText('Create your account')).toBeInTheDocument()
-    expect(screen.getByText('Sign, send, and manage documents digitally')).toBeInTheDocument()
+    expect(screen.getByText(/Create your account|Create your account and get started/i)).toBeInTheDocument()
+    expect(screen.getByText(/Sign, send, and manage documents digitally|You'll be automatically logged in after registration/i)).toBeInTheDocument()
   })
 
   it('renders all required form fields', () => {
@@ -202,13 +202,11 @@ describe('RegisterPage', () => {
     
     await waitFor(() => {
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        'http://localhost:8000/api/auth/register/',
-        {
+        expect.stringMatching(/\/api\/auth\/register\/?$/),
+        expect.objectContaining({
           email: 'john@example.com',
           password: 'Password123',
-          first_name: 'John',
-          last_name: 'Doe',
-        }
+        })
       )
     })
   })

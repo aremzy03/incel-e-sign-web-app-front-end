@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
+import { getUserById } from '@/lib/api/users'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -81,7 +83,9 @@ export default function EnvelopesPage() {
                 {envelopes.map((env) => (
                   <TableRow key={env.id}>
                     <TableCell className="font-medium">{env.document?.file_name || '—'}</TableCell>
-                    <TableCell>{env.creator?.full_name || env.creator?.email || '—'}</TableCell>
+                <TableCell>
+                  <CreatorCell creator={env.creator} />
+                </TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(env.status)}`}>
                         {env.status}
@@ -129,5 +133,23 @@ export default function EnvelopesPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function CreatorCell({ creator }: { creator: any }) {
+  const creatorId = creator?.id
+  const hasName = Boolean(creator?.full_name)
+  const { data: user } = useQuery({
+    queryKey: ['user', creatorId],
+    queryFn: () => getUserById(creatorId),
+    enabled: Boolean(creatorId) && !hasName,
+    staleTime: 5 * 60 * 1000,
+  })
+  const label = user?.full_name || creator?.full_name || creator?.email || '—'
+  if (!creatorId) return <span>{label}</span>
+  return (
+    <Link href={`/dashboard/users/${creatorId}`} className="text-blue-600 hover:underline">
+      {label}
+    </Link>
   )
 }

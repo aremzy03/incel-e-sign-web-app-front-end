@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { signOut, getSession } from 'next-auth/react'
+import { authAPI } from '@/lib/api/auth'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -86,7 +87,17 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
   const [notifications, setNotifications] = useState(dummyNotifications)
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' })
+    try {
+      const session = await getSession()
+      const refresh = (session as any)?.refreshToken
+      if (refresh) {
+        await authAPI.logout(refresh)
+      }
+    } catch (e) {
+      // Ignore network errors on logout; proceed to clear session
+    } finally {
+      await signOut({ callbackUrl: '/login' })
+    }
   }
 
   const handleMarkAsRead = (notificationId: number) => {

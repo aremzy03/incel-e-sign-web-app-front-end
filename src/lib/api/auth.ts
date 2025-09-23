@@ -1,4 +1,5 @@
 import axios from 'axios'
+import apiClient from '@/lib/axios'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -60,7 +61,8 @@ export const authAPI = {
 
   // Logout user (blacklist token)
   async logout(refreshToken: string): Promise<void> {
-    await axios.post(`${API_BASE_URL}/auth/logout/`, {
+    // Route through Next proxy so cookies/headers are consistent
+    await apiClient.post('/api/proxy/auth/logout/', {
       refresh: refreshToken,
     })
   },

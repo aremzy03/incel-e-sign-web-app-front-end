@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Download, FileText, Calendar, User, Trash2, AlertCircle, Loader2 } from 'lucide-react'
+import PdfViewer from '@/components/PdfViewer'
 import { getDocument, type Document } from '@/lib/api/documents'
 import { useDeleteDocument, useDownloadDocument } from '@/hooks/useDocuments'
 import toast from 'react-hot-toast'
@@ -191,18 +192,16 @@ export default function DocumentDetailPage() {
         <CardContent className="p-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Document Preview</h3>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 min-h-[500px] flex items-center justify-center">
-              <div className="text-center">
-                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">Document Preview Placeholder</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  In a real implementation, this would show an embedded PDF viewer
-                </p>
-                <div className="mt-4 text-xs text-gray-400">
-                  File: {documentData.file_name} ({formatFileSize(documentData.file_size)})
+            {documentData.file_url ? (
+              <PdfViewer url={documentData.file_url} />
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 min-h-[500px] flex items-center justify-center">
+                <div className="text-center">
+                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium">No preview available</p>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>

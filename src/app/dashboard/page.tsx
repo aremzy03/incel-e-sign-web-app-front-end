@@ -1,8 +1,26 @@
+"use client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
+import { getDocuments, type Document } from '@/lib/api/documents'
+import { getEnvelopes, type EnvelopesListResponse } from '@/lib/api/envelopes'
 
 export default function DashboardPage() {
+  const { data: documents, isLoading: docsLoading } = useQuery<Document[]>({
+    queryKey: ['documents', 'recent'],
+    queryFn: getDocuments,
+    staleTime: 30_000,
+  })
+  const { data: envelopesResp, isLoading: envLoading } = useQuery<EnvelopesListResponse>({
+    queryKey: ['envelopes', { page: 1, pageSize: 10 }],
+    queryFn: () => getEnvelopes(1, 10),
+    staleTime: 30_000,
+  })
+
+  const recentDocs = (documents || []).slice(0, 3)
+  const recentEnvs = (envelopesResp?.results || []).slice(0, 3)
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Welcome Header */}
@@ -92,35 +110,25 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Contract Agreement.pdf</p>
-                  <p className="text-sm text-gray-500">Aug 15, 2024</p>
-                </div>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  Signed
-                </span>
+            {docsLoading ? (
+              <div className="text-sm text-gray-600">Loading...</div>
+            ) : recentDocs.length === 0 ? (
+              <div className="text-sm text-gray-600">No recent documents</div>
+            ) : (
+              <div className="space-y-3">
+                {recentDocs.map((d) => (
+                  <div key={d.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{d.file_name}</p>
+                      <p className="text-sm text-gray-500">{new Date(d.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                      {d.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Invoice #1234.pdf</p>
-                  <p className="text-sm text-gray-500">Aug 10, 2024</p>
-                </div>
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                  Pending
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">NDA Template.pdf</p>
-                  <p className="text-sm text-gray-500">Aug 5, 2024</p>
-                </div>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                  Draft
-                </span>
-              </div>
-            </div>
+            )}
             <div className="mt-4">
               <Button asChild variant="outline" className="w-full">
                 <Link href="/dashboard/documents">
@@ -143,35 +151,25 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Q3 Contract Review</p>
-                  <p className="text-sm text-gray-500">Aug 15, 2024</p>
-                </div>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  Completed
-                </span>
+            {envLoading ? (
+              <div className="text-sm text-gray-600">Loading...</div>
+            ) : recentEnvs.length === 0 ? (
+              <div className="text-sm text-gray-600">No recent envelopes</div>
+            ) : (
+              <div className="space-y-3">
+                {recentEnvs.map((e) => (
+                  <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{e.document?.file_name || 'Envelope'}</p>
+                      <p className="text-sm text-gray-500">{new Date(e.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                      {e.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Employee Handbook</p>
-                  <p className="text-sm text-gray-500">Aug 12, 2024</p>
-                </div>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                  Sent
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Legal Agreement</p>
-                  <p className="text-sm text-gray-500">Aug 8, 2024</p>
-                </div>
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                  Draft
-                </span>
-              </div>
-            </div>
+            )}
             <div className="mt-4">
               <Button asChild variant="outline" className="w-full">
                 <Link href="/dashboard/envelopes">

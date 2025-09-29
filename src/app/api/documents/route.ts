@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const origin = request.nextUrl.origin
-  const targetUrl = `${origin}/api/proxy/documents`
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+  const targetUrl = `${apiBase}/documents/`
 
   try {
     const response = await fetch(targetUrl, {

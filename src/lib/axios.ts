@@ -2,14 +2,11 @@ import axios from 'axios'
 import { getSession, signOut } from 'next-auth/react'
 
 // Create axios instance with base configuration
-// Use absolute baseURL to ensure consistent routing to the Next.js proxy
-const frontendOrigin =
-  typeof window !== 'undefined'
-    ? window.location.origin
-    : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+// Backend base URL – prefer NEXT_PUBLIC_API_URL (e.g. http://localhost:8000/api)
+const backendBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 const apiClient = axios.create({
-  baseURL: `${frontendOrigin}`,
+  baseURL: backendBaseUrl,
   timeout: 10000,
 })
 

@@ -99,8 +99,8 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
       }))
     })
     
-    // Use Next.js proxy to reach Django backend
-    const response = await apiClient.post('/api/proxy/envelopes/create/', data)
+    // Direct to backend API
+    const response = await apiClient.post('/envelopes/create/', data)
     console.log('Create envelope response:', response.data)
     // Normalize possible response wrappers
     const payload = response.data
@@ -147,7 +147,7 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
   console.log('Attempting to fetch envelopes from backend...')
   
   try {
-    const response = await apiClient.get('/api/proxy/envelopes/', {
+    const response = await apiClient.get('/envelopes/', {
       params: {
         page,
         page_size: pageSize,
@@ -245,7 +245,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
   console.log('Full URL:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/envelopes/${id}/`)
   
   try {
-    const response = await apiClient.get(`/api/proxy/envelopes/${id}/`)
+    const response = await apiClient.get(`/envelopes/${id}/`)
     console.log('Envelope raw response:', response.data)
     const payload = response.data
     const r: any = (payload && (payload.data?.envelope || payload.data)) || payload
@@ -314,7 +314,7 @@ export const sendEnvelope = async (id: string): Promise<ApiResponse<Envelope>> =
   console.log('Send URL:', `/envelopes/${id}/send/`)
   
   try {
-    const response = await apiClient.post(`/api/proxy/envelopes/${id}/send/`)
+    const response = await apiClient.post(`/envelopes/${id}/send/`)
     console.log('Send envelope response:', response.data)
     return response.data
   } catch (error: any) {
@@ -339,7 +339,7 @@ export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>>
   console.log('Reject URL:', `/envelopes/${id}/reject/`)
   
   try {
-    const response = await apiClient.post(`/api/proxy/envelopes/${id}/reject/`)
+    const response = await apiClient.post(`/envelopes/${id}/reject/`)
     console.log('Reject envelope response:', response.data)
     return response.data
   } catch (error: any) {
@@ -364,7 +364,7 @@ export const deleteEnvelope = async (id: string): Promise<void> => {
   console.log('Delete URL:', `/envelopes/${id}/delete/`)
   
   try {
-    const response = await apiClient.delete(`/api/proxy/envelopes/${id}/delete/`)
+    const response = await apiClient.delete(`/envelopes/${id}/delete/`)
     console.log('Delete envelope response:', response.status)
     console.log('Delete successful')
   } catch (error: any) {

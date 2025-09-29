@@ -32,7 +32,7 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
   console.log('=== uploadDocument called ===')
   console.log('File:', file.name, file.size, file.type)
   console.log('API Client baseURL:', apiClient.defaults.baseURL)
-  console.log('Upload URL will be:', `${apiClient.defaults.baseURL}/api/proxy/documents/upload`)
+  console.log('Upload URL will be:', `${apiClient.defaults.baseURL}/documents/upload/`)
   
   const formData = new FormData()
   formData.append('file', file)
@@ -41,7 +41,7 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
   
   try {
     // Do NOT set Content-Type manually; let the browser set the multipart boundary
-    const response = await apiClient.post('/api/proxy/documents/upload', formData)
+    const response = await apiClient.post('/documents/upload/', formData)
     console.log('Upload response received:', response.status)
     return response.data
   } catch (error) {
@@ -54,9 +54,9 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
 export const getDocuments = async (): Promise<DocumentsListResponse> => {
   console.log('=== getDocuments API called ===')
   console.log('Timestamp:', new Date().toISOString())
-  console.log('API URL: /api/proxy/documents')
+  console.log('API URL: /documents/')
   
-  const response = await apiClient.get('/api/proxy/documents')
+  const response = await apiClient.get('/documents/')
   
   console.log('getDocuments response:', {
     status: response.status,
@@ -69,7 +69,7 @@ export const getDocuments = async (): Promise<DocumentsListResponse> => {
 
 // Get a specific document by ID
 export const getDocument = async (id: string): Promise<Document> => {
-  const response = await apiClient.get(`/api/proxy/documents/${id}/`)
+  const response = await apiClient.get(`/documents/${id}/`)
   const payload = response.data
   const doc: any = (payload && payload.data) || payload
   return {
@@ -86,7 +86,7 @@ export const getDocument = async (id: string): Promise<Document> => {
 // Delete a document
 export const deleteDocument = async (id: string): Promise<void> => {
   try {
-    await apiClient.delete(`/api/proxy/documents/${id}/delete/`)
+    await apiClient.delete(`/documents/${id}/delete/`)
   } catch (error: any) {
     // Handle 404 as success for delete operations (document already deleted)
     if (error.response?.status === 404) {
@@ -115,7 +115,7 @@ export const deleteDocument = async (id: string): Promise<void> => {
 
 // Download a document
 export const downloadDocument = async (id: string): Promise<Blob> => {
-  const response = await apiClient.get(`/api/proxy/documents/${id}/download/`, {
+  const response = await apiClient.get(`/documents/${id}/download/`, {
     responseType: 'blob',
   })
   

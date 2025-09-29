@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { signOut, getSession } from 'next-auth/react'
 import { authAPI } from '@/lib/api/auth'
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -17,7 +18,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Bell, Send, PenTool, XCircle } from 'lucide-react'
+import { Bell } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { listNotifications, markNotificationRead, type NotificationItem } from '@/lib/api/notifications'
 
 interface NavigationItem {
   name: string
@@ -40,51 +43,26 @@ interface DashboardClientLayoutProps {
   user: User
 }
 
-// Dummy notifications data
-const dummyNotifications = [
-  {
-    id: 1,
-    type: 'envelope_sent',
-    title: 'Envelope NDA sent',
-    message: 'Your envelope "Contract NDA" has been sent to 2 recipients.',
-    timestamp: '2025-09-16',
-    isRead: false
-  },
-  {
-    id: 2,
-    type: 'signature_completed',
-    title: 'John Doe signed doc',
-    message: 'John Doe has successfully signed the document.',
-    timestamp: '2025-09-15',
-    isRead: false
-  },
-  {
-    id: 3,
-    type: 'envelope_rejected',
-    title: 'Signer declined doc',
-    message: 'The envelope was declined by the recipient.',
-    timestamp: '2025-09-14',
-    isRead: false
-  }
-]
-
-const getNotificationIcon = (type: string) => {
-  switch (type) {
-    case 'envelope_sent':
-      return <Send className="h-4 w-4 text-blue-600" />
-    case 'signature_completed':
-      return <PenTool className="h-4 w-4 text-green-600" />
-    case 'envelope_rejected':
-      return <XCircle className="h-4 w-4 text-red-600" />
-    default:
-      return <Bell className="h-4 w-4 text-gray-600" />
-  }
-}
+// Use a simple bell for all notifications (backend does not provide type)
+const NotificationIcon = () => <Bell className="h-4 w-4 text-gray-600" />
 
 export function DashboardClientLayout({ children, navigation, user }: DashboardClientLayoutProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [notifications, setNotifications] = useState(dummyNotifications)
+  const queryClient = useQueryClient()
+  const { data: notificationsData } = useQuery<NotificationItem[]>({
+    queryKey: ['notifications'],
+    queryFn: listNotifications,
+    staleTime: 30_000,
+  })
+  const notifications = notificationsData ?? []
+  const markOne = useMutation({
+    mutationFn: async (id: number) => markNotificationRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+    onError: () => toast.error('Failed to mark as read'),
+  })
 
   const handleLogout = async () => {
     try {
@@ -101,11 +79,7 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
   }
 
   const handleMarkAsRead = (notificationId: number) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === notificationId 
-        ? { ...notification, isRead: true }
-        : notification
-    ))
+    markOne.mutate(notificationId)
   }
 
   const getUserInitials = () => {
@@ -121,7 +95,7 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
     return user?.full_name || 'User'
   }
 
-  const unreadCount = notifications.filter(n => !n.isRead).length
+  const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -245,16 +219,16 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
                         onClick={() => handleMarkAsRead(notification.id)}
                       >
                         <div className="flex-shrink-0 mt-0.5">
-                          {getNotificationIcon(notification.type)}
+                          <NotificationIcon />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">
-                            {notification.title}
+                          <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                            {notification.message}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {notification.timestamp}
+                            {new Date(notification.created_at).toLocaleString()}
                           </p>
-                          {!notification.isRead && (
+                          {!notification.is_read && (
                             <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
                           )}
                         </div>

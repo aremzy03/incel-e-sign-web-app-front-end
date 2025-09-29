@@ -25,7 +25,7 @@ export const searchUsersByEmail = async (email: string): Promise<User[]> => {
   // First, try to get real users from backend
   try {
     console.log('Attempting to search backend users...')
-    const response = await apiClient.get<any>('/api/proxy/auth/users/', {
+    const response = await apiClient.get<any>('/auth/users/', {
       params: {
         search: email,
         page_size: 10
@@ -89,7 +89,7 @@ export const getUserById = async (userId: string): Promise<User> => {
   console.log('User ID:', userId)
   
   try {
-    const response = await apiClient.get<any>(`/api/proxy/auth/users/${userId}/`)
+    const response = await apiClient.get<any>(`/auth/users/${userId}/`)
     console.log('User raw response:', response.data)
     const payload = response.data
     const u: any = (payload && payload.data) || payload

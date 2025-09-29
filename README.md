@@ -22,7 +22,7 @@ A modern Next.js 14 frontend application for the Incel eSign digital document si
 - **Envelope Creation Page** with document selection and signer management
 - **Envelope List Page** with status tracking and management
 - **Envelope Detail & Signing Simulation** with progress tracking and audit trail
-- **Signature Management Page** (UI only) for uploading and managing reusable signatures
+- **Signature Management Page** for uploading and managing reusable signatures
 - **Signature Placement UI** (UI only) for drag-and-drop signature placement on documents
 - **Signing Simulation Page** (UI only) for document signing with reusable signatures
 - **Notifications Page** (UI only) for viewing and managing user notifications
@@ -208,6 +208,14 @@ src/app/
 | `/dashboard/documents` | Document API | Document upload, storage, and management |
 | `/dashboard/envelopes` | Envelope API | Document envelope creation and sending |
 | `/dashboard/signatures` | Signature API | Digital signature creation and management |
+| `/dashboard/envelopes/{id}/sign` | Signature API | Sign envelope with reusable or inline signature |
+| `/dashboard/envelopes/{id}/decline` | Signature API | Decline to sign envelope |
+
+### Frontend Features → Signatures
+
+- **Reusable Signatures** (`/signatures`) → upload + select
+- **Sign Document** (`/envelopes/{id}/sign`) → sign with reusable or inline
+- **Decline to Sign** (`/envelopes/{id}/decline`) → decline signing
 | `/dashboard/notifications` | Notification API | User notifications and alerts |
 | `/dashboard/audit` | Audit API | System audit trails and activity logs |
 | `/dashboard/settings` | User API | User preferences and account settings |

@@ -61,8 +61,7 @@ export const authAPI = {
 
   // Logout user (blacklist token)
   async logout(refreshToken: string): Promise<void> {
-    // Route through Next proxy so cookies/headers are consistent
-    await apiClient.post('/api/proxy/auth/logout/', {
+    await apiClient.post('/auth/logout/', {
       refresh: refreshToken,
     })
   },

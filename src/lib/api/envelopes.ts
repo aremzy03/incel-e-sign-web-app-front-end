@@ -1,4 +1,39 @@
 import apiClient from '@/lib/axios'
+
+export interface EnvelopeDocument {
+  id: number
+  name: string
+  file_url: string
+  page_count?: number
+}
+
+export interface EnvelopeDetail {
+  id: number | string
+  status: string
+  subject?: string
+  message?: string
+  document: EnvelopeDocument
+}
+
+export async function getEnvelopeDetail(envelopeId: string | number): Promise<EnvelopeDetail> {
+  const response = await apiClient.get(`/envelopes/${envelopeId}/`)
+  return (response.data?.data ?? response.data) as EnvelopeDetail
+}
+
+export async function getEnvelopePdfUrl(envelopeId: string | number): Promise<string> {
+  // Prefer explicit download/preview endpoint if available
+  try {
+    const response = await apiClient.get(`/envelopes/${envelopeId}/document/`)
+    const data = response.data?.data ?? response.data
+    if (typeof data === 'string') return data
+    if (data?.file_url) return data.file_url as string
+  } catch {
+    // fallback to envelope detail's document.file_url
+  }
+  const detail = await getEnvelopeDetail(envelopeId)
+  return detail.document.file_url
+}
+
 import { ApiResponse, PaginatedResponse } from '@/types/api'
 
 export interface EnvelopeRecipient {

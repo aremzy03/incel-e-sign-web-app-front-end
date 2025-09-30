@@ -213,6 +213,10 @@ src/app/
 
 ### Frontend Features → Signatures
 
+- **Sign Document Page** → interactive PDF viewer with draggable/resizable signature placement.
+- **Supports both reusable and inline drawn signatures.**
+- **Saves placement coordinates to backend for actual PDF embedding.**
+
 - **Reusable Signatures** (`/signatures`) → upload + select
 - **Sign Document** (`/envelopes/{id}/sign`) → sign with reusable or inline
 - **Decline to Sign** (`/envelopes/{id}/decline`) → decline signing

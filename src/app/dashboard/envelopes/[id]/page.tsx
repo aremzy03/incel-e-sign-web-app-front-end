@@ -146,6 +146,13 @@ export default function EnvelopeDetailPage() {
           </div>
         </div>
         <div className="space-x-2">
+          <Button
+            onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/sign`)}
+            disabled={false}
+            title="Go to signing"
+          >
+            Sign Document
+          </Button>
           {envelope.status === 'draft' && (
             <Button
               onClick={async () => {

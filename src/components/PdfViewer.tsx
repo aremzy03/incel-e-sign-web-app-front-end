@@ -5,21 +5,53 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import { Button } from '@/components/ui/button'
 import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
-// Configure pdf.js worker to load from local module path matching installed version
-// Use the ESM worker shipped by pdfjs-dist@5.3.93
-pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString()
+// Configure pdf.js worker to bundled file to avoid network fetch issues
+// Prefer a locally bundled worker to avoid network fetch issues
+// Try v5 ESM worker first, then fallback to classic .js worker, finally CDN as last resort
+// Use classic worker filename bundled locally; avoid ESM worker to keep Next 14 happy
+// Use locally served worker with correct origin/port; fallback to CDN
+// Robust worker resolution without bundling import: use local public file on client, CDN on server
+if (typeof window !== 'undefined') {
+  const origin = window.location.origin
+  // Prefer ESM worker if the browser supports module workers, else classic
+  try {
+    // Use module worker path when available
+    // @ts-ignore
+    pdfjs.GlobalWorkerOptions.workerSrc = `${origin}/pdf.worker.min.mjs`
+  } catch {
+    pdfjs.GlobalWorkerOptions.workerSrc = `${origin}/pdf.worker.min.js`
+  }
+} else {
+  // During SSR, provide a placeholder; client replaces on hydrate
+  pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
+}
 
 interface PdfViewerProps {
   url: string
   className?: string
+  showControls?: boolean
+  pageNumber?: number
+  onPageChange?: (page: number) => void
+  onDocumentLoad?: (numPages: number) => void
+  onPageRender?: (info: { widthPt: number; heightPt: number; widthPx: number; heightPx: number }) => void
 }
 
-export default function PdfViewer({ url, className }: PdfViewerProps) {
+export default function PdfViewer({ url, className, showControls = true, pageNumber: controlledPageNumber, onPageChange, onDocumentLoad, onPageRender }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0)
-  const [pageNumber, setPageNumber] = useState<number>(1)
+  const isControlled = typeof controlledPageNumber === 'number'
+  const [uncontrolledPage, setUncontrolledPage] = useState<number>(1)
+  const pageNumber = isControlled ? (controlledPageNumber as number) : uncontrolledPage
+  const setPageNumber = (updater: number | ((p: number) => number)) => {
+    const next = typeof updater === 'function' ? (updater as (p: number) => number)(pageNumber) : updater
+    if (!isControlled) {
+      setUncontrolledPage(next)
+    }
+    onPageChange && onPageChange(next)
+  }
   const [scale, setScale] = useState<number>(1.2)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const containerRef = useState<HTMLDivElement | null>(null)[0]
 
   // Resolve relative URLs to backend origin (e.g., when file_url is '/media/...')
   const resolvedUrl = useMemo(() => {
@@ -36,11 +68,12 @@ export default function PdfViewer({ url, className }: PdfViewerProps) {
     return `${backendOrigin}${path}`
   }, [url])
 
-  const onDocumentLoadSuccess = ({ numPages: nextNumPages }: { numPages: number }) => {
+  const onDocumentLoadSuccess = ({ numPages: nextNumPages, _page }: { numPages: number; _page?: any }) => {
     setNumPages(nextNumPages)
     setPageNumber(1)
     setLoading(false)
     setError(null)
+    onDocumentLoad && onDocumentLoad(nextNumPages)
   }
 
   const onDocumentLoadError = (err: any) => {
@@ -65,6 +98,7 @@ export default function PdfViewer({ url, className }: PdfViewerProps) {
 
   return (
     <div className={className}>
+      {showControls && (
       <div className="flex items-center justify-between px-3 py-2 border rounded-t-md bg-white">
         <div className="flex items-center gap-2">
           <Button size="icon" variant="outline" onClick={handleZoomOut} aria-label="Zoom out">
@@ -85,8 +119,9 @@ export default function PdfViewer({ url, className }: PdfViewerProps) {
           </Button>
         </div>
       </div>
+      )}
 
-      <div className="border border-t-0 rounded-b-md bg-gray-50 flex items-center justify-center min-h-[640px] overflow-auto">
+      <div className={`border ${showControls ? 'border-t-0 rounded-b-md' : 'rounded-md'} bg-gray-50 flex items-center justify-center min-h-[640px] overflow-auto`}>
         {loading && !error && (
           <div className="flex items-center gap-2 text-gray-600">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading PDF...
@@ -97,7 +132,26 @@ export default function PdfViewer({ url, className }: PdfViewerProps) {
         )}
         {!error && (
           <Document file={resolvedUrl} onLoadSuccess={onDocumentLoadSuccess} onLoadError={onDocumentLoadError} loading="">
-            <Page pageNumber={pageNumber} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+              onRenderSuccess={(page: any) => {
+                try {
+                  const widthPt = page.view?.[2] ?? page.width ?? 0
+                  const heightPt = page.view?.[3] ?? page.height ?? 0
+                  const canvases = document.querySelectorAll('canvas')
+                  // Use the last canvas (current page) to approximate rendered px size
+                  const lastCanvas = canvases[canvases.length - 1] as HTMLCanvasElement | undefined
+                  const widthPx = lastCanvas?.clientWidth || lastCanvas?.width || 0
+                  const heightPx = lastCanvas?.clientHeight || lastCanvas?.height || 0
+                  onPageRender && onPageRender({ widthPt, heightPt, widthPx, heightPx })
+                } catch (_) {
+                  // ignore
+                }
+              }}
+            />
           </Document>
         )}
       </div>

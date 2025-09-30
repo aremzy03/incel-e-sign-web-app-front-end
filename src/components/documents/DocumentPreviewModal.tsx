@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import PdfViewer from '@/components/PdfViewer'
+import dynamic from 'next/dynamic'
+const PdfViewer = dynamic(() => import('@/components/PdfViewer'), { ssr: false })
 
 import { Document as ApiDocument } from '@/lib/api/documents'
 

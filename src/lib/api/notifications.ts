@@ -16,7 +16,7 @@ export async function listNotifications(): Promise<NotificationsListResponse> {
 }
 
 export async function markNotificationRead(id: number): Promise<void> {
-  await apiClient.post(`/notifications/${id}/read/`)
+  await apiClient.patch(`/notifications/${id}/read/`)
 }
 
 

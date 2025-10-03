@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+// removed manual name/email inputs
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -16,8 +16,10 @@ import {
 } from '@/components/ui/select'
 import { CheckCircle, AlertCircle } from 'lucide-react'
 import { useDocuments } from '@/hooks/useDocuments'
-import { useCreateEnvelope } from '@/hooks/useEnvelopes'
+import { useCreateEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
+import { RecipientSearch } from '@/components/contacts/RecipientSearch'
+import { useContacts } from '@/hooks/useContacts'
 
 interface RecipientInput {
   id: number
@@ -30,35 +32,39 @@ export default function CreateEnvelopePage() {
   const router = useRouter()
   const { data: documents, isLoading: loadingDocs } = useDocuments()
   const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
+  const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
   const { validateRecipients, isValidating } = useEnvelopeUserValidation()
+  const { data: contacts } = useContacts()
 
   const [step, setStep] = useState(1)
   const [selectedDocumentId, setSelectedDocumentId] = useState<string>('')
-  const [recipientName, setRecipientName] = useState('')
-  const [recipientEmail, setRecipientEmail] = useState('')
+  // removed manual name/email state
   const [recipients, setRecipients] = useState<RecipientInput[]>([])
   const [nextId, setNextId] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [selectedContactEmail, setSelectedContactEmail] = useState<string>('')
 
   const sortedRecipients = useMemo(
     () => recipients.slice().sort((a, b) => a.order - b.order),
     [recipients]
   )
 
-  const handleAddRecipient = () => {
-    if (!recipientEmail.trim()) return
+  const pushRecipient = (rec: { email: string; name?: string }) => {
+    // avoid duplicates by email
+    const exists = recipients.some((r) => r.email.toLowerCase() === rec.email.toLowerCase())
+    if (exists) return
     const newRecipient: RecipientInput = {
       id: nextId,
-      name: recipientName.trim(),
-      email: recipientEmail.trim(),
+      name: rec.name?.trim() || '',
+      email: rec.email.trim(),
       order: recipients.length + 1,
     }
     setRecipients((prev) => [...prev, newRecipient])
-    setNextId(nextId + 1)
-    setRecipientName('')
-    setRecipientEmail('')
+    setNextId((id) => id + 1)
   }
+
+  // removed manual add recipient handler
 
   const handleRemoveRecipient = (id: number) => {
     setRecipients((prev) => prev.filter((r) => r.id !== id).map((r, idx) => ({ ...r, order: idx + 1 })))
@@ -82,7 +88,7 @@ export default function CreateEnvelopePage() {
 
   const prevStep = () => setStep(Math.max(1, step - 1))
 
-  const handleCreate = async () => {
+  const buildPayload = async () => {
     try {
       setError(null)
       console.log('[CreateEnvelope] Clicked create, starting validation')
@@ -92,7 +98,7 @@ export default function CreateEnvelopePage() {
       console.log('[CreateEnvelope] Validation result:', { validCount: valid.length, invalid })
       if (invalid.length > 0) {
         setError(`These emails are not registered: ${invalid.join(', ')}`)
-        return
+        return null
       }
 
       // Map order to signer_id using validated users
@@ -101,18 +107,35 @@ export default function CreateEnvelopePage() {
         return { signer_id: found!.user.id, order: r.order }
       })
 
-      const payload = {
+      return {
         document_id: selectedDocumentId,
         signing_order,
       }
-      console.log('[CreateEnvelope] Submitting payload:', payload)
-      const created = await createAsync(payload as any)
-      console.log('[CreateEnvelope] Created envelope:', created)
-      setSuccess('Envelope created successfully!')
-      router.push(`/dashboard/envelopes/${created.id}`)
     } catch (e: any) {
       setError(e?.message || 'Failed to create envelope')
+      return null
     }
+  }
+
+  const handleSaveDraft = async () => {
+    const payload = await buildPayload()
+    if (!payload) return
+    console.log('[CreateEnvelope] Submitting payload (save draft):', payload)
+    const created = await createAsync(payload as any)
+    console.log('[CreateEnvelope] Created envelope (draft):', created)
+    setSuccess('Envelope saved as draft!')
+    router.push(`/dashboard/envelopes/${created.id}`)
+  }
+
+  const handleCreateAndSend = async () => {
+    const payload = await buildPayload()
+    if (!payload) return
+    console.log('[CreateEnvelope] Submitting payload (send):', payload)
+    const created = await createAsync(payload as any)
+    console.log('[CreateEnvelope] Created envelope, now sending:', created)
+    await sendAsync(created.id)
+    setSuccess('Envelope sent successfully!')
+    router.push(`/dashboard/envelopes/${created.id}`)
   }
 
   return (
@@ -169,19 +192,50 @@ export default function CreateEnvelopePage() {
           {step === 2 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Step 2: Add Recipients</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="recipient-name">Recipient Name</Label>
-                  <Input id="recipient-name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} />
+                  <Label>Search or invite recipient by email</Label>
+                  <RecipientSearch
+                    onSelect={(r) => {
+                      pushRecipient({ email: r.email, name: r.name })
+                    }}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="recipient-email">Recipient Email</Label>
-                  <Input id="recipient-email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
+                  <Label>Add from Contacts</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2">
+                      <Select value={selectedContactEmail} onValueChange={setSelectedContactEmail}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={(contacts && contacts.length > 0) ? 'Select a contact' : 'No contacts available'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(contacts || []).map((c) => (
+                            <SelectItem key={c.id} value={c.email}>
+                              {(c.name || c.email) + ' (' + c.email + ')'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          const c = (contacts || []).find((x) => x.email === selectedContactEmail)
+                          if (c) {
+                            pushRecipient({ email: c.email, name: c.name })
+                            setSelectedContactEmail('')
+                          }
+                        }}
+                        disabled={!selectedContactEmail}
+                      >
+                        + Add from Contacts
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>&nbsp;</Label>
-                  <Button onClick={handleAddRecipient} className="w-full">+ Add Recipient</Button>
-                </div>
+                {/* manual name/email inputs removed */}
               </div>
 
               {sortedRecipients.length > 0 && (
@@ -234,9 +288,14 @@ export default function CreateEnvelopePage() {
             {step < 3 ? (
               <Button onClick={nextStep} disabled={(step === 1 && !selectedDocumentId) || (step === 2 && sortedRecipients.length === 0)}>Next</Button>
             ) : (
-              <Button onClick={handleCreate} disabled={creating || isValidating}>
-                {creating || isValidating ? 'Creating...' : 'Create Envelope'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleSaveDraft} disabled={creating || isValidating} variant="secondary">
+                  {creating || isValidating ? 'Saving...' : 'Save Draft'}
+                </Button>
+                <Button onClick={handleCreateAndSend} disabled={creating || sending || isValidating}>
+                  {creating || sending || isValidating ? 'Sending...' : 'Send Now'}
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>

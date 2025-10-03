@@ -76,6 +76,13 @@ export interface CreateEnvelopeRequest {
   }>
 }
 
+export interface EditEnvelopeRequest {
+  signing_order: Array<{
+    signer_id: string
+    order: number
+  }>
+}
+
 export interface CreateEnvelopeResponse {
   id: string
   document: {
@@ -363,6 +370,27 @@ export const sendEnvelope = async (id: string): Promise<ApiResponse<Envelope>> =
     })
     
     
+    throw error
+  }
+}
+
+// Edit an envelope (PATCH)
+export const editEnvelope = async (
+  id: string,
+  data: EditEnvelopeRequest
+): Promise<ApiResponse<Envelope>> => {
+  try {
+    const response = await apiClient.patch(`/envelopes/${id}/edit/`, data)
+    return response.data
+  } catch (error: any) {
+    console.error('Edit envelope error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL,
+    })
     throw error
   }
 }

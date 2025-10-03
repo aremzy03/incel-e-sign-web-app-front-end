@@ -319,6 +319,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
 ## Frontend Features → Envelopes
 
+## Frontend Features → Contacts
+
+- **Contacts Page** (`/contacts`) → manage saved recipients.
+- **Recipient Search** in envelope creation → search by email, add registered users, or invite new users.
+
 - **Create Envelope** (`/envelopes/create`)
 - **Send Envelope** (`/envelopes/{id}/send`)
 - **List Envelopes** (`/envelopes`)

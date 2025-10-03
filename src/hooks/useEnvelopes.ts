@@ -8,8 +8,10 @@ import {
   rejectEnvelope, 
   deleteEnvelope,
   CreateEnvelopeRequest,
+  EditEnvelopeRequest,
   Envelope
 } from '@/lib/api/envelopes'
+import { editEnvelope } from '@/lib/api/envelopes'
 
 // Hook to get envelopes list
 export const useEnvelopes = (page: number = 1, pageSize: number = 10) => {
@@ -95,6 +97,27 @@ export const useSendEnvelope = () => {
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           'Failed to send envelope'
+      toast.error(errorMessage)
+    },
+  })
+}
+
+// Hook to edit an envelope (PATCH)
+export const useEditEnvelope = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    mutationFn: async ({ id, data }: { id: string; data: EditEnvelopeRequest }) => {
+      return await editEnvelope(id, data)
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['envelope', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['envelopes'] })
+      toast.success('Envelope saved successfully!')
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Failed to save envelope'
       toast.error(errorMessage)
     },
   })

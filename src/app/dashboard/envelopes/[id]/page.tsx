@@ -155,6 +155,14 @@ export default function EnvelopeDetailPage() {
           </Button>
           {envelope.status === 'draft' && (
             <Button
+              variant="outline"
+              onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/edit`)}
+            >
+              Edit
+            </Button>
+          )}
+          {envelope.status === 'draft' && (
+            <Button
               onClick={async () => {
                 if (window.confirm('Are you sure you want to send this envelope?')) {
                   await sendAsync(envelope.id)

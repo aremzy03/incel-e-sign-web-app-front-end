@@ -399,11 +399,26 @@ export const editEnvelope = async (
 export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>> => {
   console.log('=== Reject Envelope Function ===')
   console.log('Envelope ID:', id)
+  console.log('Envelope ID type:', typeof id)
   console.log('Reject URL:', `/envelopes/${id}/reject/`)
   
+  // Validate input
+  if (!id || typeof id !== 'string' || id.trim() === '') {
+    throw new Error('Invalid envelope ID provided')
+  }
+  
   try {
-    const response = await apiClient.post(`/envelopes/${id}/reject/`)
-    console.log('Reject envelope response:', response.data)
+    // Log the exact request being made
+    console.log('Making POST request to:', `/envelopes/${id}/reject/`)
+    console.log('Request payload:', {})
+    console.log('Request config:', { timeout: 15000 })
+    
+    const response = await apiClient.post(`/envelopes/${id}/reject/`, {}, {
+      timeout: 15000, // Increase timeout for reject operation
+    })
+    console.log('Reject envelope response status:', response.status)
+    console.log('Reject envelope response headers:', response.headers)
+    console.log('Reject envelope response data:', response.data)
     return response.data
   } catch (error: any) {
     console.error('Reject envelope error details:', {
@@ -412,9 +427,43 @@ export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>>
       data: error.response?.data,
       url: error.config?.url,
       method: error.config?.method,
-      baseURL: error.config?.baseURL
+      baseURL: error.config?.baseURL,
+      requestData: error.config?.data,
+      headers: error.config?.headers
     })
     
+    // Provide specific error messages based on status code
+    if (error.response?.status === 400) {
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          'Invalid request. Please check the envelope ID and try again.'
+      throw new Error(errorMessage)
+    } else if (error.response?.status === 403) {
+      throw new Error('You do not have permission to reject this envelope.')
+    } else if (error.response?.status === 404) {
+      throw new Error('Envelope not found. It may have already been processed.')
+    } else if (error.response?.status === 500) {
+      const serverMessage = error.response?.data?.detail || 
+                           error.response?.data?.message || 
+                           'Server error occurred while rejecting envelope.'
+      
+      // Log additional debugging information for 500 errors
+      console.error('=== 500 SERVER ERROR DETAILS ===')
+      console.error('Full error response:', error.response)
+      console.error('Error response data:', JSON.stringify(error.response?.data, null, 2))
+      console.error('Request URL:', error.config?.url)
+      console.error('Request method:', error.config?.method)
+      console.error('Request headers:', error.config?.headers)
+      console.error('Request data:', error.config?.data)
+      
+      throw new Error(`Server error: ${serverMessage}. Please check the console for more details or contact support.`)
+    } else if (error.code === 'ECONNABORTED') {
+      throw new Error('Request timed out. Please try again.')
+    } else if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail)
+    } else if (error.response?.data?.message) {
+      throw new Error(error.response.data.message)
+    }
     
     throw error
   }

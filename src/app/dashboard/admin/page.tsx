@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Shield, Users, FileText, Mail, Settings, Eye, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { stats, envelopeStatusData, documentsPerMonth } from '@/lib/stats'
+import { useQuery } from '@tanstack/react-query'
+import { listAuditLogs, type AuditLogItem } from '@/lib/api/audit'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
@@ -15,6 +16,83 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch audit logs to compute real metrics
+  const { data: auditData, isLoading: logsLoading, isError } = useQuery({
+    queryKey: ['audit', 'logs', 'admin-metrics'],
+    queryFn: () => listAuditLogs({ page: 1, page_size: 500 }),
+    staleTime: 60_000,
+  })
+
+  const auditLogs: AuditLogItem[] = auditData?.results ?? []
+
+  // Derive metrics from audit logs
+  const derived = (() => {
+    if (!auditLogs.length) {
+      return {
+        totalUsers: 0,
+        totalDocuments: 0,
+        envelopes: { draft: 0, sent: 0, completed: 0, rejected: 0 },
+        envelopeStatusData: [
+          { name: 'Draft', value: 0 },
+          { name: 'Sent', value: 0 },
+          { name: 'Completed', value: 0 },
+          { name: 'Rejected', value: 0 },
+        ],
+        documentsPerMonth: [] as { month: string; documents: number }[],
+      }
+    }
+
+    const uniqueActorIds = new Set<string>()
+    const documentsCreatedTimestamps: string[] = []
+    let sent = 0
+    let rejected = 0
+    let completed = 0
+
+    for (const log of auditLogs) {
+      const actorId = typeof log.actor === 'string' ? log.actor : (log.actor?.id || log.actor?.email || '')
+      if (actorId) uniqueActorIds.add(actorId)
+
+      const action = (log.action || '').toUpperCase()
+      if (action === 'SEND_ENVELOPE') sent += 1
+      if (action === 'REJECT_ENVELOPE') rejected += 1
+      if (action === 'SIGN_DOC' || action === 'COMPLETE_ENVELOPE') completed += 1
+      if (action === 'CREATE_DOC' || (log.target || '').toUpperCase().startsWith('DOC')) {
+        documentsCreatedTimestamps.push(log.created_at)
+      }
+    }
+
+    // Attempt to infer draft as sent - completed - rejected (bounded at 0)
+    const draft = Math.max(sent - completed - rejected, 0)
+
+    // Build monthly documents series
+    const monthKeyToCount = new Map<string, number>()
+    for (const ts of documentsCreatedTimestamps) {
+      const d = new Date(ts)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      monthKeyToCount.set(key, (monthKeyToCount.get(key) || 0) + 1)
+    }
+    const sortedKeys = Array.from(monthKeyToCount.keys()).sort()
+    const monthFormatter = new Intl.DateTimeFormat('en', { month: 'short' })
+    const documentsPerMonth = sortedKeys.map((key) => {
+      const [y, m] = key.split('-').map((v) => parseInt(v, 10))
+      const monthLabel = monthFormatter.format(new Date(y, m - 1, 1))
+      return { month: monthLabel, documents: monthKeyToCount.get(key) || 0 }
+    })
+
+    return {
+      totalUsers: uniqueActorIds.size,
+      totalDocuments: documentsCreatedTimestamps.length,
+      envelopes: { draft, sent, completed, rejected },
+      envelopeStatusData: [
+        { name: 'Draft', value: draft },
+        { name: 'Sent', value: sent },
+        { name: 'Completed', value: completed },
+        { name: 'Rejected', value: rejected },
+      ],
+      documentsPerMonth,
+    }
+  })()
 
   useEffect(() => {
     // Simulate admin check - in real implementation, this would check user role from session
@@ -96,7 +174,7 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <div className="text-2xl font-bold">{logsLoading ? '—' : derived.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
               Registered users
             </p>
@@ -110,7 +188,7 @@ export default function AdminDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalDocuments}</div>
+            <div className="text-2xl font-bold">{logsLoading ? '—' : derived.totalDocuments}</div>
             <p className="text-xs text-muted-foreground">
               Uploaded documents
             </p>
@@ -124,7 +202,7 @@ export default function AdminDashboard() {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.envelopes.draft}</div>
+            <div className="text-2xl font-bold text-blue-600">{logsLoading ? '—' : derived.envelopes.draft}</div>
             <p className="text-xs text-muted-foreground">
               In draft status
             </p>
@@ -138,7 +216,7 @@ export default function AdminDashboard() {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.envelopes.sent}</div>
+            <div className="text-2xl font-bold text-yellow-600">{logsLoading ? '—' : derived.envelopes.sent}</div>
             <p className="text-xs text-muted-foreground">
               Awaiting signatures
             </p>
@@ -156,7 +234,7 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">{stats.envelopes.completed}</div>
+            <div className="text-3xl font-bold text-green-600">{logsLoading ? '—' : derived.envelopes.completed}</div>
             <p className="text-sm text-muted-foreground">Successfully completed</p>
           </CardContent>
         </Card>
@@ -169,7 +247,7 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{stats.envelopes.rejected}</div>
+            <div className="text-3xl font-bold text-red-600">{logsLoading ? '—' : derived.envelopes.rejected}</div>
             <p className="text-sm text-muted-foreground">Rejected or failed</p>
           </CardContent>
         </Card>
@@ -193,7 +271,7 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={envelopeStatusData}
+                    data={derived.envelopeStatusData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -202,7 +280,7 @@ export default function AdminDashboard() {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {envelopeStatusData.map((entry, index) => (
+                    {derived.envelopeStatusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -227,7 +305,7 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={documentsPerMonth}>
+                <BarChart data={derived.documentsPerMonth}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />

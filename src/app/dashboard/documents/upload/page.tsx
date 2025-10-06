@@ -24,8 +24,19 @@ export default function DocumentUploadPage() {
 
   const validateFile = (file: File): string | null => {
     // Check file type
-    if (file.type !== 'application/pdf') {
-      return 'Only PDF files are allowed'
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]
+    const allowedExtensions = ['.pdf', '.doc', '.docx']
+
+    const fileName = file.name.toLowerCase()
+    const hasAllowedExtension = allowedExtensions.some((ext) => fileName.endsWith(ext))
+    const hasAllowedMimeType = allowedMimeTypes.includes(file.type)
+
+    if (!(hasAllowedMimeType || hasAllowedExtension)) {
+      return 'Only PDF or Word (.doc, .docx) files are allowed'
     }
     
     // Check file size (20MB = 20 * 1024 * 1024 bytes)
@@ -150,7 +161,7 @@ export default function DocumentUploadPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Upload a Document</CardTitle>
           <CardDescription>
-            Upload PDF files to your account for digital signing
+            Upload PDF or Word files to your account for digital signing
           </CardDescription>
         </CardHeader>
         
@@ -218,7 +229,7 @@ export default function DocumentUploadPage() {
                 </div>
                 <div>
                   <p className="text-lg font-medium text-gray-900">
-                    {isDragOver ? 'Drop your PDF here' : 'Drag and drop your PDF here'}
+                    {isDragOver ? 'Drop your PDF or Word file here' : 'Drag and drop your PDF or Word file here'}
                   </p>
                   <p className="text-sm text-gray-500">or</p>
                 </div>
@@ -233,7 +244,7 @@ export default function DocumentUploadPage() {
           <Input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,.doc,.docx"
             onChange={handleFileInputChange}
             className="hidden"
           />
@@ -258,7 +269,7 @@ export default function DocumentUploadPage() {
 
           {/* File requirements */}
           <div className="text-center text-sm text-gray-500">
-            <p>Supported: PDF only • Max 20MB</p>
+            <p>Supported: PDF, Word (.doc, .docx) • Max 20MB</p>
           </div>
 
           {/* Upload button */}

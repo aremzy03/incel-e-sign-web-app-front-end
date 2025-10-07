@@ -9,6 +9,7 @@ export interface EnvelopeDocument {
 
 export interface EnvelopeDetail {
   id: number | string
+  name?: string
   status: string
   subject?: string
   message?: string
@@ -48,6 +49,7 @@ export interface EnvelopeRecipient {
 
 export interface Envelope {
   id: string
+  name?: string
   document: {
     id: string
     file_name: string
@@ -252,6 +254,7 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
 
       return {
         id: r.id,
+        name: r.name,
         document,
         creator,
         recipients,
@@ -324,6 +327,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
 
     return {
       id: r.id,
+      name: r.name,
       document,
       creator,
       recipients,

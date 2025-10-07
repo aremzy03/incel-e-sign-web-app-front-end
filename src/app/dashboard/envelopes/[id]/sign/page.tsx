@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
 import SignaturePad from 'react-signature-canvas'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   declineEnvelope,
   listUserSignatures,
@@ -164,6 +165,28 @@ export default function EnvelopeSignPage() {
     setPlacement({ ...placement, width: nextPt.w, height: nextPt.h })
   }
 
+  // PDF Navigation helpers
+  const canPrevPage = currentPage > 1
+  const canNextPage = currentPage < numPages
+  const handlePrevPage = () => {
+    if (canPrevPage) {
+      setCurrentPage(currentPage - 1)
+      // Update placement to new page if signature is placed
+      if (placement) {
+        setPlacement({ ...placement, page: currentPage - 1 })
+      }
+    }
+  }
+  const handleNextPage = () => {
+    if (canNextPage) {
+      setCurrentPage(currentPage + 1)
+      // Update placement to new page if signature is placed
+      if (placement) {
+        setPlacement({ ...placement, page: currentPage + 1 })
+      }
+    }
+  }
+
   const canConfirm = Boolean(placement && ((source === 'reusable' && selectedSignature) || (source === 'draw' && drawnDataUrl)))
 
   const confirmMutation = useMutation({
@@ -240,11 +263,26 @@ export default function EnvelopeSignPage() {
       <Card className="bg-white shadow-sm">
         <CardHeader>
           <CardTitle>Document</CardTitle>
-          <CardDescription>{envelope?.document?.name || 'PDF preview'} · Page {currentPage} of {numPages || '?'}</CardDescription>
+          <CardDescription>{envelope?.name || envelope?.document?.name || 'PDF preview'} · Page {currentPage} of {numPages || '?'}</CardDescription>
         </CardHeader>
         <CardContent>
           {pdfUrl ? (
             <div className="w-full flex flex-col items-center gap-3">
+              {/* PDF Navigation Controls */}
+              {numPages > 1 && (
+                <div className="flex items-center justify-center w-full max-w-3xl px-3 py-2 border rounded-md bg-white">
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={handlePrevPage} disabled={!canPrevPage} aria-label="Previous page">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="text-sm text-gray-700 px-2">Page {currentPage} of {numPages}</div>
+                    <Button size="sm" variant="outline" onClick={handleNextPage} disabled={!canNextPage} aria-label="Next page">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               <div className="relative w-full max-w-3xl border rounded-md bg-gray-50" ref={pageContainerRef} onMouseMove={onDrag} onMouseUp={onDragEnd} onMouseLeave={onDragEnd}>
                 <PdfViewer
                   url={pdfUrl}

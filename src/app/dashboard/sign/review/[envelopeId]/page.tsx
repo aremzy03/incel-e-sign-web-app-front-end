@@ -124,7 +124,7 @@ export default function FinalSignOffPage() {
       id: notifications.length + 1,
       type: 'signature_completed',
       title: 'Signer confirmed signing',
-      message: `You have successfully signed the document "${envelope?.documentName}".`,
+      message: `You have successfully signed the document "${envelope?.name || envelope?.documentName}".`,
       timestamp: new Date().toISOString().split('T')[0],
       isRead: false
     }
@@ -136,7 +136,7 @@ export default function FinalSignOffPage() {
       action: 'SIGN_DOC',
       actor: 'signer2@example.com',
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      details: `Signer2 signed document "${envelope?.documentName}"`,
+      details: `Signer2 signed document "${envelope?.name || envelope?.documentName}"`,
       ipAddress: '192.168.1.102',
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
@@ -157,7 +157,7 @@ export default function FinalSignOffPage() {
       id: notifications.length + 1,
       type: 'envelope_rejected',
       title: 'Signer declined envelope NDA',
-      message: `You have declined to sign the document "${envelope?.documentName}".`,
+      message: `You have declined to sign the document "${envelope?.name || envelope?.documentName}".`,
       timestamp: new Date().toISOString().split('T')[0],
       isRead: false
     }
@@ -169,7 +169,7 @@ export default function FinalSignOffPage() {
       action: 'DECLINE_SIGN',
       actor: 'signer2@example.com',
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      details: `Signer2 declined document "${envelope?.documentName}"`,
+      details: `Signer2 declined document "${envelope?.name || envelope?.documentName}"`,
       ipAddress: '192.168.1.102',
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
@@ -224,7 +224,7 @@ export default function FinalSignOffPage() {
                 <span className="text-red-600 text-sm font-bold">PDF</span>
               </div>
               <div>
-                <p className="font-medium text-gray-900">{envelope.documentName}</p>
+                <p className="font-medium text-gray-900">{envelope.name || envelope.documentName}</p>
                 <p className="text-sm text-gray-600">PDF Document</p>
               </div>
             </div>

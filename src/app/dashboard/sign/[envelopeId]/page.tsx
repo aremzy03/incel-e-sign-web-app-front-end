@@ -45,7 +45,7 @@ export default function SigningSimulationPage({ params }: { params: { envelopeId
     if (selectedSignature) {
       const signature = signatures.find(sig => sig.id === selectedSignature)
       if (signature) {
-        console.log(`Signed with signature ${signature.name} on document ${dummyEnvelope.documentName}`)
+        console.log(`Signed with signature ${signature.name} on document ${dummyEnvelope.name || dummyEnvelope.documentName}`)
         setAppliedSignature(signature)
         setIsSigned(true)
         alert('Document signed successfully! Check console for details.')
@@ -64,7 +64,7 @@ export default function SigningSimulationPage({ params }: { params: { envelopeId
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sign Document</h1>
           <p className="text-gray-600 mt-1">
-            Document: {dummyEnvelope.documentName}
+            Document: {dummyEnvelope.name || dummyEnvelope.documentName}
           </p>
           <p className="text-sm text-gray-500 mt-1">
             Envelope ID: {params.envelopeId}
@@ -92,7 +92,7 @@ export default function SigningSimulationPage({ params }: { params: { envelopeId
             <CardHeader>
               <CardTitle>Document Preview</CardTitle>
               <CardDescription>
-                {dummyEnvelope.documentName} - {dummyEnvelope.pages} pages
+                {dummyEnvelope.name || dummyEnvelope.documentName} - {dummyEnvelope.pages} pages
               </CardDescription>
             </CardHeader>
             <CardContent>

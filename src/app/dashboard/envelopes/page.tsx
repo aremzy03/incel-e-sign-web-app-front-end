@@ -82,7 +82,7 @@ export default function EnvelopesPage() {
               <TableBody>
                 {envelopes.map((env) => (
                   <TableRow key={env.id}>
-                    <TableCell className="font-medium">{env.document?.file_name || '—'}</TableCell>
+                    <TableCell className="font-medium">{env.name || env.document?.file_name || '—'}</TableCell>
                 <TableCell>
                   <CreatorCell creator={env.creator} />
                 </TableCell>

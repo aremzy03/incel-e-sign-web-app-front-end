@@ -115,7 +115,7 @@ export default function EnvelopeDetailPage() {
     )
   }
 
-  const documentName =
+  const documentName = envelope?.name || 
     (documentData && (documentData as any).file_name) ||
     (envelope as any)?.document_file_name ||
     envelope?.document?.file_name ||

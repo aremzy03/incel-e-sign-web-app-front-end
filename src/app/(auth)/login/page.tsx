@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { signIn, getSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-hot-toast';
@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -39,11 +40,27 @@ export default function LoginPage() {
     },
   });
 
-  // Redirect if already authenticated with valid session
+  // Handle logout messages and redirect if already authenticated
   useEffect(() => {
+    const message = searchParams?.get('message');
+    if (message) {
+      switch (message) {
+        case 'session_expired':
+          toast.error('Your session has expired. Please log in again.');
+          setError('Your session has expired. Please log in again.');
+          break;
+        case 'auth_failed':
+          toast.error('Authentication failed. Please log in again.');
+          setError('Authentication failed. Please log in again.');
+          break;
+        default:
+          break;
+      }
+    }
+
     const checkSession = async () => {
       const session = await getSession();
-      if (session?.accessToken) {
+      if (session?.accessToken && !session?.error) {
         // Check if token is valid (not expired)
         try {
           const payload = JSON.parse(atob(session.accessToken.split('.')[1]));
@@ -60,7 +77,7 @@ export default function LoginPage() {
       }
     };
     checkSession();
-  }, [router]);
+  }, [router, searchParams]);
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);

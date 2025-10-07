@@ -1,44 +1,47 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 export function useSessionMonitor() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const hasHandledError = useRef(false)
 
   useEffect(() => {
-    const checkSession = () => {
-      // Don't redirect if we're already on login page or register page
-      if (typeof window !== 'undefined' && 
-          (window.location.pathname.includes('/login') || 
-           window.location.pathname.includes('/register'))) {
-        return
-      }
+    // Only run on client side and when session is loaded
+    if (typeof window === 'undefined' || status === 'loading') return
 
-      // Only check if we're authenticated
-      if (status === 'authenticated' && session?.accessToken) {
-        try {
-          // Parse JWT token to check expiration
-          const payload = JSON.parse(atob(session.accessToken.split('.')[1]))
-          const currentTime = Math.floor(Date.now() / 1000)
-          
-          // Only redirect if token is actually expired (not just about to expire)
-          if (payload.exp < currentTime) {
-            console.log('Session expired, redirecting to login')
-            router.push('/login')
-          }
-        } catch (error) {
-          console.error('Error checking token expiration:', error)
-          // Don't redirect on parsing errors, let the API calls handle it
-        }
-      }
+    // Check if session has a refresh token error
+    if (session?.error === 'RefreshAccessTokenError' && !hasHandledError.current) {
+      console.warn('Token refresh failed - logging out user')
+      hasHandledError.current = true
+      
+      // Clear any local storage data
+      localStorage.removeItem('nextauth.session')
+      sessionStorage.clear()
+      
+      // Sign out and redirect to login
+      signOut({ 
+        redirect: true, 
+        callbackUrl: '/login?message=session_expired' 
+      }).then(() => {
+        // Reset the flag after successful logout
+        hasHandledError.current = false
+      }).catch((error) => {
+        console.error('Error during signOut:', error)
+        // Fallback to manual redirect if signOut fails
+        window.location.href = '/login?message=session_expired'
+        hasHandledError.current = false
+      })
     }
 
-    // Check every 60 seconds (less frequent)
-    const interval = setInterval(checkSession, 60000)
-
-    return () => clearInterval(interval)
+    // Reset the flag if session becomes valid again
+    if (session && !session.error) {
+      hasHandledError.current = false
+    }
   }, [session, status, router])
+
+  return { session, status }
 }

@@ -67,7 +67,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   
   // Get user's display name
-  const userName = session?.user?.full_name || session?.user?.name || 'User';
+  const userName = session?.user?.full_name || 'User';
   
   const { data: documents, isLoading: docsLoading } = useQuery<Document[]>({
     queryKey: ['documents', 'recent'],
@@ -376,7 +376,7 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="font-medium text-navy-900">
-                              {env.document?.file_name || 'Envelope'}
+                              {env.name || env.document?.file_name || 'Envelope'}
                             </p>
                             <p className="text-sm text-gray-500">
                               {new Date(env.created_at).toLocaleDateString()}

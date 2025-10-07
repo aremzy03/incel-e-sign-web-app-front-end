@@ -93,7 +93,7 @@ export default function ContactsPage() {
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <p className="text-xs text-gray-500">We'll auto-fill the name if the email is registered. If not registered, we'll send an invite first.</p>
+              <p className="text-xs text-gray-500">We&apos;ll auto-fill the name if the email is registered. If not registered, we&apos;ll send an invite first.</p>
             </div>
             <div className="space-y-2">
               <Label>&nbsp;</Label>

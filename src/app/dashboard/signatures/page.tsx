@@ -47,7 +47,7 @@ export default function SignaturesPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => deleteUserSignature(id),
+    mutationFn: async (id: number) => deleteUserSignature(id.toString()),
     onSuccess: () => {
       toast.success('Signature deleted')
       queryClient.invalidateQueries({ queryKey: ['signatures', 'user'] })
@@ -98,7 +98,7 @@ export default function SignaturesPage() {
                 <div key={signature.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-gray-900">{signature.name}</h3>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(signature.id)} className="h-8 w-8 p-0" disabled={deleteMutation.isPending}>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(Number(signature.id))} className="h-8 w-8 p-0" disabled={deleteMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

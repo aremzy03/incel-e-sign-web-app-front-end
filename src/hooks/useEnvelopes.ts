@@ -107,7 +107,7 @@ export const useEditEnvelope = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    // eslint-disable-next-line
     mutationFn: async ({ id, data }: { id: string; data: EditEnvelopeRequest }) => {
       return await editEnvelope(id, data)
     },

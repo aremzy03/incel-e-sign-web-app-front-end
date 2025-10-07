@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, getSession } from 'next-auth/react'
@@ -18,15 +19,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Bell } from 'lucide-react'
+import { 
+  Bell,
+  BarChart3, 
+  FileText, 
+  Mail, 
+  Users, 
+  PenTool, 
+  ClipboardList, 
+  Shield, 
+  Settings 
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 import { listNotifications, markNotificationRead, type NotificationItem } from '@/lib/api/notifications'
 
 interface NavigationItem {
   name: string
   href: string
-  icon: string
+  icon: React.ComponentType<{ className?: string }>
 }
+
+const dashboardNav = [
+  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Documents', href: '/dashboard/documents', icon: FileText },
+  { name: 'Envelopes', href: '/dashboard/envelopes', icon: Mail },
+  { name: 'Contacts', href: '/dashboard/contacts', icon: Users },
+  { name: 'Signatures', href: '/dashboard/signatures', icon: PenTool },
+  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+  { name: 'Audit Logs', href: '/dashboard/audit', icon: ClipboardList },
+  { name: 'Admin', href: '/dashboard/admin', icon: Shield },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+]
 
 interface User {
   id: string
@@ -39,14 +62,13 @@ interface User {
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode
-  navigation: NavigationItem[]
   user: User
 }
 
 // Use a simple bell for all notifications (backend does not provide type)
 const NotificationIcon = () => <Bell className="h-4 w-4 text-gray-600" />
 
-export function DashboardClientLayout({ children, navigation, user }: DashboardClientLayoutProps) {
+export function DashboardClientLayout({ children, user }: DashboardClientLayoutProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const queryClient = useQueryClient()
@@ -130,7 +152,7 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
         
         {/* Navigation */}
         <nav className="mt-6 px-3">
-          {navigation.map((item) => (
+          {dashboardNav.map((item) => (
             <Link
               key={item.name}
               href={item.href}
@@ -142,7 +164,7 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               )}
             >
-              <span className="mr-3 text-lg">{item.icon}</span>
+              {React.createElement(item.icon, { className: "mr-3 w-5 h-5" })}
               {item.name}
             </Link>
           ))}
@@ -190,7 +212,7 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
         <header className="hidden md:block bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold text-gray-800">
-              {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
+              {dashboardNav.find(item => item.href === pathname)?.name || 'Dashboard'}
             </h1>
             <div className="flex items-center space-x-4">
               {/* Notification Bell */}
@@ -264,7 +286,7 @@ export function DashboardClientLayout({ children, navigation, user }: DashboardC
         {/* Mobile Header */}
         <header className="md:hidden bg-white shadow-sm border-b px-4 py-3 mt-16">
           <h1 className="text-lg font-semibold text-gray-800">
-            {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
+            {dashboardNav.find(item => item.href === pathname)?.name || 'Dashboard'}
           </h1>
         </header>
 

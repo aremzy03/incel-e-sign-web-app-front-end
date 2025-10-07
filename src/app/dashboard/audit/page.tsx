@@ -27,7 +27,7 @@ export default function AuditPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['audit', { page, pageSize, action, search }],
     queryFn: () => listAuditLogs({ page, page_size: pageSize, action, search }),
-    keepPreviousData: true,
+    placeholderData: (previousData: any) => previousData,
     staleTime: 30_000,
   })
 

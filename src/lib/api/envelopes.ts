@@ -42,7 +42,7 @@ export interface EnvelopeRecipient {
   email: string
   name: string
   order: number
-  status: 'pending' | 'sent' | 'signed' | 'rejected'
+  status: 'pending' | 'signed' | 'rejected'
   signed_at?: string
   rejected_at?: string
 }
@@ -62,7 +62,7 @@ export interface Envelope {
     full_name: string
   }
   recipients: EnvelopeRecipient[]
-  status: 'draft' | 'sent' | 'completed' | 'rejected'
+  status: 'draft' | 'pending' | 'completed' | 'rejected'
   created_at: string
   updated_at: string
   sent_at?: string
@@ -72,9 +72,17 @@ export interface Envelope {
 
 export interface CreateEnvelopeRequest {
   document_id: string
+  name?: string
   signing_order: Array<{
     signer_id: string
     order: number
+    position?: {
+      page: number
+      x: number
+      y: number
+      width: number
+      height: number
+    }
   }>
 }
 
@@ -82,6 +90,13 @@ export interface EditEnvelopeRequest {
   signing_order: Array<{
     signer_id: string
     order: number
+    position?: {
+      page: number
+      x: number
+      y: number
+      width: number
+      height: number
+    }
   }>
 }
 

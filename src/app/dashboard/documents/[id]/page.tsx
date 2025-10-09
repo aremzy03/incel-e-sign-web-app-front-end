@@ -18,7 +18,7 @@ const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'draft':
       return 'bg-gray-100 text-gray-800'
-    case 'sent':
+    case 'pending':
       return 'bg-blue-100 text-blue-800'
     case 'completed':
     case 'signed':

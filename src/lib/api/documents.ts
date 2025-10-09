@@ -5,7 +5,7 @@ export interface Document {
   file_name: string
   file_url: string
   file_size: number
-  status: 'draft' | 'sent' | 'completed' | 'rejected'
+  status: 'draft' | 'pending' | 'completed' | 'rejected'
   created_at: string
   updated_at: string
 }

@@ -79,7 +79,7 @@ export interface SignatureDocument {
   title: string;
   pages: DocumentPage[];
   signers: Signer[];
-  status: 'draft' | 'sent' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'draft' | 'pending' | 'in-progress' | 'completed' | 'cancelled';
   createdAt: Date;
   completedAt?: Date;
 }

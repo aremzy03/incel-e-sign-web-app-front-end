@@ -92,7 +92,7 @@ describe('Documents Integration Tests', () => {
             file_name: 'another-document.pdf',
             file_size: 2048000,
             file_type: 'application/pdf',
-            status: 'sent',
+            status: 'pending',
             owner: { email: 'test@example.com' },
             created_at: '2024-01-02T00:00:00Z',
           },

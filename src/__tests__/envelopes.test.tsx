@@ -166,7 +166,7 @@ const mockEnvelopes = {
           status: 'signed',
         },
       ],
-      status: 'sent',
+      status: 'pending',
       created_at: '2024-01-02T00:00:00Z',
       updated_at: '2024-01-02T00:00:00Z',
       sent_at: '2024-01-02T00:00:00Z',
@@ -234,7 +234,7 @@ describe('Envelopes Module', () => {
       render(<EnvelopesPage />, { wrapper: createTestWrapper() })
 
       expect(screen.getByText('draft')).toBeInTheDocument()
-      expect(screen.getByText('sent')).toBeInTheDocument()
+      expect(screen.getByText('pending')).toBeInTheDocument()
     })
 
     it('shows recipient count', () => {
@@ -608,10 +608,10 @@ describe('Envelopes Module', () => {
       expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to send this envelope?')
     })
 
-    it('shows reject button for sent envelopes', () => {
-      // Mock sent envelope
-      const sentEnvelope = { ...mockEnvelope, status: 'sent' }
-      mockUseEnvelope.mockReturnValue({ data: sentEnvelope, isLoading: false, error: null })
+    it('shows reject button for pending envelopes', () => {
+      // Mock pending envelope
+      const pendingEnvelope = { ...mockEnvelope, status: 'pending' }
+      mockUseEnvelope.mockReturnValue({ data: pendingEnvelope, isLoading: false, error: null })
 
       render(<EnvelopeDetailPage />, { wrapper: createTestWrapper() })
 

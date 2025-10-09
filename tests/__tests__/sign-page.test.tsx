@@ -26,7 +26,7 @@ jest.mock('react-pdf', () => ({
 }))
 
 jest.mock('@/lib/api/envelopes', () => ({
-  getEnvelopeDetail: jest.fn().mockResolvedValue({ id: '123', status: 'sent', document: { id: 1, name: 'Doc', file_url: '/doc.pdf' } }),
+  getEnvelopeDetail: jest.fn().mockResolvedValue({ id: '123', status: 'pending', document: { id: 1, name: 'Doc', file_url: '/doc.pdf' } }),
   getEnvelopePdfUrl: jest.fn().mockResolvedValue('/doc.pdf'),
 }))
 

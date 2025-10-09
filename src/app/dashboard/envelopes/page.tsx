@@ -16,11 +16,12 @@ import {
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEnvelopes, useRejectEnvelope, useDeleteEnvelope } from '@/hooks/useEnvelopes'
+import { useSession } from 'next-auth/react'
 
 const getStatusBadge = (status: string) => {
   const map: Record<string, string> = {
     draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
+    pending: 'bg-blue-100 text-blue-800',
     completed: 'bg-green-100 text-green-800',
     rejected: 'bg-red-100 text-red-800',
   }
@@ -29,6 +30,8 @@ const getStatusBadge = (status: string) => {
 
 export default function EnvelopesPage() {
   const router = useRouter()
+  const { data: session } = useSession()
+  const currentUserId = session?.user?.id
   const { data, isLoading, error } = useEnvelopes()
   const { mutateAsync: rejectAsync, isPending: rejecting } = useRejectEnvelope()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteEnvelope()
@@ -80,7 +83,9 @@ export default function EnvelopesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {envelopes.map((env) => (
+                {envelopes.map((env) => {
+                  const isCreator = env.creator?.id === currentUserId
+                  return (
                   <TableRow key={env.id}>
                     <TableCell className="font-medium">{env.name || env.document?.file_name || '—'}</TableCell>
                 <TableCell>
@@ -96,7 +101,7 @@ export default function EnvelopesPage() {
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button size="sm" variant="outline" title="View envelope" onClick={() => router.push(`/dashboard/envelopes/${env.id}`)}>View</Button>
-                      {env.status === 'sent' && (
+                      {isCreator && env.status === 'pending' && (
                         <Button
                           size="sm"
                           variant="destructive"
@@ -111,6 +116,7 @@ export default function EnvelopesPage() {
                           Reject
                         </Button>
                       )}
+                      {isCreator && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -124,9 +130,11 @@ export default function EnvelopesPage() {
                       >
                         Delete
                       </Button>
+                      )}
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
               </TableBody>
             </Table>
           )}

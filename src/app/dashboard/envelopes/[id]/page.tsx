@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useQuery } from '@tanstack/react-query'
 import { getUserById } from '@/lib/api/users'
 import { getDocument } from '@/lib/api/documents'
+import { useSession } from 'next-auth/react'
 
 function RecipientItem({ r }: { r: any }) {
   const recipientId = r?.id
@@ -43,7 +44,7 @@ function RecipientItem({ r }: { r: any }) {
 const badge = (status: string) => {
   const map: Record<string, string> = {
     draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
+    pending: 'bg-blue-100 text-blue-800',
     completed: 'bg-green-100 text-green-800',
     rejected: 'bg-red-100 text-red-800',
   }
@@ -54,6 +55,7 @@ export default function EnvelopeDetailPage() {
   const params = useParams()
   const router = useRouter()
   const id = (params?.id as string) || ''
+  const { data: session } = useSession()
 
   const { data: envelope, isLoading, error } = useEnvelope(id)
   const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
@@ -125,6 +127,16 @@ export default function EnvelopeDetailPage() {
   const creatorLabel = envelope?.creator?.full_name || envelope?.creator?.email || (envelope as any)?.creator_email || '—'
   const creatorDisplay = creatorUser?.full_name || creatorLabel
 
+  // Check if current user is the creator
+  const currentUserId = session?.user?.id
+  const isCreator = currentUserId && (creatorId === currentUserId)
+  
+  // Check if current user is a recipient
+  const isRecipient = currentUserId && envelope?.recipients?.some((r: any) => {
+    const recipientId = r?.id || r?.user_id || r?.signer_id
+    return recipientId === currentUserId
+  })
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
@@ -146,7 +158,8 @@ export default function EnvelopeDetailPage() {
           </div>
         </div>
         <div className="space-x-2">
-          {(envelope.status === 'draft' || envelope.status === 'sent') && (
+          {/* Sign Document - Only for recipients */}
+          {isRecipient && (envelope.status === 'draft' || envelope.status === 'pending') && (
             <Button
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/sign`)}
               disabled={false}
@@ -155,7 +168,8 @@ export default function EnvelopeDetailPage() {
               Sign Document
             </Button>
           )}
-          {envelope.status === 'draft' && (
+          {/* Edit - Only for creator in draft status */}
+          {isCreator && envelope.status === 'draft' && (
             <Button
               variant="outline"
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/edit`)}
@@ -163,7 +177,8 @@ export default function EnvelopeDetailPage() {
               Edit
             </Button>
           )}
-          {envelope.status === 'draft' && (
+          {/* Send - Only for creator in draft status */}
+          {isCreator && envelope.status === 'draft' && (
             <Button
               onClick={async () => {
                 if (window.confirm('Are you sure you want to send this envelope?')) {
@@ -175,7 +190,8 @@ export default function EnvelopeDetailPage() {
               Send Envelope
             </Button>
           )}
-          {envelope.status === 'sent' && (
+          {/* Reject - Only for creator when sent */}
+          {isCreator && envelope.status === 'pending' && (
             <Button
               variant="destructive"
               onClick={async () => {
@@ -188,18 +204,21 @@ export default function EnvelopeDetailPage() {
               Reject Envelope
             </Button>
           )}
-          <Button
-            variant="ghost"
-            onClick={async () => {
-              if (window.confirm('Are you sure you want to delete this envelope?')) {
-                await deleteAsync(envelope.id)
-                router.push('/dashboard/envelopes')
-              }
-            }}
-            disabled={deleting}
-          >
-            Delete
-          </Button>
+          {/* Delete - Only for creator */}
+          {isCreator && (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to delete this envelope?')) {
+                  await deleteAsync(envelope.id)
+                  router.push('/dashboard/envelopes')
+                }
+              }}
+              disabled={deleting}
+            >
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 

@@ -61,7 +61,7 @@ const mockDocuments = [
     file_name: 'another-document.pdf',
     file_size: 2048000,
     file_type: 'application/pdf',
-    status: 'sent',
+    status: 'pending',
     owner: {
       id: '2',
       email: 'other@example.com',

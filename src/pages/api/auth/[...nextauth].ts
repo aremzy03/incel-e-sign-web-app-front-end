@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
           user: user.user,
-          accessTokenExpires: Date.now() + 15 * 60 * 1000, // 15 minutes
+          accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
         }
       }
 
@@ -125,6 +125,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
   },
   secret: process.env.NEXTAUTH_SECRET,
 }
@@ -142,7 +143,7 @@ async function refreshAccessToken(token: any) {
         ...token,
         accessToken: response.data.access,
         refreshToken: response.data.refresh || token.refreshToken,
-        accessTokenExpires: Date.now() + 15 * 60 * 1000, // 15 minutes
+        accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       }
     }
     

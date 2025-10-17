@@ -8,7 +8,7 @@ import { useEnvelope, useSendEnvelope, useRejectEnvelope, useDeleteEnvelope } fr
 import { Skeleton } from '@/components/ui/skeleton'
 import { useQuery } from '@tanstack/react-query'
 import { getUserById } from '@/lib/api/users'
-import { getDocument } from '@/lib/api/documents'
+import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 import { useSession } from 'next-auth/react'
 
 function RecipientItem({ r }: { r: any }) {
@@ -71,12 +71,12 @@ export default function EnvelopeDetailPage() {
     enabled: Boolean(creatorId) && !creatorHasName,
     staleTime: 5 * 60 * 1000,
   })
-  const documentIdPre = envelope?.document?.id || (envelope as any)?.document
-  const documentHasName = Boolean(envelope?.document?.file_name || (envelope as any)?.document_file_name)
-  const { data: documentData } = useQuery({
-    queryKey: ['document', documentIdPre],
-    queryFn: () => getDocument(documentIdPre as string),
-    enabled: Boolean(documentIdPre) && !documentHasName,
+
+  // Fetch documents for the current envelope
+  const { data: envelopeDocuments, isLoading: isLoadingDocs } = useQuery<EnvelopeDocumentResponse[]>({
+    queryKey: ['envelopeDocuments', id],
+    queryFn: () => getEnvelopeDocuments(id),
+    enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -117,13 +117,7 @@ export default function EnvelopeDetailPage() {
     )
   }
 
-  const documentName = envelope?.name || 
-    (documentData && (documentData as any).file_name) ||
-    (envelope as any)?.document_file_name ||
-    envelope?.document?.file_name ||
-    (documentData && ((documentData as any).name || (documentData as any).filename || (documentData as any).title)) ||
-    'Document'
-  const documentId = envelope?.document?.id || (envelope as any)?.document || documentData?.id
+  const documentName = envelope?.name || 'Document'
   const creatorLabel = envelope?.creator?.full_name || envelope?.creator?.email || (envelope as any)?.creator_email || '—'
   const creatorDisplay = creatorUser?.full_name || creatorLabel
 
@@ -168,8 +162,8 @@ export default function EnvelopeDetailPage() {
               Sign Document
             </Button>
           )}
-          {/* Edit - Only for creator in draft status */}
-          {isCreator && envelope.status === 'draft' && (
+          {/* Edit - Only for creator in draft or rejected status */}
+          {isCreator && (envelope.status === 'draft' || envelope.status === 'rejected') && (
             <Button
               variant="outline"
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/edit`)}
@@ -227,22 +221,27 @@ export default function EnvelopeDetailPage() {
           <CardTitle>Document Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
-                <span className="text-red-600 text-sm font-bold">PDF</span>
-              </div>
-              <div>
-                {documentId ? (
-                  <Link href={`/dashboard/documents/${documentId}`} className="font-medium text-blue-600 hover:underline">
-                    {documentData ? documentName : 'Loading...'}
-                  </Link>
-                ) : (
-                  <p className="font-medium text-gray-900">{documentName}</p>
-                )}
-                <p className="text-sm text-gray-600">Size: {Math.round(((envelope.document?.file_size || documentData?.file_size || 0) as number) / 1024)} KB</p>
-              </div>
-            </div>
+          <div className="space-y-3">
+            {isLoadingDocs ? (
+              <div>Loading documents...</div>
+            ) : envelopeDocuments && envelopeDocuments.length > 0 ? (
+              envelopeDocuments.map((doc: EnvelopeDocumentResponse) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+                      <span className="text-red-600 text-sm font-bold">PDF</span>
+                    </div>
+                    <div>
+                      <Link href={`/dashboard/documents/${doc.id}`} className="font-medium text-blue-600 hover:underline">
+                        {doc.file_name || `Document ${doc.id}`}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : ( 
+              <p className="text-sm text-gray-600">No documents found in this envelope.</p>
+            )}
           </div>
         </CardContent>
       </Card>

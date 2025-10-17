@@ -1,38 +1,11 @@
 import apiClient from '@/lib/axios'
 
-export interface EnvelopeDocument {
-  id: number
-  name: string
-  file_url: string
-  page_count?: number
-}
-
 export interface EnvelopeDetail {
   id: number | string
   name?: string
   status: string
   subject?: string
   message?: string
-  document: EnvelopeDocument
-}
-
-export async function getEnvelopeDetail(envelopeId: string | number): Promise<EnvelopeDetail> {
-  const response = await apiClient.get(`/envelopes/${envelopeId}/`)
-  return (response.data?.data ?? response.data) as EnvelopeDetail
-}
-
-export async function getEnvelopePdfUrl(envelopeId: string | number): Promise<string> {
-  // Prefer explicit download/preview endpoint if available
-  try {
-    const response = await apiClient.get(`/envelopes/${envelopeId}/document/`)
-    const data = response.data?.data ?? response.data
-    if (typeof data === 'string') return data
-    if (data?.file_url) return data.file_url as string
-  } catch {
-    // fallback to envelope detail's document.file_url
-  }
-  const detail = await getEnvelopeDetail(envelopeId)
-  return detail.document.file_url
 }
 
 import { ApiResponse, PaginatedResponse } from '@/types/api'
@@ -50,12 +23,6 @@ export interface EnvelopeRecipient {
 export interface Envelope {
   id: string
   name?: string
-  document: {
-    id: string
-    file_name: string
-    file_url: string
-    file_size: number
-  }
   creator: {
     id: string
     email: string
@@ -70,44 +37,52 @@ export interface Envelope {
   rejected_at?: string
 }
 
-export interface CreateEnvelopeRequest {
+export interface Position {
+  page: number
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface SignerDocumentPosition {
+  signer_id: string
+  position: Position
+}
+
+export interface DocumentWithPositions {
   document_id: string
+  signer_document_positions: SignerDocumentPosition[]
+}
+
+export interface CreateEnvelopeRequest {
+  document_ids: string[]
   name?: string
   signing_order: Array<{
     signer_id: string
     order: number
-    position?: {
-      page: number
-      x: number
-      y: number
-      width: number
-      height: number
-    }
   }>
+  documents_with_positions: DocumentWithPositions[]
 }
 
 export interface EditEnvelopeRequest {
-  signing_order: Array<{
+  name?: string
+  document_ids?: string[]
+  signing_order?: Array<{
     signer_id: string
     order: number
-    position?: {
-      page: number
-      x: number
-      y: number
-      width: number
-      height: number
-    }
   }>
+  documents_with_positions?: DocumentWithPositions[]
 }
 
 export interface CreateEnvelopeResponse {
   id: string
-  document: {
+  documents: Array<{
     id: string
     file_name: string
     file_url: string
     file_size: number
-  }
+  }>
   creator: {
     id: string
     email: string
@@ -131,9 +106,11 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
   console.log('Envelope data:', data)
   console.log('Envelope data type:', typeof data)
   console.log('Envelope data keys:', Object.keys(data))
-  console.log('Document ID:', data.document_id)
+  console.log('Document IDs:', data.document_ids)
   console.log('Signing order:', data.signing_order)
   console.log('Signing order length:', data.signing_order?.length)
+  console.log('Documents with positions:', data.documents_with_positions)
+  console.log('Documents with positions length:', data.documents_with_positions?.length)
   console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api')
   console.log('Full URL:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/envelopes/create/`)
   
@@ -144,8 +121,9 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
     console.log('Method:', 'POST')
     console.log('Data being sent:', JSON.stringify(data, null, 2))
     console.log('Data type check:', {
-      hasDocumentId: !!data.document_id,
-      documentIdType: typeof data.document_id,
+      hasDocumentIds: !!data.document_ids,
+      documentIdsType: typeof data.document_ids,
+      documentIdsLength: data.document_ids?.length,
       hasSigningOrder: !!data.signing_order,
       signingOrderType: typeof data.signing_order,
       signingOrderLength: data.signing_order?.length,
@@ -155,6 +133,13 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
         signer_id_length: item.signer_id?.length,
         order: item.order,
         order_type: typeof item.order
+      })),
+      hasDocumentsWithPositions: !!data.documents_with_positions,
+      documentsWithPositionsType: typeof data.documents_with_positions,
+      documentsWithPositionsLength: data.documents_with_positions?.length,
+      documentsWithPositionsItems: data.documents_with_positions?.map(doc => ({
+        document_id: doc.document_id,
+        signerDocumentPositionsLength: doc.signer_document_positions?.length
       }))
     })
     
@@ -238,15 +223,6 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
 
     // Normalize result items to Envelope shape consumed by UI
     const normalizedResults: Envelope[] = results.map((r: any) => {
-      const document = r.document && typeof r.document === 'object'
-        ? r.document
-        : {
-            id: r.document,
-            file_name: r.document_file_name || r.document?.file_name || 'Document',
-            file_url: r.document_file_url || '',
-            file_size: r.document_file_size || 0,
-          }
-
       const creator = r.creator && typeof r.creator === 'object'
         ? r.creator
         : {
@@ -270,7 +246,6 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
       return {
         id: r.id,
         name: r.name,
-        document,
         creator,
         recipients,
         status: r.status || 'draft',
@@ -310,16 +285,6 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
     const payload = response.data
     const r: any = (payload && (payload.data?.envelope || payload.data)) || payload
 
-    // Normalize to Envelope shape
-    const document = r.document && typeof r.document === 'object'
-      ? r.document
-      : {
-          id: r.document,
-          file_name: r.document_file_name || r.document?.file_name || 'Document',
-          file_url: r.document_file_url || '',
-          file_size: r.document_file_size || 0,
-        }
-
     const creator = r.creator && typeof r.creator === 'object'
       ? r.creator
       : {
@@ -343,7 +308,6 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
     return {
       id: r.id,
       name: r.name,
-      document,
       creator,
       recipients,
       status: r.status || 'draft',
@@ -393,13 +357,74 @@ export const sendEnvelope = async (id: string): Promise<ApiResponse<Envelope>> =
   }
 }
 
+export interface EnvelopeDocumentResponse {
+  id: string; // This is the ID of the document within the envelope context (association ID)
+  document: string; // This is the actual document ID
+  file_name: string;
+  document_file_name: string;
+  document_file_url: string; // This is the actual file URL for PDF viewer
+  file_size: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  signer_document_positions: Array<{
+    signer_id: string;
+    position: Position;
+  }>;
+}
+
+// Get documents associated with an envelope
+export const getEnvelopeDocuments = async (envelopeId: string): Promise<EnvelopeDocumentResponse[]> => {
+  try {
+    const response = await apiClient.get(`/envelopes/${envelopeId}/document/`);
+    const payload = response.data;
+    // Assuming the backend returns an array of documents directly or nested under a 'data' field
+    const documents = (payload && payload.data) || payload;
+    if (!Array.isArray(documents)) {
+      console.warn('getEnvelopeDocuments: unexpected response shape, expected array', documents);
+      return [];
+    }
+    console.log('Fetched documents for envelope:', envelopeId, documents);
+    // Map the documents to ensure correct IDs and file names are used
+    return documents.map(doc => ({
+      ...doc,
+      id: doc.document, // The ID for linking to document details etc.
+      document: doc.document, // The actual document ID from backend
+      file_name: doc.document_file_name || doc.file_name || `Document ${doc.document}`, // Fallback for display
+      document_file_url: doc.document_file_url || doc.file_url, // Use document_file_url for the PDF source
+      signer_document_positions: doc.signer_document_positions || [],
+    })) as EnvelopeDocumentResponse[];
+  } catch (error: any) {
+    console.error('Error fetching documents for envelope:', envelopeId, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL,
+    });
+    throw error;
+  }
+}
+
 // Edit an envelope (PATCH)
 export const editEnvelope = async (
   id: string,
   data: EditEnvelopeRequest
 ): Promise<ApiResponse<Envelope>> => {
+  console.log('=== Edit Envelope Function ===')
+  console.log('Envelope ID:', id)
+  console.log('Edit data:', data)
+  console.log('Edit URL:', `/envelopes/${id}/edit/`)
+  
   try {
+    console.log('=== Sending to Backend for Edit ===')
+    console.log('URL:', `/envelopes/${id}/edit/`)
+    console.log('Method:', 'PATCH')
+    console.log('Data being sent:', JSON.stringify(data, null, 2))
+    
     const response = await apiClient.patch(`/envelopes/${id}/edit/`, data)
+    console.log('Edit envelope response:', response.data)
     return response.data
   } catch (error: any) {
     console.error('Edit envelope error details:', {
@@ -409,6 +434,7 @@ export const editEnvelope = async (
       url: error.config?.url,
       method: error.config?.method,
       baseURL: error.config?.baseURL,
+      requestData: error.config?.data,
     })
     throw error
   }

@@ -69,17 +69,31 @@ export const getDocuments = async (): Promise<DocumentsListResponse> => {
 
 // Get a specific document by ID
 export const getDocument = async (id: string): Promise<Document> => {
-  const response = await apiClient.get(`/documents/${id}/`)
-  const payload = response.data
-  const doc: any = (payload && payload.data) || payload
-  return {
-    id: doc.id,
-    file_name: doc.file_name,
-    file_url: doc.file_url || '',
-    file_size: doc.file_size ?? 0,
-    status: doc.status || 'draft',
-    created_at: doc.created_at || '',
-    updated_at: doc.updated_at || '',
+  try {
+    console.log('Fetching document with ID:', id);
+    const response = await apiClient.get(`/documents/${id}/`);
+    const payload = response.data;
+    const doc: any = (payload && payload.data) || payload;
+    console.log('Document fetched successfully:', doc);
+    return {
+      id: doc.id,
+      file_name: doc.file_name,
+      file_url: doc.file_url || '',
+      file_size: doc.file_size ?? 0,
+      status: doc.status || 'draft',
+      created_at: doc.created_at || '',
+      updated_at: doc.updated_at || '',
+    };
+  } catch (error: any) {
+    console.error('Error fetching document:', id, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL,
+    });
+    throw error;
   }
 }
 

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Bell, Send, PenTool, XCircle, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { listNotifications, markNotificationRead, type NotificationItem } from '@/lib/api/notifications'
+import { listNotifications, markNotificationRead, type NotificationItem, markAllNotificationsRead } from '@/lib/api/notifications'
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -41,11 +41,14 @@ export default function NotificationsPage() {
   const notifications = data ?? []
   const unreadCount = useMemo(() => notifications.filter(n => !n.is_read).length, [notifications])
 
-  const markAllLocal = () => {
-    const current = queryClient.getQueryData<NotificationItem[]>(['notifications']) || []
-    const updated = current.map(n => ({ ...n, is_read: true }))
-    queryClient.setQueryData(['notifications'], updated)
-  }
+  const markAll = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      toast.success('All notifications marked as read')
+    },
+    onError: () => toast.error('Failed to mark all as read'),
+  })
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -59,7 +62,7 @@ export default function NotificationsPage() {
             <Badge variant="destructive" className="text-sm">{unreadCount} unread</Badge>
           )}
           {unreadCount > 0 && (
-            <Button variant="outline" onClick={markAllLocal} disabled={isLoading}>
+            <Button variant="outline" onClick={() => markAll.mutate()} disabled={markAll.isPending}>
               <CheckCircle className="h-4 w-4 mr-2" />
               Mark All as Read
             </Button>

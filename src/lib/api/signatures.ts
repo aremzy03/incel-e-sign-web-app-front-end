@@ -57,11 +57,19 @@ export interface SignaturePlacementPayload {
 export async function signEnvelopeWithReusableSignature(
   envelopeId: string | number,
   signatureId: string,
-  placement?: Omit<SignaturePlacementPayload, 'signature_id' | 'signature_image'>
+  page: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
 ) {
   const response = await apiClient.post(`/signatures/${envelopeId}/sign/`, {
     signature_id: signatureId,
-    ...(placement ? placement : {}),
+    page,
+    x,
+    y,
+    width,
+    height,
   })
   return response.data
 }
@@ -69,17 +77,25 @@ export async function signEnvelopeWithReusableSignature(
 export async function signEnvelopeWithInline(
   envelopeId: string | number,
   dataUrlPng: string,
-  placement?: Omit<SignaturePlacementPayload, 'signature_id' | 'signature_image'>
+  page: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
 ) {
   const response = await apiClient.post(`/signatures/${envelopeId}/sign/`, {
     signature_image: dataUrlPng,
-    ...(placement ? placement : {}),
+    page,
+    x,
+    y,
+    width,
+    height,
   })
   return response.data
 }
 
-export async function declineEnvelope(envelopeId: string | number) {
-  const response = await apiClient.post(`/signatures/${envelopeId}/decline/`)
+export async function declineEnvelope(envelopeId: string | number, declineMessage: string) {
+  const response = await apiClient.post(`/signatures/${envelopeId}/decline/`, { decline_message: declineMessage })
   return response.data
 }
 

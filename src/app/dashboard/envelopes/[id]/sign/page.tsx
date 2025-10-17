@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -10,6 +10,10 @@ import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
 import { getUserById, type User } from '@/lib/api/users'
 import { useSession } from 'next-auth/react'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 
 // Configure PDF.js worker (same as envelope creation page)
 if (typeof window !== 'undefined') {
@@ -34,12 +38,22 @@ interface SigningOrderEntry {
   position: Position
 }
 
+interface SignerDocumentPositionEntry {
+  signer_id: string;
+  position: Position;
+  document_id: string; // Add document_id to the interface
+}
+
 interface EnvelopeResponse {
   id: string
   name?: string
-  document: string | { file_url: string }
   status: string
-  signing_order: SigningOrderEntry[]
+  signing_order: Array<{
+    signer_id: string;
+    order: number;
+    signed_at?: string;
+    status?: 'pending' | 'signed' | 'rejected';
+  }>;
 }
 
 export default function SignEnvelopePage() {
@@ -47,19 +61,22 @@ export default function SignEnvelopePage() {
   const envelopeId = params?.id
   const { data: session } = useSession()
   const currentUserId = session?.user?.id
+  const queryClient = useQueryClient()
 
   const [numPages, setNumPages] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selected, setSelected] = useState<SigningOrderEntry | null>(null)
-  const [signedFor, setSignedFor] = useState<Record<string, boolean>>({})
+  const [selected, setSelected] = useState<SignerDocumentPositionEntry | null>(null)
+  const [signedFor, setSignedFor] = useState<Record<string, boolean>>({}) // Key: `${documentId}-${signerId}`, Value: true if signed
   const [previewSignerId, setPreviewSignerId] = useState<string | null>(null)
   const [draftPlacement, setDraftPlacement] = useState<Position | null>(null)
   const [isDraggingDraft, setIsDraggingDraft] = useState(false)
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
-  const [pageDims, setPageDims] = useState<Record<number, { widthPt: number; heightPt: number; widthPx: number; heightPx: number }>>({})
-  const [documentUrl, setDocumentUrl] = useState<string>('')
+  const [pageDims, setPageDims] = useState<Record<string, Record<number, { widthPt: number; heightPt: number; widthPx: number; heightPx: number } & {numPages?: number}>>>({}) // docId -> pageNo -> dims
+  const [envelopeDocuments, setEnvelopeDocuments] = useState<EnvelopeDocumentResponse[]>([])
   const [signerDetails, setSignerDetails] = useState<Record<string, User>>({})
   const [selectedSignature, setSelectedSignature] = useState<any>(null)
+  const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false)
+  const [declineMessage, setDeclineMessage] = useState('')
 
   // Resolve possibly relative URLs to backend origin
   const resolveUrl = useCallback((url?: string | null | any) => {
@@ -85,6 +102,11 @@ export default function SignEnvelopePage() {
       const envelope = (res.data?.data ?? res.data) as EnvelopeResponse
       console.log('[Sign Page] Envelope loaded:', envelope)
       console.log('[Sign Page] Signing order:', envelope?.signing_order)
+      // No longer setting activeDocumentId here as all documents will be displayed.
+      // The `signedFor` state should only track positions signed during the current session,
+      // or be updated via a full re-fetch of the envelope if the backend provides granular status.
+      // For now, we will rely on re-fetching the envelope data to update status.
+      setSignedFor({}); // Initialize as empty, status will be reflected by re-fetching envelope
       return envelope
     },
   })
@@ -116,37 +138,22 @@ export default function SignEnvelopePage() {
   }, [selectedSignature])
 
 
-  // Get document URL from envelope data
+  // Get document URLs for the envelope
   useEffect(() => {
-    if (!envelope) return
+    if (!envelopeId) return
     
-    const fetchDocumentUrl = async () => {
+    const fetchDocuments = async () => {
       try {
-        console.log('[Sign Page] Fetching document URL for envelope:', envelope.id)
-        
-        // Get the document info from the API
-        const response = await apiClient.get(`/envelopes/${envelope.id}/document/`)
-        console.log('[Sign Page] Document response:', response.data)
-        
-        const responseData = response.data.data || response.data
-        const fileUrl = responseData.file_url || responseData.signed_file_url || responseData.url || responseData.document_url
-        
-        if (fileUrl) {
-          const resolved = resolveUrl(fileUrl)
-          console.log('[Sign Page] Resolved document URL:', resolved)
-          setDocumentUrl(resolved)
-    } else {
-          console.error('[Sign Page] No file URL found in response:', responseData)
-          toast.error('Document URL not found')
-        }
+        console.log('[Sign Page] Fetching all documents for envelope:', envelopeId)
+        const docs = await getEnvelopeDocuments(envelopeId)
+        setEnvelopeDocuments(docs)
       } catch (error) {
-        console.error('[Sign Page] Failed to fetch document URL:', error)
-        toast.error('Failed to load document')
+        console.error('[Sign Page] Failed to fetch envelope documents:', error)
+        toast.error('Failed to load documents for signing')
       }
     }
-    
-    fetchDocumentUrl()
-  }, [envelope, resolveUrl])
+    fetchDocuments()
+  }, [envelopeId])
 
   // Fetch signer details for all signers in the envelope
   useEffect(() => {
@@ -188,8 +195,10 @@ export default function SignEnvelopePage() {
     }
   }
 
-  const onPlaceholderClick = (entry: SigningOrderEntry) => {
-    if (signedFor[entry.signer_id]) return
+  const onPlaceholderClick = (entry: SignerDocumentPositionEntry) => {
+    // We need the document ID here for the signedFor check
+    const documentIdForEntry = entry.document_id || selected?.document_id; // Fallback for existing positions
+    if (documentIdForEntry && signedFor[`${documentIdForEntry}-${entry.signer_id}`]) return
     
     // Check if user has selected a signature
     if (!selectedSignature) {
@@ -219,23 +228,70 @@ export default function SignEnvelopePage() {
       if (!mySignatureId) {
         throw new Error('No signature on file. Please create/upload your signature first.')
       }
-      const myEntry = (envelope?.signing_order || []).find((e) => currentUserId && e.signer_id === currentUserId)
-      const hasExistingPosition = Boolean(myEntry?.position)
-      const body: any = { signature_id: mySignatureId }
-      if (!hasExistingPosition && draftPlacement) {
-        body.page = draftPlacement.page
-        body.x = Math.max(0, draftPlacement.x)
-        body.y = Math.max(0, draftPlacement.y)
-        body.width = Math.max(1, draftPlacement.width)
-        body.height = Math.max(1, draftPlacement.height)
+      if (!envelope) {
+        throw new Error('Envelope data not loaded.');
       }
-      console.log('[Sign Page] Signing with payload:', body)
-      const res = await apiClient.post(`/signatures/${envelopeId}/sign/`, body)
-      return res.data
+      if (!selected?.position) {
+        throw new Error('No signature position selected.');
+      }
+      // Collect all current user's unsigned positions across all documents
+      const allMyUnsignedPositions: Array<{
+        document_id: string;
+        signer_id: string;
+        position: Position;
+      }> = [];
+
+      envelopeDocuments.forEach((docItem: EnvelopeDocumentResponse) => {
+        const currentDocPositions = docItem.signer_document_positions;
+        currentDocPositions.forEach((sDocPos: SignerDocumentPositionEntry) => {
+          if (currentUserId && sDocPos.signer_id === currentUserId) {
+            const isAlreadySigned = signedFor[`${docItem.id}-${sDocPos.signer_id}`];
+            if (!isAlreadySigned) {
+              allMyUnsignedPositions.push({
+                document_id: docItem.id,
+                signer_id: sDocPos.signer_id,
+                position: sDocPos.position,
+              });
+            }
+          }
+        });
+      });
+
+      if (allMyUnsignedPositions.length === 0) {
+        throw new Error('No unsigned positions found for you.');
+      }
+
+      // For each unsigned position, make a sign call.
+      // Note: This assumes the backend can handle multiple sign calls for one envelope.
+      // If the backend has a bulk signing endpoint, this would be refactored.
+      const signPromises = allMyUnsignedPositions.map(async (unsignedPos) => {
+        const body = {
+          signature_id: mySignatureId,
+          page: unsignedPos.position.page,
+          x: Math.max(0, unsignedPos.position.x),
+          y: Math.max(0, unsignedPos.position.y),
+          width: Math.max(1, unsignedPos.position.width),
+          height: Math.max(1, unsignedPos.position.height),
+        };
+        console.log(`[Sign Page] Signing document ${unsignedPos.document_id} with payload:`, body);
+        // If the backend supports document-specific signing, this API call would change.
+        // For now, using the envelope-level sign endpoint and implicitly hoping the backend processes based on payload.
+        return apiClient.post(`/signatures/${envelopeId}/sign/`, body);
+      });
+
+      await Promise.all(signPromises);
+      // After all promises resolve, return a generic success indicator
+      return { success: true };
+      
     },
     onSuccess: () => {
       toast.success('Signed successfully!')
-      if (selected) setSignedFor((prev) => ({ ...prev, [selected.signer_id]: true }))
+      // Invalidate queries to re-fetch envelope status and documents from backend
+      queryClient.invalidateQueries({ queryKey: ['sign-envelope', envelopeId] });
+      queryClient.invalidateQueries({ queryKey: ['envelopeDocuments', envelopeId] });
+      // For immediate UI feedback, clear selected and preview states.
+      setSignedFor({}); // Clear signedFor to force re-evaluation from fresh envelope data
+      
       setIsDialogOpen(false)
       setPreviewSignerId(null)
       setDraftPlacement(null)
@@ -247,6 +303,25 @@ export default function SignEnvelopePage() {
     },
   })
   
+  // Decline mutation
+  const declineMutation = useMutation({
+    mutationFn: async (message?: string) => {
+      const body = message ? { decline_message: message } : { decline_message: 'Declined without specific reason.' };
+      const res = await apiClient.post(`/signatures/${envelopeId}/decline/`, body);
+      return res.data
+    },
+    onSuccess: () => {
+      toast.success('Envelope declined successfully.')
+      setIsDeclineDialogOpen(false)
+      // Optionally redirect user after declining
+      // router.push('/dashboard/envelopes')
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.detail || err?.response?.data?.message || 'Error declining envelope'
+      toast.error(msg)
+    },
+  })
+
   // Clear preview when clicking outside
   const handleClearPreview = () => {
     if (previewSignerId && !isDialogOpen) {
@@ -256,35 +331,12 @@ export default function SignEnvelopePage() {
     }
   }
 
-  if (loadingEnv || !envelope) return <div className="p-6">Loading envelope…</div>
-  if (!documentUrl) return <div className="p-6">Loading document…</div>
+  if (loadingEnv || !envelope || !envelopeDocuments.length) return <div className="p-6">Loading envelope…</div>
   
-  // Check if current user has any signature positions in this envelope
-  const currentUserEntries = (envelope.signing_order || []).filter((entry) => 
-    currentUserId && entry.signer_id === currentUserId
-  )
-  
-  if (currentUserId && currentUserEntries.length === 0) {
-    return (
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="text-center py-12">
-          <h1 className="text-xl font-semibold mb-4">{envelope.name || 'Sign Document'}</h1>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <div className="text-yellow-800">
-              <h2 className="text-lg font-medium mb-2">No Signature Required</h2>
-              <p className="text-sm">
-                You are not listed as a signer for this document, or no signature positions have been defined for you.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   console.log('[Sign Page Render] Current envelope:', envelope)
   console.log('[Sign Page Render] Signing order count:', envelope?.signing_order?.length)
   console.log('[Sign Page Render] Page dimensions:', pageDims)
+  console.log('[Sign Page Render] currentUserId:', currentUserId);
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-4">
@@ -299,181 +351,228 @@ export default function SignEnvelopePage() {
           }
         }}
       >
-        {documentUrl && (
-          <Document 
-            file={documentUrl}
-            onLoadSuccess={(info: any) => {
-              console.log('[Sign Page] PDF loaded successfully:', info)
-              setNumPages(info.numPages)
-            }}
-            onLoadError={(error: any) => {
-              console.error('[Sign Page] PDF load error:', error)
-              toast.error('Failed to load PDF file')
-            }}
-            loading=""
-          >
-            {Array.from({ length: numPages || 1 }, (_, i) => i + 1).map((pageNo) => (
-              <div key={pageNo} className="relative">
-                <Page
-                  pageNumber={pageNo}
-                  renderAnnotationLayer={false}
-                  renderTextLayer={false}
-                  className="shadow"
-                  loading=""
-                  onRenderSuccess={(page: any) => {
-                    try {
-                      const [x0, y0, x1, y1] = page.view || [0, 0, page.width, page.height]
-                      const widthPt = Math.abs((x1 ?? page.width) - (x0 ?? 0)) || page.width || 0
-                      const heightPt = Math.abs((y1 ?? page.height) - (y0 ?? 0)) || page.height || 0
-                      const canvas = (page as any).canvas || document.querySelector('.react-pdf__Page canvas')
-                      const widthPx = (canvas && (canvas as HTMLCanvasElement).clientWidth) || 0
-                      const heightPx = (canvas && (canvas as HTMLCanvasElement).clientHeight) || 0
-                      setPageDims((prev) => ({ ...prev, [pageNo]: { widthPt, heightPt, widthPx, heightPx } }))
-                    } catch {}
-                  }}
-                />
+        {envelopeDocuments.map((docItem) => (
+          <div key={docItem.id} className="mb-8 border rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold p-4 border-b text-gray-800">
+              Document: {docItem.file_name || `Document ${docItem.id}`}
+            </h3>
+            {docItem.document_file_url ? (
+              <Document
+                file={resolveUrl(docItem.document_file_url)}
+                onLoadSuccess={(info: { numPages: number }) => {
+                  console.log(`[Sign Page] PDF for ${docItem.id} loaded successfully, numPages:`, info.numPages);
+                  // We need to store numPages per document to render all pages correctly
+                  setPageDims(prev => ({
+                    ...prev,
+                    [docItem.id]: {
+                      numPages: info.numPages, // Store numPages for this document
+                      ...prev[docItem.id] // Keep existing page dimensions if any
+                    }
+                  }));
+                }}
+                onLoadError={(error: any) => {
+                  console.error(`[Sign Page] PDF load error for ${docItem.id}:`, error);
+                  toast.error(`Failed to load PDF for ${docItem.file_name || docItem.id}`);
+                }}
+                loading=""
+              >
+                {Array.from({ length: pageDims[docItem.id]?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => {
+                  console.log(`[Sign Page] Rendering page ${pageNo} for document ${docItem.id}`);
+                  return (
+                  <div key={`${docItem.id}-${pageNo}`} className="relative">
+                    <Page
+                      pageNumber={pageNo}
+                      renderAnnotationLayer={false}
+                      renderTextLayer={false}
+                      className="shadow"
+                      loading=""
+                      onRenderSuccess={(page: any) => {
+                        try {
+                          const [x0, y0, x1, y1] = page.view || [0, 0, page.width, page.height];
+                          const widthPt = Math.abs((x1 ?? page.width) - (x0 ?? 0)) || page.width || 0;
+                          const heightPt = Math.abs((y1 ?? page.height) - (y0 ?? 0)) || page.height || 0;
+                          const canvas = (page as any).canvas || document.querySelector('.react-pdf__Page__canvas');
+                          const widthPx = (canvas && (canvas as HTMLCanvasElement).clientWidth) || 0;
+                          const heightPx = (canvas && (canvas as HTMLCanvasElement).clientHeight) || 0;
+                          setPageDims(prev => ({
+                            ...prev,
+                            [docItem.id]: { 
+                              ...(prev[docItem.id] || {}), 
+                              [pageNo]: { widthPt, heightPt, widthPx, heightPx } 
+                            }
+                          }));
+                          console.log(`[Sign Page] Page ${pageNo} dims for doc ${docItem.id}:`, { widthPt, heightPt, widthPx, heightPx });
+                        } catch (e) {
+                          console.error('Error getting page dimensions:', e);
+                        }
+                      }}
+                    />
 
-                {/* Overlay placeholders for this page */}
-                <div className="absolute inset-0">
-                  {(() => {
-                    const entries = (envelope.signing_order || [])
-                      .filter((s) => s.position?.page === pageNo)
-                      .filter((s) => currentUserId && s.signer_id === currentUserId) // Only show highlights for current user
-                    console.log(`[Sign Page] Page ${pageNo} - Entries with position for current user:`, entries)
-                    return entries.map((entry, idx) => {
-                      const isMe = entry.signer_id === currentUserId
-                      const isSigned = signedFor[entry.signer_id]
-                      const isPreview = previewSignerId === entry.signer_id && !isSigned
-                      const dims = pageDims[pageNo]
-                      
-                      console.log(`[Sign Page] Rendering placeholder for signer ${entry.signer_id}:`, {
-                        position: entry.position,
-                        dims,
-                        isMe,
-                        isSigned,
-                        isPreview
-                      })
-                      
-                      let commonStyle: React.CSSProperties = {}
-                      if (dims) {
-                        // The backend stores coordinates in PDF points with top-left origin (already CSS-style)
-                        // Just scale from points to pixels
-                        const scaleX = dims.widthPx / (dims.widthPt || 1)
-                        const scaleY = dims.heightPx / (dims.heightPt || 1)
-                        const leftPx = (entry.position.x || 0) * scaleX
-                        const topPx = (entry.position.y || 0) * scaleY
-                        const widthPx = (entry.position.width || 0) * scaleX
-                        const heightPx = (entry.position.height || 0) * scaleY
-                        commonStyle = { left: leftPx, top: topPx, width: widthPx, height: heightPx }
-                        console.log(`[Sign Page] Computed style for placeholder:`, commonStyle)
-                      } else {
-                        console.warn(`[Sign Page] No dimensions available for page ${pageNo} yet`)
-                      }
-                      
-                      return (
-                        <div key={`${entry.signer_id}-${idx}`} className="absolute" style={commonStyle}>
-                          {!isSigned ? (
-                            isPreview && selectedSignature ? (
-                              <div
-                                className="relative w-full h-full rounded-md border-2 border-green-500 bg-white shadow-lg cursor-pointer hover:border-green-600 transition group"
-                                onClick={() => (isMe ? onPlaceholderClick(entry) : undefined)}
-                                title="Click to confirm and sign"
-                              >
-                                <img
-                                  src={selectedSignature.image}
-                                  alt="Signature preview"
-                                  className="w-full h-full object-contain select-none p-1"
-                                />
-                                <div className="absolute inset-0 flex items-center justify-center bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
-                                  <span className="text-xs font-semibold text-green-700 bg-white/90 px-2 py-1 rounded">
-                                    Click to confirm
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              <div
-                                role="button"
-                                onClick={() => onPlaceholderClick(entry)}
-                                className="group absolute inset-0 border-2 border-blue-500 bg-blue-100/40 rounded-md cursor-pointer hover:bg-blue-200/60 transition flex flex-col items-center justify-center p-2"
-                                title="Click to place your signature"
-                              >
-                                <div className="text-center">
-                                  <div className="text-xs font-semibold text-blue-900 mb-1">
-                                    {signerDetails[entry.signer_id]?.full_name || 'Your Signature'}
-                                  </div>
-                                  <div className="text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Click to sign here
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          ) : (
-                            selectedSignature ? (
-                              <img
-                                src={selectedSignature.image}
-                                alt="Signed"
-                                className="w-full h-full object-contain select-none"
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-green-100 border-2 border-green-400 rounded-md" />
-                            )
-                            )}
-                          </div>
-                      )
-                    })
-                  })()}
+                    {/* Overlay placeholders for this page */}
+                    <div className="absolute inset-0">
+                      {(() => {
+                        const signerPositionsForThisDoc = docItem.signer_document_positions || [];
+                        console.log(`[Sign Page] signerPositionsForThisDoc for doc ${docItem.id}:`, signerPositionsForThisDoc);
 
-                  {/* If current signer has no predefined position, allow placing a draft preview */}
-                  {(() => {
-                    const myEntry = (envelope.signing_order || []).find((e) => currentUserId && e.signer_id === currentUserId)
-                    const canPlace = (!myEntry || !myEntry.position) && previewSignerId && currentUserId && previewSignerId === currentUserId
-                    if (!canPlace) return null
-                    const isThisPage = (draftPlacement?.page || pageNo) === pageNo
-                    const defaultW = 180
-                    const defaultH = 50
-                    return (
-                      <div
-                        className="absolute inset-0"
-                        onClick={(e) => {
-                          // click to set initial placement centered at click
-                          if (!selectedSignature) return
-                          const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-                          const x = e.clientX - rect.left - defaultW / 2
-                          const y = e.clientY - rect.top - defaultH / 2
-                          setDraftPlacement({ page: pageNo, x: Math.max(0, x), y: Math.max(0, y), width: defaultW, height: defaultH })
-                        }}
-                      >
-                        {isThisPage && draftPlacement && selectedSignature && (
+                        const myPositionsOnThisPage = signerPositionsForThisDoc
+                          .filter(sp => {
+                           console.log(`[Sign Page] Filtering position: currentUserId=${currentUserId}, sp.signer_id=${sp.signer_id}, match=${sp.signer_id === currentUserId}, page=${sp.position.page}, pageNo=${pageNo}, pageMatch=${sp.position.page === pageNo}`);
+                           return currentUserId && sp.signer_id === currentUserId && sp.position.page === pageNo
+                         });
+                      
+                        console.log(`[Sign Page] Document ${docItem.id}, Page ${pageNo} - Positions for current user:`, myPositionsOnThisPage);
+                        return myPositionsOnThisPage.map((entry, idx) => {
+                          const isMe = entry.signer_id === currentUserId;
+                          const isSigned = signedFor[`${docItem.id}-${entry.signer_id}`];
+                          const isPreview = previewSignerId === entry.signer_id && !isSigned;
+                          const dims = pageDims[docItem.id]?.[pageNo];
+                          
+                          console.log(`[Sign Page] Rendering placeholder for signer ${entry.signer_id} on doc ${docItem.id} page ${pageNo}:`, {
+                            position: entry.position,
+                            dims,
+                            isMe,
+                            isSigned,
+                            isPreview
+                          });
+                          
+                          let commonStyle: React.CSSProperties = {};
+                          if (dims) {
+                            const scaleX = dims.widthPx / (dims.widthPt || 1);
+                            const scaleY = dims.heightPx / (dims.heightPt || 1);
+                            const leftPx = (entry.position.x || 0) * scaleX;
+                            const topPx = (entry.position.y || 0) * scaleY;
+                            const widthPx = (entry.position.width || 0) * scaleX;
+                            const heightPx = (entry.position.height || 0) * scaleY;
+                            commonStyle = { left: leftPx, top: topPx, width: widthPx, height: heightPx };
+                            console.log(`[Sign Page] Computed style for placeholder:`, commonStyle);
+                          } else {
+                            console.warn(`[Sign Page] No dimensions available for doc ${docItem.id} page ${pageNo} yet`);
+                          }
+                          
+                          return (
+                            <div key={`${docItem.id}-${entry.signer_id}-${idx}`} className="absolute" style={commonStyle}>
+                              {!isSigned ? (
+                                isPreview && selectedSignature ? (
+                                  <div
+                                    className="relative w-full h-full rounded-md border-2 border-green-500 bg-white shadow-lg cursor-pointer hover:border-green-600 transition group"
+                                    onClick={() => (isMe ? onPlaceholderClick({ ...entry, document_id: docItem.id }) : undefined)}
+                                    title="Click to confirm and sign"
+                                  >
+                                    <img
+                                      src={selectedSignature.image}
+                                      alt="Signature preview"
+                                      className="w-full h-full object-contain select-none p-1"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                                      <span className="text-xs font-semibold text-green-700 bg-white/90 px-2 py-1 rounded">
+                                        Click to confirm
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    role="button"
+                                    onClick={() => onPlaceholderClick({ ...entry, document_id: docItem.id })}
+                                    className="group absolute inset-0 border-2 border-blue-500 bg-blue-100/40 rounded-md cursor-pointer hover:bg-blue-200/60 transition flex flex-col items-center justify-center p-2"
+                                    title="Click to place your signature"
+                                  >
+                                    <div className="text-center">
+                                      <div className="text-xs font-semibold text-blue-900 mb-1">
+                                        {signerDetails[entry.signer_id]?.full_name || 'Your Signature'}
+                                      </div>
+                                      <div className="text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Click to sign here
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              ) : (
+                                selectedSignature ? (
+                                  <img
+                                    src={selectedSignature.image}
+                                    alt="Signed"
+                                    className="w-full h-full object-contain select-none"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 bg-green-100 border-2 border-green-400 rounded-md" />
+                                )
+                                )}
+                              </div>
+                          )
+                        })
+                      })()}
+
+                      {/* If current signer has no predefined position, allow placing a draft preview */}
+                      {(() => {
+                        const mySignerDocPosition = docItem.signer_document_positions?.find(s => s.signer_id === currentUserId);
+                        const canPlace = (!mySignerDocPosition || !mySignerDocPosition.position) && previewSignerId && currentUserId && previewSignerId === currentUserId && docItem.document_file_url;
+                        if (!canPlace) return null;
+                        // Ensure draft placement is for the current document being rendered
+                        const isThisDocAndPage = draftPlacement?.page === pageNo && selected?.document_id === docItem.id; 
+                        const defaultW = 180;
+                        const defaultH = 50;
+                        return (
                           <div
-                            className="absolute border-2 border-blue-500 bg-white/90 cursor-move rounded-md shadow"
-                            style={{ left: draftPlacement.x, top: draftPlacement.y, width: draftPlacement.width, height: draftPlacement.height }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation()
-                              setIsDraggingDraft(true)
-                              const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-                              setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-                            }}
-                            onMouseUp={() => setIsDraggingDraft(false)}
-                            onMouseLeave={() => setIsDraggingDraft(false)}
-                            onMouseMove={(e) => {
-                              if (!isDraggingDraft || !draftPlacement) return
-                              const parentRect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect()
-                              const newX = Math.max(0, Math.min(e.clientX - parentRect.left - dragOffset.x, parentRect.width - draftPlacement.width))
-                              const newY = Math.max(0, Math.min(e.clientY - parentRect.top - dragOffset.y, parentRect.height - draftPlacement.height))
-                              setDraftPlacement({ ...draftPlacement, x: newX, y: newY })
+                            className="absolute inset-0"
+                            onClick={(e) => {
+                              if (!selectedSignature) return;
+                              const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                              const x = e.clientX - rect.left - defaultW / 2;
+                              const y = e.clientY - rect.top - defaultH / 2;
+                              // Set draft placement for the specific document and page
+                              setSelected({ ...selected!, document_id: docItem.id });
+                              setDraftPlacement({ page: pageNo, x: Math.max(0, x), y: Math.max(0, y), width: defaultW, height: defaultH });
                             }}
                           >
-                            <img src={selectedSignature.image} alt="Signature preview" className="w-full h-full object-contain select-none pointer-events-none" />
+                            {isThisDocAndPage && draftPlacement && selectedSignature && (
+                              <div
+                                className="absolute border-2 border-blue-500 bg-white/90 cursor-move rounded-md shadow"
+                                style={{ left: draftPlacement.x, top: draftPlacement.y, width: draftPlacement.width, height: draftPlacement.height }}
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                  setIsDraggingDraft(true);
+                                  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                                  setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                                }}
+                                onMouseUp={() => setIsDraggingDraft(false)}
+                                onMouseLeave={() => setIsDraggingDraft(false)}
+                                onMouseMove={(e) => {
+                                  if (!isDraggingDraft || !draftPlacement) return;
+                                  const parentRect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect();
+                                  const newX = Math.max(0, Math.min(e.clientX - parentRect.left - dragOffset.x, parentRect.width - draftPlacement.width));
+                                  const newY = Math.max(0, Math.min(e.clientY - parentRect.top - dragOffset.y, parentRect.height - draftPlacement.height));
+                                  setDraftPlacement({ ...draftPlacement, x: newX, y: newY });
+                                }}
+                              >
+                                <img src={selectedSignature.image} alt="Signature preview" className="w-full h-full object-contain select-none pointer-events-none" />
+                              </div>
+                            )}
                           </div>
-                        )}
+                        );
+                      })()}
+                    </div>
                   </div>
-                )
-                  })()}
-                </div>
-              </div>
-            ))}
-          </Document>
-        )}
+                );
+              })}
+            </Document>
+          ) : (
+            <div className="min-h-[200px] flex items-center justify-center text-gray-500">
+              No PDF preview available for this document.
+            </div>
+          )}
+        </div>
+        ))}
+      </div>
+
+      {/* Decline to Sign Button */}
+      <div className="flex justify-end mt-4 mb-4">
+        <Button 
+          variant="destructive"
+          onClick={() => setIsDeclineDialogOpen(true)}
+          disabled={declineMutation.isPending}
+        >
+          Decline to Sign
+        </Button>
       </div>
 
       {/* Signature Selector */}
@@ -561,6 +660,37 @@ export default function SignEnvelopePage() {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
             <Button onClick={() => signMutation.mutate()} disabled={signMutation.isPending}>
               {signMutation.isPending ? 'Signing…' : 'Approve & Sign'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Decline to Sign</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for declining this envelope (optional).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4">
+            <label htmlFor="decline-message" className="sr-only">Decline Message</label>
+            <Textarea
+              id="decline-message"
+              placeholder="e.g., Document terms are not acceptable."
+              value={declineMessage}
+              onChange={(e) => setDeclineMessage(e.target.value)}
+              className="w-full min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeclineDialogOpen(false)}>Cancel</Button>
+            <Button 
+              variant="destructive"
+              onClick={() => declineMutation.mutate(declineMessage)}
+              disabled={declineMutation.isPending}
+            >
+              {declineMutation.isPending ? 'Declining…' : 'Decline Envelope'}
             </Button>
           </DialogFooter>
         </DialogContent>

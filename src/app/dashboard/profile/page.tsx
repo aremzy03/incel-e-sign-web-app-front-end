@@ -4,13 +4,16 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Label } from '@/components/ui/label'
+import { useProfile } from '@/hooks/useProfile'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ProfilePage() {
+  const { data: profile, isLoading } = useProfile()
   const [formData, setFormData] = useState({
-    full_name: 'John Doe',
-    email: 'john.doe@example.com',
+    full_name: profile?.full_name || 'John Doe',
+    email: profile?.email || 'john.doe@example.com',
     password: ''
   })
 
@@ -29,8 +32,27 @@ export default function ProfilePage() {
   }
 
   const getUserInitials = () => {
-    const names = formData.full_name.split(' ')
+    const name = profile?.full_name || formData.full_name
+    const names = name.split(' ')
     return names.map(name => name.charAt(0)).join('').toUpperCase()
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <Skeleton className="h-24 w-24 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -39,13 +61,16 @@ export default function ProfilePage() {
         <CardHeader className="text-center">
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
+              {profile?.profile_photo_url && (
+                <AvatarImage src={profile.profile_photo_url} alt={profile.full_name} />
+              )}
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
                 {getUserInitials()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-2xl">{formData.full_name}</CardTitle>
-              <CardDescription className="text-lg">{formData.email}</CardDescription>
+              <CardTitle className="text-2xl">{profile?.full_name || formData.full_name}</CardTitle>
+              <CardDescription className="text-lg">{profile?.email || formData.email}</CardDescription>
             </div>
           </div>
         </CardHeader>

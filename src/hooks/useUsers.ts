@@ -2,6 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { 
   searchUsersByEmail, 
+  searchUsers,
   getUserById, 
   validateUserExists, 
   validateUsersExist,
@@ -16,6 +17,17 @@ export const useSearchUsersByEmail = (email: string, enabled: boolean = true) =>
     enabled: enabled && !!email && email.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+  })
+}
+
+// Hook to search users by name or email
+export const useUserSearch = () => {
+  return useMutation({
+    mutationFn: (query: string) => searchUsers(query),
+    onError: (error: any) => {
+      console.error('User search error:', error)
+      toast.error('Failed to search users. Please try again.')
+    },
   })
 }
 

@@ -9,8 +9,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { useProfile } from '@/hooks/useProfile'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,12 +73,17 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const queryClient = useQueryClient()
+  const { data: profile } = useProfile()
   const { data: notificationsData } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: listNotifications,
     staleTime: 30_000,
   })
   const notifications = notificationsData ?? []
+  
+  // Use profile data if available, otherwise fall back to user prop
+  const displayUser = profile || user
+  const profilePhotoUrl = profile?.profile_photo_url
   const markOne = useMutation({
     mutationFn: async (id: number) => markNotificationRead(id),
     onSuccess: () => {
@@ -105,16 +111,16 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
   }
 
   const getUserInitials = () => {
-    if (!user?.full_name) return 'U'
-    const names = user.full_name.split(' ')
+    if (!displayUser?.full_name) return 'U'
+    const names = displayUser.full_name.split(' ')
     if (names.length >= 2) {
       return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase()
     }
-    return user.full_name.charAt(0).toUpperCase()
+    return displayUser.full_name.charAt(0).toUpperCase()
   }
 
   const getFullName = () => {
-    return user?.full_name || 'User'
+    return displayUser?.full_name || 'User'
   }
 
   const unreadCount = notifications.filter(n => !n.is_read).length
@@ -172,8 +178,9 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
 
         {/* User Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
-          <div className="flex items-center space-x-3 mb-3">
+          <Link href={`/dashboard/users/${displayUser.id}`} className="flex items-center space-x-3 mb-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
             <Avatar className="h-8 w-8">
+              {profilePhotoUrl && <AvatarImage src={profilePhotoUrl} alt={getFullName()} />}
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {getUserInitials()}
               </AvatarFallback>
@@ -183,10 +190,10 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
                 {getFullName()}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {user.email}
+                {displayUser.email}
               </p>
             </div>
-          </div>
+          </Link>
           <Button
             onClick={handleLogout}
             variant="outline"
@@ -270,15 +277,18 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{getFullName()}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
-              </div>
-              <Avatar>
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {getUserInitials()}
-                </AvatarFallback>
-              </Avatar>
+              <Link href={`/dashboard/users/${displayUser.id}`} className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{getFullName()}</p>
+                  <p className="text-xs text-gray-500">{displayUser.email}</p>
+                </div>
+                <Avatar>
+                  {profilePhotoUrl && <AvatarImage src={profilePhotoUrl} alt={getFullName()} />}
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
             </div>
           </div>
         </header>

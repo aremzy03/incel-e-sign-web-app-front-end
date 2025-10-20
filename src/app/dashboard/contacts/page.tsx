@@ -2,58 +2,25 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAddContact, useContacts, useDeleteContact, useSearchContact, useInviteContact } from '@/hooks/useContacts'
+import { useAddContact, useContacts, useDeleteContact, useSearchContact } from '@/hooks/useContacts'
 import { Button as UIButton } from '@/components/ui/button'
+import { RecipientSearch } from '@/components/contacts/RecipientSearch'
 
 export default function ContactsPage() {
   const { data: contacts, isLoading } = useContacts()
   const { mutateAsync: addAsync, isPending } = useAddContact()
   const { mutateAsync: searchAsync } = useSearchContact()
-  const { mutateAsync: inviteAsync, isPending: inviting } = useInviteContact()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteContact()
 
-  const [email, setEmail] = useState('')
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
+  const [resolvedUserIds, setResolvedUserIds] = useState<Record<string, string>>({})
   const requested = useRef<Set<string>>(new Set())
   
-
-  const onAdd = async () => {
-    if (!email.trim()) return
-    
-    const emailTrimmed = email.trim()
-    let derivedName: string | undefined = undefined
-    let userExists = false
-    
-    try {
-      // First, search to see if user exists
-      const res = await searchAsync(emailTrimmed)
-      if (res?.found && res?.user?.full_name) {
-        derivedName = res.user.full_name
-        userExists = true
-      }
-    } catch {
-      // ignore search errors, proceed as if user doesn't exist
-    }
-    
-    try {
-      // If user doesn't exist, send invite first
-      if (!userExists) {
-        console.log('User does not exist, sending invite first...')
-        await inviteAsync({ email: emailTrimmed })
-      }
-      
-      // Then add to contacts (whether user exists or not)
-      await addAsync({ email: emailTrimmed, name: derivedName })
-      setEmail('')
-    } catch (error) {
-      console.error('Error in add contact flow:', error)
-      // Error handling is done by the mutation hooks (toast messages)
-    }
-  }
+  // Real-time search will handle adding contacts directly on select
 
   useEffect(() => {
     if (!contacts || contacts.length === 0) return
@@ -66,11 +33,16 @@ export default function ContactsPage() {
         requested.current.add(key)
         try {
           const res = await searchAsync(key)
-          if (res?.found && res && (res as any).user && (res as any).user.full_name) {
-            const fullName = (res as any).user.full_name as string
-            setResolvedNames((prev) => ({ ...prev, [key]: fullName }))
+          if (res?.found && res && (res as any).user) {
+            const user = (res as any).user
+            if (user.full_name) {
+              setResolvedNames((prev) => ({ ...prev, [key]: user.full_name }))
+            }
+            if (user.id) {
+              setResolvedUserIds((prev) => ({ ...prev, [key]: user.id }))
+            }
           }
-        } catch {
+        } catch (error) {
           // ignore failures
         }
       }
@@ -89,18 +61,20 @@ export default function ContactsPage() {
           <CardTitle>Add Contact</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <p className="text-xs text-gray-500">We&apos;ll auto-fill the name if the email is registered. If not registered, we&apos;ll send an invite first.</p>
-            </div>
-            <div className="space-y-2">
-              <Label>&nbsp;</Label>
-              <Button className="w-full" onClick={onAdd} disabled={isPending || inviting}>
-                {inviting ? 'Sending Invite...' : isPending ? 'Adding Contact...' : 'Add Contact'}
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label>Search users by name or email</Label>
+            <RecipientSearch
+              onSelect={async (r) => {
+                try {
+                  await addAsync({ email: r.email, name: r.name })
+                } catch {
+                  // handled by hook toasts
+                }
+              }}
+            />
+            {isPending && (
+              <p className="text-xs text-gray-500">Adding contact...</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -124,23 +98,51 @@ export default function ContactsPage() {
                     <span className="sr-only">Actions</span>
                   </span>
               </div>
-              {contacts.map((c) => (
-                <div key={c.id} className="grid grid-cols-3 px-4 py-3 text-sm items-center">
-                  <span>{resolvedNames[c.email.toLowerCase()] || c.name || '-'}</span>
-                  <span>{c.email}</span>
-                  <span className="capitalize flex items-center justify-between">
-                    {c.status}
-                    <UIButton
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteAsync(c.id)}
-                      disabled={deleting}
-                    >
-                      Delete
-                    </UIButton>
-                  </span>
-                </div>
-              ))}
+              {contacts.map((c) => {
+                const userId = c.user_id || resolvedUserIds[c.email.toLowerCase()]
+                const contactName = resolvedNames[c.email.toLowerCase()] || c.name || '-'
+                const isClickable = userId && c.status === 'registered'
+                
+                return (
+                  <div key={c.id} className={"grid grid-cols-3 px-4 py-3 text-sm items-center"}>
+                    <div>
+                      {isClickable ? (
+                        <Link 
+                          href={`/dashboard/users/${userId}`}
+                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                        >
+                          {contactName}
+                        </Link>
+                      ) : (
+                        <span>{contactName}</span>
+                      )}
+                    </div>
+                    <div>
+                      {isClickable ? (
+                        <Link 
+                          href={`/dashboard/users/${userId}`}
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {c.email}
+                        </Link>
+                      ) : (
+                        <span>{c.email}</span>
+                      )}
+                    </div>
+                    <span className="capitalize flex items-center justify-between">
+                      {c.status}
+                      <UIButton
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteAsync(c.id)}
+                        disabled={deleting}
+                      >
+                        Delete
+                      </UIButton>
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </CardContent>

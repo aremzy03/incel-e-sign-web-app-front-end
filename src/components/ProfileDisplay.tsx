@@ -62,7 +62,9 @@ export function ProfileDisplay({
     <div className={`flex items-center space-x-3 ${className}`}>
       {showAvatar && (
         <Avatar className="h-8 w-8">
-          <AvatarImage src="" alt={profile.full_name} />
+          {profile.profile_photo_url && (
+            <AvatarImage src={profile.profile_photo_url} alt={profile.full_name} />
+          )}
           <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
         </Avatar>
       )}

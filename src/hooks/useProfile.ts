@@ -1,17 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
-import { authAPI, type ProfileResponse } from '@/lib/api/auth'
+import { getProfileDetail, type ProfileDetailResponse } from '@/lib/api/profile'
 
 export function useProfile() {
   const { data: session } = useSession()
 
-  return useQuery<ProfileResponse>({
+  return useQuery<ProfileDetailResponse['data']['user']>({
     queryKey: ['profile'],
     queryFn: async () => {
       if (!session?.accessToken) {
         throw new Error('No access token available')
       }
-      return authAPI.getProfile(session.accessToken)
+      const response = await getProfileDetail() // No user_id = get own profile
+      return response.data.user
     },
     enabled: !!session?.accessToken,
     staleTime: 5 * 60 * 1000, // 5 minutes

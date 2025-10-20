@@ -8,6 +8,8 @@ export interface User {
   is_active: boolean
   created_at: string
   updated_at: string
+  profile_photo?: string | null
+  profile_photo_url?: string | null
 }
 
 export interface UserSearchResponse {
@@ -101,6 +103,8 @@ export const getUserById = async (userId: string): Promise<User> => {
       is_active: Boolean(u.is_active ?? true),
       created_at: u.created_at || '',
       updated_at: u.updated_at || '',
+      profile_photo: u.profile_photo ?? null,
+      profile_photo_url: u.profile_photo_url ?? null,
     }
   } catch (error: any) {
     console.error('Get user error:', {
@@ -125,6 +129,55 @@ export const validateUserExists = async (email: string): Promise<{ exists: boole
     console.error('Error validating user existence:', error)
     
     return { exists: false }
+  }
+}
+
+// Search users by name or email
+export const searchUsers = async (query: string): Promise<User[]> => {
+  console.log('=== Search Users ===')
+  console.log('Searching for query:', query)
+  
+  try {
+    const response = await apiClient.get<any>('/auth/users/', {
+      params: {
+        search: query,
+        page_size: 10
+      }
+    })
+    
+    console.log('User search raw response:', response.data)
+    
+    // Normalize response data (reuse logic from searchUsersByEmail)
+    const data = response.data
+    let users: User[] = []
+    if (Array.isArray(data)) {
+      users = data as User[]
+    } else if (data && Array.isArray((data as any).results)) {
+      users = (data as any).results as User[]
+    } else if (data && Array.isArray((data as any).data)) {
+      users = (data as any).data as User[]
+    } else if (data && (data as any).data && Array.isArray((data as any).data.results)) {
+      users = (data as any).data.results as User[]
+    } else if (data && Array.isArray((data as any).users)) {
+      users = (data as any).users as User[]
+    } else if (data && typeof (data as any).results === 'object' && (data as any).results) {
+      users = Object.values((data as any).results as Record<string, User>)
+    } else {
+      console.warn('Unexpected user search response shape; returning empty list')
+      users = []
+    }
+    
+    console.log('Found users:', users)
+    return users
+  } catch (error: any) {
+    console.error('User search failed:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    })
+    
+    return []
   }
 }
 

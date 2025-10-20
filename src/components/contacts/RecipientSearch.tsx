@@ -2,88 +2,81 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { useInviteContact, useSearchContact } from '@/hooks/useContacts'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { useUserSearch } from '@/hooks/useUsers'
+import { User } from '@/lib/api/users'
 
 type Props = {
-  onSelect: (recipient: { id?: string; email: string; name?: string; status: 'registered' | 'invited' }) => void
+  onSelect: (recipient: { id?: string; email: string; name?: string; status: 'registered' }) => void
 }
 
 export function RecipientSearch({ onSelect }: Props) {
   const [query, setQuery] = useState('')
-  const [pendingInviteEmail, setPendingInviteEmail] = useState<string | null>(null)
-  const { mutate: search, data: result } = useSearchContact()
-  const { mutateAsync: inviteAsync } = useInviteContact()
+  const [searchResults, setSearchResults] = useState<User[]>([])
+  const { mutate: search, isPending: isSearching } = useUserSearch()
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      const email = query.trim()
-      if (email && email.includes('@')) {
-        search(email)
+      const trimmedQuery = query.trim()
+      if (trimmedQuery.length >= 2) {
+        search(trimmedQuery, {
+          onSuccess: (users: User[]) => {
+            setSearchResults(users)
+          },
+          onError: () => {
+            setSearchResults([])
+          }
+        })
+      } else {
+        setSearchResults([])
       }
     }, 300)
     return () => clearTimeout(handler)
   }, [query, search])
 
   const items = useMemo(() => {
-    const email = query.trim()
-    if (!email) return []
-    if (result?.found && result?.user) {
-      return [
-        {
-          key: 'registered',
-          label: `Registered: ${result?.user?.full_name || ''} (${result?.user?.email})`,
-          action: () => onSelect({ id: result?.user?.id, email: result?.user?.email as string, name: result?.user?.full_name, status: 'registered' }),
-        },
-      ]
-    }
-    return [
-      {
-        key: 'invite',
-        label: `Invite ${email} to join`,
-        action: () => setPendingInviteEmail(email),
+    if (!query.trim() || query.trim().length < 2) return []
+    
+    return searchResults.map((user) => ({
+      key: user.id,
+      label: `${user.full_name} (${user.email})`,
+      action: () => {
+        onSelect({ 
+          id: user.id, 
+          email: user.email, 
+          name: user.full_name, 
+          status: 'registered' 
+        })
+        setQuery('')
+        setSearchResults([])
       },
-    ]
-  }, [query, result, onSelect])
-
-  const confirmInvite = async () => {
-    if (!pendingInviteEmail) return
-    await inviteAsync({ email: pendingInviteEmail })
-    onSelect({ email: pendingInviteEmail, status: 'invited' })
-    setPendingInviteEmail(null)
-    setQuery('')
-  }
+    }))
+  }, [query, searchResults, onSelect])
 
   return (
-    <>
-      <Command className="rounded-md border">
-        <CommandInput placeholder="Type an email..." value={query} onValueChange={setQuery} />
-        <CommandList>
-          <CommandEmpty>Type an email to search or invite</CommandEmpty>
-          <CommandGroup heading="Results">
+    <Command className="rounded-md border">
+      <CommandInput 
+        placeholder="Search users by name or email..." 
+        value={query} 
+        onValueChange={setQuery} 
+      />
+      <CommandList>
+        {query.trim().length < 2 ? (
+          <CommandEmpty>Type at least 2 characters to search</CommandEmpty>
+        ) : isSearching ? (
+          <CommandEmpty>Searching...</CommandEmpty>
+        ) : items.length === 0 ? (
+          <CommandEmpty>No users found</CommandEmpty>
+        ) : (
+          <CommandGroup heading="Users">
             {items.map((it) => (
               <CommandItem key={it.key} onSelect={it.action}>
                 {it.label}
               </CommandItem>
             ))}
           </CommandGroup>
-        </CommandList>
-      </Command>
-
-      <AlertDialog open={!!pendingInviteEmail} onOpenChange={(o) => !o && setPendingInviteEmail(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Do you want to invite {pendingInviteEmail}?
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmInvite}>Invite</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+        )}
+      </CommandList>
+    </Command>
   )
 }
 

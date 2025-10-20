@@ -31,6 +31,8 @@ export interface ProfileResponse {
   is_active: boolean
   created_at: string
   updated_at: string
+  profile_photo?: string | null
+  profile_photo_url?: string | null
 }
 
 export interface RefreshTokenRequest {

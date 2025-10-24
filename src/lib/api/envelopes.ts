@@ -20,6 +20,19 @@ export interface EnvelopeRecipient {
   rejected_at?: string
 }
 
+export interface EnvelopeSignature {
+  id: string
+  signer: string
+  signer_email: string
+  signer_name: string
+  status: 'pending' | 'signed' | 'rejected'
+  signing_order: number
+  signed_at?: string
+  signature_image?: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Envelope {
   id: string
   name?: string
@@ -29,6 +42,7 @@ export interface Envelope {
     full_name: string
   }
   recipients: EnvelopeRecipient[]
+  signatures?: EnvelopeSignature[]
   status: 'draft' | 'pending' | 'completed' | 'rejected'
   created_at: string
   updated_at: string
@@ -310,6 +324,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
       name: r.name,
       creator,
       recipients,
+      signatures: r.signatures || [],
       status: r.status || 'draft',
       created_at: r.created_at || '',
       updated_at: r.updated_at || '',

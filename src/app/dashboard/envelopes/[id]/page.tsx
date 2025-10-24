@@ -11,7 +11,7 @@ import { getUserById } from '@/lib/api/users'
 import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 import { useSession } from 'next-auth/react'
 
-function RecipientItem({ r }: { r: any }) {
+function RecipientItem({ r, envelopeSignatures }: { r: any; envelopeSignatures: any[] }) {
   const recipientId = r?.id
   const hasDisplay = r?.name || r?.email
   const { data: user } = useQuery({
@@ -20,7 +20,14 @@ function RecipientItem({ r }: { r: any }) {
     enabled: !!recipientId && !hasDisplay,
     staleTime: 5 * 60 * 1000,
   })
+
   const display = r?.name || r?.email || user?.full_name || user?.email || 'Recipient'
+  
+  // Find the signature for this recipient by matching signer ID
+  const recipientSignature = envelopeSignatures?.find(sig => sig.signer === recipientId)
+  
+  // Get status from signatures if available, otherwise fall back to r.status
+  const recipientStatus = recipientSignature?.status || r.status
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -34,8 +41,8 @@ function RecipientItem({ r }: { r: any }) {
           <span className="text-sm text-gray-900">{display}</span>
         )}
       </div>
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badge(r.status)}`}>
-        {r.status}
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badge(recipientStatus)}`}>
+        {recipientStatus}
       </span>
     </div>
   )
@@ -257,7 +264,7 @@ export default function EnvelopeDetailPage() {
               .slice()
               .sort((a, b) => a.order - b.order)
               .map((r) => (
-                <RecipientItem key={r.id ?? `${r.order}`} r={r} />
+                <RecipientItem key={r.id ?? `${r.order}`} r={r} envelopeSignatures={envelope.signatures || []} />
               ))}
           </div>
         </CardContent>

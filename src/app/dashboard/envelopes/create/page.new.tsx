@@ -1,13 +1,12 @@
 'use client'
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react'
-import { DndContext, DragOverlay } from '@dnd-kit/core'
+import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle, AlertCircle, Save, Send, Keyboard } from 'lucide-react'
+import { CheckCircle, AlertCircle, Save, Send } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import { EnvelopeCreationSidebar } from '@/components/envelope/EnvelopeCreationSidebar'
@@ -35,8 +34,6 @@ export default function CreateEnvelopePage() {
   const [envelopeName, setEnvelopeName] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
-  const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
 
   // Add recipient with color assignment
   const addRecipient = useCallback((recipient: { email: string; name?: string }) => {
@@ -89,9 +86,7 @@ export default function CreateEnvelopePage() {
       const targetIndex = direction === 'up' ? index - 1 : index + 1
       if (targetIndex < 0 || targetIndex >= newOrder.length) return prev
       
-      const temp = newOrder[index]
-      newOrder[index] = newOrder[targetIndex]
-      newOrder[targetIndex] = temp
+      [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]]
       return newOrder.map((r, idx) => ({ ...r, order: idx + 1 }))
     })
   }, [])
@@ -149,70 +144,13 @@ export default function CreateEnvelopePage() {
     toast.success(`${fieldType} field added`)
   }, [nextFieldId])
 
-  // DnD handlers (page-level)
-  const handleDragStart = useCallback((event: any) => {
-    const data = event.active?.data?.current
-    if (data?.type === 'field-palette-item') {
-      setActiveDragFieldType(data.fieldType as string)
-    }
-  }, [])
-
-  const handleDragCancel = useCallback(() => {
-    setActiveDragFieldType(null)
-  }, [])
-
-  const handleDragEnd = useCallback((event: any) => {
-    const activeData = event.active?.data?.current
-    const over = event.over
-    const overData = over?.data?.current
-
-    setActiveDragFieldType(null)
-
-    if (activeData?.type === 'field-palette-item' && overData?.type === 'page') {
-      const fieldType = activeData.fieldType as string
-      const { documentId, pageNumber } = overData
-
-      // Compute drop coordinates using the dragged element's translated rect at drop time
-      // This avoids using the initial activator event (which causes right-edge clamping)
-      const overRect = over.rect
-      const activeRect = event.active?.rect?.current
-      const translated = activeRect?.translated || activeRect?.initial
-      const pointerX = translated ? translated.left + (translated.width || 0) / 2 : overRect.left + overRect.width / 2
-      const pointerY = translated ? translated.top + (translated.height || 0) / 2 : overRect.top + overRect.height / 2
-
-      // Field dimensions (must match FieldBox defaults)
-      const fieldWidth = 200
-      const fieldHeight = 50
-
-      // Place field so its center is under the cursor
-      let x = pointerX - overRect.left - fieldWidth / 2
-      let y = pointerY - overRect.top - fieldHeight / 2
-
-      // Constrain coordinates to stay within the visible PDF bounds
-      x = Math.max(0, Math.min(x, overRect.width - fieldWidth))
-      y = Math.max(0, Math.min(y, overRect.height - fieldHeight))
-
-      console.log('Drop coordinates:', { x, y, overRect, fieldType, documentId, pageNumber })
-      
-      handleFieldDrop(fieldType, documentId, pageNumber, x, y)
-    }
-  }, [handleFieldDrop])
-
   // Handle field position change
   const handleFieldPositionChange = useCallback((fieldId: string, position: Partial<FieldPosition>) => {
     setFieldPositions((prev) => {
       const newPositions = { ...prev }
       Object.keys(newPositions).forEach(docId => {
         if (newPositions[docId][fieldId]) {
-          // Preserve existing x/y if the update does not include them
-          const current = newPositions[docId][fieldId]
-          newPositions[docId][fieldId] = {
-            ...current,
-            ...position,
-            x: position.x !== undefined ? position.x : current.x,
-            y: position.y !== undefined ? position.y : current.y,
-            page: position.page !== undefined ? position.page : current.page,
-          }
+          newPositions[docId][fieldId] = { ...newPositions[docId][fieldId], ...position }
         }
       })
       return newPositions
@@ -373,47 +311,6 @@ export default function CreateEnvelopePage() {
     }
   }, [validationErrors, buildPayload, createAsync, sendAsync, router])
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Delete key - remove active field
-      if (event.key === 'Delete' && activeFieldId) {
-        handleFieldDelete(activeFieldId)
-        return
-      }
-      
-      // Escape key - clear selection
-      if (event.key === 'Escape') {
-        setActiveFieldId(null)
-        return
-      }
-      
-      // Ctrl/Cmd + S - save draft
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault()
-        handleSaveDraft()
-        return
-      }
-      
-      // Ctrl/Cmd + Enter - send envelope
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault()
-        handleSend()
-        return
-      }
-      
-      // ? key - show keyboard shortcuts
-      if (event.key === '?' && !event.ctrlKey && !event.metaKey) {
-        event.preventDefault()
-        setShowKeyboardShortcuts(true)
-        return
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeFieldId, handleFieldDelete, handleSaveDraft, handleSend])
-
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Header */}
@@ -445,7 +342,6 @@ export default function CreateEnvelopePage() {
               >
                 <Save className="h-4 w-4" />
                 {creating ? 'Saving...' : 'Save Draft'}
-                <span className="text-xs text-gray-500 ml-1">(Ctrl+S)</span>
               </Button>
               
               <Button
@@ -455,17 +351,6 @@ export default function CreateEnvelopePage() {
               >
                 <Send className="h-4 w-4" />
                 {sending ? 'Sending...' : 'Send Now'}
-                <span className="text-xs text-gray-500 ml-1">(Ctrl+Enter)</span>
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowKeyboardShortcuts(true)}
-                className="flex items-center gap-1"
-              >
-                <Keyboard className="h-4 w-4" />
-                <span className="text-xs">?</span>
               </Button>
             </div>
           </div>
@@ -502,22 +387,7 @@ export default function CreateEnvelopePage() {
       )}
 
       {/* Main Content */}
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-      <div className="flex-1 flex overflow-hidden relative z-10">
-        {/* Main Canvas */}
-        <div className="flex-1 flex flex-col">
-          <VerticalPDFViewer
-            documents={uploadedDocuments}
-            fieldPositions={fieldPositions}
-            recipients={recipients}
-            activeFieldId={activeFieldId}
-            onFieldSelect={setActiveFieldId}
-            onFieldPositionChange={handleFieldPositionChange}
-            onFieldDelete={handleFieldDelete}
-            onFieldDrop={handleFieldDrop}
-          />
-        </div>
-
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <EnvelopeCreationSidebar
           uploadedDocuments={uploadedDocuments}
@@ -531,66 +401,21 @@ export default function CreateEnvelopePage() {
           onRecipientReorder={reorderRecipient}
           onFieldDrop={handleFieldDrop}
         />
-      </div>
-      <DragOverlay dropAnimation={null}>
-        {activeDragFieldType && (
-          <div className="pointer-events-none rounded-md border bg-white px-3 py-2 text-xs shadow-lg z-[9999]">
-            {activeDragFieldType}
-          </div>
-        )}
-      </DragOverlay>
-      </DndContext>
 
-      {/* Keyboard Shortcuts Modal */}
-      {showKeyboardShortcuts && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Keyboard Shortcuts</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowKeyboardShortcuts(false)}
-              >
-                ✕
-              </Button>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Delete selected field</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Delete</kbd>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Clear selection</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Escape</kbd>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Save draft</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Ctrl+S</kbd>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Send envelope</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Ctrl+Enter</kbd>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Show shortcuts</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">?</kbd>
-              </div>
-            </div>
-            
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-xs text-gray-500">
-                Tip: Drag fields from the sidebar onto documents to place them, then click to assign recipients.
-              </p>
-            </div>
-          </div>
+        {/* Main Canvas */}
+        <div className="flex-1 flex flex-col">
+          <VerticalPDFViewer
+            documents={uploadedDocuments}
+            fieldPositions={fieldPositions}
+            recipients={recipients}
+            activeFieldId={activeFieldId}
+            onFieldSelect={setActiveFieldId}
+            onFieldPositionChange={handleFieldPositionChange}
+            onFieldDelete={handleFieldDelete}
+            onFieldDrop={handleFieldDrop}
+          />
         </div>
-      )}
+      </div>
     </div>
   )
 }

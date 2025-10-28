@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle, AlertCircle, Save, Send } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { DndContext, DragOverlay } from '@dnd-kit/core'
 
 import { EnvelopeCreationSidebar } from '@/components/envelope/EnvelopeCreationSidebar'
 import { VerticalPDFViewer } from '@/components/envelope/VerticalPDFViewer'
@@ -34,6 +35,7 @@ export default function CreateEnvelopePage() {
   const [envelopeName, setEnvelopeName] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
 
   // Add recipient with color assignment
   const addRecipient = useCallback((recipient: { email: string; name?: string }) => {
@@ -86,7 +88,9 @@ export default function CreateEnvelopePage() {
       const targetIndex = direction === 'up' ? index - 1 : index + 1
       if (targetIndex < 0 || targetIndex >= newOrder.length) return prev
       
-      [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]]
+      const temp = newOrder[index]
+      newOrder[index] = newOrder[targetIndex]
+      newOrder[targetIndex] = temp
       return newOrder.map((r, idx) => ({ ...r, order: idx + 1 }))
     })
   }, [])
@@ -175,6 +179,71 @@ export default function CreateEnvelopePage() {
     
     toast.success('Field removed')
   }, [activeFieldId])
+
+  // DnD handlers
+  const handleDragStart = useCallback((event: any) => {
+    const data = event.active?.data?.current
+    if (data?.type === 'field-palette-item') {
+      setActiveDragFieldType(data.fieldType as string)
+    }
+  }, [])
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragFieldType(null)
+  }, [])
+
+  const handleDragEnd = useCallback((event: any) => {
+    const activeData = event.active?.data?.current
+    const over = event.over
+    const overData = over?.data?.current
+
+    setActiveDragFieldType(null)
+
+    if (activeData?.type === 'field-palette-item' && overData?.type === 'page') {
+      const fieldType = activeData.fieldType as string
+      const { documentId, pageNumber } = overData
+
+      // Get the drop coordinates from the activator event (mouse position)
+      const activatorEvent = event.activatorEvent as MouseEvent | undefined
+      const overRect = over.rect
+      
+      if (!activatorEvent) {
+        console.warn('No activator event found, using center of drop zone')
+        // Fallback to center if no activator event
+        const fieldWidth = 200
+        const fieldHeight = 50
+        const relativeX = Math.max(0, overRect.width / 2 - fieldWidth / 2)
+        const relativeY = Math.max(0, overRect.height / 2 - fieldHeight / 2)
+        handleFieldDrop(fieldType, documentId, pageNumber, relativeX, relativeY)
+        return
+      }
+
+      // Calculate coordinates relative to the PDF page drop zone
+      const clickX = activatorEvent.clientX - overRect.left
+      const clickY = activatorEvent.clientY - overRect.top
+
+      // Field dimensions (must match FieldBox defaults)
+      const fieldWidth = 200
+      const fieldHeight = 50
+
+      // Center the field on the click point and ensure it stays within bounds
+      const relativeX = Math.max(0, Math.min(clickX - fieldWidth / 2, overRect.width - fieldWidth))
+      const relativeY = Math.max(0, Math.min(clickY - fieldHeight / 2, overRect.height - fieldHeight))
+
+      console.log('Drop calculation:', {
+        activatorEvent: { clientX: activatorEvent.clientX, clientY: activatorEvent.clientY },
+        overRect,
+        clickX,
+        clickY,
+        relativeX,
+        relativeY,
+        fieldWidth,
+        fieldHeight
+      })
+
+      handleFieldDrop(fieldType, documentId, pageNumber, relativeX, relativeY)
+    }
+  }, [handleFieldDrop])
 
   // Validation
   const validationErrors = useMemo(() => {
@@ -387,6 +456,7 @@ export default function CreateEnvelopePage() {
       )}
 
       {/* Main Content */}
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <EnvelopeCreationSidebar
@@ -416,6 +486,14 @@ export default function CreateEnvelopePage() {
           />
         </div>
       </div>
+      <DragOverlay dropAnimation={null}>
+        {activeDragFieldType && (
+          <div className="bg-blue-500 text-white px-3 py-2 rounded-md shadow-lg">
+            {activeDragFieldType} field
+          </div>
+        )}
+      </DragOverlay>
+      </DndContext>
     </div>
   )
 }

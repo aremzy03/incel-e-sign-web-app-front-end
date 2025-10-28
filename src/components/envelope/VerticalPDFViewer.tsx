@@ -323,22 +323,17 @@ export function VerticalPDFViewer({
                       {currentPageDimensions && (
                         <div className="absolute inset-0 pointer-events-none z-[999]">
                           {fieldsForPage.map(field => (
-                            <div
+                            <FieldBox
                               key={field.id}
-                              className="pointer-events-auto"
-                              style={{ position: 'absolute', left: field.x, top: field.y, width: field.width, height: field.height }}
-                            >
-                              <FieldBox
-                                field={field}
-                                recipients={recipients}
-                                isActive={activeFieldId === field.id}
-                                onPositionChange={onFieldPositionChange}
-                                onSelect={onFieldSelect}
-                                onDelete={onFieldDelete}
-                                maxWidth={(currentPageDimensions?.width || 0) * scale}
-                                maxHeight={(currentPageDimensions?.height || 0) * scale}
-                              />
-                            </div>
+                              field={field}
+                              recipients={recipients}
+                              isActive={activeFieldId === field.id}
+                              onPositionChange={onFieldPositionChange}
+                              onSelect={onFieldSelect}
+                              onDelete={onFieldDelete}
+                              maxWidth={(currentPageDimensions?.width || 0) * scale}
+                              maxHeight={(currentPageDimensions?.height || 0) * scale}
+                            />
                           ))}
                         </div>
                       )}

@@ -60,19 +60,30 @@ export function FieldBox({
 
   const handleDragStop = useCallback(
     (e: DraggableEvent, data: DraggableData) => {
-      // If there was no actual movement, don't update coordinates (prevents 0,0 resets on click)
-      const movedX = (data as any).deltaX !== undefined ? (data as any).deltaX : 0
-      const movedY = (data as any).deltaY !== undefined ? (data as any).deltaY : 0
       setIsDragging(false)
-      if (Math.abs(movedX) < 1 && Math.abs(movedY) < 1) {
-        return
-      }
-
+      // Ensure coordinates are always positive
       const newX = Math.max(0, data.x)
       const newY = Math.max(0, data.y)
+      
+      console.log('Field box drag stop:', { 
+        originalX: data.x, 
+        originalY: data.y, 
+        newX, 
+        newY,
+        bounds: {
+          left: 0,
+          top: 0,
+          right: maxWidth ? maxWidth - field.width : 2000,
+          bottom: maxHeight ? maxHeight - field.height : 2000,
+        },
+        maxWidth,
+        maxHeight,
+        field
+      })
+      
       onPositionChange(field.id, { x: newX, y: newY })
     },
-    [field.id, onPositionChange]
+    [field.id, field.width, field.height, onPositionChange, maxWidth, maxHeight]
   )
 
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
@@ -133,7 +144,7 @@ export function FieldBox({
   return (
     <Draggable
       nodeRef={nodeRef}
-      defaultPosition={{ x: 0, y: 0 }}
+      position={{ x: field.x, y: field.y }}
       onStart={handleDragStart}
       onStop={handleDragStop}
       disabled={isResizing}

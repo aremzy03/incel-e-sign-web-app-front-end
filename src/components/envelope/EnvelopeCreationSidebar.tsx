@@ -231,8 +231,7 @@ export function EnvelopeCreationSidebar({
               {/* Field Type Notes */}
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                 <p className="text-xs text-blue-800">
-                  <strong>Note:</strong> Only signature fields are currently supported by the backend. 
-                  Other field types are placeholders for future implementation.
+                  <strong>Note:</strong> Signature positions are required. Other fields (initials, date, text, designation) are optional and sent when assigned.
                 </p>
               </div>
             </CardContent>

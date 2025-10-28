@@ -257,13 +257,13 @@ export default function CreateEnvelopePage() {
       errors.push('At least one recipient is required')
     }
     
-    // Check for unassigned fields
-    const unassignedFields = Object.values(fieldPositions).flatMap(docFields =>
-      Object.values(docFields).filter(field => !field.assignedTo)
+    // Check for unassigned signature fields only (non-signature fields are optional)
+    const unassignedSignatureFields = Object.values(fieldPositions).flatMap(docFields =>
+      Object.values(docFields).filter(field => field.type === 'signature' && !field.assignedTo)
     )
     
-    if (unassignedFields.length > 0) {
-      errors.push(`${unassignedFields.length} field(s) are not assigned to recipients`)
+    if (unassignedSignatureFields.length > 0) {
+      errors.push(`${unassignedSignatureFields.length} signature field(s) are not assigned to recipients`)
     }
     
     return errors
@@ -318,12 +318,106 @@ export default function CreateEnvelopePage() {
         }
       })
 
+      // Build non-signature fields for backend (optional fields). Include only those with assigned signer
+      const recipientEmailToUserId: Record<string, string> = {}
+      valid.forEach(v => {
+        recipientEmailToUserId[v.email.toLowerCase()] = v.user.id
+      })
+
+      // Map local recipient id (number) to backend user id
+      const localRecipientIdToUserId: Record<string, string> = {}
+      recipients.forEach(r => {
+        const userId = recipientEmailToUserId[r.email.toLowerCase()]
+        if (userId) localRecipientIdToUserId[r.id.toString()] = userId
+      })
+
+      type BackendField = {
+        document_id: string
+        page: number
+        x: number
+        y: number
+        width: number
+        height: number
+        type: 'initials' | 'date' | 'text' | 'designation'
+        assigned_signer: string
+        required: boolean
+        prefill_value?: string | null
+        font_family?: string
+        font_size?: number
+        // type specific
+        date_format?: string
+        placeholder?: string
+        max_length?: number
+      }
+
+      const fields: BackendField[] = []
+      Object.entries(fieldPositions).forEach(([docId, docFields]) => {
+        Object.values(docFields).forEach(field => {
+          if (field.type === 'signature') return
+          const assignedUserId = field.assignedTo ? localRecipientIdToUserId[field.assignedTo] : undefined
+          if (!assignedUserId) return // include only assigned non-signature fields
+
+          const base = {
+            document_id: docId,
+            page: Math.max(1, field.page),
+            x: Math.max(0, field.x),
+            y: Math.max(0, field.y),
+            width: Math.max(20, field.width),
+            height: Math.max(20, field.height),
+            assigned_signer: assignedUserId,
+            required: false, // optional by default
+            font_family: 'Helvetica' as const,
+          }
+
+          if (field.type === 'initials') {
+            fields.push({
+              ...base,
+              type: 'initials',
+              prefill_value: null,
+              font_size: 12,
+            })
+          } else if (field.type === 'date') {
+            fields.push({
+              ...base,
+              type: 'date',
+              prefill_value: null,
+              date_format: 'YYYY-MM-DD',
+              font_size: 11,
+            })
+          } else if (field.type === 'text') {
+            fields.push({
+              ...base,
+              type: 'text',
+              prefill_value: null,
+              placeholder: '',
+              max_length: 240,
+              font_size: 12,
+            })
+          } else if (field.type === 'designation') {
+            fields.push({
+              ...base,
+              type: 'designation',
+              prefill_value: null,
+              max_length: 50,
+              font_size: 12,
+            })
+          }
+        })
+      })
+
       const payload = {
         document_ids: uploadedDocuments.map(d => d.id),
         signing_order,
         documents_with_positions,
+        ...(fields.length > 0 ? { fields } : {}),
         ...(envelopeName && { name: envelopeName }),
       }
+
+      // Debug: print payload summaries
+      try {
+        console.log('[CreateEnvelope] documents_with_positions:', JSON.parse(JSON.stringify(documents_with_positions)))
+        console.log('[CreateEnvelope] fields (non-signature):', JSON.parse(JSON.stringify(fields)))
+      } catch {}
       
       return payload
     } catch (e: any) {

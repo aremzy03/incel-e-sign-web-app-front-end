@@ -24,7 +24,7 @@ const FIELD_TYPE_ICONS: Record<FieldType, string> = {
   initials: '🖋️',
   date: '📅',
   text: '📝',
-  checkbox: '☑️',
+  designation: '🏷️',
 }
 
 const FIELD_TYPE_LABELS: Record<FieldType, string> = {
@@ -32,7 +32,7 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   initials: 'Initials',
   date: 'Date',
   text: 'Text',
-  checkbox: 'Checkbox',
+  designation: 'Designation',
 }
 
 export function FieldBox({

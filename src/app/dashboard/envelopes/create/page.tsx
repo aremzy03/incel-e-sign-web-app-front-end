@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle, AlertCircle, Save, Send, Keyboard } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -250,13 +251,45 @@ export default function CreateEnvelopePage() {
       errors.push('At least one recipient is required')
     }
     
-    // Check for unassigned fields
-    const unassignedFields = Object.values(fieldPositions).flatMap(docFields =>
-      Object.values(docFields).filter(field => !field.assignedTo)
+    // Enforce assignment for signature fields; non-signature fields must have settings when present
+    const unassignedSignatureFields = Object.values(fieldPositions).flatMap(docFields =>
+      Object.values(docFields).filter(field => field.type === 'signature' && !field.assignedTo)
     )
     
-    if (unassignedFields.length > 0) {
-      errors.push(`${unassignedFields.length} field(s) are not assigned to recipients`)
+    if (unassignedSignatureFields.length > 0) {
+      errors.push(`${unassignedSignatureFields.length} signature field(s) are not assigned to recipients`)
+    }
+
+    // Non-signature fields config completeness
+    const incomplete: string[] = []
+    Object.values(fieldPositions).forEach(docFields => {
+      Object.values(docFields).forEach(field => {
+        if (field.type === 'signature') return
+        // must be assigned
+        if (!field.assignedTo) {
+          incomplete.push(field.id)
+          return
+        }
+        // common required props
+        const hasRequired = typeof field.required === 'boolean'
+        const hasFont = !!field.font_family && typeof field.font_size === 'number'
+        if (!hasRequired || !hasFont) {
+          incomplete.push(field.id)
+          return
+        }
+        if (field.type === 'date') {
+          if (!field.date_format) incomplete.push(field.id)
+        }
+        if (field.type === 'text') {
+          if (field.placeholder === undefined || field.max_length === undefined) incomplete.push(field.id)
+        }
+        if (field.type === 'designation') {
+          if (field.max_length === undefined) incomplete.push(field.id)
+        }
+      })
+    })
+    if (incomplete.length > 0) {
+      errors.push('Some non-signature fields are missing settings')
     }
     
     return errors
@@ -311,12 +344,79 @@ export default function CreateEnvelopePage() {
         }
       })
 
+      // Build non-signature fields for backend (optional + include only assigned)
+      const recipientEmailToUserId: Record<string, string> = {}
+      valid.forEach(v => {
+        recipientEmailToUserId[v.email.toLowerCase()] = v.user.id
+      })
+
+      const localRecipientIdToUserId: Record<string, string> = {}
+      recipients.forEach(r => {
+        const userId = recipientEmailToUserId[r.email.toLowerCase()]
+        if (userId) localRecipientIdToUserId[r.id.toString()] = userId
+      })
+
+      type BackendField = {
+        document_id: string
+        page: number
+        x: number
+        y: number
+        width: number
+        height: number
+        type: 'initials' | 'date' | 'text' | 'designation'
+        assigned_signer: string
+        required: boolean
+        prefill_value?: string | null
+        font_family?: string
+        font_size?: number
+        date_format?: string
+        placeholder?: string
+        max_length?: number
+      }
+
+      const fields: BackendField[] = []
+      Object.entries(fieldPositions).forEach(([docId, docFields]) => {
+        Object.values(docFields).forEach(field => {
+          if (field.type === 'signature') return
+          const assignedUserId = field.assignedTo ? localRecipientIdToUserId[field.assignedTo] : undefined
+          if (!assignedUserId) return
+
+          const base = {
+            document_id: docId,
+            page: Math.max(1, field.page),
+            x: Math.max(0, field.x),
+            y: Math.max(0, field.y),
+            width: Math.max(20, field.width),
+            height: Math.max(20, field.height),
+            assigned_signer: assignedUserId,
+            required: !!field.required,
+            font_family: field.font_family,
+          }
+
+          if (field.type === 'initials') {
+            fields.push({ ...base, type: 'initials', prefill_value: field.prefill_value ?? null, font_size: field.font_size })
+          } else if (field.type === 'date') {
+            fields.push({ ...base, type: 'date', prefill_value: field.prefill_value ?? null, date_format: field.date_format, font_size: field.font_size })
+          } else if (field.type === 'text') {
+            fields.push({ ...base, type: 'text', prefill_value: field.prefill_value ?? null, placeholder: field.placeholder, max_length: field.max_length, font_size: field.font_size })
+          } else if (field.type === 'designation') {
+            fields.push({ ...base, type: 'designation', prefill_value: field.prefill_value ?? null, max_length: field.max_length, font_size: field.font_size })
+          }
+        })
+      })
+
       const payload = {
         document_ids: uploadedDocuments.map(d => d.id),
         signing_order,
         documents_with_positions,
+        ...(fields.length > 0 ? { fields } : {}),
         ...(envelopeName && { name: envelopeName }),
       }
+
+      try {
+        console.log('[CreateEnvelope] documents_with_positions:', JSON.parse(JSON.stringify(documents_with_positions)))
+        console.log('[CreateEnvelope] fields (non-signature):', JSON.parse(JSON.stringify(fields)))
+      } catch {}
       
       return payload
     } catch (e: any) {
@@ -540,6 +640,97 @@ export default function CreateEnvelopePage() {
         )}
       </DragOverlay>
       </DndContext>
+
+      {/* Field Settings Panel */}
+      {activeFieldId && (() => {
+        let activeField: FieldPosition | null = null
+        Object.values(fieldPositions).forEach(docFields => {
+          if (docFields[activeFieldId!]) activeField = docFields[activeFieldId!]
+        })
+        if (!activeField) return null
+        const f = activeField as FieldPosition
+        if (f.type === 'signature') return null
+        const update = (patch: Partial<FieldPosition>) => handleFieldPositionChange(activeFieldId!, patch)
+        return (
+          <div className="fixed right-4 bottom-4 w-full max-w-sm bg-white border rounded-lg shadow-lg z-[1000]">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div className="text-sm font-semibold text-gray-800">Field Settings ({f.type})</div>
+              <Button variant="ghost" size="sm" onClick={() => setActiveFieldId(null)}>✕</Button>
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Assigned signer info */}
+              <div className="text-xs text-gray-600">Assigned: {recipients.find(r => r.id.toString() === f.assignedTo)?.name || 'Unassigned'}</div>
+
+              {/* Required */}
+              <div className="space-y-1">
+                <Label className="text-xs">Required</Label>
+                <div className="flex gap-2">
+                  <Button variant={f.required ? 'default' : 'outline'} size="sm" onClick={() => update({ required: true })}>Yes</Button>
+                  <Button variant={!f.required ? 'default' : 'outline'} size="sm" onClick={() => update({ required: false })}>No</Button>
+                </div>
+              </div>
+
+              {/* Font family/size */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Font family</Label>
+                  <Input value={f.font_family || ''} placeholder="Helvetica" onChange={(e) => update({ font_family: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Font size</Label>
+                  <Input type="number" value={f.font_size ?? ''} onChange={(e) => update({ font_size: Number(e.target.value) || undefined })} />
+                </div>
+              </div>
+
+              {/* Prefill value */}
+              <div>
+                <Label className="text-xs">Prefill value</Label>
+                <Input value={f.prefill_value ?? ''} onChange={(e) => update({ prefill_value: e.target.value })} />
+              </div>
+
+              {f.type === 'date' && (
+                <div>
+                  <Label className="text-xs">Date format</Label>
+                  <Select value={f.date_format || ''} onValueChange={(v) => update({ date_format: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                      <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                      <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                      <SelectItem value="YYYY/MM/DD">YYYY/MM/DD</SelectItem>
+                      <SelectItem value="DD-MMM-YYYY">DD-MMM-YYYY</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {f.type === 'text' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Placeholder</Label>
+                    <Input value={f.placeholder || ''} onChange={(e) => update({ placeholder: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Max length</Label>
+                    <Input type="number" value={f.max_length ?? ''} onChange={(e) => update({ max_length: Number(e.target.value) || undefined })} />
+                  </div>
+                </div>
+              )}
+
+              {f.type === 'designation' && (
+                <div>
+                  <Label className="text-xs">Max length</Label>
+                  <Input type="number" value={f.max_length ?? ''} onChange={(e) => update({ max_length: Number(e.target.value) || undefined })} />
+                </div>
+              )}
+
+              <div className="text-[10px] text-gray-500">Tip: Required means signer must fill unless a prefill value is provided.</div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Keyboard Shortcuts Modal */}
       {showKeyboardShortcuts && (

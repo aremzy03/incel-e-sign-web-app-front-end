@@ -1,4 +1,4 @@
-export type FieldType = 'signature' | 'initials' | 'date' | 'text' | 'checkbox'
+export type FieldType = 'signature' | 'initials' | 'date' | 'text' | 'designation'
 
 export interface FieldPosition {
   id: string
@@ -10,6 +10,14 @@ export interface FieldPosition {
   height: number
   assignedTo: string | null // recipient id
   documentId: string
+  // Optional, configured for non-signature fields
+  required?: boolean
+  prefill_value?: string | null
+  font_family?: string
+  font_size?: number
+  date_format?: string
+  placeholder?: string
+  max_length?: number
 }
 
 export interface FieldPositions {
@@ -66,10 +74,10 @@ export const FIELD_TYPES: FieldPaletteItem[] = [
     description: 'Text input field'
   },
   {
-    type: 'checkbox',
-    label: 'Checkbox',
-    icon: '☑️',
-    description: 'Checkbox field'
+    type: 'designation',
+    label: 'Designation',
+    icon: '🏷️',
+    description: 'Designation field'
   }
 ]
 

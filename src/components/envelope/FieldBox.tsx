@@ -53,6 +53,28 @@ export function FieldBox({
   const assignedRecipient = recipients.find(r => r.id.toString() === field.assignedTo)
   const fieldColor = assignedRecipient?.color || '#6B7280'
 
+  // Helpers for live preview
+  const formatDate = (d: Date, pattern?: string) => {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mmm = d.toLocaleString('en', { month: 'short' })
+    switch (pattern) {
+      case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`
+      case 'DD/MM/YYYY': return `${dd}/${mm}/${yyyy}`
+      case 'YYYY/MM/DD': return `${yyyy}/${mm}/${dd}`
+      case 'DD-MMM-YYYY': return `${dd}-${mmm}-${yyyy}`
+      case 'YYYY-MM-DD':
+      default: return `${yyyy}-${mm}-${dd}`
+    }
+  }
+  const getInitials = (name?: string) => {
+    if (!name) return 'AB'
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+  }
+
   const handleDragStart = useCallback(() => {
     setIsDragging(true)
     onSelect(field.id)
@@ -173,22 +195,59 @@ export function FieldBox({
         }}
         onClick={handleClick}
       >
-        <div className="text-center p-1 overflow-hidden flex-1">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <span className="text-lg">{FIELD_TYPE_ICONS[field.type]}</span>
-            <span className="text-xs font-semibold truncate">
-              {FIELD_TYPE_LABELS[field.type]}
-            </span>
+        <div className="p-1 overflow-hidden flex-1 h-full w-full relative">
+          {/* Header: field type + recipient name */}
+          <div className="absolute top-0 left-0 right-0 text-[10px] leading-none px-1 pt-0.5 text-gray-800 flex items-center justify-between">
+            <span className="truncate max-w-[70%]">{assignedRecipient ? (assignedRecipient.name || assignedRecipient.email) : 'Unassigned'}</span>
+            <span className="uppercase opacity-80">{FIELD_TYPE_LABELS[field.type]}</span>
           </div>
-          
-          {assignedRecipient ? (
-            <div className="text-xs opacity-75 truncate">
-              {assignedRecipient.name}
-            </div>
-          ) : (
-            <div className="text-xs opacity-50 truncate">
-              Click to assign
-            </div>
+
+          {/* Live preview content */}
+          <div
+            className="w-full h-full flex items-center justify-center text-gray-900"
+            style={{ fontFamily: field.font_family || 'Helvetica', fontSize: field.font_size || 12 }}
+          >
+            {(() => {
+              if (!field.assignedTo) {
+                return <span className="text-[11px] opacity-60">Assign recipient</span>
+              }
+              if (field.type === 'date') {
+                const value = (field.prefill_value && field.prefill_value.trim() !== '')
+                  ? field.prefill_value!
+                  : formatDate(new Date(), field.date_format || 'YYYY-MM-DD')
+                return <span className="px-1 truncate w-full text-center">{value}</span>
+              }
+              if (field.type === 'initials') {
+                const value = (field.prefill_value && field.prefill_value.trim() !== '')
+                  ? field.prefill_value!
+                  : getInitials(assignedRecipient?.name || assignedRecipient?.email)
+                return <span className="px-1 truncate w-full text-center">{value || '—'}</span>
+              }
+              if (field.type === 'designation') {
+                const value = (field.prefill_value && field.prefill_value.trim() !== '')
+                  ? field.prefill_value!
+                  : 'Head of Operations'
+                return <span className="px-2 truncate w-full">{value}</span>
+              }
+              // text
+              const placeholder = field.placeholder || 'Sample text'
+              const value = (field.prefill_value && field.prefill_value.trim() !== '') ? field.prefill_value! : ''
+              return (
+                <input
+                  type="text"
+                  defaultValue={value}
+                  placeholder={placeholder}
+                  maxLength={field.max_length || undefined}
+                  className="w-full h-[70%] bg-transparent outline-none text-center"
+                  style={{ fontFamily: field.font_family || 'Helvetica', fontSize: field.font_size || 12 }}
+                  readOnly
+                />
+              )
+            })()}
+          </div>
+          {/* Required marker */}
+          {field.required && (
+            <div className="absolute bottom-0.5 right-1 text-[10px] text-red-600">*</div>
           )}
         </div>
         

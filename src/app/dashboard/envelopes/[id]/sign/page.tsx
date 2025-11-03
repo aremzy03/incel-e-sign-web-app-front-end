@@ -72,11 +72,39 @@ export default function SignEnvelopePage() {
   const [isDraggingDraft, setIsDraggingDraft] = useState(false)
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [pageDims, setPageDims] = useState<Record<string, Record<number, { widthPt: number; heightPt: number; widthPx: number; heightPx: number } & {numPages?: number}>>>({}) // docId -> pageNo -> dims
+  const pageContainersRef = React.useRef<Record<string, Record<number, HTMLDivElement | null>>>({})
+  const setPageContainerRef = useCallback((docId: string, pageNo: number) => (el: HTMLDivElement | null) => {
+    if (!pageContainersRef.current[docId]) pageContainersRef.current[docId] = {}
+    pageContainersRef.current[docId][pageNo] = el
+  }, [])
+  const measurePageCanvas = useCallback((docId: string, pageNo: number) => {
+    const container = pageContainersRef.current[docId]?.[pageNo]
+    if (!container) return
+    requestAnimationFrame(() => {
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement | null
+      if (!canvas) return
+      const widthPx = canvas.clientWidth || 0
+      const heightPx = canvas.clientHeight || 0
+      setPageDims(prev => {
+        const prevDoc = prev[docId] || {}
+        const prevPage = prevDoc[pageNo] || { widthPt: 0, heightPt: 0, widthPx: 0, heightPx: 0 }
+        return {
+          ...prev,
+          [docId]: {
+            ...prevDoc,
+            [pageNo]: { ...prevPage, widthPx, heightPx }
+          }
+        }
+      })
+    })
+  }, [])
   const [envelopeDocuments, setEnvelopeDocuments] = useState<EnvelopeDocumentResponse[]>([])
   const [signerDetails, setSignerDetails] = useState<Record<string, User>>({})
   const [selectedSignature, setSelectedSignature] = useState<any>(null)
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false)
   const [declineMessage, setDeclineMessage] = useState('')
+  const [activeFieldPreview, setActiveFieldPreview] = useState<string | null>(null)
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
 
   // Resolve possibly relative URLs to backend origin
   const resolveUrl = useCallback((url?: string | null | any) => {
@@ -243,7 +271,7 @@ export default function SignEnvelopePage() {
 
       envelopeDocuments.forEach((docItem: EnvelopeDocumentResponse) => {
         const currentDocPositions = docItem.signer_document_positions;
-        currentDocPositions.forEach((sDocPos: SignerDocumentPositionEntry) => {
+        currentDocPositions.forEach((sDocPos) => {
           if (currentUserId && sDocPos.signer_id === currentUserId) {
             const isAlreadySigned = signedFor[`${docItem.id}-${sDocPos.signer_id}`];
             if (!isAlreadySigned) {
@@ -302,6 +330,57 @@ export default function SignEnvelopePage() {
       toast.error(msg)
     },
   })
+
+  // Save non-signature values (for current user) before signing
+  const saveValuesMutation = useMutation({
+    mutationFn: async () => {
+      if (!envelopeId || !currentUserId) return
+      const allFields = (envelope as any)?.fields as Array<any> | undefined
+      if (!allFields || allFields.length === 0) return
+      // Build items
+      const items: Array<{ id: string; value: string }> = []
+      const todayFmt = (fmt?: string) => { const d=new Date(); const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); const mmm=d.toLocaleString('en',{month:'short'}); switch(fmt){case 'MM/DD/YYYY':return `${mm}/${dd}/${yyyy}`;case 'DD/MM/YYYY':return `${dd}/${mm}/${yyyy}`;case 'YYYY/MM/DD':return `${yyyy}/${mm}/${dd}`;case 'DD-MMM-YYYY':return `${dd}-${mmm}-${yyyy}`;default:return `${yyyy}-${mm}-${dd}`}}
+      const initialsOf = (name?: string) => { if(!name) return ''; const p=name.trim().split(/\s+/); if(p.length===1) return p[0].charAt(0).toUpperCase(); return (p[0].charAt(0)+p[p.length-1].charAt(0)).toUpperCase() }
+      allFields.forEach((f:any)=>{
+        if (f.assigned_signer !== currentUserId) return
+        if (!f.id) return
+        let value = ''
+        if (f.type === 'text') value = (fieldValues[f.id] ?? f.prefill_value ?? '').toString()
+        if (f.type === 'date') value = (f.prefill_value && f.prefill_value.trim()!=='') ? f.prefill_value : todayFmt(f.date_format)
+        if (f.type === 'initials') value = (f.prefill_value && f.prefill_value.trim()!=='') ? f.prefill_value : initialsOf(signerDetails[currentUserId!]?.full_name)
+        if (f.type === 'designation') value = (f.prefill_value ?? '').toString()
+        if (value !== '') items.push({ id: f.id, value })
+      })
+      if (items.length === 0) return
+      const body = { items }
+      console.log('[Sign Page][Dashboard] Save values payload:', body)
+      await apiClient.post(`/fields/signing/${envelopeId}/values/`, body)
+    }
+  })
+
+  // Chain: save values then sign on Approve
+  const approveAndSign = async () => {
+    try {
+      // Basic required check
+      const myFields = ((envelope as any)?.fields as Array<any> | undefined)?.filter((f:any)=>f.assigned_signer===currentUserId) || []
+      const emptyRequired = myFields.filter((f:any)=>{
+        if(!f.required) return false
+        let v=''
+        if(f.type==='text') v=(fieldValues[f.id] ?? f.prefill_value ?? '').toString()
+        if(f.type==='date') { const d=new Date(); const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); const mmm=d.toLocaleString('en',{month:'short'}); const fallback = (():string=>{switch(f.date_format){case 'MM/DD/YYYY':return `${mm}/${dd}/${yyyy}`;case 'DD/MM/YYYY':return `${dd}/${mm}/${yyyy}`;case 'YYYY/MM/DD':return `${yyyy}/${mm}/${dd}`;case 'DD-MMM-YYYY':return `${dd}-${mmm}-${yyyy}`;default:return `${yyyy}-${mm}-${dd}`}})(); v=(f.prefill_value && f.prefill_value.trim()!=='')?f.prefill_value:fallback }
+        if(f.type==='initials') { const name=signerDetails[currentUserId!]?.full_name; const init = (():string=>{ if(!name) return ''; const p=name.trim().split(/\s+/); return (p[0]?.[0]||'').toUpperCase() + (p[p.length-1]?.[0]||'').toUpperCase() })(); v=(f.prefill_value && f.prefill_value.trim()!=='')?f.prefill_value:init }
+        if(f.type==='designation') v=(f.prefill_value ?? '').toString()
+        return !v || v.trim()===''
+      })
+      if (emptyRequired.length>0) { toast.error('Please complete all required fields'); return }
+
+      await saveValuesMutation.mutateAsync()
+      await signMutation.mutateAsync()
+    } catch (e:any) {
+      console.error('[Sign Page][Dashboard] approveAndSign error:', e)
+      toast.error(e?.response?.data?.detail || e?.message || 'Failed to approve and sign')
+    }
+  }
   
   // Decline mutation
   const declineMutation = useMutation({
@@ -376,32 +455,37 @@ export default function SignEnvelopePage() {
                 }}
                 loading=""
               >
-                {Array.from({ length: pageDims[docItem.id]?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => {
+                {Array.from({ length: (pageDims[docItem.id] as any)?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => {
                   console.log(`[Sign Page] Rendering page ${pageNo} for document ${docItem.id}`);
                   return (
-                  <div key={`${docItem.id}-${pageNo}`} className="relative">
+                  <div key={`${docItem.id}-${pageNo}`} className="relative" ref={setPageContainerRef(docItem.id, pageNo)}>
                     <Page
                       pageNumber={pageNo}
                       renderAnnotationLayer={false}
                       renderTextLayer={false}
                       className="shadow"
                       loading=""
+                      data-page-key={`${docItem.id}-${pageNo}`}
                       onRenderSuccess={(page: any) => {
                         try {
                           const [x0, y0, x1, y1] = page.view || [0, 0, page.width, page.height];
                           const widthPt = Math.abs((x1 ?? page.width) - (x0 ?? 0)) || page.width || 0;
                           const heightPt = Math.abs((y1 ?? page.height) - (y0 ?? 0)) || page.height || 0;
-                          const canvas = (page as any).canvas || document.querySelector('.react-pdf__Page__canvas');
-                          const widthPx = (canvas && (canvas as HTMLCanvasElement).clientWidth) || 0;
-                          const heightPx = (canvas && (canvas as HTMLCanvasElement).clientHeight) || 0;
+                          // Prefer the canvas within this specific Page instance using a page key
+                          const pageEl = document.querySelector(`[data-page-key="${docItem.id}-${pageNo}"]`) as HTMLElement | null;
+                          const canvas = pageEl ? (pageEl.querySelector('canvas') as HTMLCanvasElement | null) : (page as any).canvas;
+                          const widthPx = canvas?.clientWidth || 0;
+                          const heightPx = canvas?.clientHeight || 0;
                           setPageDims(prev => ({
                             ...prev,
                             [docItem.id]: { 
                               ...(prev[docItem.id] || {}), 
-                              [pageNo]: { widthPt, heightPt, widthPx, heightPx } 
+                              [pageNo]: { widthPt, heightPt, widthPx: prev[docItem.id]?.[pageNo]?.widthPx || 0, heightPx: prev[docItem.id]?.[pageNo]?.heightPx || 0 } 
                             }
                           }));
-                          console.log(`[Sign Page] Page ${pageNo} dims for doc ${docItem.id}:`, { widthPt, heightPt, widthPx, heightPx });
+                          // Defer canvas measurement
+                          measurePageCanvas(docItem.id, pageNo)
+                          console.log(`[Sign Page] Page ${pageNo} dims for doc ${docItem.id}:`, { widthPt, heightPt });
                         } catch (e) {
                           console.error('Error getting page dimensions:', e);
                         }
@@ -436,19 +520,31 @@ export default function SignEnvelopePage() {
                           });
                           
                           let commonStyle: React.CSSProperties = {};
-                          if (dims) {
+                          if (dims && dims.widthPt > 0 && dims.heightPt > 0 && dims.widthPx > 0 && dims.heightPx > 0) {
                             const scaleX = dims.widthPx / (dims.widthPt || 1);
                             const scaleY = dims.heightPx / (dims.heightPt || 1);
-                            const leftPx = (entry.position.x || 0) * scaleX;
-                            const topPx = (entry.position.y || 0) * scaleY;
-                            const widthPx = (entry.position.width || 0) * scaleX;
-                            const heightPx = (entry.position.height || 0) * scaleY;
-                            commonStyle = { left: leftPx, top: topPx, width: widthPx, height: heightPx };
-                            console.log(`[Sign Page] Computed style for placeholder:`, commonStyle);
+                            const x = entry.position.x || 0;
+                            const y = entry.position.y || 0;
+                            const w = entry.position.width || 0;
+                            const h = entry.position.height || 0;
+                            // Heuristic: support both point (top-left Y) and legacy pixel storage
+                            const looksLikePixels = x > dims.widthPt * 2 || y > dims.heightPt * 2 || w > dims.widthPt * 2 || h > dims.heightPt * 2;
+                            const leftPx = looksLikePixels ? x : x * scaleX;
+                            const topPx = looksLikePixels ? y : y * scaleY;
+                            const widthPx = looksLikePixels ? w : w * scaleX;
+                            const heightPx = looksLikePixels ? h : h * scaleY;
+                            // Clamp into page bounds
+                            const clampedLeft = Math.max(0, Math.min(leftPx, (dims.widthPx || 0) - widthPx));
+                            const clampedTop = Math.max(0, Math.min(topPx, (dims.heightPx || 0) - heightPx));
+                            commonStyle = { left: clampedLeft, top: clampedTop, width: widthPx, height: heightPx };
+                            console.log(`[Sign Page] Computed style for placeholder:`, { commonStyle, looksLikePixels, dims });
                           } else {
                             console.warn(`[Sign Page] No dimensions available for doc ${docItem.id} page ${pageNo} yet`);
                           }
                           
+                          if (!(commonStyle as any).width || !(commonStyle as any).height) {
+                            return null
+                          }
                           return (
                             <div key={`${docItem.id}-${entry.signer_id}-${idx}`} className="absolute" style={commonStyle}>
                               {!isSigned ? (
@@ -498,6 +594,203 @@ export default function SignEnvelopePage() {
                                 )
                                 )}
                               </div>
+                          )
+                        })
+                      })()}
+
+                      {/* Non-signature fields overlays for this page */}
+                      {(() => {
+                        const allFields = (envelope as any).fields as Array<any> | undefined
+                        if (!allFields || allFields.length === 0) return null
+                        const dims = pageDims[docItem.id]?.[pageNo]
+                        const fieldsForPage = allFields.filter(f => (f?.page || 0) === pageNo)
+                        console.log('[Sign Page][NonSig][Dashboard] doc', docItem.id, 'page', pageNo, 'fieldsForPage:', fieldsForPage)
+                        return fieldsForPage.map((f, idx) => {
+                          const key = (f as any).id || `${docItem.id}-${pageNo}-${idx}`
+                          let style: React.CSSProperties = {}
+                          if (dims && dims.widthPt > 0 && dims.heightPt > 0 && dims.widthPx > 0 && dims.heightPx > 0) {
+                            const scaleX = dims.widthPx / (dims.widthPt || 1)
+                            const scaleY = dims.heightPx / (dims.heightPt || 1)
+                            const x = f.x || 0
+                            const y = f.y || 0
+                            const w = f.width || 0
+                            const h = f.height || 0
+                            const looksLikePixels = x > dims.widthPt * 2 || y > dims.heightPt * 2 || w > dims.widthPt * 2 || h > dims.widthPt * 2
+                            const leftPx = looksLikePixels ? x : x * scaleX
+                            const topPx = looksLikePixels ? y : y * scaleY
+                            const widthPx = looksLikePixels ? w : w * scaleX
+                            const heightPx = looksLikePixels ? h : h * scaleY
+                            const clampedLeft = Math.max(0, Math.min(leftPx, (dims.widthPx || 0) - widthPx))
+                            const clampedTop = Math.max(0, Math.min(topPx, (dims.heightPx || 0) - heightPx))
+                            style = { left: clampedLeft, top: clampedTop, width: widthPx, height: heightPx }
+                          }
+                          const isMine = !currentUserId || !f.assigned_signer || f.assigned_signer === currentUserId
+                          const borderColor = isMine ? 'border-blue-500' : 'border-gray-400'
+                          const bgColor = isMine ? 'bg-blue-50/40' : 'bg-gray-100/40'
+                          const isActive = activeFieldPreview === key
+                          const interactiveCls = 'group absolute inset-0 border-2 border-blue-500 bg-blue-100/40 rounded-md cursor-pointer hover:bg-blue-200/60 transition flex flex-col items-center justify-center p-2'
+                          const disabledCls = 'absolute inset-0 border border-gray-300 bg-gray-200/30 rounded-md cursor-not-allowed flex items-center justify-center p-2'
+                          const fontFamily = f.font_family || 'Helvetica'
+                          const fontSize = f.font_size || 12
+                          const requiredMark = f.required ? ' *' : ''
+
+                          // Helper: initials and date
+                          const myName = currentUserId ? signerDetails[currentUserId]?.full_name : undefined
+                          const initials = (() => {
+                            if (!myName) return ''
+                            const parts = myName.trim().split(/\s+/)
+                            if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+                            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+                          })()
+                          const today = (() => {
+                            const d = new Date()
+                            const yyyy = d.getFullYear()
+                            const mm = String(d.getMonth() + 1).padStart(2, '0')
+                            const dd = String(d.getDate()).padStart(2, '0')
+                            const mmm = d.toLocaleString('en', { month: 'short' })
+                            switch (f.date_format) {
+                              case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`
+                              case 'DD/MM/YYYY': return `${dd}/${mm}/${yyyy}`
+                              case 'YYYY/MM/DD': return `${yyyy}/${mm}/${dd}`
+                              case 'DD-MMM-YYYY': return `${dd}-${mmm}-${yyyy}`
+                              case 'YYYY-MM-DD':
+                              default: return `${yyyy}-${mm}-${dd}`
+                            }
+                          })()
+
+                          console.log('[Sign Page][NonSig][Dashboard] field calc', {
+                            key,
+                            type: f.type,
+                            assigned_signer: f.assigned_signer,
+                            recipientName: signerDetails[f.assigned_signer || '']?.full_name,
+                            isMine,
+                            prefill_value: f.prefill_value,
+                            date_format: f.date_format,
+                            today,
+                            initials,
+                            style
+                          })
+
+                          const header = (
+                            <div className="absolute top-0 left-0 right-0 text-[10px] leading-none px-1 pt-0.5 text-blue-900/90 flex items-center justify-between">
+                              <span className="truncate max-w-[70%]">{isMine ? (signerDetails[f.assigned_signer || '']?.full_name || 'You') : 'Recipient'}</span>
+                              <span className="uppercase opacity-80">{f.type}</span>
+                            </div>
+                          )
+
+                          const handleClick = () => {
+                            if (!isMine) return
+                            setActiveFieldPreview(prev => {
+                              const next = prev === key ? null : key
+                              console.log('[Sign Page][NonSig][Dashboard] click toggle', { key, next })
+                              return next
+                            })
+                          }
+
+                          if (!(style as any).width || !(style as any).height) return null
+                          if (f.type === 'date') {
+                            const value = (f.prefill_value && f.prefill_value.trim() !== '') ? f.prefill_value : today
+                            console.log('[Sign Page][NonSig][Dashboard] date value', { key, value })
+                            return (
+                              <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+                                <div
+                                  className={isMine ? interactiveCls : disabledCls}
+                                  title={`Date${requiredMark}`}
+                                  role={isMine ? 'button' : undefined}
+                                  onClick={handleClick}
+                                >
+                                  {header}
+                                  <div style={{ fontFamily, fontSize }} className="w-full h-full flex items-center justify-center text-gray-900">
+                                    {value}
+                                  </div>
+                                  {isMine && (
+                                    <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                      Click to preview
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }
+                          if (f.type === 'initials') {
+                            const value = (f.prefill_value && f.prefill_value.trim() !== '') ? f.prefill_value : initials
+                            console.log('[Sign Page][NonSig][Dashboard] initials value', { key, value })
+                            return (
+                              <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+                                <div
+                                  className={isMine ? interactiveCls : disabledCls}
+                                  title={`Initials${requiredMark}`}
+                                  role={isMine ? 'button' : undefined}
+                                  onClick={handleClick}
+                                >
+                                  {header}
+                                  <div style={{ fontFamily, fontSize }} className="w-full h-full flex items-center justify-center text-gray-900">
+                                    {value || '—'}
+                                  </div>
+                                  {isMine && (
+                                    <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                      Click to preview
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }
+                          if (f.type === 'designation') {
+                            const value = f.prefill_value ?? 'Designation not set'
+                            return (
+                              <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+                                <div
+                                  className={isMine ? interactiveCls : disabledCls}
+                                  title={`Designation${requiredMark}`}
+                                  role={isMine ? 'button' : undefined}
+                                  onClick={handleClick}
+                                >
+                                  {header}
+                                  <div style={{ fontFamily, fontSize }} className="w-full truncate text-gray-900 px-2">
+                                    {value}
+                                  </div>
+                                  {isMine && (
+                                    <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                      Click to preview
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }
+                          // text input
+                          return (
+                            <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+                              <div
+                                className={isMine ? interactiveCls : disabledCls}
+                                title={`Text${requiredMark}`}
+                                role={isMine ? 'button' : undefined}
+                                onClick={handleClick}
+                              >
+                                {header}
+                                <input
+                                  type="text"
+                                  defaultValue={f.prefill_value || fieldValues[(f as any).id || ''] || ''}
+                                  placeholder={f.placeholder || ''}
+                                  maxLength={f.max_length || undefined}
+                                  readOnly={!isMine}
+                                  className="w-full h-full bg-transparent outline-none text-gray-900"
+                                  style={{ fontFamily, fontSize }}
+                                  autoFocus={isActive}
+                                  onChange={(e) => {
+                                    const id = (f as any).id
+                                    if (!id) return
+                                    setFieldValues(prev => ({ ...prev, [id]: e.target.value }))
+                                  }}
+                                />
+                                {isMine && (
+                                  <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                    Click to type
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           )
                         })
                       })()}
@@ -658,8 +951,8 @@ export default function SignEnvelopePage() {
       </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => signMutation.mutate()} disabled={signMutation.isPending}>
-              {signMutation.isPending ? 'Signing…' : 'Approve & Sign'}
+            <Button onClick={approveAndSign} disabled={signMutation.isPending || saveValuesMutation.isPending}>
+              {(signMutation.isPending || saveValuesMutation.isPending) ? 'Processing…' : 'Approve & Sign'}
             </Button>
           </DialogFooter>
         </DialogContent>

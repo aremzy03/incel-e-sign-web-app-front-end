@@ -31,6 +31,7 @@ interface VerticalPDFViewerProps {
   onFieldPositionChange: (fieldId: string, position: Partial<FieldPosition>) => void
   onFieldDelete: (fieldId: string) => void
   onFieldDrop: (fieldType: string, documentId: string, page: number, x: number, y: number) => void
+  onPageMetricsChange?: (pageKey: string, metrics: { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }) => void
 }
 
 interface DocumentPageInfo {
@@ -49,6 +50,7 @@ export function VerticalPDFViewer({
   onFieldPositionChange,
   onFieldDelete,
   onFieldDrop,
+  onPageMetricsChange,
 }: VerticalPDFViewerProps) {
   const [scale, setScale] = useState(1.0)
   const [isLoading, setIsLoading] = useState(true)
@@ -82,6 +84,10 @@ export function VerticalPDFViewer({
         ...prev,
         [`${documentId}-${pageNumber}`]: { width, height }
       }))
+      // Notify consumer with base metrics
+      try {
+        onPageMetricsChange?.(`${documentId}-${pageNumber}`, { baseWidthPxAtScale1: width, baseHeightPxAtScale1: height, scale })
+      } catch {}
       
       // Get actual rendered dimensions after a short delay to ensure PDF is rendered
       setTimeout(() => {
@@ -114,10 +120,18 @@ export function VerticalPDFViewer({
           setTimeout(() => {
             getActualPDFDimensions(doc.id, pageNumber)
           }, 200) // Longer delay for scale changes
+          // Propagate scale changes alongside base dimensions if known
+          const pageKey = `${doc.id}-${pageNumber}`
+          const dims = pageDimensions[pageKey]
+          if (dims) {
+            try {
+              onPageMetricsChange?.(pageKey, { baseWidthPxAtScale1: dims.width, baseHeightPxAtScale1: dims.height, scale })
+            } catch {}
+          }
         }
       })
     }
-  }, [scale, documents, documentPages, getActualPDFDimensions])
+  }, [scale, documents, documentPages, getActualPDFDimensions, pageDimensions])
 
   // Recalculate dimensions when new documents are added
   useEffect(() => {

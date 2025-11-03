@@ -38,6 +38,7 @@ export default function CreateEnvelopePage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
+  const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
 
   // Add recipient with color assignment
   const addRecipient = useCallback((recipient: { email: string; name?: string }) => {
@@ -149,6 +150,11 @@ export default function CreateEnvelopePage() {
     setActiveFieldId(fieldId)
     toast.success(`${fieldType} field added`)
   }, [nextFieldId])
+
+  // Receive per-page metrics from PDF viewer
+  const handlePageMetricsChange = useCallback((pageKey: string, metrics: { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }) => {
+    setPageMetrics((prev) => ({ ...prev, [pageKey]: metrics }))
+  }, [])
 
   // DnD handlers (page-level)
   const handleDragStart = useCallback((event: any) => {
@@ -318,6 +324,27 @@ export default function CreateEnvelopePage() {
         }
       })
 
+      // Helper to convert from rendered CSS pixels to PDF points (top-left Y)
+      const cssPxToPoints = (px: number) => (px * 72) / 96
+      const convertFieldGeometry = (docId: string, field: FieldPosition) => {
+        const pageKey = `${docId}-${field.page}`
+        const metrics = pageMetrics[pageKey]
+        if (!metrics) {
+          return { x: field.x, y: field.y, width: field.width, height: field.height }
+        }
+        const scale = metrics.scale || 1
+        const x1 = field.x / scale
+        const y1 = field.y / scale
+        const w1 = field.width / scale
+        const h1 = field.height / scale
+        return {
+          x: cssPxToPoints(x1),
+          y: cssPxToPoints(y1),
+          width: cssPxToPoints(w1),
+          height: cssPxToPoints(h1),
+        }
+      }
+
       // Build documents with positions (only signature fields for backend)
       const documents_with_positions = Object.entries(fieldPositions).map(([docId, docFields]) => {
         const signer_document_positions = Object.values(docFields)
@@ -325,15 +352,16 @@ export default function CreateEnvelopePage() {
           .map(field => {
             const recipient = recipients.find(r => r.id.toString() === field.assignedTo)
             const validRecipient = valid.find(v => v.email.toLowerCase() === recipient?.email.toLowerCase())
+            const geom = convertFieldGeometry(docId, field)
             
             return {
               signer_id: validRecipient!.user.id,
               position: {
                 page: field.page,
-                x: field.x,
-                y: field.y,
-                width: field.width,
-                height: field.height,
+                x: geom.x,
+                y: geom.y,
+                width: geom.width,
+                height: geom.height,
               },
             }
           })
@@ -381,13 +409,14 @@ export default function CreateEnvelopePage() {
           const assignedUserId = field.assignedTo ? localRecipientIdToUserId[field.assignedTo] : undefined
           if (!assignedUserId) return
 
+          const geom = convertFieldGeometry(docId, field)
           const base = {
             document_id: docId,
             page: Math.max(1, field.page),
-            x: Math.max(0, field.x),
-            y: Math.max(0, field.y),
-            width: Math.max(20, field.width),
-            height: Math.max(20, field.height),
+            x: Math.max(0, geom.x),
+            y: Math.max(0, geom.y),
+            width: Math.max(20, geom.width),
+            height: Math.max(20, geom.height),
             assigned_signer: assignedUserId,
             required: !!field.required,
             font_family: field.font_family,
@@ -674,7 +703,21 @@ export default function CreateEnvelopePage() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Font family</Label>
-                  <Input value={f.font_family || ''} placeholder="Helvetica" onChange={(e) => update({ font_family: e.target.value })} />
+                  <Select value={f.font_family || ''} onValueChange={(v) => update({ font_family: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select font" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Helvetica">Helvetica</SelectItem>
+                      <SelectItem value="Arial">Arial</SelectItem>
+                      <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                      <SelectItem value="Courier New">Courier New</SelectItem>
+                      <SelectItem value="Roboto">Roboto</SelectItem>
+                      <SelectItem value="Inter">Inter</SelectItem>
+                      <SelectItem value="Georgia">Georgia</SelectItem>
+                      <SelectItem value="Verdana">Verdana</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label className="text-xs">Font size</Label>

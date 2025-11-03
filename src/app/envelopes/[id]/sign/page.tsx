@@ -42,6 +42,24 @@ interface EnvelopeResponse {
   document: string | { file_url: string }
   status: string
   signing_order: SigningOrderEntry[]
+  // Optional from backend: non-signature fields
+  fields?: Array<{
+    document_id?: string
+    page: number
+    x: number
+    y: number
+    width: number
+    height: number
+    type: 'initials' | 'date' | 'text' | 'designation'
+    assigned_signer?: string
+    required?: boolean
+    prefill_value?: string | null
+    font_family?: string
+    font_size?: number
+    date_format?: string
+    placeholder?: string
+    max_length?: number
+  }>
 }
 
 interface MySignatureResponse {
@@ -62,6 +80,24 @@ export default function SignEnvelopePage() {
   const [isDraggingDraft, setIsDraggingDraft] = useState(false)
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [pageDims, setPageDims] = useState<Record<number, { widthPt: number; heightPt: number; widthPx: number; heightPx: number }>>({})
+  const pageContainersRef = React.useRef<Record<string, HTMLDivElement | null>>({})
+  const setPageContainerRef = useCallback((key: string) => (el: HTMLDivElement | null) => {
+    pageContainersRef.current[key] = el
+  }, [])
+  const measurePageCanvas = useCallback((key: string) => {
+    const container = pageContainersRef.current[key]
+    if (!container) return
+    requestAnimationFrame(() => {
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement | null
+      if (!canvas) return
+      const widthPx = canvas.clientWidth || 0
+      const heightPx = canvas.clientHeight || 0
+      const pageNo = Number(key)
+      if (!pageNo) return
+      setPageDims(prev => ({ ...prev, [pageNo]: { ...(prev[pageNo] || { widthPt: 0, heightPt: 0, widthPx: 0, heightPx: 0 }), widthPx, heightPx } }))
+    })
+  }, [])
+  const [activeFieldPreview, setActiveFieldPreview] = useState<string | null>(null)
 
   // Resolve possibly relative URLs to backend origin
   const resolveUrl = useCallback((url?: string | null) => {
@@ -112,11 +148,52 @@ export default function SignEnvelopePage() {
     } catch { return undefined }
   }, [])
 
+  const currentUserFullName: string | undefined = useMemo(() => {
+    try {
+      return (window as any).__CURRENT_USER_NAME__ || undefined
+    } catch { return undefined }
+  }, [])
+
+  const formatDate = useCallback((d: Date, pattern?: string) => {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mmm = d.toLocaleString('en', { month: 'short' })
+    switch (pattern) {
+      case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`
+      case 'DD/MM/YYYY': return `${dd}/${mm}/${yyyy}`
+      case 'YYYY/MM/DD': return `${yyyy}/${mm}/${dd}`
+      case 'DD-MMM-YYYY': return `${dd}-${mmm}-${yyyy}`
+      case 'YYYY-MM-DD':
+      default: return `${yyyy}-${mm}-${dd}`
+    }
+  }, [])
+
+  const getInitials = useCallback((full?: string) => {
+    if (!full) return ''
+    const parts = full.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+  }, [])
+
   const documentUrl = useMemo(() => {
     const doc = envelope?.document
     const raw = typeof doc === 'string' ? doc : (doc?.file_url || '')
     return resolveUrl(raw)
   }, [envelope, resolveUrl])
+
+  // Map signer id to name if backend provides it on public sign page
+  const signerIdToName = useMemo(() => {
+    const map: Record<string, string> = {}
+    try {
+      const anyEnv: any = envelope as any
+      const sigs: Array<any> = anyEnv?.signatures || []
+      sigs.forEach((s) => {
+        if (s?.signer && s?.signer_name) map[s.signer] = s.signer_name
+      })
+    } catch {}
+    return map
+  }, [envelope])
 
   const onPlaceholderClick = (entry: SigningOrderEntry) => {
     // Only open for current user if user id is known; otherwise let server enforce later
@@ -176,22 +253,21 @@ export default function SignEnvelopePage() {
         {documentUrl && (
           <Document file={documentUrl} onLoadSuccess={(info: any) => setNumPages(info.numPages)} loading="">
             {Array.from({ length: numPages || 1 }, (_, i) => i + 1).map((pageNo) => (
-              <div key={pageNo} className="relative">
+              <div key={pageNo} className="relative" ref={setPageContainerRef(`${pageNo}`)}>
                 <Page
                   pageNumber={pageNo}
                   renderAnnotationLayer={false}
                   renderTextLayer={false}
                   className="shadow"
                   loading=""
+                  data-page-key={`public-${pageNo}`}
                   onRenderSuccess={(page: any) => {
                     try {
                       const [x0, y0, x1, y1] = page.view || [0, 0, page.width, page.height]
                       const widthPt = Math.abs((x1 ?? page.width) - (x0 ?? 0)) || page.width || 0
                       const heightPt = Math.abs((y1 ?? page.height) - (y0 ?? 0)) || page.height || 0
-                      const canvas = (page as any).canvas || document.querySelector('.react-pdf__Page canvas')
-                      const widthPx = (canvas && (canvas as HTMLCanvasElement).clientWidth) || 0
-                      const heightPx = (canvas && (canvas as HTMLCanvasElement).clientHeight) || 0
-                      setPageDims((prev) => ({ ...prev, [pageNo]: { widthPt, heightPt, widthPx, heightPx } }))
+                      setPageDims((prev) => ({ ...prev, [pageNo]: { widthPt, heightPt, widthPx: prev[pageNo]?.widthPx || 0, heightPx: prev[pageNo]?.heightPx || 0 } }))
+                      measurePageCanvas(`${pageNo}`)
                     } catch {}
                   }}
                 />
@@ -217,8 +293,8 @@ export default function SignEnvelopePage() {
                       })
                       
                       let commonStyle: React.CSSProperties = {}
-                      if (dims) {
-                        // Convert PDF point coordinates (bottom-left origin) to CSS pixels (top-left origin)
+                      if (dims && dims.widthPt > 0 && dims.heightPt > 0 && dims.widthPx > 0 && dims.heightPx > 0) {
+                        // Convert stored top-left Y to CSS top using page height
                         const scaleX = dims.widthPx / (dims.widthPt || 1)
                         const scaleY = dims.heightPx / (dims.heightPt || 1)
                         const leftPx = (entry.position.x || 0) * scaleX
@@ -231,6 +307,9 @@ export default function SignEnvelopePage() {
                         console.warn(`[Sign Page] No dimensions available for page ${pageNo} yet`)
                       }
                       
+                      if (!(commonStyle as any).width || !(commonStyle as any).height) {
+                        return null
+                      }
                       return (
                         <div key={`${entry.signer_id}-${idx}`} className="absolute" style={commonStyle}>
                           {!isSigned ? (
@@ -264,6 +343,180 @@ export default function SignEnvelopePage() {
                               <div className="absolute inset-0 bg-green-100 border-2 border-green-400 rounded-md" />
                             )
                           )}
+                        </div>
+                      )
+                    })
+                  })()}
+
+                  {/* Non-signature fields overlays */}
+                  {(() => {
+                    const allFields = (envelope as any).fields as EnvelopeResponse['fields'] | undefined
+                    if (!allFields || allFields.length === 0) return null
+                    const fieldsForPage = allFields.filter(f => (f?.page || 0) === pageNo)
+                    console.log('[Sign Page][NonSig] page', pageNo, 'fieldsForPage:', fieldsForPage)
+                    const dims = pageDims[pageNo]
+                    return fieldsForPage.map((f, idx) => {
+                      const key = (f as any).id || `${pageNo}-${idx}`
+                      let style: React.CSSProperties = {}
+                      if (dims && dims.widthPt > 0 && dims.heightPt > 0 && dims.widthPx > 0 && dims.heightPx > 0) {
+                        const scaleX = dims.widthPx / (dims.widthPt || 1)
+                        const scaleY = dims.heightPx / (dims.heightPt || 1)
+                        const x = f.x || 0
+                        const y = f.y || 0
+                        const w = f.width || 0
+                        const h = f.height || 0
+                        const looksPixels = x > dims.widthPt * 2 || y > dims.heightPt * 2 || w > dims.widthPt * 2 || h > dims.widthPt * 2
+                        const leftPx = looksPixels ? x : x * scaleX
+                        const topPx = looksPixels ? y : y * scaleY
+                        const widthPx = looksPixels ? w : w * scaleX
+                        const heightPx = looksPixels ? h : h * scaleY
+                        const clampedLeft = Math.max(0, Math.min(leftPx, (dims.widthPx || 0) - widthPx))
+                        const clampedTop = Math.max(0, Math.min(topPx, (dims.heightPx || 0) - heightPx))
+                        style = { left: clampedLeft, top: clampedTop, width: widthPx, height: heightPx }
+                      }
+                      const isMine = !currentUserId || !f.assigned_signer || f.assigned_signer === currentUserId
+                      const interactiveCls = 'group absolute inset-0 border-2 border-blue-500 bg-blue-100/40 rounded-md cursor-pointer hover:bg-blue-200/60 transition flex flex-col items-center justify-center p-2'
+                      const disabledCls = 'absolute inset-0 border border-gray-300 bg-gray-200/30 rounded-md cursor-not-allowed flex items-center justify-center p-2'
+                      const fontFamily = f.font_family || 'Helvetica'
+                      const fontSize = f.font_size || 12
+                      const requiredMark = f.required ? ' *' : ''
+                      const today = formatDate(new Date(), f.date_format || 'YYYY-MM-DD')
+                      const recipientName = f.assigned_signer ? (signerIdToName?.[f.assigned_signer] || currentUserFullName) : currentUserFullName
+                      const initials = getInitials(recipientName)
+                      console.log('[Sign Page][NonSig] field calc', {
+                        key,
+                        type: f.type,
+                        assigned_signer: f.assigned_signer,
+                        recipientName,
+                        isMine,
+                        prefill_value: f.prefill_value,
+                        date_format: f.date_format,
+                        today,
+                        initials,
+                        style
+                      })
+                      const header = (
+                        <div className="absolute top-0 left-0 right-0 text-[10px] leading-none px-1 pt-0.5 text-blue-900/90 flex items-center justify-between">
+                          <span className="truncate max-w-[70%]">{isMine ? (recipientName || 'You') : (recipientName || 'Recipient')}</span>
+                          <span className="uppercase opacity-80">{f.type}</span>
+                        </div>
+                      )
+                      const isActive = activeFieldPreview === key
+                      const handleClick = () => {
+                        if (!isMine) return
+                        setActiveFieldPreview(prev => {
+                          const next = prev === key ? null : key
+                          console.log('[Sign Page][NonSig] click toggle', { key, next })
+                          return next
+                        })
+                      }
+
+                      if (!(style as any).width || !(style as any).height) return null
+                      if (f.type === 'date') {
+                        const value = (f.prefill_value && f.prefill_value.trim() !== '') ? f.prefill_value : today
+                        console.log('[Sign Page][NonSig] date value', { key, value })
+                        return (
+                          <div key={`nf-${idx}`} className="absolute" style={style}>
+                            <div className={isMine ? interactiveCls : disabledCls} title={`Date${requiredMark}`} role={isMine ? 'button' : undefined} onClick={handleClick}>
+                              {header}
+                              <div style={{ fontFamily, fontSize }} className="w-full h-full flex items-center justify-center text-gray-900">
+                                {value}
+                              </div>
+                              {isActive && (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 border-2 border-blue-500 rounded-md shadow-lg">
+                                  <div style={{ fontFamily, fontSize: Math.max(fontSize * 1.5, 14) }} className="px-2 text-blue-900 font-semibold">
+                                    {value}
+                                  </div>
+                                </div>
+                              )}
+                              {isMine && (
+                                <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                  Click to preview
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      }
+                      if (f.type === 'initials') {
+                        const value = (f.prefill_value && f.prefill_value.trim() !== '') ? f.prefill_value : initials
+                        console.log('[Sign Page][NonSig] initials value', { key, value })
+                        return (
+                          <div key={`nf-${idx}`} className="absolute" style={style}>
+                            <div className={isMine ? interactiveCls : disabledCls} title={`Initials${requiredMark}`} role={isMine ? 'button' : undefined} onClick={handleClick}>
+                              {header}
+                              <div style={{ fontFamily, fontSize }} className="w-full h-full flex items-center justify-center text-gray-900">
+                                {value || '—'}
+                              </div>
+                              {isActive && (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 border-2 border-blue-500 rounded-md shadow-lg">
+                                  <div style={{ fontFamily, fontSize: Math.max(fontSize * 1.5, 14) }} className="px-2 text-blue-900 font-semibold">
+                                    {value || '—'}
+                                  </div>
+                                </div>
+                              )}
+                              {isMine && (
+                                <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                  Click to preview
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      }
+                      if (f.type === 'designation') {
+                        const value = f.prefill_value ?? 'Designation not set'
+                        return (
+                          <div key={`nf-${idx}`} className="absolute" style={style}>
+                            <div className={isMine ? interactiveCls : disabledCls} title={`Designation${requiredMark}`} role={isMine ? 'button' : undefined} onClick={handleClick}>
+                              {header}
+                              <div style={{ fontFamily, fontSize }} className="px-2 w-full truncate text-gray-900">
+                                {value}
+                              </div>
+                              {isActive && (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 border-2 border-blue-500 rounded-md shadow-lg">
+                                  <div style={{ fontFamily, fontSize: Math.max(fontSize * 1.5, 14) }} className="px-2 text-blue-900 font-semibold truncate max-w-full">
+                                    {value}
+                                  </div>
+                                </div>
+                              )}
+                              {isMine && (
+                                <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                  Click to preview
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      }
+                      // text input
+                      return (
+                        <div key={`nf-${idx}`} className="absolute" style={style}>
+                          <div className={isMine ? interactiveCls : disabledCls} title={`Text${requiredMark}`} role={isMine ? 'button' : undefined} onClick={handleClick}>
+                            {header}
+                            <input
+                              type="text"
+                              defaultValue={f.prefill_value || ''}
+                              placeholder={f.placeholder || ''}
+                              maxLength={f.max_length || undefined}
+                              readOnly={!isMine}
+                              className="w-full h-full bg-transparent outline-none text-gray-900"
+                              style={{ fontFamily, fontSize }}
+                              autoFocus={isActive}
+                            />
+                            {isActive && !isMine && (
+                              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 border-2 border-blue-500 rounded-md shadow-lg">
+                                <div style={{ fontFamily, fontSize: Math.max(fontSize * 1.5, 14) }} className="px-2 text-blue-900 font-semibold truncate max-w-full">
+                                  {f.prefill_value || ''}
+                                </div>
+                              </div>
+                            )}
+                            {isMine && (
+                              <div className="absolute bottom-0.5 left-0 right-0 text-[10px] text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                Click to type
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )
                     })

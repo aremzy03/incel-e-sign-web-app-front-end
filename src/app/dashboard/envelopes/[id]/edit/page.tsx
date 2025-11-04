@@ -26,7 +26,7 @@ import { toast } from 'react-hot-toast'
 interface RecipientInput {
   id: string
   name?: string
-  email?: string
+  email: string
   order: number
 }
 
@@ -489,7 +489,7 @@ export default function EditEnvelopePage() {
                     documentUrl={documentUrl}
                     signers={sortedRecipients.map(r => ({
                       id: `recipient-${r.id}`,
-                      name: r.name,
+                      name: r.name || r.email,
                       email: r.email,
                       order: r.order
                     }))}

@@ -43,6 +43,13 @@ export interface Envelope {
   }
   recipients: EnvelopeRecipient[]
   signatures?: EnvelopeSignature[]
+  // Optional: some responses may inline associated documents
+  documents?: Array<{
+    id: string
+    file_name?: string
+    file_url?: string
+    signer_document_positions?: Array<{ signer_id: string; position: Position }>
+  }>
   status: 'draft' | 'pending' | 'completed' | 'rejected'
   created_at: string
   updated_at: string

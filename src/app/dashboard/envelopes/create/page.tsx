@@ -12,14 +12,19 @@ import { CheckCircle, AlertCircle, Save, Send, Keyboard } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import { EnvelopeCreationSidebar } from '@/components/envelope/EnvelopeCreationSidebar'
-import { VerticalPDFViewer } from '@/components/envelope/VerticalPDFViewer'
+import dynamic from 'next/dynamic'
 import { useCreateEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { useDocuments } from '@/hooks/useDocuments'
-import { Document } from '@/lib/api/documents'
+import { Document, mergeDocuments } from '@/lib/api/documents'
 import { FieldPosition, FieldPositions, RecipientInput, RECIPIENT_COLORS } from '@/types/envelope'
 
 export default function CreateEnvelopePage() {
+  // Avoid SSR of PDF viewer (uses DOM APIs)
+  const VerticalPDFViewer = useMemo(
+    () => dynamic(() => import('@/components/envelope/VerticalPDFViewer').then(m => m.VerticalPDFViewer), { ssr: false }),
+    []
+  )
   const router = useRouter()
   const { data: existingDocuments } = useDocuments()
   const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
@@ -39,6 +44,7 @@ export default function CreateEnvelopePage() {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
   const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
+  const [isMerging, setIsMerging] = useState(false)
 
   // Add recipient with color assignment
   const addRecipient = useCallback((recipient: { email: string; name?: string }) => {
@@ -244,6 +250,27 @@ export default function CreateEnvelopePage() {
     
     toast.success('Field removed')
   }, [activeFieldId])
+
+  // Merge documents: create a new merged PDF and select only it
+  const handleMergeDocuments = useCallback(async () => {
+    if (uploadedDocuments.length < 2) {
+      toast.error('Select at least two documents to merge')
+      return
+    }
+    try {
+      setIsMerging(true)
+      const merged = await mergeDocuments(uploadedDocuments.map(d => d.id), 'merged.pdf')
+      setUploadedDocuments([merged])
+      setFieldPositions({})
+      toast.success('Documents merged successfully')
+    } catch (e: any) {
+      console.error('Merge documents error:', e)
+      const msg = e?.response?.data?.message || e?.message || 'Failed to merge documents'
+      toast.error(msg)
+    } finally {
+      setIsMerging(false)
+    }
+  }, [uploadedDocuments])
 
   // Validation
   const validationErrors = useMemo(() => {
@@ -659,6 +686,8 @@ export default function CreateEnvelopePage() {
           onRecipientRemove={removeRecipient}
           onRecipientReorder={reorderRecipient}
           onFieldDrop={handleFieldDrop}
+          onMergeDocuments={handleMergeDocuments}
+          isMerging={isMerging}
         />
       </div>
       <DragOverlay dropAnimation={null}>

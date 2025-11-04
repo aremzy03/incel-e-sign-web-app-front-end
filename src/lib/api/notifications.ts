@@ -19,5 +19,10 @@ export async function markNotificationRead(id: number): Promise<void> {
   await apiClient.patch(`/notifications/${id}/read/`)
 }
 
+export async function markAllNotificationsRead(): Promise<void> {
+  // Backend may expose either of these; try the canonical first
+  await apiClient.patch('/notifications/read-all/')
+}
+
 
 

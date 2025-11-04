@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, IBM_Plex_Sans } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Navigation } from '@/components/navigation'
@@ -11,12 +11,7 @@ const inter = Inter({
   display: 'swap',
 })
 
-const ibmPlexSans = IBM_Plex_Sans({ 
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-ibm-plex-sans',
-  display: 'swap',
-})
+// Using Inter for both headings and body
 
 export const metadata: Metadata = {
   title: 'INCEL E-Sign - Legal Authority in Digital Signatures',
@@ -48,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${ibmPlexSans.variable}`}>
+    <html lang="en" className={`${inter.variable}`}>
       <body className="font-body antialiased bg-background text-foreground">
         <Providers>
           <div className="min-h-screen bg-gray-50">

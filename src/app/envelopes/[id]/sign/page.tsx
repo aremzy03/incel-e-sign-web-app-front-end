@@ -217,11 +217,30 @@ export default function SignEnvelopePage() {
       const hasExistingPosition = Boolean(myEntry?.position)
       const body: any = { signature_id: mySignatureId }
       if (!hasExistingPosition && draftPlacement) {
-        body.page = draftPlacement.page
-        body.x = Math.max(0, draftPlacement.x)
-        body.y = Math.max(0, draftPlacement.y)
-        body.width = Math.max(1, draftPlacement.width)
-        body.height = Math.max(1, draftPlacement.height)
+        // Convert from on-screen pixels back to PDF points to reduce flattening offset
+        const dims = pageDims[draftPlacement.page]
+        if (dims && dims.widthPt && dims.heightPt && dims.widthPx && dims.heightPx) {
+          const scaleX = (dims.widthPt || 1) / (dims.widthPx || 1)
+          const scaleY = (dims.heightPt || 1) / (dims.heightPx || 1)
+          const xPt = Math.max(0, draftPlacement.x) * scaleX
+          const yTopPx = Math.max(0, draftPlacement.y)
+          const hPx = Math.max(1, draftPlacement.height)
+          const yBottomPt = (dims.heightPt - (yTopPx + hPx) * scaleY)
+          const wPt = Math.max(1, draftPlacement.width) * scaleX
+          const hPt = hPx * scaleY
+          body.page = draftPlacement.page
+          body.x = xPt
+          body.y = yBottomPt
+          body.width = wPt
+          body.height = hPt
+        } else {
+          // Fallback to raw pixels if dims missing
+          body.page = draftPlacement.page
+          body.x = Math.max(0, draftPlacement.x)
+          body.y = Math.max(0, draftPlacement.y)
+          body.width = Math.max(1, draftPlacement.width)
+          body.height = Math.max(1, draftPlacement.height)
+        }
       }
       const res = await apiClient.post(`/signatures/${envelopeId}/sign/`, body)
       return res.data

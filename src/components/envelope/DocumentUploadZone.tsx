@@ -15,6 +15,8 @@ interface DocumentUploadZoneProps {
   onDocumentAdd: (document: Document) => void
   onDocumentRemove: (documentId: string) => void
   onDocumentSelect: (document: Document) => void
+  onMergeDocuments?: () => void
+  isMerging?: boolean
 }
 
 export function DocumentUploadZone({
@@ -22,6 +24,8 @@ export function DocumentUploadZone({
   onDocumentAdd,
   onDocumentRemove,
   onDocumentSelect,
+  onMergeDocuments,
+  isMerging,
 }: DocumentUploadZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false)
   const [showExistingDocuments, setShowExistingDocuments] = useState(false)
@@ -236,12 +240,10 @@ export function DocumentUploadZone({
             variant="outline"
             size="sm"
             className="w-full text-xs"
-            onClick={() => {
-              // TODO: Implement document merge functionality
-              toast('Document merge feature coming soon!')
-            }}
+            disabled={!onMergeDocuments || isMerging}
+            onClick={() => onMergeDocuments?.()}
           >
-            Merge Documents
+            {isMerging ? 'Merging…' : 'Merge Documents'}
           </Button>
         </div>
       )}

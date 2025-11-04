@@ -23,6 +23,8 @@ interface EnvelopeCreationSidebarProps {
   onRecipientRemove: (recipientId: number) => void
   onRecipientReorder: (recipientId: number, direction: 'up' | 'down') => void
   onFieldDrop: (fieldType: string, documentId: string, page: number, x: number, y: number) => void
+  onMergeDocuments?: () => void
+  isMerging?: boolean
 }
 
 export function EnvelopeCreationSidebar({
@@ -36,6 +38,8 @@ export function EnvelopeCreationSidebar({
   onRecipientRemove,
   onRecipientReorder,
   onFieldDrop,
+  onMergeDocuments,
+  isMerging,
 }: EnvelopeCreationSidebarProps) {
   
   const handleDragEnd = (event: DragEndEvent) => {
@@ -109,6 +113,8 @@ export function EnvelopeCreationSidebar({
                   onDocumentAdd={onDocumentAdd}
                   onDocumentRemove={onDocumentRemove}
                   onDocumentSelect={onDocumentSelect}
+                  onMergeDocuments={onMergeDocuments}
+                  isMerging={isMerging}
                 />
               </CardTitle>
             </CardHeader>

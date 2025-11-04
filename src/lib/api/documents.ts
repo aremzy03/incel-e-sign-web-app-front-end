@@ -67,6 +67,40 @@ export const getDocuments = async (): Promise<DocumentsListResponse> => {
   return response.data
 }
 
+export interface MergeDocumentsResponse {
+  status: string
+  message: string
+  data: {
+    id: string
+    file_url: string
+    name?: string
+  }
+}
+
+// Merge multiple existing documents into a new single document
+export const mergeDocuments = async (documentIds: string[], name?: string): Promise<Document> => {
+  if (!Array.isArray(documentIds) || documentIds.length < 2) {
+    throw new Error('At least two documents are required to merge')
+  }
+
+  const payload: { document_ids: string[]; name?: string } = { document_ids: documentIds }
+  if (name && name.trim()) payload.name = name.trim()
+
+  const response = await apiClient.post<MergeDocumentsResponse>('/documents/merge/', payload)
+  const res = response.data
+  const merged = res?.data
+
+  return {
+    id: merged.id,
+    file_name: merged.name || 'Merged Document',
+    file_url: merged.file_url,
+    file_size: 0,
+    status: 'draft',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+}
+
 // Get a specific document by ID
 export const getDocument = async (id: string): Promise<Document> => {
   try {

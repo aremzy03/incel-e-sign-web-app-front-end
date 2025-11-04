@@ -376,7 +376,7 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="font-medium text-navy-900">
-                              {env.name || env.document?.file_name || 'Envelope'}
+                              {env.name || env.documents?.[0]?.file_name || 'Envelope'}
                             </p>
                             <p className="text-sm text-gray-500">
                               {new Date(env.created_at).toLocaleDateString()}

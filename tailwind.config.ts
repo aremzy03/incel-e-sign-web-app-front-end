@@ -12,7 +12,7 @@ const config: Config = {
   theme: {
     // Override default font families
     fontFamily: {
-      'heading': ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'system-ui', 'sans-serif'],
+      'heading': ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
       'body': ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
       'sans': ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
     },

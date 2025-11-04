@@ -87,7 +87,7 @@ export default function EnvelopesPage() {
                   const isCreator = env.creator?.id === currentUserId
                   return (
                   <TableRow key={env.id}>
-                    <TableCell className="font-medium">{env.name || env.document?.file_name || '—'}</TableCell>
+                    <TableCell className="font-medium">{env.name || env.documents?.[0]?.file_name || '—'}</TableCell>
                 <TableCell>
                   <CreatorCell creator={env.creator} />
                 </TableCell>

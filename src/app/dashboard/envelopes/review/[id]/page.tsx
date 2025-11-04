@@ -238,7 +238,7 @@ export default function EnvelopeReviewPage() {
                 <span className="text-red-600 text-sm font-bold">PDF</span>
               </div>
               <div>
-                <p className="font-medium text-gray-900">{envelope.name || envelope.documentName}</p>
+                <p className="font-medium text-gray-900">{envelope.documentName}</p>
                 <p className="text-sm text-gray-600">PDF Document</p>
               </div>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { signIn, getSession } from 'next-auth/react';
@@ -26,32 +26,21 @@ import { loginSchema, type LoginFormData } from '@/lib/validations';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-export default function LoginPage() {
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  // Handle logout messages and redirect if already authenticated
   useEffect(() => {
     const message = searchParams?.get('message');
     if (message) {
       switch (message) {
         case 'session_expired':
           toast.error('Your session has expired. Please log in again.');
-          setError('Your session has expired. Please log in again.');
+          onSetError('Your session has expired. Please log in again.');
           break;
         case 'auth_failed':
           toast.error('Authentication failed. Please log in again.');
-          setError('Authentication failed. Please log in again.');
+          onSetError('Authentication failed. Please log in again.');
           break;
         default:
           break;
@@ -61,23 +50,37 @@ export default function LoginPage() {
     const checkSession = async () => {
       const session = await getSession();
       if (session?.accessToken && !session?.error) {
-        // Check if token is valid (not expired)
         try {
           const payload = JSON.parse(atob(session.accessToken.split('.')[1]));
           const currentTime = Math.floor(Date.now() / 1000);
-          
-          // Only redirect if token is valid and not expired
           if (payload.exp > currentTime) {
             router.push('/dashboard');
           }
         } catch (error) {
           console.error('Error checking token validity:', error);
-          // Don't redirect if we can't parse the token
         }
       }
     };
     checkSession();
-  }, [router, searchParams]);
+  }, [router, searchParams, onSetError]);
+
+  return null;
+}
+
+export default function LoginPage() {
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  // Message + redirect handled via Suspense-wrapped child
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -113,6 +116,8 @@ export default function LoginPage() {
   };
 
   return (
+    <Suspense fallback={null}>
+      <LoginParamHandler onSetError={setError} />
     <motion.div 
       className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
       variants={pageVariants}
@@ -241,5 +246,6 @@ export default function LoginPage() {
         </Card>
       </motion.div>
     </motion.div>
+    </Suspense>
   );
 }

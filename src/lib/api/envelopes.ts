@@ -36,6 +36,7 @@ export interface EnvelopeSignature {
 export interface Envelope {
   id: string
   name?: string
+  description?: string | null
   creator: {
     id: string
     email: string
@@ -79,6 +80,7 @@ export interface DocumentWithPositions {
 export interface CreateEnvelopeRequest {
   document_ids: string[]
   name?: string
+  description?: string | null
   signing_order: Array<{
     signer_id: string
     order: number
@@ -88,6 +90,7 @@ export interface CreateEnvelopeRequest {
 
 export interface EditEnvelopeRequest {
   name?: string
+  description?: string | null
   document_ids?: string[]
   signing_order?: Array<{
     signer_id: string
@@ -112,6 +115,7 @@ export interface CreateEnvelopeResponse {
   recipients: EnvelopeRecipient[]
   status: string
   created_at: string
+  description?: string | null
 }
 
 export interface EnvelopesListResponse {
@@ -267,6 +271,7 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
       return {
         id: r.id,
         name: r.name,
+        description: r.description ?? null,
         creator,
         recipients,
         status: r.status || 'draft',
@@ -329,6 +334,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
     return {
       id: r.id,
       name: r.name,
+      description: r.description ?? null,
       creator,
       recipients,
       signatures: r.signatures || [],

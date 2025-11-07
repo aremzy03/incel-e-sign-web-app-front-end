@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle, AlertCircle, Save, Send, Keyboard } from 'lucide-react'
@@ -56,6 +57,7 @@ export default function EditEnvelopePage() {
   const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
   const [isMerging, setIsMerging] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [description, setDescription] = useState<string>('')
 
   useEffect(() => {
     if (!envelope || !envelopeDocuments || initialized) return
@@ -74,6 +76,7 @@ export default function EditEnvelopePage() {
     setRecipients(initialRecipients)
     setNextRecipientId(initialRecipients.length + 1)
     setEnvelopeName(envelope.name || '')
+    setDescription(envelope.description || '')
 
     const initialDocuments: Document[] = envelopeDocuments.map((doc): Document => ({
       id: doc.id,
@@ -549,12 +552,15 @@ export default function EditEnvelopePage() {
         })
       })
 
+      const trimmedDescription = description.trim()
+
       const payload = {
         document_ids: uploadedDocuments.map(d => d.id),
         signing_order,
         documents_with_positions,
         ...(fields.length > 0 ? { fields } : {}),
         ...(envelopeName && { name: envelopeName }),
+        description: trimmedDescription.length > 0 ? trimmedDescription : null,
       }
 
       try {
@@ -567,7 +573,7 @@ export default function EditEnvelopePage() {
       setError(e?.message || 'Failed to update envelope')
       return null
     }
-  }, [uploadedDocuments, recipients, fieldPositions, envelopeName, validateRecipients])
+  }, [uploadedDocuments, recipients, fieldPositions, envelopeName, description, validateRecipients])
 
   // Save draft
   const handleSaveDraft = useCallback(async () => {
@@ -728,6 +734,18 @@ export default function EditEnvelopePage() {
               </Button>
             </div>
           </div>
+        </div>
+        <div className="mt-4">
+          <Label htmlFor="envelope-description" className="text-sm font-medium text-gray-700">Envelope Description (Optional)</Label>
+          <Textarea
+            id="envelope-description"
+            placeholder="Add a short message or instructions for recipients"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="mt-2"
+            maxLength={1000}
+          />
+          <p className="mt-1 text-xs text-gray-500">Shown to all recipients before signing. {description.length}/1000 characters.</p>
         </div>
       </div>
 

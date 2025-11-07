@@ -225,6 +225,20 @@ export default function EnvelopeDetailPage() {
 
       <Card className="bg-white shadow-sm">
         <CardHeader>
+          <CardTitle>Envelope Description</CardTitle>
+          <CardDescription>Shared with recipients</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {envelope.description ? (
+            <p className="text-sm text-gray-700 whitespace-pre-line">{envelope.description}</p>
+          ) : (
+            <p className="text-sm text-gray-500 italic">No description provided.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white shadow-sm">
+        <CardHeader>
           <CardTitle>Document Information</CardTitle>
         </CardHeader>
         <CardContent>

@@ -190,7 +190,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <AuthorityButton size="lg" className="w-full" asChild>
-                  <Link href="/dashboard/documents">
+                  <Link href="/dashboard/documents/upload">
                     <Plus className="w-4 h-4" />
                     Upload Document
                   </Link>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <Button variant="default" size="lg" className="w-full" asChild>
-                  <Link href="/dashboard/envelopes">
+                  <Link href="/dashboard/envelopes/create">
                     <Send className="w-4 h-4" />
                     Create Envelope
                   </Link>

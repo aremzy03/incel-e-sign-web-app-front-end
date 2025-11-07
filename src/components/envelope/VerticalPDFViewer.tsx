@@ -5,7 +5,7 @@ import { Document as PDFDocument, Page, pdfjs } from 'react-pdf'
 import { useDroppable } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
 import { Document as DocumentType } from '@/lib/api/documents'
@@ -52,13 +52,13 @@ export function VerticalPDFViewer({
   onFieldDrop,
   onPageMetricsChange,
 }: VerticalPDFViewerProps) {
-  const [scale, setScale] = useState(1.0)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [documentPages, setDocumentPages] = useState<Record<string, number>>({})
   const [pageDimensions, setPageDimensions] = useState<Record<string, { width: number; height: number }>>({})
   const [actualPDFDimensions, setActualPDFDimensions] = useState<Record<string, { width: number; height: number }>>({})
   const containerRef = useRef<HTMLDivElement>(null)
+  const scale = 1
 
   // Calculate all pages to render
   const allPages: DocumentPageInfo[] = documents.flatMap(doc => {
@@ -111,28 +111,6 @@ export function VerticalPDFViewer({
   }, [])
 
   // Update actual dimensions when scale changes
-  useEffect(() => {
-    if (documents.length > 0) {
-      // Recalculate dimensions for all pages when scale changes
-      documents.forEach(doc => {
-        const totalPages = documentPages[doc.id] || 1
-        for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
-          setTimeout(() => {
-            getActualPDFDimensions(doc.id, pageNumber)
-          }, 200) // Longer delay for scale changes
-          // Propagate scale changes alongside base dimensions if known
-          const pageKey = `${doc.id}-${pageNumber}`
-          const dims = pageDimensions[pageKey]
-          if (dims) {
-            try {
-              onPageMetricsChange?.(pageKey, { baseWidthPxAtScale1: dims.width, baseHeightPxAtScale1: dims.height, scale })
-            } catch {}
-          }
-        }
-      })
-    }
-  }, [scale, documents, documentPages, getActualPDFDimensions, pageDimensions])
-
   // Recalculate dimensions when new documents are added
   useEffect(() => {
     if (documents.length > 0) {
@@ -213,27 +191,6 @@ export function VerticalPDFViewer({
             <ChevronUp className="h-4 w-4" />
             Top
           </Button>
-          
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))}
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-gray-600 min-w-12 text-center">
-              {Math.round(scale * 100)}%
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setScale(prev => Math.min(2.0, prev + 0.1))}
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-          </div>
-          
           <Button
             variant="outline"
             size="sm"
@@ -304,8 +261,8 @@ export function VerticalPDFViewer({
                     <div
                       className="relative"
                       style={{
-                        width: (actualPDFDimensions[pageKey]?.width || (currentPageDimensions ? currentPageDimensions.width * scale : 0)) || 0,
-                        height: (actualPDFDimensions[pageKey]?.height || (currentPageDimensions ? currentPageDimensions.height * scale : 0)) || 0,
+                        width: (actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 0),
+                        height: (actualPDFDimensions[pageKey]?.height || currentPageDimensions?.height || 0),
                       }}
                     >
                       {/* PDF Content (fills wrapper) */}
@@ -345,8 +302,8 @@ export function VerticalPDFViewer({
                               onPositionChange={onFieldPositionChange}
                               onSelect={onFieldSelect}
                               onDelete={onFieldDelete}
-                              maxWidth={(currentPageDimensions?.width || 0) * scale}
-                              maxHeight={(currentPageDimensions?.height || 0) * scale}
+                              maxWidth={currentPageDimensions?.width || 0}
+                              maxHeight={currentPageDimensions?.height || 0}
                             />
                           ))}
                         </div>

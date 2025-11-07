@@ -97,7 +97,7 @@ export function EnvelopeCreationSidebar({
   const unassignedCount = getUnassignedFieldCount()
 
   return (
-      <div className="w-80 bg-gray-50 border-l border-gray-200 flex flex-col h-full overflow-hidden relative z-50">
+      <div className="w-96 bg-gray-50 border-l border-gray-200 flex flex-col h-full overflow-hidden relative z-50">
         <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">Create Envelope</h2>
           <p className="text-sm text-gray-600">Drag fields onto documents</p>

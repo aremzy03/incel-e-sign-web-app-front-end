@@ -20,16 +20,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { 
+import {
   Bell,
-  BarChart3, 
-  FileText, 
-  Mail, 
-  Users, 
-  PenTool, 
-  ClipboardList, 
-  Shield, 
-  Settings 
+  BarChart3,
+  FileText,
+  Mail,
+  Users,
+  PenTool,
+  ClipboardList,
+  Shield,
+  Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { listNotifications, markNotificationRead, type NotificationItem } from '@/lib/api/notifications'
@@ -72,6 +74,7 @@ const NotificationIcon = () => <Bell className="h-4 w-4 text-gray-600" />
 export function DashboardClientLayout({ children, user }: DashboardClientLayoutProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const queryClient = useQueryClient()
   const { data: profile } = useProfile()
   const { data: notificationsData } = useQuery<NotificationItem[]>({
@@ -139,21 +142,27 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
 
       {/* Sidebar */}
       <div className={cn(
-        "w-64 bg-white shadow-lg border-r transition-transform duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-64",
+        "bg-white shadow-lg border-r transition-all duration-300 ease-in-out",
         "md:translate-x-0 md:static md:z-auto",
         isMobileMenuOpen ? "translate-x-0 fixed inset-y-0 z-40" : "-translate-x-full fixed inset-y-0 z-40"
       )}>
         {/* Logo Section */}
-        <div className="p-6 border-b">
-          <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground text-sm font-bold">I</span>
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-800">Incel eSign</h2>
-              <p className="text-xs text-gray-500">Dashboard</p>
-            </div>
-          </div>
+        <div className="p-6 border-b flex items-center justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden md:inline-flex h-10 w-10 text-gray-600 hover:text-gray-900"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+            <span className="sr-only">Toggle sidebar</span>
+          </Button>
         </div>
         
         {/* Navigation */}
@@ -169,38 +178,46 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               )}
+              title={item.name}
             >
-              {React.createElement(item.icon, { className: "mr-3 w-5 h-5" })}
-              {item.name}
+              {React.createElement(item.icon, { className: cn("w-5 h-5", isCollapsed ? '' : 'mr-3') })}
+              {!isCollapsed && item.name}
             </Link>
           ))}
         </nav>
 
         {/* User Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
-          <Link href={`/dashboard/users/${displayUser.id}`} className="flex items-center space-x-3 mb-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
+          <Link href={`/dashboard/users/${displayUser.id}`} className={cn("flex items-center mb-3 rounded-lg p-2 transition-colors hover:bg-gray-100", isCollapsed ? 'justify-center' : 'space-x-3')} title={getFullName()}>
             <Avatar className="h-8 w-8">
               {profilePhotoUrl && <AvatarImage src={profilePhotoUrl} alt={getFullName()} />}
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {getUserInitials()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {getFullName()}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {displayUser.email}
-              </p>
-            </div>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {getFullName()}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {displayUser.email}
+                </p>
+              </div>
+            )}
           </Link>
           <Button
             onClick={handleLogout}
             variant="outline"
             size="sm"
-            className="w-full"
+            className={cn("w-full", isCollapsed ? 'px-0' : '')}
+            title="Logout"
           >
-            Logout
+            {isCollapsed ? (
+              <svg className="w-5 h-5 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            ) : (
+              'Logout'
+            )}
           </Button>
         </div>
       </div>

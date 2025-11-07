@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { Button } from '@/components/ui/button'
@@ -59,6 +59,7 @@ interface EnvelopeResponse {
 export default function SignEnvelopePage() {
   const params = useParams<{ id: string }>()
   const envelopeId = params?.id
+  const router = useRouter()
   const { data: session } = useSession()
   const currentUserId = session?.user?.id
   const queryClient = useQueryClient()
@@ -324,6 +325,10 @@ export default function SignEnvelopePage() {
       setPreviewSignerId(null)
       setDraftPlacement(null)
       setSelected(null)
+      // Redirect back to envelope details
+      if (envelopeId) {
+        router.push(`/dashboard/envelopes/${envelopeId}`)
+      }
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.detail || err?.response?.data?.message || 'Error signing document'
@@ -392,8 +397,10 @@ export default function SignEnvelopePage() {
     onSuccess: () => {
       toast.success('Envelope declined successfully.')
       setIsDeclineDialogOpen(false)
-      // Optionally redirect user after declining
-      // router.push('/dashboard/envelopes')
+      // Redirect back to envelope details
+      if (envelopeId) {
+        router.push(`/dashboard/envelopes/${envelopeId}`)
+      }
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.detail || err?.response?.data?.message || 'Error declining envelope'

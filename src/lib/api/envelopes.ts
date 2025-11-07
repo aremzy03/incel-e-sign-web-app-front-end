@@ -37,6 +37,7 @@ export interface Envelope {
   id: string
   name?: string
   description?: string | null
+  pdf_lock_password?: string | null
   creator: {
     id: string
     email: string
@@ -272,6 +273,7 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
         id: r.id,
         name: r.name,
         description: r.description ?? null,
+      pdf_lock_code: r.pdf_lock_code ?? null,
         creator,
         recipients,
         status: r.status || 'draft',
@@ -335,6 +337,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
       id: r.id,
       name: r.name,
       description: r.description ?? null,
+      pdf_lock_password: r.pdf_lock_password ?? null,
       creator,
       recipients,
       signatures: r.signatures || [],

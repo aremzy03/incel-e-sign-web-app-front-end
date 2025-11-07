@@ -239,6 +239,44 @@ export default function EnvelopeDetailPage() {
 
       <Card className="bg-white shadow-sm">
         <CardHeader>
+          <CardTitle>PDF Protection</CardTitle>
+          <CardDescription>Password required to open completed PDFs</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {envelope.pdf_lock_password ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold text-gray-900">Password:</span> {envelope.pdf_lock_password}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(envelope.pdf_lock_password ?? '').then(
+                      () => {},
+                      () => {}
+                    )
+                  }}
+                  className="text-xs"
+                >
+                  Copy
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Keep this password secure. Recipients will need it to open signed documents.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 italic">
+              A password will be generated once the envelope is completed.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white shadow-sm">
+        <CardHeader>
           <CardTitle>Document Information</CardTitle>
         </CardHeader>
         <CardContent>

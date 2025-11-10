@@ -12,8 +12,6 @@ import {
   ArrowRight,
   Clock,
   CheckCircle,
-  AlertCircle,
-  TrendingUp,
   Users,
   Shield,
   BarChart3
@@ -25,43 +23,50 @@ import { AuthorityButton, Button } from '@/components/ui/button';
 import { SignatureSeal } from '@/components/ui/signature-seal';
 import { createStagger, createEntrance } from '@/lib/motion';
 import { getDocuments, type Document } from '@/lib/api/documents';
-import { getEnvelopes, type EnvelopesListResponse } from '@/lib/api/envelopes';
+import { getEnvelopes, type EnvelopesListResponse, getEnvelopeMetrics, type EnvelopeMetrics } from '@/lib/api/envelopes';
 
-// Mock data for demonstration
-const stats = [
-  {
-    label: 'Documents Signed',
-    value: '124',
-    change: '+12%',
-    trend: 'up' as const,
-    icon: CheckCircle,
-    color: 'text-success-600',
-  },
-  {
-    label: 'Pending Signatures',
-    value: '8',
-    change: '-3',
-    trend: 'down' as const,
-    icon: Clock,
-    color: 'text-warning-600',
-  },
-  {
-    label: 'Active Envelopes',
-    value: '23',
-    change: '+5',
-    trend: 'up' as const,
-    icon: Send,
-    color: 'text-blue-600',
-  },
-  {
-    label: 'Completion Rate',
-    value: '96%',
-    change: '+2%',
-    trend: 'up' as const,
-    icon: BarChart3,
-    color: 'text-navy-600',
-  },
-];
+const StatCard = ({
+  label,
+  value,
+  icon: Icon,
+  color,
+  helper,
+}: {
+  label: string
+  value: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  helper: string
+}) => (
+  <motion.div
+    variants={createEntrance('up')}
+    whileHover={{ y: -4, scale: 1.02 }}
+    transition={{ type: 'spring', stiffness: 300 }}
+  >
+    <Card className="authority-container">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-600">
+              {label}
+            </p>
+            <p className="text-2xl font-bold font-heading text-navy-900">
+              {value}
+            </p>
+          </div>
+          
+          <div className={`p-3 rounded-lg bg-gray-50 ${color}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+        </div>
+        
+        <div className="mt-4 text-sm text-gray-500">
+          {helper}
+        </div>
+      </CardContent>
+    </Card>
+  </motion.div>
+)
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -79,6 +84,12 @@ export default function DashboardPage() {
     queryKey: ['envelopes', { page: 1, pageSize: 10 }],
     queryFn: () => getEnvelopes(1, 10),
     staleTime: 30_000,
+  });
+
+  const { data: metrics, isLoading: metricsLoading } = useQuery<EnvelopeMetrics>({
+    queryKey: ['envelopes', 'metrics'],
+    queryFn: getEnvelopeMetrics,
+    staleTime: 60_000,
   });
 
   const recentDocs = (documents || []).slice(0, 3);
@@ -124,41 +135,34 @@ export default function DashboardPage() {
           initial="initial"
           animate="animate"
         >
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              variants={createEntrance('up')}
-              whileHover={{ y: -4, scale: 1.02 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
-              <Card className="authority-container">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-600">
-                        {stat.label}
-                      </p>
-                      <p className="text-2xl font-bold font-heading text-navy-900">
-                        {stat.value}
-                      </p>
-                    </div>
-                    
-                    <div className={`p-3 rounded-lg bg-gray-50 ${stat.color}`}>
-                      <stat.icon className="w-6 h-6" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 mt-4">
-                    <TrendingUp className={`w-4 h-4 ${stat.trend === 'up' ? 'text-success-500' : 'text-error-500'}`} />
-                    <span className={`text-sm font-medium ${stat.trend === 'up' ? 'text-success-600' : 'text-error-600'}`}>
-                      {stat.change}
-                    </span>
-                    <span className="text-sm text-gray-500">from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+          <StatCard
+            label="Documents Signed"
+            value={metricsLoading ? '—' : (metrics?.documents_signed ?? 0).toString()}
+            icon={CheckCircle}
+            color="text-success-600"
+            helper="Total signatures completed"
+          />
+          <StatCard
+            label="Pending Signatures"
+            value={metricsLoading ? '—' : (metrics?.pending_signatures ?? 0).toString()}
+            icon={Clock}
+            color="text-warning-600"
+            helper="Waiting on recipients"
+          />
+          <StatCard
+            label="Active Envelopes"
+            value={metricsLoading ? '—' : (metrics?.active_envelopes ?? 0).toString()}
+            icon={Send}
+            color="text-blue-600"
+            helper="Draft or pending envelopes"
+          />
+          <StatCard
+            label="Completion Rate"
+            value={metricsLoading ? '—' : `${(metrics?.completion_rate ?? 0).toFixed(0)}%`}
+            icon={BarChart3}
+            color="text-navy-600"
+            helper="Completed envelopes ratio"
+          />
         </motion.div>
 
         {/* Quick Actions */}

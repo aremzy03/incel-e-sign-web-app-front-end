@@ -32,6 +32,11 @@ export function DocumentUploadZone({
   const uploadMutation = useUploadDocument()
   const { data: existingDocuments, isLoading: loadingExisting } = useDocuments()
 
+  const selectableExistingDocuments = (existingDocuments || []).filter(doc => {
+    const status = (doc.status || '').toLowerCase()
+    return status === 'pending' || status === 'rejected'
+  })
+
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setIsDragActive(false)
@@ -145,9 +150,9 @@ export function DocumentUploadZone({
           <h4 className="text-xs font-medium text-gray-700">Existing Documents:</h4>
           {loadingExisting ? (
             <div className="text-xs text-gray-500 text-center py-4">Loading documents...</div>
-          ) : existingDocuments && existingDocuments.length > 0 ? (
+          ) : selectableExistingDocuments.length > 0 ? (
             <div className="space-y-1 max-h-32 overflow-y-auto w-full">
-              {existingDocuments.map((doc) => {
+              {selectableExistingDocuments.map((doc) => {
                 const isAlreadyAdded = uploadedDocuments.some(addedDoc => addedDoc.id === doc.id)
                 return (
                   <div key={doc.id} className={`p-2 border rounded w-full ${isAlreadyAdded ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
@@ -184,7 +189,7 @@ export function DocumentUploadZone({
               })}
             </div>
           ) : (
-            <div className="text-xs text-gray-500 text-center py-4">No existing documents found</div>
+            <div className="text-xs text-gray-500 text-center py-4">No eligible documents found (pending or rejected only)</div>
           )}
         </div>
       )}

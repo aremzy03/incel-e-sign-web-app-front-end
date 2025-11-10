@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -52,9 +52,12 @@ const formatDate = (dateString: string): string => {
   })
 }
 
+const STATUS_ORDER = ['all', 'draft', 'pending', 'completed', 'rejected']
+
 export default function DocumentsPage() {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeStatus, setActiveStatus] = useState<string>('all')
 
   // Fetch documents from API using the hook
   const { data: documentsData, isLoading, error, refetch } = useDocuments()
@@ -93,6 +96,30 @@ export default function DocumentsPage() {
   }
 
   const documents = documentsData || []
+
+  const statusGroups = useMemo(() => {
+    const grouped: Record<string, Document[]> = {
+      all: documents,
+      draft: [],
+      pending: [],
+      completed: [],
+      rejected: [],
+    }
+
+    documents.forEach((doc) => {
+      const status = (doc.status || '').toLowerCase()
+      if (grouped[status]) {
+        grouped[status].push(doc)
+      }
+    })
+
+    return grouped
+  }, [documents])
+
+  const filteredDocuments = useMemo(() => {
+    if (activeStatus === 'all') return documents
+    return statusGroups[activeStatus] || []
+  }, [activeStatus, documents, statusGroups])
 
   // Loading state
   if (isLoading) {
@@ -184,14 +211,34 @@ export default function DocumentsPage() {
 
       {/* Documents Table */}
       <Card className="bg-white shadow-sm">
-        <CardHeader>
+        <CardHeader className="pb-0">
           <CardTitle>Your Documents</CardTitle>
           <CardDescription>
             View and manage all your uploaded documents
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {documents.length > 0 ? (
+        <CardContent className="pt-4">
+          <div className="mb-4 flex flex-wrap gap-2">
+            {STATUS_ORDER.map((status) => {
+              const label = status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)
+              const count = status === 'all' ? documents.length : statusGroups[status]?.length ?? 0
+              const isActive = activeStatus === status
+              return (
+                <Button
+                  key={status}
+                  variant={isActive ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveStatus(status)}
+                  className="flex items-center gap-2"
+                >
+                  {label}
+                  <span className="rounded-full bg-gray-100 px-2 text-xs text-gray-600">{count}</span>
+                </Button>
+              )
+            })}
+          </div>
+
+          {filteredDocuments.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -204,22 +251,28 @@ export default function DocumentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents.map((document) => (
+                {filteredDocuments.map((document) => (
                   <TableRow key={document.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
                           <span className="text-red-600 text-sm font-bold">PDF</span>
                         </div>
-                        <span className="text-gray-900">{document.file_name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDocumentClick(document)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {document.file_name}
+                        </button>
                       </div>
                     </TableCell>
                     <TableCell className="text-gray-600">
                       You
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(document.status)}>
-                        {document.status}
+                      <Badge className={getStatusColor(document.status || 'draft')}>
+                        {(document.status || 'draft').toUpperCase()}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-gray-600">
@@ -269,7 +322,7 @@ export default function DocumentsPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="text-gray-400 mb-4">
                 <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -277,13 +330,17 @@ export default function DocumentsPage() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
               <p className="text-gray-600 text-center mb-4">
-                Upload your first document to get started with digital signing
+                {activeStatus === 'all'
+                  ? 'Upload your first document to get started with digital signing.'
+                  : `There are no ${activeStatus} documents right now.`}
               </p>
-              <Button asChild>
-                <Link href="/dashboard/documents/upload">
-                  Upload Your First Document
-                </Link>
-              </Button>
+              {activeStatus === 'all' && (
+                <Button asChild>
+                  <Link href="/dashboard/documents/upload">
+                    Upload Your First Document
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

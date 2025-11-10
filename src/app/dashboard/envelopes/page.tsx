@@ -1,11 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getUserById } from '@/lib/api/users'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -36,7 +39,26 @@ export default function EnvelopesPage() {
   const { mutateAsync: rejectAsync, isPending: rejecting } = useRejectEnvelope()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteEnvelope()
 
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [searchTerm, setSearchTerm] = useState<string>('')
+
   const envelopes = data?.results || []
+
+  const filteredEnvelopes = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    return envelopes.filter((env) => {
+      const statusMatches = statusFilter === 'all' || env.status === statusFilter
+      const name = env.name || env.documents?.[0]?.file_name || ''
+      const creatorName = env.creator?.full_name || ''
+      const creatorEmail = env.creator?.email || ''
+      const searchMatches =
+        term.length === 0 ||
+        name.toLowerCase().includes(term) ||
+        creatorName.toLowerCase().includes(term) ||
+        creatorEmail.toLowerCase().includes(term)
+      return statusMatches && searchMatches
+    })
+  }, [envelopes, statusFilter, searchTerm])
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -51,9 +73,32 @@ export default function EnvelopesPage() {
       </div>
 
       <Card className="bg-white shadow-sm">
-        <CardHeader>
+        <CardHeader className="space-y-4">
           <CardTitle>Your Envelopes</CardTitle>
           <CardDescription>View and manage all your document envelopes</CardDescription>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Input
+              type="search"
+              placeholder="Search envelopes by name or creator"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="md:w-64"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -66,12 +111,12 @@ export default function EnvelopesPage() {
           {error && (
             <p className="text-red-600">Failed to load envelopes. Please try again.</p>
           )}
-          {!isLoading && !error && envelopes.length === 0 && (
+          {!isLoading && !error && filteredEnvelopes.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-600">No envelopes found.</p>
             </div>
           )}
-          {!isLoading && !error && envelopes.length > 0 && (
+          {!isLoading && !error && filteredEnvelopes.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -83,7 +128,7 @@ export default function EnvelopesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {envelopes.map((env) => {
+                {filteredEnvelopes.map((env) => {
                   const isCreator = env.creator?.id === currentUserId
                   return (
                   <TableRow key={env.id}>

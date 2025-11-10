@@ -119,6 +119,13 @@ export interface CreateEnvelopeResponse {
   description?: string | null
 }
 
+export interface EnvelopeMetrics {
+  documents_signed: number
+  pending_signatures: number
+  active_envelopes: number
+  completion_rate: number
+}
+
 export interface EnvelopesListResponse {
   count: number
   next: string | null
@@ -360,6 +367,18 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
     
     
     throw error
+  }
+}
+
+export const getEnvelopeMetrics = async (): Promise<EnvelopeMetrics> => {
+  const response = await apiClient.get('/envelopes/metrics/')
+  const payload = response.data
+  const data = payload?.data ?? payload
+  return {
+    documents_signed: data?.documents_signed ?? 0,
+    pending_signatures: data?.pending_signatures ?? 0,
+    active_envelopes: data?.active_envelopes ?? 0,
+    completion_rate: data?.completion_rate ?? 0,
   }
 }
 

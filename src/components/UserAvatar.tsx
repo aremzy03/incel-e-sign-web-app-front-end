@@ -32,8 +32,8 @@ export function UserAvatar({
   className,
   fallbackClassName,
 }: UserAvatarProps) {
-  // If we don't have profile photo URL but have userId, fetch the user data
-  const shouldFetchUser = userId && !profilePhotoUrl && !userName
+  // Always fetch user data if we have userId but no profilePhotoUrl, to ensure we get the profile picture
+  const shouldFetchUser = userId && !profilePhotoUrl
   const { data: fetchedUser, isLoading } = useUser(userId || '', !!shouldFetchUser)
 
   // Determine the actual values to use

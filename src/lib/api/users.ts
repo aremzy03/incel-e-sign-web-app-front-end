@@ -1,5 +1,6 @@
 import apiClient from '@/lib/axios'
 import { ApiResponse } from '@/types/api'
+import { getProfileDetail } from './profile'
 
 export interface User {
   id: string
@@ -90,21 +91,46 @@ export const getUserById = async (userId: string): Promise<User> => {
   console.log('=== Get User by ID ===')
   console.log('User ID:', userId)
   
+  // First try to get from profile endpoint which has profile_photo_url
+  try {
+    const profileResponse = await getProfileDetail(userId)
+    if (profileResponse?.data?.user) {
+      const u = profileResponse.data.user
+      const full_name = u.full_name || [u.first_name, u.last_name].filter(Boolean).join(' ').trim()
+      console.log('User from profile endpoint:', u)
+      return {
+        id: u.id,
+        email: u.email,
+        full_name: full_name || u.email,
+        is_active: Boolean(u.is_active ?? true),
+        created_at: u.created_at || '',
+        updated_at: u.updated_at || '',
+        profile_photo: u.profile_photo ?? null,
+        profile_photo_url: u.profile_photo_url ?? null,
+      }
+    }
+  } catch (profileError: any) {
+    console.log('Profile endpoint failed, trying users endpoint:', profileError.message)
+  }
+  
+  // Fallback to users endpoint
   try {
     const response = await apiClient.get<any>(`/auth/users/${userId}/`)
     console.log('User raw response:', response.data)
     const payload = response.data
     const u: any = (payload && payload.data) || payload
-    const full_name = u.full_name || [u.first_name, u.last_name].filter(Boolean).join(' ').trim()
+    // Handle nested structure: data.user or just data
+    const userData = u?.user || u
+    const full_name = userData.full_name || [userData.first_name, userData.last_name].filter(Boolean).join(' ').trim()
     return {
-      id: u.id,
-      email: u.email,
-      full_name: full_name || u.email,
-      is_active: Boolean(u.is_active ?? true),
-      created_at: u.created_at || '',
-      updated_at: u.updated_at || '',
-      profile_photo: u.profile_photo ?? null,
-      profile_photo_url: u.profile_photo_url ?? null,
+      id: userData.id,
+      email: userData.email,
+      full_name: full_name || userData.email,
+      is_active: Boolean(userData.is_active ?? true),
+      created_at: userData.created_at || '',
+      updated_at: userData.updated_at || '',
+      profile_photo: userData.profile_photo ?? null,
+      profile_photo_url: userData.profile_photo_url ?? null,
     }
   } catch (error: any) {
     console.error('Get user error:', {

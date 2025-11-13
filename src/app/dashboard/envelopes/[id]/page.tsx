@@ -10,18 +10,21 @@ import { useQuery } from '@tanstack/react-query'
 import { getUserById } from '@/lib/api/users'
 import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 import { useSession } from 'next-auth/react'
+import { UserAvatar } from '@/components/UserAvatar'
 
 function RecipientItem({ r, envelopeSignatures }: { r: any; envelopeSignatures: any[] }) {
   const recipientId = r?.id
   const hasDisplay = r?.name || r?.email
+  // Always fetch user data to get profile photo URL
   const { data: user } = useQuery({
     queryKey: ['user', recipientId],
     queryFn: () => getUserById(recipientId),
-    enabled: !!recipientId && !hasDisplay,
+    enabled: !!recipientId,
     staleTime: 5 * 60 * 1000,
   })
 
   const display = r?.name || r?.email || user?.full_name || user?.email || 'Recipient'
+  const profilePhotoUrl = user?.profile_photo_url || r?.profile_photo_url
   
   // Find the signature for this recipient by matching signer ID
   const recipientSignature = envelopeSignatures?.find(sig => sig.signer === recipientId)
@@ -33,6 +36,25 @@ function RecipientItem({ r, envelopeSignatures }: { r: any; envelopeSignatures: 
     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
       <div className="flex items-center space-x-3">
         <span className="text-sm font-medium text-gray-600">Order {r.order}</span>
+        {recipientId ? (
+          <Link href={`/dashboard/users/${recipientId}`} className="hover:opacity-80 transition-opacity">
+            <UserAvatar
+              userId={recipientId}
+              userName={user?.full_name || r?.name}
+              userEmail={user?.email || r?.email}
+              profilePhotoUrl={profilePhotoUrl}
+              className="h-8 w-8"
+            />
+          </Link>
+        ) : (
+          <UserAvatar
+            userId={recipientId}
+            userName={user?.full_name || r?.name}
+            userEmail={user?.email || r?.email}
+            profilePhotoUrl={profilePhotoUrl}
+            className="h-8 w-8"
+          />
+        )}
         {recipientId ? (
           <Link href={`/dashboard/users/${recipientId}`} className="text-sm text-blue-600 hover:underline">
             {display}
@@ -72,10 +94,11 @@ export default function EnvelopeDetailPage() {
   // Compute IDs and run user query BEFORE any early returns to keep hook order stable
   const creatorId = envelope?.creator?.id || (envelope as any)?.creator
   const creatorHasName = Boolean(envelope?.creator?.full_name || (envelope as any)?.creator_full_name)
+  // Always fetch user data to get profile photo URL
   const { data: creatorUser } = useQuery({
     queryKey: ['user', creatorId],
     queryFn: () => getUserById(creatorId),
-    enabled: Boolean(creatorId) && !creatorHasName,
+    enabled: Boolean(creatorId),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -127,6 +150,7 @@ export default function EnvelopeDetailPage() {
   const documentName = envelope?.name || 'Document'
   const creatorLabel = envelope?.creator?.full_name || envelope?.creator?.email || (envelope as any)?.creator_email || '—'
   const creatorDisplay = creatorUser?.full_name || creatorLabel
+  const creatorProfilePhotoUrl = creatorUser?.profile_photo_url || (envelope?.creator as any)?.profile_photo_url
 
   // Check if current user is the creator
   const currentUserId = session?.user?.id
@@ -147,15 +171,27 @@ export default function EnvelopeDetailPage() {
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge(envelope.status)}`}>
               {envelope.status}
             </span>
-            <span className="text-gray-600">
-              Creator: {creatorId ? (
-                <Link href={`/dashboard/users/${creatorId}`} className="text-blue-600 hover:underline">
-                  {creatorDisplay}
-                </Link>
+            <div className="flex items-center space-x-2 text-gray-600">
+              <span>Creator:</span>
+              {creatorId ? (
+                <div className="flex items-center space-x-2">
+                  <Link href={`/dashboard/users/${creatorId}`} className="hover:opacity-80 transition-opacity">
+                    <UserAvatar
+                      userId={creatorId}
+                      userName={creatorUser?.full_name || envelope?.creator?.full_name}
+                      userEmail={creatorUser?.email || envelope?.creator?.email}
+                      profilePhotoUrl={creatorProfilePhotoUrl}
+                      className="h-8 w-8"
+                    />
+                  </Link>
+                  <Link href={`/dashboard/users/${creatorId}`} className="text-blue-600 hover:underline">
+                    {creatorDisplay}
+                  </Link>
+                </div>
               ) : (
-                creatorDisplay
+                <span>{creatorDisplay}</span>
               )}
-            </span>
+            </div>
           </div>
         </div>
         <div className="space-x-2">

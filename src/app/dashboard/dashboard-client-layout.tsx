@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, getSession } from 'next-auth/react'
 import { authAPI } from '@/lib/api/auth'
-import { useState } from 'react'
+import { useState, createContext, useContext } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -35,6 +35,11 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { listNotifications, markNotificationRead, type NotificationItem } from '@/lib/api/notifications'
+
+// Context for sidebar collapse state
+const SidebarContext = createContext<{ isCollapsed: boolean }>({ isCollapsed: false })
+
+export const useSidebar = () => useContext(SidebarContext)
 
 interface NavigationItem {
   name: string
@@ -319,7 +324,9 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
+          <SidebarContext.Provider value={{ isCollapsed }}>
+            {children}
+          </SidebarContext.Provider>
         </main>
       </div>
     </div>

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: incel-esign-frontend
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: HEALTH_CHECK_BACKEND
+        value: "false"
+        sync: false
+      - key: ENABLE_LOGGING
+        value: "false"
+        sync: false
+

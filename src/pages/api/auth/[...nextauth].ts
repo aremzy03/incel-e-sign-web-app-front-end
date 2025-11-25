@@ -1,8 +1,9 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import axios from 'axios'
+import { getApiBaseUrl, getNextAuthSecret } from '@/lib/env'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = getApiBaseUrl()
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -48,7 +49,6 @@ export const authOptions: NextAuthOptions = {
                 }
               }
             } catch (profileError) {
-              console.error('Failed to fetch user profile:', profileError)
               // Fallback to basic user object
               const user = {
                 id: 'temp-id',
@@ -70,7 +70,10 @@ export const authOptions: NextAuthOptions = {
             }
           }
         } catch (error: any) {
-          console.error('Login error:', error.response?.data || error.message)
+          // Log error details only in development
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Login error:', error.response?.data || error.message)
+          }
           return null
         }
 
@@ -127,7 +130,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: getNextAuthSecret(),
 }
 
 async function refreshAccessToken(token: any) {
@@ -149,13 +152,15 @@ async function refreshAccessToken(token: any) {
     
     throw new Error('Invalid refresh response')
   } catch (error: any) {
-    console.error('Token refresh error:', error)
+    // Log error details only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Token refresh error:', error)
+    }
     
     // If token is blacklisted or invalid, return null to force re-authentication
     if (error.response?.data?.code === 'token_not_valid' || 
         error.response?.data?.detail?.includes('blacklisted') ||
         error.response?.status === 401) {
-      console.log('Token is blacklisted or invalid, forcing re-authentication')
       return null
     }
     

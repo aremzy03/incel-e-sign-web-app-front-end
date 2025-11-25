@@ -1,6 +1,7 @@
 import apiClient from '@/lib/axios'
 import { ApiResponse } from '@/types/api'
 import { getProfileDetail } from './profile'
+import { logger } from '@/lib/logger'
 
 export interface User {
   id: string
@@ -22,25 +23,16 @@ export interface UserSearchResponse {
 
 // Search users by email - try backend first, fallback to mock
 export const searchUsersByEmail = async (email: string): Promise<User[]> => {
-  console.log('=== Search Users by Email ===')
-  console.log('Searching for email:', email)
+  logger.debug('Searching users by email', { email })
   
   // First, try to get real users from backend
   try {
-    console.log('Attempting to search backend users...')
     const response = await apiClient.get<any>('/auth/users/', {
       params: {
         search: email,
         page_size: 10
       }
     })
-    
-    console.log('Backend user search raw response:', response.data)
-    if (response && typeof response.data === 'object') {
-      try {
-        console.log('Response keys:', Object.keys(response.data))
-      } catch {}
-    }
     
     // Some backends return paginated objects, others return arrays. Normalize.
     const data = response.data
@@ -61,7 +53,7 @@ export const searchUsersByEmail = async (email: string): Promise<User[]> => {
     } else if (data && (data as any).email) {
       users = [data as User]
     } else {
-      console.warn('Unexpected user search response shape; returning empty list')
+      logger.warn('Unexpected user search response shape; returning empty list')
       users = []
     }
 
@@ -70,26 +62,17 @@ export const searchUsersByEmail = async (email: string): Promise<User[]> => {
       String(u.email || '').toLowerCase() === email.toLowerCase()
     )
     
-    console.log('Found users in backend (normalized):', exactMatches)
+    logger.debug('Found users in backend', { count: exactMatches.length })
     return exactMatches
   } catch (error: any) {
-    console.error('Backend user search failed:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message
-    })
-    
-    // Return empty array if backend fails
-    console.log('Backend unavailable, returning empty array')
+    logger.errorSafe(error, 'Backend user search failed')
     return []
   }
 }
 
 // Get user by ID
 export const getUserById = async (userId: string): Promise<User> => {
-  console.log('=== Get User by ID ===')
-  console.log('User ID:', userId)
+  logger.debug('Getting user by ID', { userId })
   
   // First try to get from profile endpoint which has profile_photo_url
   try {
@@ -97,7 +80,6 @@ export const getUserById = async (userId: string): Promise<User> => {
     if (profileResponse?.data?.user) {
       const u = profileResponse.data.user
       const full_name = u.full_name || [u.first_name, u.last_name].filter(Boolean).join(' ').trim()
-      console.log('User from profile endpoint:', u)
       return {
         id: u.id,
         email: u.email,
@@ -133,12 +115,7 @@ export const getUserById = async (userId: string): Promise<User> => {
       profile_photo_url: userData.profile_photo_url ?? null,
     }
   } catch (error: any) {
-    console.error('Get user error:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data
-    })
-    
+    logger.errorSafe(error, 'Get user failed')
     throw error
   }
 }
@@ -152,16 +129,14 @@ export const validateUserExists = async (email: string): Promise<{ exists: boole
       user: users[0] || undefined
     }
   } catch (error: any) {
-    console.error('Error validating user existence:', error)
-    
+    logger.errorSafe(error, 'Error validating user existence')
     return { exists: false }
   }
 }
 
 // Search users by name or email
 export const searchUsers = async (query: string): Promise<User[]> => {
-  console.log('=== Search Users ===')
-  console.log('Searching for query:', query)
+  logger.debug('Searching users', { query })
   
   try {
     const response = await apiClient.get<any>('/auth/users/', {
@@ -170,8 +145,6 @@ export const searchUsers = async (query: string): Promise<User[]> => {
         page_size: 10
       }
     })
-    
-    console.log('User search raw response:', response.data)
     
     // Normalize response data (reuse logic from searchUsersByEmail)
     const data = response.data
@@ -189,20 +162,14 @@ export const searchUsers = async (query: string): Promise<User[]> => {
     } else if (data && typeof (data as any).results === 'object' && (data as any).results) {
       users = Object.values((data as any).results as Record<string, User>)
     } else {
-      console.warn('Unexpected user search response shape; returning empty list')
+      logger.warn('Unexpected user search response shape; returning empty list')
       users = []
     }
     
-    console.log('Found users:', users)
+    logger.debug('Found users', { count: users.length })
     return users
   } catch (error: any) {
-    console.error('User search failed:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message
-    })
-    
+    logger.errorSafe(error, 'User search failed')
     return []
   }
 }
@@ -224,8 +191,7 @@ export const validateUsersExist = async (emails: string[]): Promise<{
         invalid.push(email)
       }
     } catch (error: any) {
-      console.error(`Error validating user ${email}:`, error)
-      
+      logger.errorSafe(error, `Error validating user ${email}`)
       invalid.push(email)
     }
   }

@@ -631,6 +631,70 @@ it('displays user management table with dummy data', async () => {
 3. Follow the existing folder structure
 4. Write meaningful commit messages
 
+## 🚀 Deployment
+
+### Render Deployment
+
+This application is configured for deployment on [Render](https://render.com). See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+#### Quick Deploy to Render
+
+1. **Connect Repository**
+   - Sign up/login to [Render](https://render.com)
+   - Click "New +" → "Web Service"
+   - Connect your Git repository
+
+2. **Configure Service**
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+   - **Health Check Path:** `/api/health`
+   - **Node Version:** 20.x
+
+3. **Set Environment Variables**
+   ```
+   NODE_ENV=production
+   NEXT_PUBLIC_API_URL=https://your-backend-api.com/api
+   NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
+   NEXTAUTH_URL=https://your-app.onrender.com
+   ALLOWED_ORIGINS=https://your-app.onrender.com
+   ```
+
+4. **Deploy**
+   - Click "Create Web Service"
+   - Wait for build to complete (~5-10 minutes)
+   - Your app will be live at `https://your-app.onrender.com`
+
+#### Using render.yaml
+
+The repository includes a `render.yaml` configuration file. You can use Render Blueprints to deploy automatically:
+
+1. In Render dashboard, go to "New +" → "Blueprint"
+2. Connect your repository
+3. Render will detect and use `render.yaml`
+4. Set environment variables in the dashboard
+
+#### Environment Variables
+
+**Required:**
+- `NEXT_PUBLIC_API_URL` - Your backend API URL
+- `NEXTAUTH_SECRET` - Generate with: `openssl rand -base64 32`
+- `NEXTAUTH_URL` - Your deployed app URL (e.g., `https://your-app.onrender.com`)
+
+**Optional:**
+- `ALLOWED_ORIGINS` - Comma-separated CORS origins
+- `HEALTH_CHECK_BACKEND` - Set to `true` to check backend in health endpoint
+- `ENABLE_LOGGING` - Set to `true` to enable production logging
+
+For detailed deployment instructions, troubleshooting, and best practices, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+### Other Platforms
+
+This application can also be deployed to:
+- **Vercel** - Optimized for Next.js (recommended alternative)
+- **Netlify** - Good Next.js support
+- **AWS Amplify** - Enterprise option
+- **Docker** - Any container platform
+
 ## 📄 License
 
 This project is part of the Incel eSign application suite.

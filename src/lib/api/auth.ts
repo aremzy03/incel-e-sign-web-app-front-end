@@ -1,7 +1,8 @@
 import axios from 'axios'
 import apiClient from '@/lib/axios'
+import { getApiBaseUrl } from '@/lib/env'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = getApiBaseUrl()
 
 // Types for authentication
 export interface RegisterRequest {

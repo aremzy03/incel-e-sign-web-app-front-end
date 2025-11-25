@@ -1,9 +1,9 @@
 import axios from 'axios'
 import { getSession, signOut } from 'next-auth/react'
+import { getApiBaseUrl } from '@/lib/env'
 
 // Create axios instance with base configuration
-// Backend base URL – prefer NEXT_PUBLIC_API_URL (e.g. http://localhost:8000/api)
-const backendBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const backendBaseUrl = getApiBaseUrl()
 
 const apiClient = axios.create({
   baseURL: backendBaseUrl,
@@ -17,8 +17,6 @@ apiClient.interceptors.request.use(
     
     // Check if session has a refresh error before making the request
     if (session?.error === 'RefreshAccessTokenError') {
-      console.warn('Session has refresh token error - logging out user')
-      
       // Only redirect if we're in the browser and not already on login page
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         // Clear any existing session data
@@ -50,8 +48,6 @@ apiClient.interceptors.response.use(
   async (error) => {
     // Handle 401 errors by redirecting to login
     if (error.response?.status === 401) {
-      console.warn('Authentication failed (401) - redirecting to login')
-      
       // Only redirect if we're in the browser and not already on login page
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         // Clear any existing session data
@@ -66,8 +62,6 @@ apiClient.interceptors.response.use(
     // Also check if the session has been invalidated during the request
     const session = await getSession()
     if (session?.error === 'RefreshAccessTokenError') {
-      console.warn('Session refresh error detected during response - logging out user')
-      
       // Only redirect if we're in the browser and not already on login page
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         // Clear any existing session data

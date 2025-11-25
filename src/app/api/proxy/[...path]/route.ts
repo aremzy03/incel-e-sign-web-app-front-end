@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getApiBaseUrl, getAllowedOrigins, isProduction } from '@/lib/env'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = getApiBaseUrl()
+
+// Get allowed origins for CORS
+function getAllowedOrigin(request: NextRequest): string {
+  const allowedOrigins = getAllowedOrigins()
+  const origin = request.headers.get('origin')
+  
+  // In development, allow all origins
+  if (!isProduction()) {
+    return origin || '*'
+  }
+  
+  // In production, check if origin is allowed
+  if (origin && allowedOrigins.includes(origin)) {
+    return origin
+  }
+  
+  // Default to first allowed origin or deny
+  return allowedOrigins[0] || ''
+}
 
 export async function GET(
   request: NextRequest,
@@ -14,8 +34,7 @@ export async function GET(
   
   const targetUrl = `${API_BASE_URL}/${path}${hadTrailingSlash ? '/' : ''}${queryString}`
   
-  // Debug logging (remove in production)
-  console.log('Proxy request:', path, request.headers.get('authorization') ? '(authenticated)' : '(unauthenticated)')
+  const allowedOrigin = getAllowedOrigin(request)
   
   try {
     const response = await fetch(targetUrl, {
@@ -26,21 +45,21 @@ export async function GET(
       },
     })
     
-    console.log('Backend response status:', response.status)
-    
     // Check if this is a download request (binary data)
     const contentType = response.headers.get('content-type') || ''
     if (contentType.includes('application/pdf') || path.includes('/download')) {
-      console.log('Handling binary download response')
       const buffer = await response.arrayBuffer()
       return new NextResponse(buffer, {
         status: response.status,
         headers: {
           'Content-Type': contentType,
           'Content-Disposition': response.headers.get('content-disposition') || '',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          ...(allowedOrigin && {
+            'Access-Control-Allow-Origin': allowedOrigin,
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+          }),
         },
       })
     }
@@ -57,16 +76,32 @@ export async function GET(
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        ...(allowedOrigin && {
+          'Access-Control-Allow-Origin': allowedOrigin,
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
+        }),
       },
     })
   } catch (error) {
-    console.error('Proxy error:', error)
+    const errorMessage = isProduction() 
+      ? 'Failed to fetch data' 
+      : error instanceof Error ? error.message : 'Failed to fetch data'
+    
     return NextResponse.json(
-      { error: 'Failed to fetch data' },
-      { status: 500 }
+      { error: errorMessage },
+      { 
+        status: 500,
+        headers: {
+          ...(allowedOrigin && {
+            'Access-Control-Allow-Origin': allowedOrigin,
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+          }),
+        },
+      }
     )
   }
 }
@@ -78,12 +113,7 @@ export async function POST(
   const path = params.path.join('/')
   // Django with APPEND_SLASH requires trailing slash on POST endpoints
   const targetUrl = `${API_BASE_URL}/${path}/`
-  
-  console.log('=== POST Proxy Request ===')
-  console.log('Path:', path)
-  console.log('Target URL:', targetUrl)
-  console.log('Content-Type:', request.headers.get('content-type'))
-  console.log('Authorization:', request.headers.get('authorization') ? 'Present' : 'Missing')
+  const allowedOrigin = getAllowedOrigin(request)
   
   try {
     const contentType = request.headers.get('content-type') || ''
@@ -91,12 +121,8 @@ export async function POST(
     let response: Response
 
     if (contentType.includes('multipart/form-data')) {
-      console.log('Processing multipart/form-data...')
       // Rebuild FormData to ensure a correct multipart boundary is generated
       const incomingForm = await request.formData()
-      console.log('Incoming form entries:', Array.from(incomingForm.entries()).map(([key, value]) => 
-        `${key}: ${typeof value === 'object' && value && 'name' in value ? `File(${value.name}, ${value.size} bytes)` : String(value)}`
-      ))
       
       const outgoingForm = new FormData()
       Array.from(incomingForm.entries()).forEach(([key, value]) => {
@@ -105,14 +131,6 @@ export async function POST(
         } else {
           outgoingForm.append(key, String(value))
         }
-      })
-
-      console.log('Making request to Django...')
-      console.log('Request details:', {
-        url: targetUrl,
-        method: 'POST',
-        headers: { Authorization: authHeader ? 'Bearer ***' : 'Missing' },
-        bodyType: 'FormData'
       })
       
       try {
@@ -124,14 +142,11 @@ export async function POST(
           },
           body: outgoingForm,
         })
-        console.log('Django response received:', response.status, response.statusText)
       } catch (fetchError) {
-        console.error('Fetch error to Django:', fetchError)
         throw fetchError
       }
     } else {
       const textBody = await request.text()
-      console.log('Processing JSON/text body:', textBody.substring(0, 200))
       response = await fetch(targetUrl, {
         method: 'POST',
         headers: {
@@ -140,39 +155,53 @@ export async function POST(
         },
         body: textBody || undefined,
       })
-      console.log('Django response status:', response.status)
     }
     
     let data: any
     const responseText = await response.text()
-    console.log('Django raw response:', responseText.substring(0, 500))
     
     try {
       data = JSON.parse(responseText)
-      console.log('Django response data:', data)
     } catch (jsonError) {
-      console.log('Django returned non-JSON response, likely HTML error page')
       data = {
         error: 'Server returned non-JSON response',
-        detail: responseText.substring(0, 200),
-        status: response.status,
-        statusText: response.statusText
+        ...(isProduction() ? {} : {
+          detail: responseText.substring(0, 200),
+          status: response.status,
+          statusText: response.statusText
+        }),
       }
     }
     
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        ...(allowedOrigin && {
+          'Access-Control-Allow-Origin': allowedOrigin,
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
+        }),
       },
     })
   } catch (error) {
-    console.error('POST Proxy error:', error)
+    const errorMessage = isProduction() 
+      ? 'Failed to fetch data' 
+      : error instanceof Error ? error.message : 'Failed to fetch data'
+    
     return NextResponse.json(
-      { error: 'Failed to fetch data', details: String(error) },
-      { status: 500 }
+      { error: errorMessage },
+      { 
+        status: 500,
+        headers: {
+          ...(allowedOrigin && {
+            'Access-Control-Allow-Origin': allowedOrigin,
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+          }),
+        },
+      }
     )
   }
 }
@@ -184,11 +213,7 @@ export async function DELETE(
   const path = params.path.join('/')
   // Django with APPEND_SLASH requires trailing slash on DELETE endpoints
   const targetUrl = `${API_BASE_URL}/${path}/`
-  
-  console.log('=== DELETE Proxy Request ===')
-  console.log('Path:', path)
-  console.log('Target URL:', targetUrl)
-  console.log('Authorization:', request.headers.get('authorization') ? 'Present' : 'Missing')
+  const allowedOrigin = getAllowedOrigin(request)
   
   try {
     const response = await fetch(targetUrl, {
@@ -199,19 +224,19 @@ export async function DELETE(
       },
     })
     
-    console.log('Django response status:', response.status)
-    
     // Handle 204 No Content responses (successful deletion)
     if (response.status === 204) {
-      console.log('Django returned 204 No Content (successful deletion)')
       return NextResponse.json(
         { status: 'success', message: 'Document deleted successfully' },
         {
           status: 200, // Change to 200 for frontend compatibility
           headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            ...(allowedOrigin && {
+              'Access-Control-Allow-Origin': allowedOrigin,
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+              'Access-Control-Allow-Credentials': 'true',
+            }),
           },
         }
       )
@@ -219,45 +244,65 @@ export async function DELETE(
     
     let data: any
     const responseText = await response.text()
-    console.log('Django raw response:', responseText.substring(0, 200))
     
     try {
       data = JSON.parse(responseText)
-      console.log('Django response data:', data)
     } catch (jsonError) {
-      console.log('Django returned non-JSON response, likely HTML error page')
       data = {
         error: 'Server returned non-JSON response',
-        detail: responseText.substring(0, 200),
-        status: response.status,
-        statusText: response.statusText
+        ...(isProduction() ? {} : {
+          detail: responseText.substring(0, 200),
+          status: response.status,
+          statusText: response.statusText
+        }),
       }
     }
     
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        ...(allowedOrigin && {
+          'Access-Control-Allow-Origin': allowedOrigin,
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
+        }),
       },
     })
   } catch (error) {
-    console.error('DELETE Proxy error:', error)
+    const errorMessage = isProduction() 
+      ? 'Failed to fetch data' 
+      : error instanceof Error ? error.message : 'Failed to fetch data'
+    
     return NextResponse.json(
-      { error: 'Failed to fetch data', details: String(error) },
-      { status: 500 }
+      { error: errorMessage },
+      { 
+        status: 500,
+        headers: {
+          ...(allowedOrigin && {
+            'Access-Control-Allow-Origin': allowedOrigin,
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+          }),
+        },
+      }
     )
   }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
+  const allowedOrigin = getAllowedOrigin(request)
+  
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      ...(allowedOrigin && {
+        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Credentials': 'true',
+      }),
     },
   })
 }

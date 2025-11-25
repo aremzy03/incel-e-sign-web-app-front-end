@@ -1,4 +1,5 @@
 import apiClient from '@/lib/axios'
+import { logger } from '@/lib/logger'
 
 export interface EnvelopeDetail {
   id: number | string
@@ -135,25 +136,10 @@ export interface EnvelopesListResponse {
 
 // Create a new envelope
 export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<CreateEnvelopeResponse> => {
-  console.log('=== Create Envelope Function ===')
-  console.log('Envelope data:', data)
-  console.log('Envelope data type:', typeof data)
-  console.log('Envelope data keys:', Object.keys(data))
-  console.log('Document IDs:', data.document_ids)
-  console.log('Signing order:', data.signing_order)
-  console.log('Signing order length:', data.signing_order?.length)
-  console.log('Documents with positions:', data.documents_with_positions)
-  console.log('Documents with positions length:', data.documents_with_positions?.length)
-  console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api')
-  console.log('Full URL:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/envelopes/create/`)
+  logger.debug('Creating envelope', { documentIds: data.document_ids?.length, signingOrder: data.signing_order?.length })
   
   try {
-    // Log the exact data being sent
-    console.log('=== Sending to Backend ===')
-    console.log('URL:', '/envelopes/create/')
-    console.log('Method:', 'POST')
-    console.log('Data being sent:', JSON.stringify(data, null, 2))
-    console.log('Data type check:', {
+    logger.api('POST', '/envelopes/create/', data)
       hasDocumentIds: !!data.document_ids,
       documentIdsType: typeof data.document_ids,
       documentIdsLength: data.document_ids?.length,
@@ -167,49 +153,27 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
         order: item.order,
         order_type: typeof item.order
       })),
-      hasDocumentsWithPositions: !!data.documents_with_positions,
-      documentsWithPositionsType: typeof data.documents_with_positions,
-      documentsWithPositionsLength: data.documents_with_positions?.length,
-      documentsWithPositionsItems: data.documents_with_positions?.map(doc => ({
-        document_id: doc.document_id,
-        signerDocumentPositionsLength: doc.signer_document_positions?.length
-      }))
-    })
-    
     // Direct to backend API
     const response = await apiClient.post('/envelopes/create/', data)
-    console.log('Create envelope response:', response.data)
+    logger.debug('Create envelope response received')
+    
     // Normalize possible response wrappers
     const payload = response.data
     const unwrapped = payload?.data?.envelope || payload?.data || payload
     if (!unwrapped?.id) {
-      console.warn('Create envelope: unexpected response shape, missing id')
+      logger.warn('Create envelope: unexpected response shape, missing id')
     }
     return unwrapped
   } catch (error: any) {
-    console.error('Create envelope error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL
-    })
+    logger.errorSafe(error, 'Create envelope failed')
     
-    // Log the full error response for 400 errors
+    // Log detailed error info only in development
     if (error.response?.status === 400) {
-      console.error('=== 400 BAD REQUEST DETAILS ===')
-      console.error('Error response data:', JSON.stringify(error.response?.data, null, 2))
-      console.error('Request data that was sent:', JSON.stringify(data, null, 2))
-      console.error('Headers sent:', error.config?.headers)
+      logger.debug('400 Bad Request details', {
+        responseData: error.response?.data,
+        requestData: data,
+      })
     }
-    
-    // Log the full error response for debugging
-    console.error('Full error response:', error.response)
-    console.error('Error response data:', error.response?.data)
-    console.error('Error response headers:', error.response?.headers)
-    console.error('Request data that was sent:', data)
-    
     
     throw error
   }
@@ -217,11 +181,7 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
 
 // Get all envelopes
 export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Promise<EnvelopesListResponse> => {
-  console.log('=== Get Envelopes Function ===')
-  console.log('Page:', page, 'PageSize:', pageSize)
-  console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api')
-  console.log('Full URL:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/envelopes/`)
-  console.log('Attempting to fetch envelopes from backend...')
+  logger.debug('Fetching envelopes', { page, pageSize })
   
   try {
     const response = await apiClient.get('/envelopes/', {
@@ -231,7 +191,7 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
       },
     })
     
-    console.log('Envelopes raw response:', response.data)
+    logger.debug('Envelopes response received')
     const payload = response.data
     const unwrapped: any = (payload && payload.data) || payload
 
@@ -249,7 +209,7 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
       next = unwrapped.next ?? null
       previous = unwrapped.previous ?? null
     } else {
-      console.warn('Unexpected envelopes list shape, defaulting to empty list')
+      logger.warn('Unexpected envelopes list shape, defaulting to empty list')
       results = []
       count = 0
     }
@@ -294,29 +254,17 @@ export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Pro
 
     return { count, next, previous, results: normalizedResults }
   } catch (error: any) {
-    console.error('Get envelopes error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL
-    })
-    
-    
+    logger.errorSafe(error, 'Get envelopes failed')
     throw error
   }
 }
 
 // Get a specific envelope by ID
 export const getEnvelope = async (id: string): Promise<Envelope> => {
-  console.log('=== Get Envelope Function ===')
-  console.log('Envelope ID:', id)
-  console.log('Full URL:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/envelopes/${id}/`)
+  logger.debug('Fetching envelope', { id })
   
   try {
     const response = await apiClient.get(`/envelopes/${id}/`)
-    console.log('Envelope raw response:', response.data)
     const payload = response.data
     const r: any = (payload && (payload.data?.envelope || payload.data)) || payload
 
@@ -356,16 +304,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
       rejected_at: r.rejected_at,
     }
   } catch (error: any) {
-    console.error('Get envelope error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL
-    })
-    
-    
+    logger.errorSafe(error, 'Get envelope failed')
     throw error
   }
 }
@@ -384,25 +323,14 @@ export const getEnvelopeMetrics = async (): Promise<EnvelopeMetrics> => {
 
 // Send an envelope
 export const sendEnvelope = async (id: string): Promise<ApiResponse<Envelope>> => {
-  console.log('=== Send Envelope Function ===')
-  console.log('Envelope ID:', id)
-  console.log('Send URL:', `/envelopes/${id}/send/`)
+  logger.debug('Sending envelope', { id })
   
   try {
     const response = await apiClient.post(`/envelopes/${id}/send/`)
-    console.log('Send envelope response:', response.data)
+    logger.debug('Envelope sent successfully')
     return response.data
   } catch (error: any) {
-    console.error('Send envelope error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL
-    })
-    
-    
+    logger.errorSafe(error, 'Send envelope failed')
     throw error
   }
 }
@@ -431,10 +359,10 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
     // Assuming the backend returns an array of documents directly or nested under a 'data' field
     const documents = (payload && payload.data) || payload;
     if (!Array.isArray(documents)) {
-      console.warn('getEnvelopeDocuments: unexpected response shape, expected array', documents);
+      logger.warn('getEnvelopeDocuments: unexpected response shape, expected array');
       return [];
     }
-    console.log('Fetched documents for envelope:', envelopeId, documents);
+    logger.debug('Fetched documents for envelope', { envelopeId, count: documents.length });
     // Map the documents to ensure correct IDs and file names are used
     return documents.map(doc => ({
       ...doc,
@@ -445,7 +373,7 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
       signer_document_positions: doc.signer_document_positions || [],
     })) as EnvelopeDocumentResponse[];
   } catch (error: any) {
-    console.error('Error fetching documents for envelope:', envelopeId, {
+    logger.errorSafe(error, `Error fetching documents for envelope ${envelopeId}`)
       status: error.response?.status,
       statusText: error.response?.statusText,
       data: error.response?.data,
@@ -492,10 +420,7 @@ export const editEnvelope = async (
 
 // Reject an envelope (creator cancels)
 export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>> => {
-  console.log('=== Reject Envelope Function ===')
-  console.log('Envelope ID:', id)
-  console.log('Envelope ID type:', typeof id)
-  console.log('Reject URL:', `/envelopes/${id}/reject/`)
+  logger.debug('Rejecting envelope', { id })
   
   // Validate input
   if (!id || typeof id !== 'string' || id.trim() === '') {
@@ -503,29 +428,13 @@ export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>>
   }
   
   try {
-    // Log the exact request being made
-    console.log('Making POST request to:', `/envelopes/${id}/reject/`)
-    console.log('Request payload:', {})
-    console.log('Request config:', { timeout: 15000 })
-    
     const response = await apiClient.post(`/envelopes/${id}/reject/`, {}, {
       timeout: 15000, // Increase timeout for reject operation
     })
-    console.log('Reject envelope response status:', response.status)
-    console.log('Reject envelope response headers:', response.headers)
-    console.log('Reject envelope response data:', response.data)
+    logger.debug('Envelope rejected successfully')
     return response.data
   } catch (error: any) {
-    console.error('Reject envelope error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL,
-      requestData: error.config?.data,
-      headers: error.config?.headers
-    })
+    logger.errorSafe(error, 'Reject envelope failed')
     
     // Provide specific error messages based on status code
     if (error.response?.status === 400) {
@@ -541,17 +450,7 @@ export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>>
       const serverMessage = error.response?.data?.detail || 
                            error.response?.data?.message || 
                            'Server error occurred while rejecting envelope.'
-      
-      // Log additional debugging information for 500 errors
-      console.error('=== 500 SERVER ERROR DETAILS ===')
-      console.error('Full error response:', error.response)
-      console.error('Error response data:', JSON.stringify(error.response?.data, null, 2))
-      console.error('Request URL:', error.config?.url)
-      console.error('Request method:', error.config?.method)
-      console.error('Request headers:', error.config?.headers)
-      console.error('Request data:', error.config?.data)
-      
-      throw new Error(`Server error: ${serverMessage}. Please check the console for more details or contact support.`)
+      throw new Error(`Server error: ${serverMessage}. Please try again or contact support.`)
     } else if (error.code === 'ECONNABORTED') {
       throw new Error('Request timed out. Please try again.')
     } else if (error.response?.data?.detail) {
@@ -566,23 +465,13 @@ export const rejectEnvelope = async (id: string): Promise<ApiResponse<Envelope>>
 
 // Delete an envelope
 export const deleteEnvelope = async (id: string): Promise<void> => {
-  console.log('=== Delete Envelope Function ===')
-  console.log('Envelope ID:', id)
-  console.log('Delete URL:', `/envelopes/${id}/delete/`)
+  logger.debug('Deleting envelope', { id })
   
   try {
-    const response = await apiClient.delete(`/envelopes/${id}/delete/`)
-    console.log('Delete envelope response:', response.status)
-    console.log('Delete successful')
+    await apiClient.delete(`/envelopes/${id}/delete/`)
+    logger.debug('Envelope deleted successfully')
   } catch (error: any) {
-    console.error('Delete envelope error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method
-    })
-    
+    logger.errorSafe(error, 'Delete envelope failed')
     
     // Provide specific error messages based on status code
     if (error.response?.status === 404) {

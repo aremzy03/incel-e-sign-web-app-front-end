@@ -1,8 +1,17 @@
 /** @type {import('next').NextConfig} */
 
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-})
+// Conditionally load bundle analyzer only if ANALYZE is true and module is available
+let withBundleAnalyzer = (config) => config
+try {
+  if (process.env.ANALYZE === 'true') {
+    withBundleAnalyzer = require('@next/bundle-analyzer')({
+      enabled: true,
+    })
+  }
+} catch (error) {
+  // Bundle analyzer not available, continue without it
+  console.warn('@next/bundle-analyzer not found, skipping bundle analysis')
+}
 
 // Get allowed origins from environment variable
 const getAllowedOrigins = () => {

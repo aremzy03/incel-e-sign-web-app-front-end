@@ -79,11 +79,10 @@ export const getUserById = async (userId: string): Promise<User> => {
     const profileResponse = await getProfileDetail(userId)
     if (profileResponse?.data?.user) {
       const u = profileResponse.data.user
-      const full_name = u.full_name || [u.first_name, u.last_name].filter(Boolean).join(' ').trim()
       return {
         id: u.id,
         email: u.email,
-        full_name: full_name || u.email,
+        full_name: u.full_name || u.email,
         is_active: Boolean(u.is_active ?? true),
         created_at: u.created_at || '',
         updated_at: u.updated_at || '',
@@ -92,18 +91,21 @@ export const getUserById = async (userId: string): Promise<User> => {
       }
     }
   } catch (profileError: any) {
-    console.log('Profile endpoint failed, trying users endpoint:', profileError.message)
+    logger.debug('Profile endpoint failed, trying users endpoint', { error: profileError.message })
   }
   
   // Fallback to users endpoint
   try {
     const response = await apiClient.get<any>(`/auth/users/${userId}/`)
-    console.log('User raw response:', response.data)
     const payload = response.data
     const u: any = (payload && payload.data) || payload
     // Handle nested structure: data.user or just data
     const userData = u?.user || u
-    const full_name = userData.full_name || [userData.first_name, userData.last_name].filter(Boolean).join(' ').trim()
+    // Use full_name if available, otherwise try to construct from first_name/last_name if they exist
+    const full_name = userData.full_name || 
+      (userData.first_name || userData.last_name 
+        ? [userData.first_name, userData.last_name].filter(Boolean).join(' ').trim()
+        : userData.email)
     return {
       id: userData.id,
       email: userData.email,

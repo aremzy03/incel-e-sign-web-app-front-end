@@ -30,7 +30,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     logger.errorSafe(error, 'ErrorBoundary')
-    logger.errorSafe(new Error(errorInfo.componentStack), 'ErrorBoundary Stack')
+    if (errorInfo.componentStack) {
+      logger.errorSafe(new Error(errorInfo.componentStack), 'ErrorBoundary Stack')
+    }
     
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
@@ -63,7 +65,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Something went wrong
             </h2>
             <p className="text-gray-600 text-center mb-4">
-              We're sorry, but something unexpected happened. Please try refreshing the page.
+              We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
             </p>
             <button
               onClick={() => {

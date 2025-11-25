@@ -140,19 +140,7 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
   
   try {
     logger.api('POST', '/envelopes/create/', data)
-      hasDocumentIds: !!data.document_ids,
-      documentIdsType: typeof data.document_ids,
-      documentIdsLength: data.document_ids?.length,
-      hasSigningOrder: !!data.signing_order,
-      signingOrderType: typeof data.signing_order,
-      signingOrderLength: data.signing_order?.length,
-      signingOrderItems: data.signing_order?.map(item => ({
-        signer_id: item.signer_id,
-        signer_id_type: typeof item.signer_id,
-        signer_id_length: item.signer_id?.length,
-        order: item.order,
-        order_type: typeof item.order
-      })),
+    
     // Direct to backend API
     const response = await apiClient.post('/envelopes/create/', data)
     logger.debug('Create envelope response received')
@@ -374,14 +362,7 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
     })) as EnvelopeDocumentResponse[];
   } catch (error: any) {
     logger.errorSafe(error, `Error fetching documents for envelope ${envelopeId}`)
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL,
-    });
-    throw error;
+    throw error
   }
 }
 
@@ -390,30 +371,15 @@ export const editEnvelope = async (
   id: string,
   data: EditEnvelopeRequest
 ): Promise<ApiResponse<Envelope>> => {
-  console.log('=== Edit Envelope Function ===')
-  console.log('Envelope ID:', id)
-  console.log('Edit data:', data)
-  console.log('Edit URL:', `/envelopes/${id}/edit/`)
+  logger.debug('Editing envelope', { id })
   
   try {
-    console.log('=== Sending to Backend for Edit ===')
-    console.log('URL:', `/envelopes/${id}/edit/`)
-    console.log('Method:', 'PATCH')
-    console.log('Data being sent:', JSON.stringify(data, null, 2))
-    
+    logger.api('PATCH', `/envelopes/${id}/edit/`, data)
     const response = await apiClient.patch(`/envelopes/${id}/edit/`, data)
-    console.log('Edit envelope response:', response.data)
+    logger.debug('Envelope edited successfully')
     return response.data
   } catch (error: any) {
-    console.error('Edit envelope error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      baseURL: error.config?.baseURL,
-      requestData: error.config?.data,
-    })
+    logger.errorSafe(error, 'Edit envelope failed')
     throw error
   }
 }

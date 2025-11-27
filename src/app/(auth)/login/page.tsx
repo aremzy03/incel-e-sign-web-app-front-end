@@ -10,17 +10,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-hot-toast';
 import { Shield, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AuthorityButton, Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Form as AuthorityForm, 
-  FormField, 
-  FormLabel, 
-  FormInput, 
-  FormMessage 
-} from '@/components/ui/authority-form';
-import { createEntrance, pageVariants } from '@/lib/motion';
+// NOTE: Use relative imports instead of "@/..." so builds work reliably in all environments (including Render)
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { AuthorityButton, Button } from '../../../components/ui/button';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
+import {
+  Form as AuthorityForm,
+  FormField,
+  FormLabel,
+  FormInput,
+  FormMessage,
+} from '../../../components/ui/authority-form';
+import { createEntrance, pageVariants } from '../../../lib/motion';
 import { loginSchema, type LoginFormData } from '@/lib/validations';
 
 // Force dynamic rendering

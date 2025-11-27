@@ -59,6 +59,14 @@ const nextConfig = {
       { test: /\.mjs\.map$/i, type: 'asset/source' },
       { test: /\.map$/i, type: 'asset/source' }
     )
+
+    // Silence known safe Webpack warnings from onnxruntime-web dynamic requires
+    config.ignoreWarnings = config.ignoreWarnings || []
+    config.ignoreWarnings.push({
+      module: /onnxruntime-web/,
+      message: /Critical dependency: require function is used in a way in which dependencies cannot be statically extracted/,
+    })
+
     return config
   },
   async headers() {

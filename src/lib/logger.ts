@@ -3,18 +3,18 @@
  * Respects NODE_ENV and only logs in development or when explicitly enabled
  */
 
+import { isLoggingEnabled, isProduction } from '@/lib/env'
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
-const isDevelopment = process.env.NODE_ENV === 'development'
-const isProduction = process.env.NODE_ENV === 'production'
-const enableLogging = process.env.ENABLE_LOGGING === 'true' || isDevelopment
+const enableLogging = isLoggingEnabled()
 
 class Logger {
   private shouldLog(level: LogLevel): boolean {
     if (!enableLogging) return false
     
     // In production, only log warnings and errors
-    if (isProduction && (level === 'debug' || level === 'info')) {
+    if (isProduction() && (level === 'debug' || level === 'info')) {
       return false
     }
     
@@ -52,7 +52,7 @@ class Logger {
     if (!this.shouldLog('error')) return
 
     const message = error instanceof Error ? error.message : String(error)
-    const sanitized = isProduction 
+    const sanitized = isProduction() 
       ? 'An error occurred' 
       : message
 

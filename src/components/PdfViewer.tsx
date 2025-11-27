@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
+import { getApiBaseUrl } from '@/lib/env'
 import { Button } from '@/components/ui/button'
 import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
@@ -57,12 +58,12 @@ export default function PdfViewer({ url, className, showControls = true, pageNum
   const resolvedUrl = useMemo(() => {
     if (!url) return url
     if (/^https?:\/\//i.test(url)) return url
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-    let backendOrigin = 'http://localhost:8000'
+    const apiBase = getApiBaseUrl()
+    let backendOrigin = apiBase
     try {
       backendOrigin = new URL(apiBase).origin
     } catch (_) {
-      // fallback kept
+      // keep apiBase as-is if URL parsing fails
     }
     const path = url.startsWith('/') ? url : `/${url}`
     return `${backendOrigin}${path}`

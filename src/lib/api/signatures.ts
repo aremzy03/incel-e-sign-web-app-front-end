@@ -14,18 +14,53 @@ export interface UploadSignatureResponse {
   message?: string
 }
 
+/**
+ * Helper to normalize raw backend signature payloads into ReusableSignature
+ */
+function mapToReusableSignature(item: any): ReusableSignature {
+  const id = String(item.id)
+  const imageUrl = item.image_url || item.image || ''
+  const uploadedAt = item.uploaded_at || item.created_at || new Date().toISOString()
+  const isDefault = Boolean(item.is_default)
+  const name = item.name || (isDefault ? 'Default Signature' : 'Signature')
+  return { id, name, image_url: imageUrl, uploaded_at: uploadedAt, is_default: isDefault }
+}
+
 export async function listUserSignatures(): Promise<ReusableSignature[]> {
-  const response = await apiClient.get('/signatures/user/')
-  const raw = Array.isArray(response.data) ? response.data : (response.data?.data ?? [])
-  if (!Array.isArray(raw)) return []
-  return raw.map((item: any) => {
-    const id = String(item.id)
-    const imageUrl = item.image_url || item.image || ''
-    const uploadedAt = item.uploaded_at || item.created_at || new Date().toISOString()
-    const isDefault = Boolean(item.is_default)
-    const name = item.name || (isDefault ? 'Default Signature' : 'Signature')
-    return { id, name, image_url: imageUrl, uploaded_at: uploadedAt, is_default: isDefault } as ReusableSignature
-  })
+  // Hit the documented Next.js API route which proxies to the backend
+  // Use relative URL - Next.js will handle protocol automatically
+  try {
+    const response = await fetch('/api/signatures/user', {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store', // Prevent browser from using cached redirects
+    })
+
+    if (!response.ok) {
+      // Best-effort JSON parse for error details; fall back to empty list
+      try {
+        const errorData = await response.json()
+        console.error('[listUserSignatures] Failed to fetch signatures:', errorData)
+      } catch {
+        console.error('[listUserSignatures] Failed to fetch signatures, status:', response.status)
+      }
+      return []
+    }
+
+    const data = await response.json()
+    // Handle paginated response (results array) or direct array or nested data
+    const raw = Array.isArray(data) 
+      ? data 
+      : (data?.results ?? data?.data ?? [])
+    if (!Array.isArray(raw)) {
+      console.warn('[listUserSignatures] Unexpected response format:', data)
+      return []
+    }
+    return raw.map(mapToReusableSignature)
+  } catch (error) {
+    console.error('[listUserSignatures] Network error:', error)
+    return []
+  }
 }
 
 export async function uploadUserSignature(file: File, name?: string, isDefault?: boolean): Promise<ReusableSignature> {
@@ -34,14 +69,51 @@ export async function uploadUserSignature(file: File, name?: string, isDefault?:
   formData.append('image', file)
   if (typeof isDefault === 'boolean') formData.append('is_default', String(isDefault))
   if (name) formData.append('name', name)
-  const response = await apiClient.post('/signatures/user/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+
+  // Use the documented Next.js API route which will forward multipart form-data
+  // Use relative URL - Next.js will handle protocol automatically
+  const response = await fetch('/api/signatures/user', {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+    cache: 'no-store', // Prevent browser from using cached redirects
   })
-  return (response.data?.data ?? response.data) as ReusableSignature
+
+  if (!response.ok) {
+    let message = 'Failed to upload signature'
+    try {
+      const errData = await response.json()
+      message = errData?.detail || errData?.message || message
+      console.error('[uploadUserSignature] Error response:', errData)
+    } catch {
+      console.error('[uploadUserSignature] Failed with status:', response.status)
+    }
+    throw new Error(message)
+  }
+
+  const data = await response.json()
+  const payload = (data?.data ?? data) as any
+  return mapToReusableSignature(payload)
 }
 
 export async function deleteUserSignature(id: string): Promise<void> {
-  await apiClient.delete(`/signatures/user/${id}/`)
+  // Use the documented Next.js API route which proxies DELETE to backend
+  // Use relative URL - Next.js will handle protocol automatically
+  const response = await fetch(`/api/signatures/user/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    cache: 'no-store', // Prevent browser from using cached redirects
+  })
+
+  if (!response.ok) {
+    try {
+      const errData = await response.json()
+      console.error('[deleteUserSignature] Failed to delete signature:', errData)
+    } catch {
+      console.error('[deleteUserSignature] Failed to delete signature, status:', response.status)
+    }
+    throw new Error('Failed to delete signature')
+  }
 }
 
 export interface SignaturePlacementPayload {

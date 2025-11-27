@@ -95,7 +95,14 @@ export default function DocumentsPage() {
     downloadDocumentMutation.mutate(documentId)
   }
 
-  const documents = documentsData || []
+  // Normalize documents to always be an array
+  const documents: Document[] = Array.isArray(documentsData)
+    ? documentsData
+    : Array.isArray((documentsData as any)?.results)
+      ? (documentsData as any).results
+      : Array.isArray((documentsData as any)?.data)
+        ? (documentsData as any).data
+        : []
 
   const statusGroups = useMemo(() => {
     const grouped: Record<string, Document[]> = {

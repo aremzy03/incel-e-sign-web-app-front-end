@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getApiBaseUrl } from '@/lib/env'
 
 export async function GET(request: NextRequest) {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+  const apiBase = getApiBaseUrl()
   const targetUrl = `${apiBase}/documents/`
 
   try {

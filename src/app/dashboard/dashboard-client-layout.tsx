@@ -87,7 +87,14 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
     queryFn: listNotifications,
     staleTime: 30_000,
   })
-  const notifications = notificationsData ?? []
+  // Normalize notifications to always be an array, regardless of backend shape
+  const notifications: NotificationItem[] = Array.isArray(notificationsData)
+    ? notificationsData
+    : Array.isArray((notificationsData as any)?.results)
+      ? (notificationsData as any).results
+      : Array.isArray((notificationsData as any)?.data)
+        ? (notificationsData as any).data
+        : []
   
   // Use profile data if available, otherwise fall back to user prop
   const displayUser = profile || user

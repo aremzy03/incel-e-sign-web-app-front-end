@@ -20,6 +20,7 @@ import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { RecipientSearch } from '@/components/contacts/RecipientSearch'
 import { useContacts } from '@/hooks/useContacts'
 import { PDFViewerWithSignatures } from '@/components/envelope/PDFViewerWithSignatures'
+import { getApiBaseUrl } from '@/lib/env'
 import { toast } from 'react-hot-toast'
 import { Input } from '@/components/ui/input'
 
@@ -476,7 +477,7 @@ export default function CreateEnvelopePage() {
 
                 {activeDocumentId && (() => {
                   const selectedDoc = documents?.find(d => d.id === activeDocumentId)
-                  const documentUrl = selectedDoc?.file_url || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/documents/${activeDocumentId}/download/`
+                  const documentUrl = selectedDoc?.file_url || `${getApiBaseUrl()}/documents/${activeDocumentId}/download/`
                   console.log('Selected document for positioning:', selectedDoc)
                   console.log('Document URL for PDF viewer:', documentUrl)
                   return (

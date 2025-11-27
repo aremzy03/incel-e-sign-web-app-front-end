@@ -70,6 +70,16 @@ const nextConfig = {
     return config
   },
   async headers() {
+    // Derive the backend origin (for CSP connect-src) from NEXT_PUBLIC_API_URL, ignoring any path.
+    let apiOrigin = ''
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      try {
+        apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL).origin
+      } catch {
+        // If URL parsing fails, leave apiOrigin empty and rely on 'self' only.
+      }
+    }
+
     const securityHeaders = [
       {
         key: 'X-DNS-Prefetch-Control',
@@ -108,7 +118,7 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' " + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'),
+      "connect-src 'self'" + (apiOrigin ? ` ${apiOrigin}` : ''),
       "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",

@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
+import { listUserSignatures, type ReusableSignature } from '@/lib/api/signatures'
+import { getApiBaseUrl } from '@/lib/env'
 
 // Configure PDF.js worker (same as envelope creation page)
 if (typeof window !== 'undefined') {
@@ -115,8 +117,8 @@ export default function SignEnvelopePage() {
       return ''
     }
     if (/^https?:\/\//i.test(url)) return url
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-    let backendOrigin = 'http://localhost:8000'
+    const apiBase = getApiBaseUrl()
+    let backendOrigin = apiBase
     try { backendOrigin = new URL(apiBase).origin } catch {}
     const path = url.startsWith('/') ? url : `/${url}`
     return `${backendOrigin}${path}`
@@ -140,14 +142,13 @@ export default function SignEnvelopePage() {
     },
   })
 
-  // Fetch current user's signatures
-  const { data: mySignatures } = useQuery<any[]>({
+  // Fetch current user's reusable signatures via shared helper
+  const { data: mySignatures } = useQuery<ReusableSignature[]>({
     queryKey: ['my-signatures'],
     queryFn: async () => {
-      const res = await apiClient.get(`/signatures/user/`)
-      const raw = Array.isArray(res.data) ? res.data : (res.data?.data ?? [])
-      console.log('[Sign Page] Fetched signatures:', raw)
-      return raw
+      const sigs = await listUserSignatures()
+      console.log('[Sign Page] Fetched reusable signatures:', sigs)
+      return sigs
     },
   })
 
@@ -562,7 +563,7 @@ export default function SignEnvelopePage() {
                                     title="Click to confirm and sign"
                                   >
                                     <img
-                                      src={selectedSignature.image}
+                                      src={selectedSignature.image || selectedSignature.image_url}
                                       alt="Signature preview"
                                       className="w-full h-full object-contain select-none p-1"
                                     />
@@ -589,16 +590,14 @@ export default function SignEnvelopePage() {
                                     </div>
                                   </div>
                                 )
-                              ) : (
-                                selectedSignature ? (
+                                ) : selectedSignature ? (
                                   <img
-                                    src={selectedSignature.image}
+                                    src={selectedSignature.image || selectedSignature.image_url}
                                     alt="Signed"
                                     className="w-full h-full object-contain select-none"
                                   />
                                 ) : (
                                   <div className="absolute inset-0 bg-green-100 border-2 border-green-400 rounded-md" />
-                                )
                                 )}
                               </div>
                           )
@@ -843,8 +842,12 @@ export default function SignEnvelopePage() {
                                   const newY = Math.max(0, Math.min(e.clientY - parentRect.top - dragOffset.y, parentRect.height - draftPlacement.height));
                                   setDraftPlacement({ ...draftPlacement, x: newX, y: newY });
                                 }}
-                              >
-                                <img src={selectedSignature.image} alt="Signature preview" className="w-full h-full object-contain select-none pointer-events-none" />
+                                >
+                                  <img
+                                    src={selectedSignature.image || selectedSignature.image_url}
+                                    alt="Signature preview"
+                                    className="w-full h-full object-contain select-none pointer-events-none"
+                                  />
                               </div>
                             )}
                           </div>
@@ -885,8 +888,10 @@ export default function SignEnvelopePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {mySignatures.map((sig: any) => {
               const sigId = sig.id || sig.signature_id
-              const isSelected = selectedSignature && (selectedSignature.id || selectedSignature.signature_id) === sigId
+              const isSelected =
+                selectedSignature && (selectedSignature.id || selectedSignature.signature_id) === sigId
               const isDefault = sig.is_default
+              const imageSrc = sig.image || sig.image_url
               
               return (
                 <div
@@ -910,9 +915,9 @@ export default function SignEnvelopePage() {
                     </div>
                   )}
                   <div className="flex items-center justify-center h-20 bg-gray-50 rounded">
-                    {sig.image ? (
+                    {imageSrc ? (
                       <img
-                        src={sig.image}
+                        src={imageSrc}
                         alt="Signature"
                         className="max-w-full max-h-full object-contain"
                       />
@@ -927,7 +932,7 @@ export default function SignEnvelopePage() {
               </div>
               )}
 
-      <Dialog 
+      <Dialog
         open={isDialogOpen} 
         onOpenChange={(open) => { 
           setIsDialogOpen(open)
@@ -948,14 +953,14 @@ export default function SignEnvelopePage() {
           <div className="flex justify-center my-4">
             {selectedSignature ? (
               <img
-                src={selectedSignature.image}
+                src={selectedSignature.image || selectedSignature.image_url}
                 alt="Signature preview"
                 className="w-[200px] h-[60px] object-contain border border-gray-200 rounded-md"
               />
             ) : (
               <p className="text-sm text-gray-600">No signature selected</p>
             )}
-      </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
             <Button onClick={approveAndSign} disabled={signMutation.isPending || saveValuesMutation.isPending}>

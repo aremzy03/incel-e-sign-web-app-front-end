@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
+import { getApiBaseUrl } from '@/lib/env'
 
 // Configure pdf.js worker (uses the worker copied to /public during postinstall)
 if (typeof window !== 'undefined') {
@@ -103,8 +104,8 @@ export default function SignEnvelopePage() {
   const resolveUrl = useCallback((url?: string | null) => {
     if (!url) return ''
     if (/^https?:\/\//i.test(url)) return url
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-    let backendOrigin = 'http://localhost:8000'
+    const apiBase = getApiBaseUrl()
+    let backendOrigin = apiBase
     try { backendOrigin = new URL(apiBase).origin } catch {}
     const path = url.startsWith('/') ? url : `/${url}`
     return `${backendOrigin}${path}`

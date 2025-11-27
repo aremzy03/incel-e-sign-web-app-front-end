@@ -5,6 +5,7 @@ import { Document as PDFDocument, Page, pdfjs } from 'react-pdf'
 import { useDroppable } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getApiBaseUrl } from '@/lib/env'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
@@ -217,19 +218,19 @@ export function VerticalPDFViewer({
           const resolveUrl = (url: string) => {
             if (!url) return url
             if (/^https?:\/\//i.test(url)) return url
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-            let backendOrigin = 'http://localhost:8000'
+            const apiBase = getApiBaseUrl()
+            let backendOrigin = apiBase
             try {
               backendOrigin = new URL(apiBase).origin
             } catch (_) {
-              // fallback kept
+              // keep apiBase as-is if URL parsing fails
             }
             const path = url.startsWith('/') ? url : `/${url}`
             return `${backendOrigin}${path}`
           }
           
           const documentUrl = resolveUrl(
-            document.file_url || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/documents/${pageInfo.documentId}/download/`
+            document.file_url || `${getApiBaseUrl()}/documents/${pageInfo.documentId}/download/`
           )
           const pageKey = `${pageInfo.documentId}-${pageInfo.pageNumber}`
           const currentPageDimensions = pageDimensions[pageKey]

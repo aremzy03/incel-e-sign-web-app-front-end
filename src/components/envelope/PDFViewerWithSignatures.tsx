@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { SignatureBox } from './SignatureBox'
 import { toast } from 'react-hot-toast'
+import { getApiBaseUrl } from '@/lib/env'
 
 // Configure PDF.js worker (same as existing PdfViewer)
 if (typeof window !== 'undefined') {
@@ -75,12 +76,12 @@ export function PDFViewerWithSignatures({
   const resolvedUrl = React.useMemo(() => {
     if (!documentUrl) return documentUrl
     if (/^https?:\/\//i.test(documentUrl)) return documentUrl
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-    let backendOrigin = 'http://localhost:8000'
+    const apiBase = getApiBaseUrl()
+    let backendOrigin = apiBase
     try {
       backendOrigin = new URL(apiBase).origin
     } catch (_) {
-      // fallback kept
+      // keep apiBase as-is if URL parsing fails
     }
     const path = documentUrl.startsWith('/') ? documentUrl : `/${documentUrl}`
     return `${backendOrigin}${path}`

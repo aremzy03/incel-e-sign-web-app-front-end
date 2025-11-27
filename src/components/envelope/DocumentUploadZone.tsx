@@ -30,9 +30,18 @@ export function DocumentUploadZone({
   const [isDragActive, setIsDragActive] = useState(false)
   const [showExistingDocuments, setShowExistingDocuments] = useState(false)
   const uploadMutation = useUploadDocument()
-  const { data: existingDocuments, isLoading: loadingExisting } = useDocuments()
+  const { data: existingDocumentsData, isLoading: loadingExisting } = useDocuments()
 
-  const selectableExistingDocuments = (existingDocuments || []).filter(doc => {
+  // Normalize existing documents to always be an array
+  const existingDocuments: Document[] = Array.isArray(existingDocumentsData)
+    ? existingDocumentsData
+    : Array.isArray((existingDocumentsData as any)?.results)
+      ? (existingDocumentsData as any).results
+      : Array.isArray((existingDocumentsData as any)?.data)
+        ? (existingDocumentsData as any).data
+        : []
+
+  const selectableExistingDocuments = existingDocuments.filter(doc => {
     const status = (doc.status || '').toLowerCase()
     return status === 'pending' || status === 'rejected'
   })

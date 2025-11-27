@@ -15,6 +15,8 @@ const requiredEnvVars = {
 const optionalEnvVars = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || '',
+  HEALTH_CHECK_BACKEND: process.env.HEALTH_CHECK_BACKEND || '',
+  ENABLE_LOGGING: process.env.ENABLE_LOGGING || '',
 } as const
 
 /**
@@ -99,6 +101,21 @@ export function isProduction(): boolean {
  */
 export function isDevelopment(): boolean {
   return optionalEnvVars.NODE_ENV === 'development'
+}
+
+/**
+ * Check if backend health check is enabled
+ */
+export function isHealthCheckBackendEnabled(): boolean {
+  return optionalEnvVars.HEALTH_CHECK_BACKEND === 'true'
+}
+
+/**
+ * Check if logging should be enabled
+ * ENABLE_LOGGING=true forces logging even in non-development
+ */
+export function isLoggingEnabled(): boolean {
+  return optionalEnvVars.ENABLE_LOGGING === 'true' || isDevelopment()
 }
 
 // Validate on module load (server-side only)

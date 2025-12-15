@@ -13,17 +13,12 @@ import {
   type ReusableSignature,
   deleteUserSignature,
 } from '@/lib/api/signatures'
-import { removeBackground } from '@imgly/background-removal'
 
 export default function SignaturesPage() {
   const queryClient = useQueryClient()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
-  const [processedFile, setProcessedFile] = useState<File | null>(null)
-  const [processedPreviewUrl, setProcessedPreviewUrl] = useState<string | null>(null)
-  const [isProcessingBackground, setIsProcessingBackground] = useState<boolean>(false)
-  const [useProcessedImage, setUseProcessedImage] = useState<boolean>(false)
 
   const { data: signatures, isLoading } = useQuery<ReusableSignature[]>({
     queryKey: ['signatures', 'user'],
@@ -33,20 +28,17 @@ export default function SignaturesPage() {
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      let fileToUpload = selectedFile
-      if (useProcessedImage && processedFile) {
-        fileToUpload = processedFile
-      }
-      if (!fileToUpload) throw new Error('No file selected')
-      return await uploadUserSignature(fileToUpload, fileToUpload.name.replace(/\.[^/.]+$/, ''))
+      if (!selectedFile) throw new Error('No file selected')
+      // Backend will handle any background removal or processing.
+      return await uploadUserSignature(
+        selectedFile,
+        selectedFile.name.replace(/\.[^/.]+$/, '')
+      )
     },
     onSuccess: () => {
       toast.success('Signature uploaded')
       setSelectedFile(null)
-      setProcessedFile(null)
       setLocalPreviewUrl(null)
-      setProcessedPreviewUrl(null)
-      setUseProcessedImage(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
       queryClient.invalidateQueries({ queryKey: ['signatures', 'user'] })
     },
@@ -56,7 +48,7 @@ export default function SignaturesPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => deleteUserSignature(id.toString()),
+    mutationFn: async (id: string) => deleteUserSignature(id),
     onSuccess: () => {
       toast.success('Signature deleted')
       queryClient.invalidateQueries({ queryKey: ['signatures', 'user'] })
@@ -64,51 +56,21 @@ export default function SignaturesPage() {
     onError: () => toast.error('Failed to delete signature'),
   })
 
-  const processImageForBackgroundRemoval = async (file: File) => {
-    setIsProcessingBackground(true)
-    try {
-      const resultBlob = await removeBackground(file)
-      const processedFile = new File([resultBlob], `processed_${file.name}`, { type: resultBlob.type })
-      setProcessedFile(processedFile)
-      if (processedPreviewUrl) URL.revokeObjectURL(processedPreviewUrl)
-      setProcessedPreviewUrl(URL.createObjectURL(processedFile))
-      setUseProcessedImage(true)
-    } catch (error) {
-      console.error('Background removal failed:', error)
-      toast.error('Failed to remove background. Please try again or use the original image.')
-      setProcessedFile(null)
-      if (processedPreviewUrl) URL.revokeObjectURL(processedPreviewUrl)
-      setProcessedPreviewUrl(null)
-      setUseProcessedImage(false)
-    } finally {
-      setIsProcessingBackground(false)
-    }
-  }
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       setSelectedFile(file)
       if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl)
       setLocalPreviewUrl(URL.createObjectURL(file))
-      setProcessedFile(null) // Reset processed file on new selection
-      if (processedPreviewUrl) URL.revokeObjectURL(processedPreviewUrl)
-      setProcessedPreviewUrl(null)
-      setUseProcessedImage(false)
-      processImageForBackgroundRemoval(file)
     }
   }
 
   const handleUpload = () => {
-    let fileToUpload = selectedFile
-    if (useProcessedImage && processedFile) {
-      fileToUpload = processedFile
-    }
-    if (!fileToUpload) return
+    if (!selectedFile) return
     uploadMutation.mutate()
   }
 
-  const handleDelete = (signatureId: number) => {
+  const handleDelete = (signatureId: string) => {
     deleteMutation.mutate(signatureId)
   }
 
@@ -137,7 +99,13 @@ export default function SignaturesPage() {
                 <div key={signature.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-gray-900">{signature.name}</h3>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(Number(signature.id))} className="h-8 w-8 p-0" disabled={deleteMutation.isPending}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(signature.id)}
+                      className="h-8 w-8 p-0"
+                      disabled={deleteMutation.isPending}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -187,37 +155,24 @@ export default function SignaturesPage() {
               <p className="text-sm text-gray-600">Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)</p>
             )}
           </div>
-          {(localPreviewUrl || processedPreviewUrl) && (
+          {localPreviewUrl && (
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-2">Preview:</p>
-              <div className="flex space-x-4">
-                {localPreviewUrl && (
-                  <div className="flex flex-col items-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={localPreviewUrl} alt="Original signature preview" className={`h-24 object-contain border rounded-md p-2 bg-white ${!useProcessedImage ? 'border-blue-500 ring-2 ring-blue-200' : ''}`} />
-                    <Button variant="ghost" size="sm" onClick={() => setUseProcessedImage(false)} disabled={isProcessingBackground || !processedFile} className="mt-2">Use Original</Button>
-                  </div>
-                )}
-                {isProcessingBackground ? (
-                  <div className="flex flex-col items-center justify-center h-24 w-24 border rounded-md p-2 bg-gray-100 text-gray-500 text-sm">
-                    Processing...
-                  </div>
-                ) : processedPreviewUrl && (
-                  <div className="flex flex-col items-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={processedPreviewUrl} alt="Processed signature preview" className={`h-24 object-contain border rounded-md p-2 bg-white ${useProcessedImage ? 'border-blue-500 ring-2 ring-blue-200' : ''}`} />
-                    <Button variant="ghost" size="sm" onClick={() => setUseProcessedImage(true)} disabled={!processedFile} className="mt-2">Use Removed Background</Button>
-                  </div>
-                )}
+              <div className="flex flex-col items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={localPreviewUrl}
+                  alt="Signature preview"
+                  className="h-24 object-contain border rounded-md p-2 bg-white"
+                />
               </div>
-              {processedFile === null && selectedFile && !isProcessingBackground && (
-                <Button variant="outline" size="sm" onClick={() => processImageForBackgroundRemoval(selectedFile)} className="mt-4">
-                  Retry Background Removal
-                </Button>
-              )}
             </div>
           )}
-          <Button onClick={handleUpload} disabled={!selectedFile || uploadMutation.isPending || isProcessingBackground} className="w-full sm:w-auto">
+          <Button
+            onClick={handleUpload}
+            disabled={!selectedFile || uploadMutation.isPending}
+            className="w-full sm:w-auto"
+          >
             <Upload className="h-4 w-4 mr-2" />
             {uploadMutation.isPending ? 'Uploading...' : 'Upload Signature'}
           </Button>

@@ -92,7 +92,9 @@ export default function DocumentsPage() {
   }
 
   const handleDownloadDocument = (documentId: string) => {
-    downloadDocumentMutation.mutate(documentId)
+    const doc = documents.find(d => d.id === documentId)
+    if (!doc) return
+    downloadDocumentMutation.mutate({ id: documentId, fileName: doc.file_name })
   }
 
   // Normalize documents to always be an array

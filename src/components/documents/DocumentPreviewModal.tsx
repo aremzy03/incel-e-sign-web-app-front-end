@@ -17,6 +17,10 @@ interface DocumentPreviewModalProps {
   document: ApiDocument | null
   isOpen: boolean
   onClose: () => void
+  /**
+   * Optional password for opening password-protected PDFs when previewing.
+   */
+  pdfPassword?: string
 }
 
 const getStatusColor = (status: string) => {
@@ -32,7 +36,7 @@ const getStatusColor = (status: string) => {
   }
 }
 
-export function DocumentPreviewModal({ document, isOpen, onClose }: DocumentPreviewModalProps) {
+export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }: DocumentPreviewModalProps) {
   if (!document) return null
 
   return (
@@ -54,7 +58,7 @@ export function DocumentPreviewModal({ document, isOpen, onClose }: DocumentPrev
               <h3 className="text-sm font-medium text-gray-700">PDF Preview</h3>
             </div>
             {document.file_url ? (
-              <PdfViewer url={document.file_url} />
+              <PdfViewer url={document.file_url} pdfPassword={pdfPassword} />
             ) : (
               <div className="h-96 bg-gray-100 flex items-center justify-center">
                 <div className="text-center text-gray-600">No preview available</div>

@@ -43,6 +43,10 @@ interface PDFViewerWithSignaturesProps {
   onSignerSelect: (signerId: string) => void
   onPositionChange: (signerId: string, position: SignaturePosition) => void
   positions: Record<string, SignaturePosition>
+  /**
+   * Optional password for opening password-protected PDFs when placing signatures.
+   */
+  pdfPassword?: string
 }
 
 const SIGNER_COLORS = [
@@ -63,6 +67,7 @@ export function PDFViewerWithSignatures({
   onSignerSelect,
   onPositionChange,
   positions,
+  pdfPassword,
 }: PDFViewerWithSignaturesProps) {
   const [numPages, setNumPages] = useState<number>(0)
   const [pageNumber, setPageNumber] = useState(1)
@@ -313,6 +318,7 @@ export function PDFViewerWithSignatures({
               onLoadError={onDocumentLoadError}
               loading=""
               className="flex justify-center"
+              options={pdfPassword ? { password: pdfPassword } : undefined}
             >
               <div className="relative inline-block">
                 <Page

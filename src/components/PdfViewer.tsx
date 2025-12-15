@@ -35,9 +35,23 @@ interface PdfViewerProps {
   onPageChange?: (page: number) => void
   onDocumentLoad?: (numPages: number) => void
   onPageRender?: (info: { widthPt: number; heightPt: number; widthPx: number; heightPx: number }) => void
+  /**
+   * Optional password for opening password-protected PDFs.
+   * When provided, it will be passed directly to pdf.js to avoid in-viewer prompts.
+   */
+  pdfPassword?: string
 }
 
-export default function PdfViewer({ url, className, showControls = true, pageNumber: controlledPageNumber, onPageChange, onDocumentLoad, onPageRender }: PdfViewerProps) {
+export default function PdfViewer({
+  url,
+  className,
+  showControls = true,
+  pageNumber: controlledPageNumber,
+  onPageChange,
+  onDocumentLoad,
+  onPageRender,
+  pdfPassword,
+}: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0)
   const isControlled = typeof controlledPageNumber === 'number'
   const [uncontrolledPage, setUncontrolledPage] = useState<number>(1)
@@ -132,7 +146,13 @@ export default function PdfViewer({ url, className, showControls = true, pageNum
           <div className="text-sm text-red-600 px-4 py-2">{error}</div>
         )}
         {!error && (
-          <Document file={resolvedUrl} onLoadSuccess={onDocumentLoadSuccess} onLoadError={onDocumentLoadError} loading="">
+          <Document
+            file={resolvedUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading=""
+            options={pdfPassword ? { password: pdfPassword } : undefined}
+          >
             <Page
               pageNumber={pageNumber}
               scale={scale}

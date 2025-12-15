@@ -112,13 +112,17 @@ const nextConfig = {
     ]
 
     // Content Security Policy
+    // Allow images and XHR/WebSocket connections to the backend API origin (for profile photos, etc.)
+    const imgSrc = "img-src 'self' data: blob: https:" + (apiOrigin ? ` ${apiOrigin}` : '')
+    const connectSrc = "connect-src 'self'" + (apiOrigin ? ` ${apiOrigin}` : '')
+
     const cspHeader = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed for PDF.js
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
+      imgSrc,
       "font-src 'self' data:",
-      "connect-src 'self'" + (apiOrigin ? ` ${apiOrigin}` : ''),
+      connectSrc,
       "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",

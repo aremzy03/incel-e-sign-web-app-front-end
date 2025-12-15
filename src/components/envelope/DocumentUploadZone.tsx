@@ -43,7 +43,8 @@ export function DocumentUploadZone({
 
   const selectableExistingDocuments = existingDocuments.filter(doc => {
     const status = (doc.status || '').toLowerCase()
-    return status === 'pending' || status === 'rejected'
+    // Only allow draft or rejected documents to be reused in new envelopes
+    return status === 'draft' || status === 'rejected'
   })
 
   const onDrop = useCallback(
@@ -51,8 +52,20 @@ export function DocumentUploadZone({
       setIsDragActive(false)
       
       for (const file of acceptedFiles) {
-        if (file.type !== 'application/pdf') {
-          toast.error(`${file.name} is not a PDF file`)
+        // Allow PDF and Word documents (backend will convert to PDF as needed)
+        const allowedMimeTypes = [
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]
+        const allowedExtensions = ['.pdf', '.doc', '.docx']
+
+        const fileName = file.name.toLowerCase()
+        const hasAllowedExtension = allowedExtensions.some((ext) => fileName.endsWith(ext))
+        const hasAllowedMimeType = allowedMimeTypes.includes(file.type)
+
+        if (!(hasAllowedMimeType || hasAllowedExtension)) {
+          toast.error(`${file.name} is not a supported file type. Only PDF or Word (.doc, .docx) files are allowed.`)
           continue
         }
 
@@ -74,7 +87,9 @@ export function DocumentUploadZone({
     onDragEnter: () => setIsDragActive(true),
     onDragLeave: () => setIsDragActive(false),
     accept: {
-      'application/pdf': ['.pdf']
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     multiple: true
   })
@@ -108,8 +123,8 @@ export function DocumentUploadZone({
         {...getRootProps()}
         className={`
           border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors w-full min-w-0
-          ${dropzoneActive || isDragActive 
-            ? 'border-blue-500 bg-blue-50' 
+          ${dropzoneActive || isDragActive
+            ? 'border-blue-500 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400'
           }
         `}
@@ -117,7 +132,9 @@ export function DocumentUploadZone({
         <input {...getInputProps()} />
         <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
         <p className="text-sm text-gray-600 mb-1">
-          {dropzoneActive ? 'Drop PDF files here' : 'Drag & drop PDF files here'}
+          {dropzoneActive
+            ? 'Drop PDF or Word files here'
+            : 'Drag & drop PDF or Word files here'}
         </p>
         <p className="text-xs text-gray-500">or click to browse</p>
       </div>
@@ -132,7 +149,9 @@ export function DocumentUploadZone({
           disabled={uploadMutation.isPending}
         >
           <Plus className="h-4 w-4 mr-2" />
-          <span className="truncate">{uploadMutation.isPending ? 'Uploading...' : 'Upload PDF'}</span>
+          <span className="truncate">
+            {uploadMutation.isPending ? 'Uploading...' : 'Upload Document'}
+          </span>
         </Button>
         <Button
           variant="outline"
@@ -146,7 +165,7 @@ export function DocumentUploadZone({
         <input
           id="file-input"
           type="file"
-          accept=".pdf"
+          accept=".pdf,.doc,.docx"
           multiple
           onChange={handleFileInput}
           className="hidden"
@@ -198,7 +217,9 @@ export function DocumentUploadZone({
               })}
             </div>
           ) : (
-            <div className="text-xs text-gray-500 text-center py-4">No eligible documents found (pending or rejected only)</div>
+            <div className="text-xs text-gray-500 text-center py-4">
+              No eligible documents found (draft or rejected only)
+            </div>
           )}
         </div>
       )}

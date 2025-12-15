@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -50,8 +50,10 @@ const formatDate = (dateString: string): string => {
 
 export default function DocumentDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const router = useRouter()
   const documentId = params?.id as string
+  const pdfPassword = searchParams?.get('pdf_password') || undefined
 
   // Fetch document from API
   const { data: documentData, isLoading, error } = useQuery({
@@ -65,8 +67,8 @@ export default function DocumentDetailPage() {
   const downloadDocumentMutation = useDownloadDocument()
 
   const handleDownload = () => {
-    if (documentId) {
-      downloadDocumentMutation.mutate(documentId)
+    if (documentId && documentData) {
+      downloadDocumentMutation.mutate({ id: documentId, fileName: documentData.file_name })
     }
   }
 
@@ -194,7 +196,7 @@ export default function DocumentDetailPage() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Document Preview</h3>
             {documentData.file_url ? (
-              <PdfViewer url={documentData.file_url} />
+              <PdfViewer url={documentData.file_url} pdfPassword={pdfPassword} />
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 min-h-[500px] flex items-center justify-center">
                 <div className="text-center">

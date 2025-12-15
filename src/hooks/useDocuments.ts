@@ -88,16 +88,21 @@ export const useDeleteDocument = () => {
 }
 
 // Hook to download a document
+// Expects both the document ID and its file_name so the saved file name is user friendly.
 export const useDownloadDocument = () => {
   return useMutation({
-    mutationFn: downloadDocument,
-    onSuccess: (blob, documentId) => {
+    mutationFn: ({ id }: { id: string; fileName: string }) => downloadDocument(id),
+    onSuccess: (blob, variables) => {
+      const { id, fileName } = variables as { id: string; fileName: string }
       try {
         // Create download link
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `document-${documentId}.pdf`
+        // Prefer the original file name; fall back to a generic name with ID if missing
+        link.download = fileName && fileName.trim().length > 0
+          ? fileName
+          : `document-${id}.pdf`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)

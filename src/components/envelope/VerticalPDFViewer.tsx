@@ -33,6 +33,11 @@ interface VerticalPDFViewerProps {
   onFieldDelete: (fieldId: string) => void
   onFieldDrop: (fieldType: string, documentId: string, page: number, x: number, y: number) => void
   onPageMetricsChange?: (pageKey: string, metrics: { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }) => void
+  /**
+   * Optional password for opening password-protected PDFs when previewing documents.
+   * Typically provided from the envelope's pdf_lock_password once completed.
+   */
+  pdfPassword?: string
 }
 
 interface DocumentPageInfo {
@@ -52,6 +57,7 @@ export function VerticalPDFViewer({
   onFieldDelete,
   onFieldDrop,
   onPageMetricsChange,
+  pdfPassword,
 }: VerticalPDFViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -277,6 +283,7 @@ export function VerticalPDFViewer({
                               setError(`Failed to load PDF: ${error.message}`)
                             }}
                             loading=""
+                            options={pdfPassword ? { password: pdfPassword } : undefined}
                           >
                             <Page
                               pageNumber={pageInfo.pageNumber}

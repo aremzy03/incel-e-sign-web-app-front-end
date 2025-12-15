@@ -327,7 +327,16 @@ export default function EnvelopeDetailPage() {
                       <span className="text-red-600 text-sm font-bold">PDF</span>
                     </div>
                     <div>
-                      <Link href={`/dashboard/documents/${doc.id}`} className="font-medium text-blue-600 hover:underline">
+                      <Link
+                        href={
+                          envelope.status === 'completed' && envelope.pdf_lock_password
+                            ? `/dashboard/documents/${doc.id}?pdf_password=${encodeURIComponent(
+                                envelope.pdf_lock_password
+                              )}`
+                            : `/dashboard/documents/${doc.id}`
+                        }
+                        className="font-medium text-blue-600 hover:underline"
+                      >
                         {doc.file_name || `Document ${doc.id}`}
                       </Link>
                     </div>

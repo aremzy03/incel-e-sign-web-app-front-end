@@ -167,20 +167,22 @@ export function VerticalPDFViewer({
 
   if (documents.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg">
-        <div className="text-center">
-          <div className="text-6xl mb-4">📄</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Documents</h3>
-          <p className="text-gray-600">Upload documents to get started</p>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="inline-flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white/60 px-8 py-10 shadow-sm">
+          <div className="text-5xl mb-3">📄</div>
+          <h3 className="text-base font-semibold text-gray-900 mb-1">No document loaded</h3>
+          <p className="text-sm text-gray-600 text-center max-w-xs">
+            Use the panel on the left to upload or choose a document to start placing fields.
+          </p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-lg border relative z-0">
+    <div className="flex-1 flex flex-col bg-slate-50 rounded-xl border border-gray-200 shadow-sm relative z-0">
       {/* Controls */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-white/80">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-gray-900">Document Preview</h3>
           <span className="text-sm text-gray-500">
@@ -213,9 +215,9 @@ export function VerticalPDFViewer({
       {/* PDF Pages */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-6"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
+        className="flex-1 overflow-y-auto px-4 py-4"
       >
+        <div className="flex flex-col items-center gap-4">
         {allPages.map((pageInfo, index) => {
           const document = documents.find(d => d.id === pageInfo.documentId)
           if (!document) return null
@@ -240,14 +242,16 @@ export function VerticalPDFViewer({
           )
           const pageKey = `${pageInfo.documentId}-${pageInfo.pageNumber}`
           const currentPageDimensions = pageDimensions[pageKey]
+          const pageWidth = actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 595
+          const pageHeight = actualPDFDimensions[pageKey]?.height || currentPageDimensions?.height || 842
           const fieldsForPage = Object.values(fieldPositions[pageInfo.documentId] || {})
             .filter(field => field.page === pageInfo.pageNumber)
 
           return (
-            <div key={pageKey} className="relative">
+            <div key={pageKey} className="relative w-full max-w-4xl">
               {/* Document Header */}
               {pageInfo.pageNumber === 1 && (
-                <Card className="mb-4">
+                <Card className="mb-3 shadow-none border border-gray-200 bg-white/90">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-900">
                       {pageInfo.documentName}
@@ -257,20 +261,19 @@ export function VerticalPDFViewer({
               )}
 
               {/* Page Container */}
-              <div className="relative inline-block z-0">
-                <div className="relative border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-gray-50 flex items-center justify-center min-h-[400px]">
+              <div className="relative inline-flex justify-center w-full z-0">
+                <div className="relative border border-gray-200 rounded-lg overflow-hidden shadow bg-white flex items-center justify-center min-h-[420px]">
                   {/* Make the sized wrapper the actual droppable so over.rect matches overlay coords */}
                   <PageDropZone
                     documentId={pageInfo.documentId}
                     pageNumber={pageInfo.pageNumber}
                     onFieldDrop={onFieldDrop}
+                    width={pageWidth}
+                    height={pageHeight}
                   >
                     <div
                       className="relative"
-                      style={{
-                        width: (actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 0),
-                        height: (actualPDFDimensions[pageKey]?.height || currentPageDimensions?.height || 0),
-                      }}
+                      style={{ width: pageWidth, height: pageHeight }}
                     >
                       {/* PDF Content (fills wrapper) */}
                       <div className="absolute inset-0">
@@ -310,8 +313,8 @@ export function VerticalPDFViewer({
                               onPositionChange={onFieldPositionChange}
                               onSelect={onFieldSelect}
                               onDelete={onFieldDelete}
-                              maxWidth={currentPageDimensions?.width || 0}
-                              maxHeight={currentPageDimensions?.height || 0}
+                              maxWidth={pageWidth}
+                              maxHeight={pageHeight}
                             />
                           ))}
                         </div>
@@ -328,6 +331,7 @@ export function VerticalPDFViewer({
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )

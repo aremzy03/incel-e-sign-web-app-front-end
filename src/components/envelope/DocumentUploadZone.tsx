@@ -144,23 +144,31 @@ export function DocumentUploadZone({
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 h-8 px-2 text-xs"
           onClick={() => document.getElementById('file-input')?.click()}
           disabled={uploadMutation.isPending}
+          title={uploadMutation.isPending ? 'Uploading…' : 'Upload document'}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="truncate">
-            {uploadMutation.isPending ? 'Uploading...' : 'Upload Document'}
+          <Plus className="h-3 w-3" />
+          <span className="sr-only">
+            {uploadMutation.isPending ? 'Uploading documents' : 'Upload document'}
           </span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowExistingDocuments(!showExistingDocuments)}
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 h-8 px-2 text-xs"
+          title={showExistingDocuments ? 'Hide existing documents' : 'Browse existing documents'}
         >
-          <FileText className="h-4 w-4 mr-2" />
-          <span className="truncate">{showExistingDocuments ? 'Hide' : 'Browse'} Existing</span>
+          {showExistingDocuments ? (
+            <X className="h-3 w-3" />
+          ) : (
+            <FileText className="h-3 w-3" />
+          )}
+          <span className="sr-only">
+            {showExistingDocuments ? 'Hide existing documents' : 'Browse existing documents'}
+          </span>
         </Button>
         <input
           id="file-input"

@@ -363,6 +363,17 @@ export default function EditEnvelopePage() {
     }
   }, [uploadedDocuments])
 
+  // Currently selected field (if any)
+  const activeField: FieldPosition | null = useMemo(() => {
+    if (!activeFieldId) return null
+    for (const docFields of Object.values(fieldPositions)) {
+      if (docFields[activeFieldId]) {
+        return docFields[activeFieldId]
+      }
+    }
+    return null
+  }, [activeFieldId, fieldPositions])
+
   // Validation
   const validationErrors = useMemo(() => {
     const errors: string[] = []
@@ -680,85 +691,71 @@ export default function EditEnvelopePage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Edit Envelope</h1>
-            <p className="text-gray-600 mt-1">Review documents, recipients, and fields before sending</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="envelope-name" className="text-sm font-medium">Envelope Name:</Label>
-              <Input
-                id="envelope-name"
-                placeholder="e.g., Contract Agreement"
-                value={envelopeName}
-                onChange={(e) => setEnvelopeName(e.target.value)}
-                className="w-48"
-              />
+    <div className="flex flex-col h-full bg-gray-100">
+      {/* Slim Header with step indicator */}
+      <div className="bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-3 pt-2 pb-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-[15px] font-semibold text-slate-900 tracking-tight">Edit envelope</h1>
+              <p className="text-[11px] text-slate-600">
+                Review documents, recipients, and fields before sending.
+              </p>
             </div>
-            
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleSaveDraft}
                 disabled={saving || isValidating || validationErrors.length > 0}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 h-8 px-3 text-xs"
               >
-                <Save className="h-4 w-4" />
-                {saving ? 'Saving...' : 'Save Draft'}
-                <span className="text-xs text-gray-500 ml-1">(Ctrl+S)</span>
+                <Save className="h-3.5 w-3.5" />
+                <span>{saving ? 'Saving…' : 'Save draft'}</span>
               </Button>
-              
               <Button
+                size="sm"
                 onClick={handleSend}
                 disabled={saving || sending || isValidating || validationErrors.length > 0}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 h-8 px-3 text-xs"
               >
-                <Send className="h-4 w-4" />
-                {sending ? 'Sending...' : 'Send Now'}
-                <span className="text-xs text-gray-500 ml-1">(Ctrl+Enter)</span>
+                <Send className="h-3.5 w-3.5" />
+                <span>{sending ? 'Sending…' : 'Send'}</span>
               </Button>
-              
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="h-8 w-8"
                 onClick={() => setShowKeyboardShortcuts(true)}
-                className="flex items-center gap-1"
+                title="Keyboard shortcuts"
               >
                 <Keyboard className="h-4 w-4" />
-                <span className="text-xs">?</span>
               </Button>
             </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <Label htmlFor="envelope-description" className="text-sm font-medium text-gray-700">Envelope Description (Optional)</Label>
-          <Textarea
-            id="envelope-description"
-            placeholder="Add a short message or instructions for recipients"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="mt-2"
-            maxLength={1000}
-          />
-          <p className="mt-1 text-xs text-gray-500">Shown to all recipients before signing. {description.length}/1000 characters.</p>
+          <div className="mt-2 flex items-center gap-3 text-[11px]">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-10 rounded-full bg-blue-600" />
+              <span className="font-medium text-slate-900">Prepare</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-400">
+              <div className="h-1.5 w-10 rounded-full bg-slate-200" />
+              <span>Set up &amp; send</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Alerts */}
       {success && (
-        <Alert className="border-green-200 bg-green-50 mx-4 mt-4">
+        <Alert className="border-green-200 bg-green-50 mx-3 mt-3">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">{success}</AlertDescription>
         </Alert>
       )}
       
       {error && (
-        <Alert variant="destructive" className="mx-4 mt-4">
+        <Alert variant="destructive" className="mx-3 mt-3">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -766,7 +763,7 @@ export default function EditEnvelopePage() {
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
-        <Alert variant="destructive" className="mx-4 mt-4">
+        <Alert variant="destructive" className="mx-3 mt-3">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <div className="space-y-1">
@@ -780,37 +777,228 @@ export default function EditEnvelopePage() {
 
       {/* Main Content */}
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-      <div className="flex-1 flex overflow-hidden relative z-10">
-        {/* Main Canvas */}
-        <div className="flex-1 flex flex-col">
-          <VerticalPDFViewer
-            documents={uploadedDocuments}
-            fieldPositions={fieldPositions}
-            recipients={recipients}
-            activeFieldId={activeFieldId}
-            onFieldSelect={setActiveFieldId}
-            onFieldPositionChange={handleFieldPositionChange}
-            onFieldDelete={handleFieldDelete}
-            onFieldDrop={handleFieldDrop}
-          />
+        <div className="flex-1 flex min-h-0 bg-gray-100">
+          <div className="flex flex-1 max-w-7xl mx-auto gap-3 px-3 py-3 overflow-hidden">
+            {/* Left Sidebar */}
+            <div className="w-[240px] flex-shrink-0 hidden md:flex">
+              <EnvelopeCreationSidebar
+                uploadedDocuments={uploadedDocuments}
+                recipients={recipients}
+                fieldPositions={fieldPositions}
+                onDocumentAdd={addDocument}
+                onDocumentRemove={removeDocument}
+                onDocumentSelect={selectDocument}
+                onRecipientAdd={addRecipient}
+                onRecipientRemove={removeRecipient}
+                onRecipientReorder={reorderRecipient}
+                onFieldDrop={handleFieldDrop}
+                onMergeDocuments={handleMergeDocuments}
+                isMerging={isMerging}
+                envelopeName={envelopeName}
+                onEnvelopeNameChange={setEnvelopeName}
+                description={description || ''}
+                onDescriptionChange={setDescription}
+                onSaveDraft={handleSaveDraft}
+                onSend={handleSend}
+                creating={saving}
+                sending={sending}
+                isValidating={isValidating}
+                hasValidationErrors={validationErrors.length > 0}
+                onShowShortcuts={() => setShowKeyboardShortcuts(true)}
+              />
+            </div>
+
+            {/* Central PDF Canvas */}
+            <div className="flex-1 flex justify-center overflow-hidden min-w-0">
+              <div className="flex-1 max-w-5xl flex min-w-0">
+                <VerticalPDFViewer
+                  documents={uploadedDocuments}
+                  fieldPositions={fieldPositions}
+                  recipients={recipients}
+                  activeFieldId={activeFieldId}
+                  onFieldSelect={setActiveFieldId}
+                  onFieldPositionChange={handleFieldPositionChange}
+                  onFieldDelete={handleFieldDelete}
+                  onFieldDrop={handleFieldDrop}
+                  onPageMetricsChange={handlePageMetricsChange}
+                />
+              </div>
+            </div>
+
+            {/* Right-hand Settings Panel */}
+            {activeField && activeField.type !== 'signature' && (
+              <div className="w-[300px] flex-shrink-0 hidden lg:block">
+                <div className="h-full bg-white border rounded-lg shadow-sm flex flex-col">
+                  <div className="p-4 border-b flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-800">Field Settings</div>
+                      <div className="text-xs text-gray-500 mt-0.5 capitalize">{activeField.type}</div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setActiveFieldId(null)}>
+                      ✕
+                    </Button>
+                  </div>
+                  <div className="p-4 space-y-3 overflow-y-auto">
+                    {/* Assigned signer info */}
+                    <div className="text-xs text-gray-600">
+                      Assigned:{' '}
+                      {recipients.find((r) => r.id.toString() === activeField!.assignedTo)?.name ||
+                        'Unassigned'}
+                    </div>
+
+                    {/* Required */}
+                    <div className="space-y-1">
+                      <Label className="text-xs">Required</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={activeField.required ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() =>
+                            handleFieldPositionChange(activeField!.id, { required: true })
+                          }
+                        >
+                          Yes
+                        </Button>
+                        <Button
+                          variant={!activeField.required ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() =>
+                            handleFieldPositionChange(activeField!.id, { required: false })
+                          }
+                        >
+                          No
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Font family/size */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Font family</Label>
+                        <Select
+                          value={activeField.font_family || ''}
+                          onValueChange={(v) =>
+                            handleFieldPositionChange(activeField!.id, { font_family: v })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select font" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Helvetica">Helvetica</SelectItem>
+                            <SelectItem value="Arial">Arial</SelectItem>
+                            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                            <SelectItem value="Courier New">Courier New</SelectItem>
+                            <SelectItem value="Roboto">Roboto</SelectItem>
+                            <SelectItem value="Inter">Inter</SelectItem>
+                            <SelectItem value="Georgia">Georgia</SelectItem>
+                            <SelectItem value="Verdana">Verdana</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Font size</Label>
+                        <Input
+                          type="number"
+                          value={activeField.font_size ?? ''}
+                          onChange={(e) =>
+                            handleFieldPositionChange(activeField!.id, {
+                              font_size: Number(e.target.value) || undefined,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Prefill value */}
+                    <div>
+                      <Label className="text-xs">Prefill value</Label>
+                      <Input
+                        value={activeField.prefill_value ?? ''}
+                        onChange={(e) =>
+                          handleFieldPositionChange(activeField!.id, {
+                            prefill_value: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    {activeField.type === 'date' && (
+                      <div>
+                        <Label className="text-xs">Date format</Label>
+                        <Select
+                          value={activeField.date_format || ''}
+                          onValueChange={(v) =>
+                            handleFieldPositionChange(activeField!.id, { date_format: v })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select format" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                            <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                            <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                            <SelectItem value="YYYY/MM/DD">YYYY/MM/DD</SelectItem>
+                            <SelectItem value="DD-MMM-YYYY">DD-MMM-YYYY</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {activeField.type === 'text' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Placeholder</Label>
+                          <Input
+                            value={activeField.placeholder || ''}
+                            onChange={(e) =>
+                              handleFieldPositionChange(activeField!.id, {
+                                placeholder: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Max length</Label>
+                          <Input
+                            type="number"
+                            value={activeField.max_length ?? ''}
+                            onChange={(e) =>
+                              handleFieldPositionChange(activeField!.id, {
+                                max_length: Number(e.target.value) || undefined,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {activeField.type === 'designation' && (
+                      <div>
+                        <Label className="text-xs">Max length</Label>
+                        <Input
+                          type="number"
+                          value={activeField.max_length ?? ''}
+                          onChange={(e) =>
+                            handleFieldPositionChange(activeField!.id, {
+                              max_length: Number(e.target.value) || undefined,
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+
+                    <div className="text-[10px] text-gray-500">
+                      Tip: Required means signer must fill unless a prefill value is provided.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Sidebar */}
-        <EnvelopeCreationSidebar
-          uploadedDocuments={uploadedDocuments}
-          recipients={recipients}
-          fieldPositions={fieldPositions}
-          onDocumentAdd={addDocument}
-          onDocumentRemove={removeDocument}
-          onDocumentSelect={selectDocument}
-          onRecipientAdd={addRecipient}
-          onRecipientRemove={removeRecipient}
-          onRecipientReorder={reorderRecipient}
-          onFieldDrop={handleFieldDrop}
-          onMergeDocuments={handleMergeDocuments}
-          isMerging={isMerging}
-        />
-      </div>
       <DragOverlay dropAnimation={null}>
         {activeDragFieldType && (
           <div className="pointer-events-none rounded-md border bg-white px-3 py-2 text-xs shadow-lg z-[9999]">
@@ -819,111 +1007,6 @@ export default function EditEnvelopePage() {
         )}
       </DragOverlay>
       </DndContext>
-
-      {/* Field Settings Panel */}
-      {activeFieldId && (() => {
-        let activeField: FieldPosition | null = null
-        Object.values(fieldPositions).forEach(docFields => {
-          if (docFields[activeFieldId!]) activeField = docFields[activeFieldId!]
-        })
-        if (!activeField) return null
-        const f = activeField as FieldPosition
-        if (f.type === 'signature') return null
-        const update = (patch: Partial<FieldPosition>) => handleFieldPositionChange(activeFieldId!, patch)
-        return (
-          <div className="fixed right-4 bottom-4 w-full max-w-sm bg-white border rounded-lg shadow-lg z-[1000]">
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="text-sm font-semibold text-gray-800">Field Settings ({f.type})</div>
-              <Button variant="ghost" size="sm" onClick={() => setActiveFieldId(null)}>✕</Button>
-            </div>
-            <div className="p-4 space-y-3">
-              {/* Assigned signer info */}
-              <div className="text-xs text-gray-600">Assigned: {recipients.find(r => r.id.toString() === f.assignedTo)?.name || 'Unassigned'}</div>
-
-              {/* Required */}
-              <div className="space-y-1">
-                <Label className="text-xs">Required</Label>
-                <div className="flex gap-2">
-                  <Button variant={f.required ? 'default' : 'outline'} size="sm" onClick={() => update({ required: true })}>Yes</Button>
-                  <Button variant={!f.required ? 'default' : 'outline'} size="sm" onClick={() => update({ required: false })}>No</Button>
-                </div>
-              </div>
-
-              {/* Font family/size */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Font family</Label>
-                  <Select value={f.font_family || ''} onValueChange={(v) => update({ font_family: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Helvetica">Helvetica</SelectItem>
-                      <SelectItem value="Arial">Arial</SelectItem>
-                      <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                      <SelectItem value="Courier New">Courier New</SelectItem>
-                      <SelectItem value="Roboto">Roboto</SelectItem>
-                      <SelectItem value="Inter">Inter</SelectItem>
-                      <SelectItem value="Georgia">Georgia</SelectItem>
-                      <SelectItem value="Verdana">Verdana</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Font size</Label>
-                  <Input type="number" value={f.font_size ?? ''} onChange={(e) => update({ font_size: Number(e.target.value) || undefined })} />
-                </div>
-              </div>
-
-              {/* Prefill value */}
-              <div>
-                <Label className="text-xs">Prefill value</Label>
-                <Input value={f.prefill_value ?? ''} onChange={(e) => update({ prefill_value: e.target.value })} />
-              </div>
-
-              {f.type === 'date' && (
-                <div>
-                  <Label className="text-xs">Date format</Label>
-                  <Select value={f.date_format || ''} onValueChange={(v) => update({ date_format: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                      <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                      <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                      <SelectItem value="YYYY/MM/DD">YYYY/MM/DD</SelectItem>
-                      <SelectItem value="DD-MMM-YYYY">DD-MMM-YYYY</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {f.type === 'text' && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Placeholder</Label>
-                    <Input value={f.placeholder || ''} onChange={(e) => update({ placeholder: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Max length</Label>
-                    <Input type="number" value={f.max_length ?? ''} onChange={(e) => update({ max_length: Number(e.target.value) || undefined })} />
-                  </div>
-                </div>
-              )}
-
-              {f.type === 'designation' && (
-                <div>
-                  <Label className="text-xs">Max length</Label>
-                  <Input type="number" value={f.max_length ?? ''} onChange={(e) => update({ max_length: Number(e.target.value) || undefined })} />
-                </div>
-              )}
-
-              <div className="text-[10px] text-gray-500">Tip: Required means signer must fill unless a prefill value is provided.</div>
-            </div>
-          </div>
-        )
-      })()}
 
       {/* Keyboard Shortcuts Modal */}
       {showKeyboardShortcuts && (

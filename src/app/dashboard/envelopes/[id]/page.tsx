@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +12,7 @@ import { getUserById } from '@/lib/api/users'
 import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 import { useSession } from 'next-auth/react'
 import { UserAvatar } from '@/components/UserAvatar'
+import { Check, Copy, PenTool, Pencil, XCircle, Trash2, Send } from 'lucide-react'
 
 function RecipientItem({ r, envelopeSignatures }: { r: any; envelopeSignatures: any[] }) {
   const recipientId = r?.id
@@ -194,15 +196,17 @@ export default function EnvelopeDetailPage() {
             </div>
           </div>
         </div>
-        <div className="space-x-2">
+        <div className="flex items-center gap-2">
           {/* Sign Document - Only for recipients */}
           {isRecipient && (envelope.status === 'draft' || envelope.status === 'pending') && (
             <Button
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/sign`)}
               disabled={false}
-              title="Go to signing"
+              title="Sign document"
+              aria-label="Sign document"
+              className="h-10 w-10 p-0 flex items-center justify-center flex-shrink-0"
             >
-              Sign Document
+              <PenTool className="h-4 w-4" />
             </Button>
           )}
           {/* Edit - Only for creator in draft or rejected status */}
@@ -210,8 +214,11 @@ export default function EnvelopeDetailPage() {
             <Button
               variant="outline"
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/edit`)}
+              title="Edit envelope"
+              aria-label="Edit envelope"
+              className="h-10 w-10 p-0 flex items-center justify-center flex-shrink-0"
             >
-              Edit
+              <Pencil className="h-4 w-4" />
             </Button>
           )}
           {/* Send - Only for creator in draft status */}
@@ -223,8 +230,11 @@ export default function EnvelopeDetailPage() {
                 }
               }}
               disabled={sending}
+              title="Send envelope"
+              aria-label="Send envelope"
+              className="h-10 w-10 p-0 flex items-center justify-center flex-shrink-0"
             >
-              Send Envelope
+              <Send className="h-4 w-4" />
             </Button>
           )}
           {/* Reject - Only for creator when sent */}
@@ -237,8 +247,11 @@ export default function EnvelopeDetailPage() {
                 }
               }}
               disabled={rejecting}
+              title="Reject envelope"
+              aria-label="Reject envelope"
+              className="h-10 w-10 p-0 flex items-center justify-center flex-shrink-0"
             >
-              Reject Envelope
+              <XCircle className="h-4 w-4" />
             </Button>
           )}
           {/* Delete - Only for creator */}
@@ -252,8 +265,11 @@ export default function EnvelopeDetailPage() {
                 }
               }}
               disabled={deleting}
+              title="Delete envelope"
+              aria-label="Delete envelope"
+              className="h-10 w-10 p-0 flex items-center justify-center flex-shrink-0"
             >
-              Delete
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>
@@ -285,19 +301,7 @@ export default function EnvelopeDetailPage() {
                 <p className="text-sm text-gray-700">
                   <span className="font-semibold text-gray-900">Password:</span> {envelope.pdf_lock_password}
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(envelope.pdf_lock_password ?? '').then(
-                      () => {},
-                      () => {}
-                    )
-                  }}
-                  className="text-xs"
-                >
-                  Copy
-                </Button>
+                <CopyPasswordButton value={envelope.pdf_lock_password ?? ''} />
               </div>
               <p className="text-xs text-gray-500">
                 Keep this password secure. Recipients will need it to open signed documents.
@@ -320,29 +324,46 @@ export default function EnvelopeDetailPage() {
             {isLoadingDocs ? (
               <div>Loading documents...</div>
             ) : envelopeDocuments && envelopeDocuments.length > 0 ? (
-              envelopeDocuments.map((doc: EnvelopeDocumentResponse) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
-                      <span className="text-red-600 text-sm font-bold">PDF</span>
+              envelopeDocuments.map((doc: EnvelopeDocumentResponse) => {
+                const href =
+                  envelope.status === 'completed' && envelope.pdf_lock_password
+                    ? `/dashboard/documents/${doc.id}?pdf_password=${encodeURIComponent(
+                        envelope.pdf_lock_password
+                      )}`
+                    : `/dashboard/documents/${doc.id}`
+
+                return (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span className="text-red-600 text-xs font-semibold tracking-wide">
+                          PDF
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                          {doc.file_name || `Document ${doc.id}`}
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          Click “Open” to view the latest version of this document.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <Link
-                        href={
-                          envelope.status === 'completed' && envelope.pdf_lock_password
-                            ? `/dashboard/documents/${doc.id}?pdf_password=${encodeURIComponent(
-                                envelope.pdf_lock_password
-                              )}`
-                            : `/dashboard/documents/${doc.id}`
-                        }
-                        className="font-medium text-blue-600 hover:underline"
+                    <Link href={href}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs flex items-center gap-1.5"
                       >
-                        {doc.file_name || `Document ${doc.id}`}
-                      </Link>
-                    </div>
+                        <span>Open</span>
+                      </Button>
+                    </Link>
                   </div>
-                </div>
-              ))
+                )
+              })
             ) : ( 
               <p className="text-sm text-gray-600">No documents found in this envelope.</p>
             )}
@@ -382,5 +403,36 @@ export default function EnvelopeDetailPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function CopyPasswordButton({ value }: { value: string }) {
+  const [copied, setCopied] = React.useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // ignore clipboard errors
+    }
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleCopy}
+      className="text-xs flex items-center justify-center gap-1.5 h-8 w-10 px-0"
+      title={copied ? 'Copied' : 'Copy password'}
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+      <span className="sr-only">{copied ? 'Copied' : 'Copy password'}</span>
+    </Button>
   )
 }

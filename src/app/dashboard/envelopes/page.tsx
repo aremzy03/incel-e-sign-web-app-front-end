@@ -22,6 +22,7 @@ import { useEnvelopes, useRejectEnvelope, useDeleteEnvelope } from '@/hooks/useE
 import { useSession } from 'next-auth/react'
 import { UserAvatar } from '@/components/UserAvatar'
 import { useSidebar } from '../dashboard-client-layout'
+import { Eye, Trash2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const getStatusBadge = (status: string) => {
@@ -124,11 +125,11 @@ export default function EnvelopesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Document</TableHead>
+                  <TableHead className="w-[200px] max-w-[200px]">Document</TableHead>
                   <TableHead>Creator</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Recipients</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -136,7 +137,9 @@ export default function EnvelopesPage() {
                   const isCreator = env.creator?.id === currentUserId
                   return (
                   <TableRow key={env.id}>
-                    <TableCell className="font-medium">{env.name || env.documents?.[0]?.file_name || '—'}</TableCell>
+                    <TableCell className="font-medium w-[200px] max-w-[200px] truncate" title={env.name || env.documents?.[0]?.file_name || '—'}>
+                      {env.name || env.documents?.[0]?.file_name || '—'}
+                    </TableCell>
                 <TableCell>
                   <CreatorCell creator={env.creator} />
                 </TableCell>
@@ -148,38 +151,53 @@ export default function EnvelopesPage() {
                     <TableCell>
                       <RecipientAvatars recipients={env.recipients || []} />
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button size="sm" variant="outline" title="View envelope" onClick={() => router.push(`/dashboard/envelopes/${env.id}`)}>View</Button>
-                      {isCreator && env.status === 'pending' && (
+                    <TableCell className="text-right w-[120px]">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           size="sm"
-                          variant="destructive"
-                          title="Reject envelope"
-                          disabled={rejecting}
-                          onClick={async () => {
-                            if (window.confirm('Are you sure you want to reject this envelope?')) {
-                              await rejectAsync(env.id)
-                            }
-                          }}
+                          variant="outline"
+                          title="View envelope"
+                          aria-label="View envelope"
+                          className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
+                          onClick={() => router.push(`/dashboard/envelopes/${env.id}`)}
                         >
-                          Reject
+                          <Eye className="h-4 w-4" />
                         </Button>
-                      )}
-                      {isCreator && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        title="Delete envelope"
-                        disabled={deleting}
-                        onClick={async () => {
-                          if (window.confirm('Are you sure you want to delete this envelope?')) {
-                            await deleteAsync(env.id)
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
-                      )}
+                        {isCreator && env.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            title="Reject envelope"
+                            aria-label="Reject envelope"
+                            disabled={rejecting}
+                            className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to reject this envelope?')) {
+                                await rejectAsync(env.id)
+                              }
+                            }}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {isCreator && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Delete envelope"
+                            aria-label="Delete envelope"
+                            disabled={deleting}
+                            className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to delete this envelope?')) {
+                                await deleteAsync(env.id)
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                   )
@@ -206,8 +224,13 @@ function CreatorCell({ creator }: { creator: any }) {
   const label = user?.full_name || creator?.full_name || creator?.email || '—'
   if (!creatorId) return <span>{label}</span>
   return (
-    <div className="flex items-center space-x-2">
-      <Link href={`/dashboard/users/${creatorId}`} className="hover:opacity-80 transition-opacity">
+    <div className="flex items-center">
+      <Link
+        href={`/dashboard/users/${creatorId}`}
+        className="hover:opacity-80 transition-opacity"
+        title={label}
+        aria-label={label}
+      >
         <UserAvatar
           userId={creatorId}
           userName={user?.full_name || creator?.full_name}
@@ -215,9 +238,6 @@ function CreatorCell({ creator }: { creator: any }) {
           profilePhotoUrl={user?.profile_photo_url || creator?.profile_photo_url}
           className="h-8 w-8"
         />
-      </Link>
-      <Link href={`/dashboard/users/${creatorId}`} className="text-blue-600 hover:underline">
-        {label}
       </Link>
     </div>
   )
@@ -265,7 +285,11 @@ function RecipientAvatar({ recipient, index }: { recipient: any; index: number }
   if (!recipientId) {
     return (
       <div className={index > 0 ? '-ml-4' : ''}>
-        <div className="h-[40px] w-[40px] rounded-full border-4 border-white">
+        <div
+          className="h-[40px] w-[40px] rounded-full border-4 border-white"
+          title={name}
+          aria-label={name}
+        >
           <UserAvatar
             userId={recipientId}
             userName={name}
@@ -280,7 +304,12 @@ function RecipientAvatar({ recipient, index }: { recipient: any; index: number }
 
   return (
     <div className={index > 0 ? '-ml-4' : ''}>
-      <Link href={`/dashboard/users/${recipientId}`} className="hover:opacity-80 transition-opacity block">
+      <Link
+        href={`/dashboard/users/${recipientId}`}
+        className="hover:opacity-80 transition-opacity block"
+        title={name}
+        aria-label={name}
+      >
         <div className="h-[40px] w-[40px] rounded-full border-4 border-white">
           <UserAvatar
             userId={recipientId}

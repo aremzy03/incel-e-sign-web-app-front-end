@@ -276,7 +276,7 @@ export function FieldBox({
 
         {/* Recipient selection dropdown */}
         {showRecipientSelect && (
-          <div className="absolute top-full left-0 mt-1 z-30 bg-white border rounded-md shadow-lg min-w-48">
+          <div className="absolute bottom-full left-0 mb-1 z-30 bg-white border rounded-md shadow-lg min-w-48">
             <div className="p-2">
               <div className="text-xs font-medium text-gray-700 mb-2">
                 Assign to recipient:

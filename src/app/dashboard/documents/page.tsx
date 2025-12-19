@@ -251,26 +251,27 @@ export default function DocumentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>File Name</TableHead>
+                  <TableHead className="w-[200px] max-w-[200px]">File Name</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Size</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredDocuments.map((document) => (
                   <TableRow key={document.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
+                    <TableCell className="font-medium w-[200px] max-w-[200px]">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center flex-shrink-0">
                           <span className="text-red-600 text-sm font-bold">PDF</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleDocumentClick(document)}
-                          className="text-blue-600 hover:underline"
+                          className="text-blue-600 hover:underline truncate text-left"
+                          title={document.file_name}
                         >
                           {document.file_name}
                         </button>
@@ -290,12 +291,15 @@ export default function DocumentsPage() {
                     <TableCell className="text-gray-600">
                       {document.created_at ? formatDate(document.created_at) : 'Unknown'}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
+                    <TableCell className="text-right w-[120px]">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDocumentClick(document)}
+                          className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
+                          title="View document"
+                          aria-label="View document"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -304,6 +308,9 @@ export default function DocumentsPage() {
                           size="sm"
                           onClick={() => handleDownloadDocument(document.id)}
                           disabled={downloadDocumentMutation.isPending}
+                          className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
+                          title="Download document"
+                          aria-label="Download document"
                         >
                           {downloadDocumentMutation.isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -316,7 +323,9 @@ export default function DocumentsPage() {
                           size="sm"
                           onClick={() => handleDeleteDocument(document.id)}
                           disabled={deleteDocumentMutation.isPending}
-                          className="text-red-600 hover:text-red-700"
+                          className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0 text-red-600 hover:text-red-700"
+                          title="Delete document"
+                          aria-label="Delete document"
                         >
                           {deleteDocumentMutation.isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

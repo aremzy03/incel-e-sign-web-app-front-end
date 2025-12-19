@@ -330,7 +330,7 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto px-2 py-0 md:px-3 md:py-0.5">
           <SidebarContext.Provider value={{ isCollapsed }}>
             {children}
           </SidebarContext.Provider>

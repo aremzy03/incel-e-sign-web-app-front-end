@@ -24,7 +24,7 @@ const getNotificationIcon = (type: string) => {
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient()
-  const { data, isLoading } = useQuery<NotificationItem[]>({
+  const { data, isLoading, error } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: listNotifications,
     staleTime: 30_000,
@@ -38,8 +38,11 @@ export default function NotificationsPage() {
     onError: () => toast.error('Failed to mark as read'),
   })
 
-  const notifications = data ?? []
-  const unreadCount = useMemo(() => notifications.filter(n => !n.is_read).length, [notifications])
+  const notifications = Array.isArray(data) ? data : []
+  const unreadCount = useMemo(() => {
+    if (!Array.isArray(notifications)) return 0
+    return notifications.filter(n => !n.is_read).length
+  }, [notifications])
 
   const markAll = useMutation({
     mutationFn: markAllNotificationsRead,
@@ -78,7 +81,11 @@ export default function NotificationsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {error ? (
+            <div className="text-sm text-red-600">
+              Error loading notifications: {error instanceof Error ? error.message : 'Unknown error'}
+            </div>
+          ) : isLoading ? (
             <div className="text-sm text-gray-600">Loading...</div>
           ) : notifications.length > 0 ? (
             <div className="space-y-4">

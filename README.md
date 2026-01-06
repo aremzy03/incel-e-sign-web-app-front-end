@@ -35,6 +35,37 @@ A modern Next.js 14 frontend application for the Incel eSign digital document si
 - **Review Actions Integration** (UI only) for triggering notifications and audit logs on envelope and document review actions
 - **Workflow Integration** with notifications and audit trails in document upload, envelope creation, and envelope detail pages
 
+## 🆕 Recent Changes
+
+### Google OAuth Authentication
+- ✅ **Google Sign-In Integration** - Added "Continue with Google" buttons on both login and register pages
+- ✅ **OAuth Flow Implementation** - Integrated with Django backend's Google OAuth endpoints (`/api/auth/google/login/` and `/api/auth/google/callback/`)
+- ✅ **NextAuth Bridge** - Created `google-jwt` credentials provider to bridge backend-issued JWTs into NextAuth sessions
+- ✅ **Callback Page** - Implemented `/auth/google/callback` route to handle OAuth redirects and token exchange
+- ✅ **Seamless Integration** - Google-authenticated users have the same session experience as email/password users
+
+### IncelGlobal Logo Implementation
+- ✅ **Custom Logo Component** - Created `IncelLogo` component with full IncelGlobal branding
+- ✅ **Logo Variants** - Supports both `icon` (four circles only) and `full` (with "IncelGlobal" text and "...adding value" tagline) variants
+- ✅ **Brand Consistency** - Replaced all Shield icons throughout the application with IncelGlobal logo
+- ✅ **Transparent Backgrounds** - All logo instances now use completely transparent backgrounds
+- ✅ **Responsive Sizing** - Logo component supports both explicit `size` prop and Tailwind className sizing
+
+### Technical Improvements
+- ✅ **TypeScript Compatibility** - Fixed type compatibility issues for logo component in navigation arrays
+- ✅ **Suspense Boundaries** - Properly wrapped all `useSearchParams()` usage in Suspense boundaries for Next.js 14 compliance
+- ✅ **Build Optimization** - Resolved all build errors and warnings for production-ready deployment
+
+### Files Modified
+- `src/components/ui/incel-logo.tsx` - New IncelGlobal logo component
+- `src/app/(auth)/login/page.tsx` - Added Google OAuth button and updated logo
+- `src/app/(auth)/register/page.tsx` - Added Google OAuth button and updated logo
+- `src/app/auth/google/callback/page.tsx` - New OAuth callback handler
+- `src/pages/api/auth/[...nextauth].ts` - Added `google-jwt` provider
+- `src/components/navigation.tsx` - Updated to use IncelGlobal logo
+- `src/app/page.tsx` - Updated to use IncelGlobal logo
+- All dashboard admin pages - Updated to use IncelGlobal logo
+
 ## 🔧 Tech Notes
 
 ### Notifications & Audit Logs
@@ -252,8 +283,10 @@ The application uses **NextAuth.js** for authentication with JWT tokens from the
 
 ### Authentication Features
 
-- **Register Page** (`/auth/register`) → integrates with backend API
-- **Login Page** (`/auth/login`) → uses NextAuth with Django API
+- **Register Page** (`/register`) → integrates with backend API
+- **Login Page** (`/login`) → uses NextAuth with Django API
+- **Google OAuth** → "Continue with Google" option on both login and register pages
+- **OAuth Callback** (`/auth/google/callback`) → handles Google OAuth redirects and token exchange
 - **Token Refresh** handled via `/auth/refresh/`
 - **Profile Fetch** integrated with `/auth/profile/`
 
@@ -272,7 +305,15 @@ The application uses **NextAuth.js** for authentication with JWT tokens from the
    - Tokens are stored in NextAuth session
    - User is redirected to dashboard
 
-3. **Token Management:**
+3. **Google OAuth Process:**
+   - User clicks "Continue with Google" on login or register page
+   - Frontend redirects to backend `/api/auth/google/login/?next=/desired/path`
+   - User authenticates with Google and is redirected back
+   - Backend issues JWT tokens and redirects to `/auth/google/callback` with tokens in query params
+   - Frontend callback page bridges tokens into NextAuth session via `google-jwt` provider
+   - User is redirected to dashboard with full session access
+
+4. **Token Management:**
    - Access tokens expire after 15 minutes
    - Automatic token refresh using `/auth/refresh/` endpoint
    - Failed refresh attempts redirect to login page
@@ -313,6 +354,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 |--------|----------|-------------|---------------|
 | `POST` | `/api/auth/register/` | User registration | ❌ |
 | `POST` | `/api/auth/login/` | User login (JWT tokens) | ❌ |
+| `GET` | `/api/auth/google/login/` | Start Google OAuth flow (redirects to Google) | ❌ |
+| `GET` | `/api/auth/google/callback/` | Google OAuth callback (issues JWT tokens, redirects to frontend) | ❌ |
 | `POST` | `/api/auth/logout/` | User logout (blacklist token) | ✅ |
 | `GET` | `/api/auth/profile/` | Get user profile | ✅ |
 | `POST` | `/api/auth/refresh/` | Refresh access token | ❌ |
@@ -336,9 +379,10 @@ The application features polished authentication pages built with **shadcn/ui** 
 
 ### Login Page Features
 
-- **Modern Design:** Centered card layout with app branding
+- **Modern Design:** Centered card layout with IncelGlobal branding
 - **Form Validation:** Real-time validation with error messages
 - **Input Icons:** Visual icons for email (✉️) and password (🔒) fields
+- **Google OAuth:** "Continue with Google" button for social authentication
 - **Loading States:** Spinner animation during authentication
 - **Error Handling:** Red alert for authentication failures
 - **Success Feedback:** Toast notifications for successful login
@@ -351,8 +395,9 @@ The application features polished authentication pages built with **shadcn/ui** 
   - Minimum 8 characters
   - Must contain uppercase, lowercase, and number
   - Password confirmation matching
+- **Google OAuth:** "Continue with Google" button for quick registration
 - **Real-time Validation:** Instant feedback on form errors
-- **Success Flow:** Toast notification and automatic redirect to login
+- **Success Flow:** Toast notification and automatic redirect to dashboard (with auto-login)
 - **Error Handling:** Detailed error messages for various failure scenarios
 
 ### UI Components Used

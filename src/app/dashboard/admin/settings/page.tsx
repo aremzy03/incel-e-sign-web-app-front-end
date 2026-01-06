@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { Shield, Settings, Save, RotateCcw, Upload, FileText, Palette, Bell } from 'lucide-react'
+import { Settings, Save, RotateCcw, Upload, FileText, Palette, Bell } from 'lucide-react'
+import { IncelLogo } from '@/components/ui/incel-logo'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
@@ -144,7 +145,7 @@ export default function SystemSettingsPage() {
         <Card className="bg-white shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
               <p className="text-gray-600 mb-4">
                 You don&apos;t have permission to view system settings. Admin access required.

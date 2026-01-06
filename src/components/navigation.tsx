@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shield, 
   Menu, 
   X, 
   Home, 
@@ -21,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button, AuthorityButton } from '@/components/ui/button';
 import { useBreakpoint } from '@/lib/platform';
+import { IncelLogo } from '@/components/ui/incel-logo';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
@@ -49,12 +49,12 @@ export function Navigation() {
   const NavLogo = () => (
     <Link href="/" className="flex items-center gap-3 group">
       <motion.div
-        className="flex items-center justify-center w-10 h-10 bg-navy-900 text-white rounded-lg"
+        className="flex items-center justify-center"
         whileHover={{ scale: 1.05, rotate: 5 }}
         whileTap={{ scale: 0.95 }}
         transition={{ type: 'spring', stiffness: 300 }}
       >
-        <Shield className="w-5 h-5" />
+        <IncelLogo variant="icon" size={40} />
       </motion.div>
       <div className="flex flex-col">
         <span className="text-xl font-bold font-heading text-navy-900 group-hover:text-blue-600 transition-colors">

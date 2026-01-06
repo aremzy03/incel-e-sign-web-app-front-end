@@ -8,6 +8,7 @@ const API_BASE_URL = getApiBaseUrl()
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
+      id: 'credentials',
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -79,6 +80,47 @@ export const authOptions: NextAuthOptions = {
 
         return null
       }
+    }),
+    CredentialsProvider({
+      id: 'google-jwt',
+      name: 'Google JWT',
+      credentials: {
+        access: { label: 'Access Token', type: 'text' },
+        refresh: { label: 'Refresh Token', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.access || !credentials?.refresh) {
+          return null
+        }
+
+        try {
+          // Use the provided access token to fetch the user profile
+          const profileResponse = await axios.get(`${API_BASE_URL}/auth/profile/`, {
+            headers: {
+              Authorization: `Bearer ${credentials.access}`,
+            },
+          })
+
+          if (profileResponse.data.status === 'success' && profileResponse.data.data) {
+            const userProfile = profileResponse.data.data
+
+            return {
+              id: userProfile.id,
+              email: userProfile.email,
+              name: userProfile.full_name,
+              accessToken: credentials.access,
+              refreshToken: credentials.refresh,
+              user: userProfile,
+            }
+          }
+        } catch (error: any) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Google JWT authorize error:', error.response?.data || error.message)
+          }
+        }
+
+        return null
+      },
     })
   ],
   callbacks: {

@@ -25,7 +25,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Shield, Search, UserCheck, UserX, Trash2, Users } from 'lucide-react'
+import { Search, UserCheck, UserX, Trash2, Users } from 'lucide-react'
+import { IncelLogo } from '@/components/ui/incel-logo'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface User {
@@ -129,7 +130,7 @@ export default function UserManagementPage() {
         <Card className="bg-white shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
               <p className="text-gray-600 mb-4">
                 You don&apos;t have permission to view user management. Admin access required.
@@ -215,7 +216,7 @@ export default function UserManagementPage() {
         <Card className="bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Admin Users</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <IncelLogo className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">

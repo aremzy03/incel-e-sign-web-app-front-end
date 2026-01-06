@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Shield, Search, Filter, Bell, User, Clock, CheckCircle, Circle, CheckCheck } from 'lucide-react'
+import { Search, Filter, Bell, User, Clock, CheckCircle, Circle, CheckCheck } from 'lucide-react'
+import { IncelLogo } from '@/components/ui/incel-logo'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Notification {
@@ -227,7 +228,7 @@ export default function NotificationsCenter() {
         <Card className="bg-white shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
               <p className="text-gray-600 mb-4">
                 You don&apos;t have permission to view notifications center. Admin access required.

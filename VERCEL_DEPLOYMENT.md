@@ -54,6 +54,19 @@ HEALTH_CHECK_BACKEND=false
 ENABLE_LOGGING=false
 ```
 
+### 4.3. Google OAuth frontend callback
+
+If your Django backend is configured to use a Google OAuth redirect like:
+
+- `FRONTEND_BASE_URL=https://your-project-name.vercel.app`
+- `GOOGLE_OAUTH_REDIRECT_PATH=/auth/google/callback`
+
+then the corresponding Next.js route `/auth/google/callback` in this app will handle:
+
+- Reading `status`, `access`, `refresh`, `next`, and `message` from the query string
+- Bridging the backend-issued JWTs into a NextAuth session via the `google-jwt` credentials provider
+- Redirecting the user to the `next` path or `/dashboard` on success
+
 ### 4.1. Generating `NEXTAUTH_SECRET`
 
 Use one of:
@@ -128,6 +141,7 @@ For backend health checks, set `HEALTH_CHECK_BACKEND=true` and ensure the backen
   - Check `ALLOWED_ORIGINS` includes your Vercel / custom domain.
 
 For more general deploy troubleshooting guidance, see Vercel’s docs: [https://vercel.com/docs](https://vercel.com/docs).
+
 
 
 

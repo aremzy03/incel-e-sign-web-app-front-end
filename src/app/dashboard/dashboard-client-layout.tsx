@@ -28,12 +28,17 @@ import {
   Users,
   PenTool,
   ClipboardList,
-  Shield,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
+import { IncelLogo } from '@/components/ui/incel-logo'
 import toast from 'react-hot-toast'
+
+// Wrapper component to make IncelLogo compatible with Lucide icon interface
+const IncelLogoIcon = ({ className }: { className?: string }) => (
+  <IncelLogo variant="icon" className={className} size={20} />
+)
 import { listNotifications, markNotificationRead, type NotificationItem } from '@/lib/api/notifications'
 
 // Context for sidebar collapse state
@@ -55,7 +60,7 @@ const dashboardNav = [
   { name: 'Signatures', href: '/dashboard/signatures', icon: PenTool },
   { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   { name: 'Audit Logs', href: '/dashboard/audit', icon: ClipboardList },
-  { name: 'Admin', href: '/dashboard/admin', icon: Shield },
+  { name: 'Admin', href: '/dashboard/admin', icon: IncelLogoIcon },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 

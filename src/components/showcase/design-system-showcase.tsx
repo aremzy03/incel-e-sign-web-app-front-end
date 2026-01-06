@@ -12,7 +12,6 @@ import {
   Type, 
   Layout, 
   Zap, 
-  Shield, 
   Smartphone, 
   Monitor,
   Tablet,
@@ -24,6 +23,7 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { IncelLogo } from '@/components/ui/incel-logo';
 import { tokens } from '@/lib/design-tokens';
 import { pageVariants, createStagger, createEntrance } from '@/lib/motion';
 import { usePlatform, useBreakpoint } from '@/lib/platform';
@@ -633,7 +633,7 @@ export function DesignSystemShowcase() {
       <footer className="bg-navy-900 text-white py-12">
         <div className="container-corporate text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
-            <Shield className="w-6 h-6 text-blue-400" />
+            <IncelLogo className="w-6 h-6 text-blue-400" />
             <span className="text-xl font-heading font-bold">INCEL E-Sign</span>
           </div>
           <p className="text-blue-200">

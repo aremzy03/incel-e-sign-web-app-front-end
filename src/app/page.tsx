@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
-  Shield, 
   FileCheck, 
   Users, 
   Zap, 
@@ -18,13 +17,19 @@ import {
 import { AuthorityButton, Button } from '@/components/ui/button';
 import { SignatureSeal } from '@/components/ui/signature-seal';
 import { pageVariants, createStagger, createEntrance } from '@/lib/motion';
+import { IncelLogo } from '@/components/ui/incel-logo';
+
+// Wrapper component to make IncelLogo compatible with Lucide icon interface
+const IncelLogoIcon = ({ className }: { className?: string }) => (
+  <IncelLogo variant="icon" className={className} size={24} />
+)
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 const features = [
   {
-    icon: Shield,
+    icon: IncelLogoIcon,
     title: 'Legal Authority',
     description: 'Enterprise-grade security with legally binding digital signatures that meet international compliance standards.',
   },
@@ -117,7 +122,7 @@ export default function HomePage() {
                 <span className="text-sm">ISO 27001 Certified</span>
               </div>
               <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
+                <IncelLogo className="w-5 h-5" />
                 <span className="text-sm">SOC 2 Type II</span>
               </div>
               <div className="flex items-center gap-2">

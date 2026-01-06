@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Shield, Users, FileText, Mail, Settings, Eye, BarChart3 } from 'lucide-react'
+import { Users, FileText, Mail, Settings, Eye, BarChart3 } from 'lucide-react'
+import { IncelLogo } from '@/components/ui/incel-logo'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useQuery } from '@tanstack/react-query'
@@ -127,7 +128,7 @@ export default function AdminDashboard() {
         <Card className="bg-white shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
               <p className="text-gray-600 mb-4">
                 You don&apos;t have permission to view admin dashboard. Admin access required.
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Shield className="h-8 w-8 text-blue-600" />
+              <IncelLogo className="h-8 w-8 text-blue-600" />
               Admin Dashboard
             </h1>
             <p className="text-gray-600 text-lg">

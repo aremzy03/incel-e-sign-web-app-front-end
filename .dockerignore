@@ -1,0 +1,70 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+coverage
+.nyc_output
+__tests__
+tests
+
+# Next.js
+.next
+out
+.vercel
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files
+.env*.local
+.env
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation (optional - uncomment if you want to exclude)
+# *.md
+# !README.md
+
+# Logs
+logs
+*.log
+server.log
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+
+# Cache
+.cache
+.parcel-cache
+.eslintcache

@@ -717,6 +717,223 @@ This application is optimized for deployment on [Vercel](https://vercel.com), wh
 
 For a more detailed, step-by-step guide (including staging/previews and custom domains), see `VERCEL_DEPLOYMENT.md`.
 
+## 🐳 Deployment (Docker)
+
+This application includes a production-ready Docker setup with multi-stage builds for optimal image size and security.
+
+### Prerequisites
+
+- Docker Engine 20.10+ or Docker Desktop
+- Backend API URL (for `NEXT_PUBLIC_API_URL`)
+
+### Quick Start with Docker
+
+1. **Build the Docker image:**
+   ```bash
+   # Build with build-time environment variable (required for client bundle)
+   docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000/api -t incel-esign-frontend .
+   ```
+   
+   **Note:** `NEXT_PUBLIC_API_URL` must be provided at build time as it's embedded in the client bundle. You can override it using `--build-arg` if your production API URL differs.
+
+2. **Run the container:**
+   ```bash
+   docker run -p 3000:3000 \
+     -e NEXTAUTH_URL=http://localhost:3000 \
+     -e NEXTAUTH_SECRET=your-secret-key-here-change-in-production \
+     -e NEXT_PUBLIC_API_URL=http://localhost:8000/api \
+     incel-esign-frontend
+   ```
+
+3. **Access the application:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Docker Configuration
+
+The Dockerfile uses a multi-stage build process:
+
+- **Stage 1 (deps):** Installs all dependencies for optimal caching
+- **Stage 2 (builder):** Builds the Next.js application
+- **Stage 3 (runner):** Creates a minimal production image with only runtime dependencies
+
+### Environment Variables
+
+Required environment variables for Docker deployment:
+
+```env
+# NextAuth Configuration (Required)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here-change-in-production
+
+# Backend API URL (Required)
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+# Optional Configuration
+ALLOWED_ORIGINS=http://localhost:3000
+HEALTH_CHECK_BACKEND=false
+ENABLE_LOGGING=false
+```
+
+**Note:** Generate a secure `NEXTAUTH_SECRET` for production:
+```bash
+openssl rand -base64 32
+```
+
+### Using Docker Compose
+
+Create a `docker-compose.yml` file for easier management:
+
+```yaml
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: http://backend:8000/api
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-key-here}
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api
+      - ALLOWED_ORIGINS=http://localhost:3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+```
+
+**Important:** For production, use a `.env` file or environment variables for secrets:
+```bash
+# .env file (do not commit to version control)
+NEXTAUTH_SECRET=your-generated-secret-here
+```
+
+Run with:
+```bash
+docker-compose up -d
+```
+
+### Production Considerations
+
+- **Security:** The container runs as a non-root user (`nextjs`) for enhanced security
+- **Image Size:** Multi-stage builds minimize the final image size by excluding build dependencies
+- **Port Configuration:** The application listens on port 3000 by default (configurable via `PORT` environment variable)
+- **Health Checks:** Docker HEALTHCHECK instruction is configured to use `/api/health` endpoint for container orchestration
+- **Resource Limits:** Consider setting memory and CPU limits in production environments
+
+### Security Best Practices
+
+**Secret Management:**
+- **Never commit secrets to the image:** Secrets like `NEXTAUTH_SECRET` should only be provided at runtime via environment variables or Docker secrets
+- **Build-time vs Runtime variables:**
+  - `NEXT_PUBLIC_API_URL` must be provided at build time (embedded in client bundle)
+  - `NEXTAUTH_SECRET` and `NEXTAUTH_URL` should only be provided at runtime
+- **Use Docker secrets or environment variables:** For production, use Docker secrets, Kubernetes secrets, or environment variables injected by your orchestration platform
+- **Generate secure secrets:** Always generate `NEXTAUTH_SECRET` using:
+  ```bash
+  openssl rand -base64 32
+  ```
+
+**Production Deployment:**
+- Use specific image tags instead of `latest` for reproducibility
+- Regularly update base images to include security patches
+- Monitor container logs and health check status
+- Use reverse proxy (nginx, traefik) for SSL/TLS termination
+- Implement proper network policies and firewall rules
+
+### Docker Image Details
+
+- **Base Image:** `node:20-alpine` (Alpine Linux for smaller image size)
+- **Node Version:** 20.x (matches package.json requirements)
+- **Port:** 3000 (exposed, configurable)
+- **User:** Runs as non-root user (`nextjs:nodejs`)
+- **Working Directory:** `/app`
+
+### Troubleshooting
+
+**Build fails:**
+- Ensure Docker has sufficient memory (recommended: 4GB+)
+- Check that all source files are present and `.dockerignore` is correctly configured
+
+**Container won't start:**
+- Verify all required environment variables are set
+- Check container logs: `docker logs <container-id>`
+- Ensure the backend API is accessible from the container
+
+**Port already in use:**
+- Change the host port mapping: `-p 3001:3000` (maps container port 3000 to host port 3001)
+- Or stop the process using port 3000
+
+## 🔄 CI/CD (GitHub Actions)
+
+This project includes a GitHub Actions workflow for continuous integration and deployment.
+
+### Workflow Overview
+
+The CI/CD workflow (`.github/workflows/ci-cd.yml`) performs the following operations:
+
+1. **Test & Lint** - Runs ESLint and Jest tests with coverage
+2. **Build** - Builds the Next.js application for production
+3. **Docker Build & Push** - Builds and pushes Docker image to GitHub Container Registry (GHCR)
+
+### Running the Workflow
+
+**Manual Trigger (Current Setup):**
+
+1. Go to your GitHub repository
+2. Navigate to **Actions** tab
+3. Select **CI/CD** workflow from the left sidebar
+4. Click **Run workflow** button
+5. Provide the `NEXT_PUBLIC_API_URL` (default: `http://localhost:8000/api`)
+6. Click **Run workflow** to start
+
+**Workflow Input:**
+- `next_public_api_url`: The backend API URL to use during build (required at build time)
+
+### Docker Image
+
+After a successful workflow run, the Docker image will be available at:
+```
+ghcr.io/<your-username>/<repository-name>:latest
+```
+
+**Image Tags:**
+- `latest` - Latest build from default branch
+- `<branch-name>-<sha>` - Branch-specific tags with commit SHA
+- `<sha>` - Commit SHA tags
+
+### Enabling Automatic Triggers
+
+To enable automatic workflow runs on push to main branch:
+
+1. Open `.github/workflows/ci-cd.yml`
+2. Uncomment the push trigger section:
+   ```yaml
+   push:
+     branches:
+       - main
+   ```
+3. Commit and push the changes
+
+### Workflow Features
+
+- **Caching**: npm cache and Docker layer caching for faster builds
+- **Artifacts**: Test coverage reports and build artifacts are uploaded
+- **Parallel Jobs**: Test & Build run in parallel, Docker build runs after both succeed
+- **GitHub Container Registry**: Automatic authentication using `GITHUB_TOKEN`
+
+### Viewing Results
+
+- **Workflow Status**: Check the Actions tab for workflow run status
+- **Test Coverage**: Download coverage reports from workflow artifacts
+- **Docker Image**: View and pull images from GitHub Container Registry (Packages section)
+
 ## 📄 License
 
 This project is part of the Incel eSign application suite.

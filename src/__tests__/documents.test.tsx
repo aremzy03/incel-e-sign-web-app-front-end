@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SessionProvider } from 'next-auth/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -15,20 +15,12 @@ jest.mock('next-auth/react', () => ({
 }))
 
 // Mock axios
-jest.mock('axios', () => ({
-  post: jest.fn(),
-  get: jest.fn(),
-  delete: jest.fn(),
-  create: jest.fn(() => ({
-    post: jest.fn(),
-    get: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
-    },
-  })),
-}))
+jest.mock('axios')
+
+const getMockApi = () => {
+  const axios = require('axios')
+  return (axios.create as jest.Mock).mock.results[0]?.value || (axios.create as jest.Mock)()
+}
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -37,6 +29,11 @@ jest.mock('next/navigation', () => ({
     back: jest.fn(),
   }),
   useParams: () => ({ id: '1' }),
+  useSearchParams: () => ({
+    get: jest.fn((key: string) => (key === 'pdf_password' ? undefined : null)),
+    has: jest.fn(() => false),
+    getAll: jest.fn(() => []),
+  }),
 }))
 
 // Mock document data
@@ -111,16 +108,8 @@ describe('Documents Integration Tests', () => {
 
   describe('Documents List Page', () => {
     it('displays documents correctly', async () => {
-      const axios = require('axios')
-      axios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          data: mockDocuments,
-        }),
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
-      })
+      const mockApi = getMockApi()
+      mockApi.get.mockResolvedValueOnce({ data: mockDocuments })
 
       render(
         <TestWrapper>
@@ -136,16 +125,8 @@ describe('Documents Integration Tests', () => {
     })
 
     it('shows empty state when no documents', async () => {
-      const axios = require('axios')
-      axios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          data: [],
-        }),
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
-      })
+      const mockApi = getMockApi()
+      mockApi.get.mockResolvedValueOnce({ data: [] })
 
       render(
         <TestWrapper>
@@ -154,26 +135,17 @@ describe('Documents Integration Tests', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('No documents yet')).toBeInTheDocument()
+        expect(screen.getByText('No documents found')).toBeInTheDocument()
         expect(screen.getByText('Upload Your First Document')).toBeInTheDocument()
       })
     })
 
     it('handles delete document', async () => {
       const user = userEvent.setup()
-      const axios = require('axios')
-      const mockDelete = jest.fn().mockResolvedValue({ data: {} })
-      
-      axios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          data: [mockDocuments[0]],
-        }),
-        delete: mockDelete,
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
-      })
+      const mockApi = getMockApi()
+      const mockDelete = mockApi.delete as jest.Mock
+      mockApi.get.mockResolvedValueOnce({ data: [mockDocuments[0]] })
+      mockDelete.mockResolvedValueOnce({ data: {} })
 
       render(
         <TestWrapper>
@@ -185,16 +157,13 @@ describe('Documents Integration Tests', () => {
         expect(screen.getByText('test-document.pdf')).toBeInTheDocument()
       })
 
-      // Find and click delete button
-      const deleteButton = screen.getByRole('button', { name: /delete/i })
+      // Confirm browser dialog and click delete button
+      jest.spyOn(window, 'confirm').mockReturnValue(true)
+      const deleteButton = screen.getByRole('button', { name: /delete document/i })
       await user.click(deleteButton)
 
-      // Confirm deletion
-      const confirmButton = screen.getByRole('button', { name: /ok/i })
-      await user.click(confirmButton)
-
       await waitFor(() => {
-        expect(mockDelete).toHaveBeenCalledWith('/documents/1/')
+        expect(mockDelete).toHaveBeenCalledWith('/documents/1/delete/')
       })
     })
   })
@@ -212,9 +181,11 @@ describe('Documents Integration Tests', () => {
       // Create a mock file with invalid type
       const file = new File(['test content'], 'test.txt', { type: 'text/plain' })
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
-      await user.upload(input, file)
+      fireEvent.change(input, { target: { files: [file] } })
 
-      expect(screen.getByText('Only PDF files are allowed')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getAllByText('Only PDF or Word (.doc, .docx) files are allowed').length).toBeGreaterThan(0)
+      })
     })
 
     it('validates file size', async () => {
@@ -226,18 +197,22 @@ describe('Documents Integration Tests', () => {
         </TestWrapper>
       )
 
-      // Create a mock file that's too large (25MB)
-      const largeFile = new File(['x'.repeat(25 * 1024 * 1024)], 'large.pdf', { type: 'application/pdf' })
+      // Create a mock file that's too large (25MB) without huge payload
+      const largeFile = new File(['x'], 'large.pdf', { type: 'application/pdf' })
+      Object.defineProperty(largeFile, 'size', { value: 25 * 1024 * 1024 })
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
-      await user.upload(input, largeFile)
+      fireEvent.change(input, { target: { files: [largeFile] } })
 
-      expect(screen.getByText('File size must be less than 20MB')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getAllByText('File size must be less than 20MB').length).toBeGreaterThan(0)
+      })
     })
 
     it('uploads document successfully', async () => {
       const user = userEvent.setup()
-      const axios = require('axios')
-      const mockPost = jest.fn().mockResolvedValue({
+      const mockApi = getMockApi()
+      const mockPost = mockApi.post as jest.Mock
+      mockPost.mockResolvedValue({
         data: {
           id: '1',
           file_name: 'test.pdf',
@@ -246,14 +221,6 @@ describe('Documents Integration Tests', () => {
           status: 'draft',
           created_at: '2025-01-01T00:00:00Z',
           download_url: 'https://example.com/download/1',
-        },
-      })
-      
-      axios.create.mockReturnValue({
-        post: mockPost,
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
         },
       })
 
@@ -267,11 +234,6 @@ describe('Documents Integration Tests', () => {
       const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' })
       
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
-      Object.defineProperty(input, 'files', {
-        value: [file],
-        writable: false,
-      })
-
       await user.upload(input, file)
 
       // Click upload button
@@ -288,16 +250,8 @@ describe('Documents Integration Tests', () => {
 
   describe('Document Detail Page', () => {
     it('displays document details correctly', async () => {
-      const axios = require('axios')
-      axios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          data: mockDocuments[0],
-        }),
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
-      })
+      const mockApi = getMockApi()
+      mockApi.get.mockResolvedValueOnce({ data: mockDocuments[0] })
 
       render(
         <TestWrapper>
@@ -307,21 +261,15 @@ describe('Documents Integration Tests', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Document: test-document.pdf')).toBeInTheDocument()
-        expect(screen.getByText('Test User')).toBeInTheDocument()
-        expect(screen.getByText('draft')).toBeInTheDocument()
+        expect(screen.getAllByText('You').length).toBeGreaterThan(0)
+        expect(screen.getAllByText('draft').length).toBeGreaterThan(0)
       })
     })
 
     it('shows delete button for document owner', async () => {
-      const axios = require('axios')
-      axios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          data: mockDocuments[0], // Document owned by test@example.com
-        }),
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
+      const mockApi = getMockApi()
+      mockApi.get.mockResolvedValueOnce({
+        data: mockDocuments[0], // Document owned by test@example.com
       })
 
       render(
@@ -336,15 +284,9 @@ describe('Documents Integration Tests', () => {
     })
 
     it('handles document not found', async () => {
-      const axios = require('axios')
-      axios.create.mockReturnValue({
-        get: jest.fn().mockRejectedValue({
-          response: { status: 404 },
-        }),
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
+      const mockApi = getMockApi()
+      mockApi.get.mockRejectedValueOnce({
+        response: { status: 404 },
       })
 
       render(

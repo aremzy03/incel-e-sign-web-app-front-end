@@ -3,10 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { SessionProvider } from 'next-auth/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-// Mock the page components since they may not exist yet
-const LoginPage = jest.fn()
-const RegisterPage = jest.fn()
-const DashboardClientLayout = jest.fn()
+import LoginPage from '@/app/(auth)/login/page'
+import RegisterPage from '@/app/(auth)/register/page'
+import { DashboardClientLayout } from '@/app/dashboard/dashboard-client-layout'
 
 // Mock NextAuth
 jest.mock('next-auth/react', () => ({
@@ -17,19 +16,17 @@ jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
 }))
 
-// Mock axios
-jest.mock('axios', () => ({
-  post: jest.fn(),
-  get: jest.fn(),
-  create: jest.fn(() => ({
-    post: jest.fn(),
-    get: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
-    },
-  })),
+jest.mock('@/hooks/useProfile', () => ({
+  useProfile: jest.fn(),
 }))
+
+// Mock axios
+jest.mock('axios')
+
+const getMockApi = () => {
+  const axios = require('axios')
+  return (axios.create as jest.Mock).mock.results[0]?.value || (axios.create as jest.Mock)()
+}
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -39,11 +36,17 @@ jest.mock('next/navigation', () => ({
     back: jest.fn(),
   }),
   usePathname: () => '/dashboard',
+  useParams: jest.fn(() => ({})),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+    has: jest.fn(() => false),
+  })),
 }))
 
 const mockUser = {
   id: '1',
   email: 'test@example.com',
+  full_name: 'John Doe',
   first_name: 'John',
   last_name: 'Doe',
   role: 'user',
@@ -82,6 +85,13 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
 describe('Authentication Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    const { useSession } = require('next-auth/react')
+    useSession.mockReturnValue({
+      data: mockSession,
+      status: 'authenticated',
+    })
+    const { useProfile } = require('@/hooks/useProfile')
+    useProfile.mockReturnValue({ data: undefined })
   })
 
   describe('Login Page', () => {
@@ -92,11 +102,11 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      expect(screen.getByText('Incel eSign')).toBeInTheDocument()
-      expect(screen.getByText('Login to your account')).toBeInTheDocument()
-      expect(screen.getByLabelText('Email')).toBeInTheDocument()
-      expect(screen.getByLabelText('Password')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(screen.getByText('INCEL E-Sign')).toBeInTheDocument()
+      expect(screen.getByText('Welcome Back')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign in securely/i })).toBeInTheDocument()
     })
 
     it('validates email format', async () => {
@@ -110,9 +120,9 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      const emailInput = screen.getByLabelText('Email')
+      const emailInput = screen.getByPlaceholderText('your@company.com')
       await user.type(emailInput, 'invalid-email')
-      await user.click(screen.getByRole('button', { name: /sign in/i }))
+      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
 
       // The form should not proceed with invalid email
       expect(mockSignIn).not.toHaveBeenCalled()
@@ -126,9 +136,9 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      const passwordInput = screen.getByLabelText('Password')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       await user.type(passwordInput, '123')
-      await user.click(screen.getByRole('button', { name: /sign in/i }))
+      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
 
       expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument()
     })
@@ -144,9 +154,9 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'password123')
-      await user.click(screen.getByRole('button', { name: /sign in/i }))
+      await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
+      await user.type(screen.getByPlaceholderText('Enter your password'), 'password123')
+      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
 
       expect(mockSignIn).toHaveBeenCalledWith('credentials', {
         email: 'test@example.com',
@@ -166,12 +176,12 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'wrongpassword')
-      await user.click(screen.getByRole('button', { name: /sign in/i }))
+      await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
+      await user.type(screen.getByPlaceholderText('Enter your password'), 'wrongpassword')
+      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
 
       await waitFor(() => {
-        expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
+        expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
       })
     })
   })
@@ -184,14 +194,14 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      expect(screen.getByText('Incel eSign')).toBeInTheDocument()
-      expect(screen.getByText('Create your account')).toBeInTheDocument()
-      expect(screen.getByLabelText('First Name')).toBeInTheDocument()
-      expect(screen.getByLabelText('Last Name')).toBeInTheDocument()
-      expect(screen.getByLabelText('Email')).toBeInTheDocument()
-      expect(screen.getByLabelText('Password')).toBeInTheDocument()
-      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument()
+      expect(screen.getByText('INCEL E-Sign')).toBeInTheDocument()
+      expect(screen.getByText('Create Your Account')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('First name')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Last name')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Create a strong password')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Re-enter your password')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument()
     })
 
     it('validates password strength', async () => {
@@ -202,12 +212,12 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      await user.type(screen.getByLabelText('First Name'), 'John')
-      await user.type(screen.getByLabelText('Last Name'), 'Doe')
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'weak')
-      await user.type(screen.getByLabelText('Confirm Password'), 'weak')
-      await user.click(screen.getByRole('button', { name: /register/i }))
+      await user.type(screen.getByPlaceholderText('First name'), 'John')
+      await user.type(screen.getByPlaceholderText('Last name'), 'Doe')
+      await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
+      await user.type(screen.getByPlaceholderText('Create a strong password'), 'weak')
+      await user.type(screen.getByPlaceholderText('Re-enter your password'), 'weak')
+      await user.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
         // Check for any password validation error message
@@ -223,12 +233,12 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      await user.type(screen.getByLabelText('First Name'), 'John')
-      await user.type(screen.getByLabelText('Last Name'), 'Doe')
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'DifferentPassword123')
-      await user.click(screen.getByRole('button', { name: /register/i }))
+      await user.type(screen.getByPlaceholderText('First name'), 'John')
+      await user.type(screen.getByPlaceholderText('Last name'), 'Doe')
+      await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
+      await user.type(screen.getByPlaceholderText('Create a strong password'), 'Password123')
+      await user.type(screen.getByPlaceholderText('Re-enter your password'), 'DifferentPassword123')
+      await user.click(screen.getByRole('button', { name: /create account/i }))
 
       expect(screen.getByText("Passwords don't match")).toBeInTheDocument()
     })
@@ -244,20 +254,19 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      await user.type(screen.getByLabelText('First Name'), 'John')
-      await user.type(screen.getByLabelText('Last Name'), 'Doe')
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
-      await user.click(screen.getByRole('button', { name: /register/i }))
+      await user.type(screen.getByPlaceholderText('First name'), 'John')
+      await user.type(screen.getByPlaceholderText('Last name'), 'Doe')
+      await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
+      await user.type(screen.getByPlaceholderText('Create a strong password'), 'Password123')
+      await user.type(screen.getByPlaceholderText('Re-enter your password'), 'Password123')
+      await user.click(screen.getByRole('button', { name: /create account/i }))
 
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining('/auth/register/'),
         {
           email: 'test@example.com',
           password: 'Password123',
-          first_name: 'John',
-          last_name: 'Doe',
+          full_name: 'John Doe',
         }
       )
     })
@@ -277,12 +286,12 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      await user.type(screen.getByLabelText('First Name'), 'John')
-      await user.type(screen.getByLabelText('Last Name'), 'Doe')
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
-      await user.click(screen.getByRole('button', { name: /register/i }))
+      await user.type(screen.getByPlaceholderText('First name'), 'John')
+      await user.type(screen.getByPlaceholderText('Last name'), 'Doe')
+      await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
+      await user.type(screen.getByPlaceholderText('Create a strong password'), 'Password123')
+      await user.type(screen.getByPlaceholderText('Re-enter your password'), 'Password123')
+      await user.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
         expect(screen.getByText('Email already exists')).toBeInTheDocument()
@@ -294,10 +303,7 @@ describe('Authentication Integration Tests', () => {
     it('displays user information correctly', () => {
       render(
         <TestWrapper>
-          <DashboardClientLayout
-            navigation={[]}
-            user={mockUser}
-          >
+          <DashboardClientLayout user={mockUser}>
             <div>Dashboard Content</div>
           </DashboardClientLayout>
         </TestWrapper>
@@ -314,10 +320,7 @@ describe('Authentication Integration Tests', () => {
 
       render(
         <TestWrapper>
-          <DashboardClientLayout
-            navigation={[]}
-            user={mockUser}
-          >
+          <DashboardClientLayout user={mockUser}>
             <div>Dashboard Content</div>
           </DashboardClientLayout>
         </TestWrapper>
@@ -330,23 +333,12 @@ describe('Authentication Integration Tests', () => {
 
   describe('Profile Fetch', () => {
     it('fetches and displays profile data', async () => {
-      const axios = require('axios')
-      axios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          data: mockUser
-        }),
-        interceptors: {
-          request: { use: jest.fn() },
-          response: { use: jest.fn() },
-        },
-      })
+      const { useProfile } = require('@/hooks/useProfile')
+      useProfile.mockReturnValue({ data: mockUser })
 
       render(
         <TestWrapper>
-          <DashboardClientLayout
-            navigation={[]}
-            user={mockUser}
-          >
+          <DashboardClientLayout user={mockUser}>
             <div>Dashboard Content</div>
           </DashboardClientLayout>
         </TestWrapper>

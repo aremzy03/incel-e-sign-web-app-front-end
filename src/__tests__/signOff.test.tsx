@@ -5,6 +5,13 @@ import FinalSignOffPage from '../app/dashboard/sign/review/[envelopeId]/page'
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
   useParams: () => ({ envelopeId: '1' }),
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+  })),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+    has: jest.fn(() => false),
+  })),
 }))
 
 // Mock Next.js Link component

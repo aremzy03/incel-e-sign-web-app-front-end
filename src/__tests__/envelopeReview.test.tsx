@@ -5,6 +5,13 @@ import EnvelopeReviewPage from '../app/dashboard/envelopes/review/[id]/page'
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
   useParams: () => ({ id: '1' }),
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+  })),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+    has: jest.fn(() => false),
+  })),
 }))
 
 // Mock Next.js Link component
@@ -159,7 +166,7 @@ describe('Envelope Review Page', () => {
   it('disables post comment button when input is empty', () => {
     render(<EnvelopeReviewPage />)
     
-    const postButton = screen.getByText('Post Comment')
+    const postButton = screen.getByRole('button', { name: /post comment/i })
     expect(postButton).toBeDisabled()
   })
 
@@ -167,7 +174,7 @@ describe('Envelope Review Page', () => {
     render(<EnvelopeReviewPage />)
     
     const commentInput = screen.getByPlaceholderText('Write a comment...')
-    const postButton = screen.getByText('Post Comment')
+    const postButton = screen.getByRole('button', { name: /post comment/i })
     
     // Initially disabled
     expect(postButton).toBeDisabled()

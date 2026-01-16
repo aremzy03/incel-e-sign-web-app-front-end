@@ -1,10 +1,21 @@
 import { authAPI } from '@/lib/api/auth'
 
 // Mock axios
-jest.mock('axios', () => ({
-  post: jest.fn(),
-  get: jest.fn(),
-}))
+jest.mock('axios', () => {
+  const mockAxiosInstance = {
+    get: jest.fn(),
+    post: jest.fn(),
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    },
+  }
+  return {
+    post: jest.fn(),
+    get: jest.fn(),
+    create: jest.fn(() => mockAxiosInstance),
+  }
+})
 
 describe('Authentication API Integration', () => {
   beforeEach(() => {
@@ -142,11 +153,12 @@ describe('Authentication API Integration', () => {
   describe('authAPI.logout', () => {
     it('calls the correct endpoint with refresh token', async () => {
       const mockAxios = require('axios')
-      mockAxios.post.mockResolvedValueOnce({})
+      const mockApi = (mockAxios.create as jest.Mock).mock.results[0]?.value || (mockAxios.create as jest.Mock)()
+      mockApi.post.mockResolvedValueOnce({})
 
       await authAPI.logout('refresh_token')
 
-      expect(mockAxios.post).toHaveBeenCalledWith(
+      expect(mockApi.post).toHaveBeenCalledWith(
         expect.stringContaining('/auth/logout/'),
         {
           refresh: 'refresh_token',

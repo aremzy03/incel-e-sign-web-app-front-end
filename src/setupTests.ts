@@ -12,6 +12,22 @@ jest.mock('next/navigation', () => ({
     refresh: jest.fn(),
   })),
   usePathname: jest.fn(() => '/dashboard'),
+  useParams: jest.fn(() => ({})),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn((key: string) => null),
+    has: jest.fn((key: string) => false),
+    getAll: jest.fn((key: string) => []),
+    keys: jest.fn(() => []),
+    values: jest.fn(() => []),
+    entries: jest.fn(() => []),
+    forEach: jest.fn(),
+    size: 0,
+    sort: jest.fn(),
+    toString: jest.fn(() => ''),
+    append: jest.fn(),
+    delete: jest.fn(),
+    set: jest.fn(),
+  })),
   redirect: jest.fn(),
 }))
 
@@ -44,23 +60,38 @@ jest.mock('react-hot-toast', () => {
   }
 })
 
-// Mock axios
-jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
-    },
-  })),
+// Mock axios with a shared instance so apiClient and tests use the same mocks
+const mockAxiosInstance = {
   get: jest.fn(),
   post: jest.fn(),
   put: jest.fn(),
+  patch: jest.fn(),
   delete: jest.fn(),
+  interceptors: {
+    request: { use: jest.fn() },
+    response: { use: jest.fn() },
+  },
+  defaults: {
+    baseURL: 'http://localhost:8000/api',
+  },
+}
+
+jest.mock('axios', () => ({
+  create: jest.fn(() => mockAxiosInstance),
+  get: mockAxiosInstance.get,
+  post: mockAxiosInstance.post,
+  put: mockAxiosInstance.put,
+  patch: mockAxiosInstance.patch,
+  delete: mockAxiosInstance.delete,
 }))
+
+beforeEach(() => {
+  mockAxiosInstance.get.mockReset()
+  mockAxiosInstance.post.mockReset()
+  mockAxiosInstance.put.mockReset()
+  mockAxiosInstance.patch.mockReset()
+  mockAxiosInstance.delete.mockReset()
+})
 
 // Mock ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -90,6 +121,14 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 })
+
+// Mock URL.createObjectURL for file previews
+if (!global.URL.createObjectURL) {
+  global.URL.createObjectURL = jest.fn(() => 'blob:mock')
+}
+if (!global.URL.revokeObjectURL) {
+  global.URL.revokeObjectURL = jest.fn()
+}
 
 // Mock Radix UI Select to simplify interaction in tests
 jest.mock('@radix-ui/react-select', () => {

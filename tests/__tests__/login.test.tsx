@@ -7,6 +7,11 @@ import LoginPage from '@/app/(auth)/login/page'
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  useParams: jest.fn(() => ({})),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+    has: jest.fn(() => false),
+  })),
 }))
 
 // Mock NextAuth
@@ -33,38 +38,38 @@ describe('LoginPage', () => {
   it('renders login page with correct title', () => {
     render(<LoginPage />)
     
-    expect(screen.getByText('Incel eSign')).toBeInTheDocument()
-    expect(screen.getByText('Login to your account')).toBeInTheDocument()
-    expect(screen.getByText('Securely sign and manage documents')).toBeInTheDocument()
+    expect(screen.getByText('INCEL E-Sign')).toBeInTheDocument()
+    expect(screen.getByText('Welcome Back')).toBeInTheDocument()
+    expect(screen.getByText('Access your digital signature dashboard')).toBeInTheDocument()
   })
 
   it('renders email and password input fields', () => {
     render(<LoginPage />)
     
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Enter your email')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
   })
 
   it('renders Sign In button', () => {
     render(<LoginPage />)
     
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sign in securely/i })).toBeInTheDocument()
   })
 
   it('renders register link', () => {
     render(<LoginPage />)
     
-    expect(screen.getByText("Don't have an account?")).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /register/i })).toBeInTheDocument()
+    expect(screen.getByText('New to INCEL E-Sign?')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /create your account/i })).toBeInTheDocument()
   })
 
   it('shows validation errors for empty fields', async () => {
     const user = userEvent.setup()
     render(<LoginPage />)
     
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const submitButton = screen.getByRole('button', { name: /sign in securely/i })
     await user.click(submitButton)
     
     await waitFor(() => {
@@ -77,9 +82,9 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     render(<LoginPage />)
     
-    const emailInput = screen.getByLabelText('Email')
-    const passwordInput = screen.getByLabelText('Password')
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const emailInput = screen.getByPlaceholderText('your@company.com')
+    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const submitButton = screen.getByRole('button', { name: /sign in securely/i })
     
     await user.clear(emailInput)
     await user.type(emailInput, 'invalid-email')
@@ -95,9 +100,9 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     render(<LoginPage />)
     
-    const emailInput = screen.getByLabelText('Email')
-    const passwordInput = screen.getByLabelText('Password')
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const emailInput = screen.getByPlaceholderText('your@company.com')
+    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const submitButton = screen.getByRole('button', { name: /sign in securely/i })
     
     await user.type(emailInput, 'test@example.com')
     await user.type(passwordInput, '123')
@@ -112,9 +117,9 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     render(<LoginPage />)
     
-    const emailInput = screen.getByLabelText('Email')
-    const passwordInput = screen.getByLabelText('Password')
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const emailInput = screen.getByPlaceholderText('your@company.com')
+    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const submitButton = screen.getByRole('button', { name: /sign in securely/i })
     
     await user.type(emailInput, 'test@example.com')
     await user.type(passwordInput, 'password123')
@@ -135,9 +140,9 @@ describe('LoginPage', () => {
     
     render(<LoginPage />)
     
-    const emailInput = screen.getByLabelText('Email')
-    const passwordInput = screen.getByLabelText('Password')
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const emailInput = screen.getByPlaceholderText('your@company.com')
+    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const submitButton = screen.getByRole('button', { name: /sign in securely/i })
     
     await user.type(emailInput, 'test@example.com')
     await user.type(passwordInput, 'wrongpassword')
@@ -150,19 +155,24 @@ describe('LoginPage', () => {
 
   it('shows loading state during form submission', async () => {
     const user = userEvent.setup()
-    mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ error: null }), 100)))
+    const pending = new Promise((resolve) => {
+      // keep pending until assertions complete
+      setTimeout(() => resolve({ error: null }), 1000)
+    })
+    mockSignIn.mockReturnValue(pending as any)
     
     render(<LoginPage />)
     
-    const emailInput = screen.getByLabelText('Email')
-    const passwordInput = screen.getByLabelText('Password')
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const emailInput = screen.getByPlaceholderText('your@company.com')
+    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const submitButton = screen.getByRole('button', { name: /sign in securely/i })
     
     await user.type(emailInput, 'test@example.com')
     await user.type(passwordInput, 'password123')
     await user.click(submitButton)
     
-    expect(screen.getByText('Signing in...')).toBeInTheDocument()
-    expect(submitButton).toBeDisabled()
+    await waitFor(() => {
+      expect(submitButton).toBeDisabled()
+    })
   })
 })

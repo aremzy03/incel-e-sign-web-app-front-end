@@ -68,7 +68,7 @@ describe('Signing Order Validation', () => {
     })
 
     it('should reject empty signing order', () => {
-      const result = validateSigningOrder([], mockUsers)
+      const result = validateSigningOrder([], testUsers)
       expect(result.isValid).toBe(false)
       expect(result.errors).toContain('At least one signer is required')
     })
@@ -224,11 +224,7 @@ describe('Signing Order Validation', () => {
       
       const userMap = new Map()
       
-      const result = convertRecipientsToSigningOrder(recipients, userMap)
-      
-      expect(result).toEqual([
-        { signer_id: '', order: 1, email: 'unknown@example.com' }
-      ])
+      expect(() => convertRecipientsToSigningOrder(recipients, userMap)).toThrow('User not found for email: unknown@example.com')
     })
   })
 })

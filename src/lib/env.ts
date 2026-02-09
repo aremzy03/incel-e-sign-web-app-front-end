@@ -17,6 +17,7 @@ const optionalEnvVars = {
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || '',
   HEALTH_CHECK_BACKEND: process.env.HEALTH_CHECK_BACKEND || '',
   ENABLE_LOGGING: process.env.ENABLE_LOGGING || '',
+  INTERNAL_API_URL: process.env.INTERNAL_API_URL || '',
 } as const
 
 /**
@@ -69,6 +70,16 @@ export function getApiBaseUrl(): string {
     throw new Error('NEXT_PUBLIC_API_URL is not set')
   }
   return url
+}
+
+/**
+ * Get server-to-server API base URL (preferred for proxy routes)
+ */
+export function getServerApiBaseUrl(): string {
+  if (optionalEnvVars.INTERNAL_API_URL) {
+    return optionalEnvVars.INTERNAL_API_URL
+  }
+  return getApiBaseUrl()
 }
 
 /**

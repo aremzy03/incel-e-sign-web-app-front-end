@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, use } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileImage, Save, RotateCcw } from 'lucide-react'
@@ -36,7 +36,8 @@ interface SignaturePlacement {
   page: number
 }
 
-export default function SignaturePlacementPage({ params }: { params: { documentId: string } }) {
+export default function SignaturePlacementPage({ params }: { params: Promise<{ documentId: string }> }) {
+  const { documentId } = use(params)
   const [signatures] = useState(dummySignatures)
   const [placements, setPlacements] = useState<SignaturePlacement[]>([])
   const [draggedSignature, setDraggedSignature] = useState<number | null>(null)

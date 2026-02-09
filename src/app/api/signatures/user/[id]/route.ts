@@ -23,8 +23,9 @@ function getAllowedOrigin(request: NextRequest): string | undefined {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   const allowedOrigin = getAllowedOrigin(request)
 
@@ -44,8 +45,6 @@ export async function DELETE(
       }
     )
   }
-
-  const id = params.id
   const targetUrl = `${API_BASE_URL}/signatures/user/${id}/`
 
   try {

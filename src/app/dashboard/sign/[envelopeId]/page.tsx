@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileImage, CheckCircle, AlertCircle } from 'lucide-react'
@@ -31,7 +31,8 @@ const dummyEnvelope = {
   signerEmail: 'john.doe@example.com'
 }
 
-export default function SigningSimulationPage({ params }: { params: { envelopeId: string } }) {
+export default function SigningSimulationPage({ params }: { params: Promise<{ envelopeId: string }> }) {
+  const { envelopeId } = use(params)
   const [signatures] = useState(dummySignatures)
   const [selectedSignature, setSelectedSignature] = useState<number | null>(null)
   const [isSigned, setIsSigned] = useState(false)
@@ -67,7 +68,7 @@ export default function SigningSimulationPage({ params }: { params: { envelopeId
             Document: {dummyEnvelope.documentName}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Envelope ID: {params.envelopeId}
+            Envelope ID: {envelopeId}
           </p>
         </div>
         <div className="flex items-center space-x-2">

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getApiBaseUrl, getAllowedOrigins, isProduction } from '@/lib/env'
+import { getAllowedOrigins, getServerApiBaseUrl, isProduction } from '@/lib/env'
 
-const API_BASE_URL = getApiBaseUrl()
+const API_BASE_URL = getServerApiBaseUrl()
 
 // Get allowed origins for CORS
 function getAllowedOrigin(request: NextRequest): string {
@@ -24,9 +24,10 @@ function getAllowedOrigin(request: NextRequest): string {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const path = params.path.join('/')
+  const { path: pathSegments } = await params
+  const path = pathSegments.join('/')
   const url = new URL(request.url)
   const searchParams = url.searchParams.toString()
   const queryString = searchParams ? `?${searchParams}` : ''
@@ -108,9 +109,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const path = params.path.join('/')
+  const { path: pathSegments } = await params
+  const path = pathSegments.join('/')
   // Django with APPEND_SLASH requires trailing slash on POST endpoints
   const targetUrl = `${API_BASE_URL}/${path}/`
   const allowedOrigin = getAllowedOrigin(request)
@@ -208,9 +210,10 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const path = params.path.join('/')
+  const { path: pathSegments } = await params
+  const path = pathSegments.join('/')
   // Django with APPEND_SLASH requires trailing slash on DELETE endpoints
   const targetUrl = `${API_BASE_URL}/${path}/`
   const allowedOrigin = getAllowedOrigin(request)

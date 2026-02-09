@@ -337,8 +337,11 @@ Create a `.env.local` file with the following variables:
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-here-change-in-production
 
-# Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
+# Backend API URL (public)
+NEXT_PUBLIC_API_URL=http://localhost:3000/api/proxy
+
+# Backend API URL (server-to-server proxy target)
+INTERNAL_API_URL=http://localhost:8000/api
 ```
 
 ### API Integration

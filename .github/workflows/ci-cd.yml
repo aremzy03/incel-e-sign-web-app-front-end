@@ -10,9 +10,9 @@ on:
         type: string
 
 # Future trigger - uncomment to enable automatic runs on push to main
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io

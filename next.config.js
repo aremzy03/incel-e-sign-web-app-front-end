@@ -39,9 +39,22 @@ const nextConfig = {
       // ignore if not found at build-time; runtime will still attempt standard resolution
     }
 
-    // Avoid bundling ONNX runtime and background-removal on the server build
-    // They are browser-only and can cause SSR bundling/parsing issues
     if (isServer) {
+      // Redirect the modern pdfjs-dist ESM build to the legacy build on the server.
+      // The modern build uses browser-only APIs (DOMMatrix, etc.) at module init time,
+      // causing "ReferenceError: DOMMatrix is not defined" during SSR.
+      // The legacy build is polyfilled for Node.js environments.
+      try {
+        const pdfjsLegacyPath = require.resolve('pdfjs-dist/legacy/build/pdf.mjs')
+        config.resolve.alias['pdfjs-dist/build/pdf.mjs'] = pdfjsLegacyPath
+        config.resolve.alias['pdfjs-dist'] = pdfjsLegacyPath
+        config.resolve.alias['react-pdf/node_modules/pdfjs-dist/build/pdf.mjs'] = pdfjsLegacyPath
+      } catch (_) {
+        // legacy build not found; server will still warn but won't crash if ssr:false is used
+      }
+
+      // Avoid bundling ONNX runtime and background-removal on the server build
+      // They are browser-only and can cause SSR bundling/parsing issues
       Object.assign(config.resolve.alias, {
         'onnxruntime-node': false,
         'onnxruntime-web': false,

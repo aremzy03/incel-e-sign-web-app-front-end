@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Document, Page, pdfjs } from 'react-pdf'

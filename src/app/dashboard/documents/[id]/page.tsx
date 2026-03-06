@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Download, FileText, Calendar, User, Trash2, AlertCircle, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), { ssr: false })
 import { getDocument, type Document } from '@/lib/api/documents'
@@ -112,7 +113,7 @@ export default function DocumentDetailPage() {
               The document you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
             <Button asChild>
-              <a href="/dashboard/documents">Back to Documents</a>
+              <Link href="/dashboard/documents">Back to Documents</Link>
             </Button>
           </CardContent>
         </Card>

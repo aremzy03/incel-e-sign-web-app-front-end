@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getApiBaseUrl, isHealthCheckBackendEnabled } from '@/lib/env'
+import { getBackendHealthUrl, isHealthCheckBackendEnabled } from '@/lib/env'
 
 /**
  * Health check endpoint for monitoring
@@ -18,8 +18,8 @@ export async function GET() {
     // Optional: Check backend connectivity
     if (isHealthCheckBackendEnabled()) {
       try {
-        const apiUrl = getApiBaseUrl()
-        const response = await fetch(`${apiUrl}/health/`, {
+        const backendHealthUrl = getBackendHealthUrl()
+        const response = await fetch(backendHealthUrl, {
           method: 'GET',
           signal: AbortSignal.timeout(5000), // 5 second timeout
         })

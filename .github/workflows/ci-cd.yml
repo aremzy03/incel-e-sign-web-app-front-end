@@ -6,7 +6,7 @@ on:
       next_public_api_url:
         description: 'NEXT_PUBLIC_API_URL for build'
         required: true
-        default: 'http://localhost:8000/api'
+        default: 'https://esign.incelgroup.com/api/proxy'
         type: string
 
 # Future trigger - uncomment to enable automatic runs on push to main

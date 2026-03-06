@@ -1,0 +1,45 @@
+services:
+  incel-esign-frontend:
+    image: incel-esign-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_API_URL is embedded into the client bundle at build time.
+        # Override with --build-arg or by setting it in a .env file.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+        NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+        # Never commit a real secret here; always override via environment at runtime.
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-build-placeholder-must-override-at-runtime}
+    container_name: incel-esign-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET must be set in the environment}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      HEALTH_CHECK_BACKEND: ${HEALTH_CHECK_BACKEND:-false}
+      # Optional: explicit URL for the backend health probe.
+      # When unset, the frontend derives it from the origin of NEXT_PUBLIC_API_URL
+      # (e.g. http://backend:8000/api → probes http://backend:8000/health/).
+      # Set this when the backend health endpoint is at a non-standard path, or
+      # when the backend service name differs from the API URL host.
+      HEALTH_CHECK_BACKEND_URL: ${HEALTH_CHECK_BACKEND_URL:-}
+      ENABLE_LOGGING: ${ENABLE_LOGGING:-false}
+    healthcheck:
+      # The error handler on the request is required: without it, ECONNREFUSED
+      # (server not yet ready) throws an unhandled exception instead of exiting
+      # cleanly with code 1.
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "const r=require('http').get('http://localhost:3000/api/health',(res)=>{process.exit(res.statusCode===200?0:1)});r.on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

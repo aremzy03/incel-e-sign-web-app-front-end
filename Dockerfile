@@ -72,8 +72,11 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+# The error handler on the request is required: without it, ECONNREFUSED
+# (server not yet ready) throws an unhandled exception with a noisy stack trace.
+# With the handler the process exits cleanly with code 1 instead.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "const r=require('http').get('http://localhost:3000/api/health',(res)=>{process.exit(res.statusCode===200?0:1)});r.on('error',()=>process.exit(1))"
 
 # Start the application
 CMD ["npm", "start"]

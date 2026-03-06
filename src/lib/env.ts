@@ -16,6 +16,9 @@ const optionalEnvVars = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || '',
   HEALTH_CHECK_BACKEND: process.env.HEALTH_CHECK_BACKEND || '',
+  // Optional explicit URL for the backend health endpoint.
+  // When unset, falls back to the origin of NEXT_PUBLIC_API_URL + /health/
+  HEALTH_CHECK_BACKEND_URL: process.env.HEALTH_CHECK_BACKEND_URL || '',
   ENABLE_LOGGING: process.env.ENABLE_LOGGING || '',
   INTERNAL_API_URL: process.env.INTERNAL_API_URL || '',
 } as const
@@ -131,6 +134,30 @@ export function isDevelopment(): boolean {
  */
 export function isHealthCheckBackendEnabled(): boolean {
   return optionalEnvVars.HEALTH_CHECK_BACKEND === 'true'
+}
+
+/**
+ * Get the URL to use for the backend health probe.
+ *
+ * Priority order:
+ *   1. HEALTH_CHECK_BACKEND_URL  – explicit override (useful in Docker where
+ *      the backend is reachable via a service name, e.g. http://backend:8000/health/)
+ *   2. Origin of NEXT_PUBLIC_API_URL + /health/  – derived automatically.
+ *      NEXT_PUBLIC_API_URL is typically http://host:port/api, so we strip the
+ *      path and only keep the origin to avoid hitting /api/health/ (404) instead
+ *      of /health/ on the Django backend.
+ */
+export function getBackendHealthUrl(): string {
+  if (optionalEnvVars.HEALTH_CHECK_BACKEND_URL) {
+    return optionalEnvVars.HEALTH_CHECK_BACKEND_URL
+  }
+  const apiBase = requiredEnvVars.NEXT_PUBLIC_API_URL || ''
+  try {
+    return `${new URL(apiBase).origin}/health/`
+  } catch {
+    // Fallback if URL parsing fails (e.g. relative URL in tests)
+    return `${apiBase}/health/`
+  }
 }
 
 /**

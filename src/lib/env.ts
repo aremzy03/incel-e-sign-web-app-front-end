@@ -83,12 +83,24 @@ export function getServerApiBaseUrl(): string {
 }
 
 /**
- * Get NextAuth secret with validation
+ * Get NextAuth secret with validation.
+ * In production, throws if the secret is missing.
+ * In development/test, falls back to an insecure placeholder so the
+ * next-auth handler can still initialise and the browser won't receive
+ * a 500 that surfaces as CLIENT_FETCH_ERROR "Failed to fetch".
  */
 export function getNextAuthSecret(): string {
   const secret = requiredEnvVars.NEXTAUTH_SECRET
   if (!secret) {
-    throw new Error('NEXTAUTH_SECRET is not set')
+    if (optionalEnvVars.NODE_ENV === 'production') {
+      throw new Error('NEXTAUTH_SECRET is not set')
+    }
+    // Warn loudly so the developer knows to add it to .env.local
+    console.warn(
+      '[env] NEXTAUTH_SECRET is not set. Using an insecure fallback. ' +
+      'Add NEXTAUTH_SECRET to your .env.local file.'
+    )
+    return 'dev-fallback-secret-add-to-env-local'
   }
   return secret
 }

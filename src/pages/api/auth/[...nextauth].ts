@@ -1,11 +1,14 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import axios from 'axios'
-import { getApiBaseUrl, getNextAuthSecret } from '@/lib/env'
+import { getApiBaseUrl, getNextAuthSecret, getNextAuthUrl } from '@/lib/env'
 
 const API_BASE_URL = getApiBaseUrl()
 
 export const authOptions: NextAuthOptions = {
+  // Explicitly set the URL so next-auth constructs correct callback/session
+  // endpoints in Next.js 15, where automatic host detection can differ.
+  ...(getNextAuthUrl() && { url: getNextAuthUrl() }),
   providers: [
     CredentialsProvider({
       id: 'credentials',

@@ -68,6 +68,11 @@ export default function PdfViewer({
   const [error, setError] = useState<string | null>(null)
   const containerRef = useState<HTMLDivElement | null>(null)[0]
 
+  const pdfOptions = useMemo(
+    () => (pdfPassword ? { password: pdfPassword } : undefined),
+    [pdfPassword]
+  )
+
   // Resolve relative URLs to backend origin (e.g., when file_url is '/media/...')
   const resolvedUrl = useMemo(() => {
     if (!url) return url
@@ -151,7 +156,7 @@ export default function PdfViewer({
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading=""
-            options={pdfPassword ? { password: pdfPassword } : undefined}
+            options={pdfOptions}
           >
             <Page
               pageNumber={pageNumber}

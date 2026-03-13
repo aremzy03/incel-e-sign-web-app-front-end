@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +15,7 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), { ssr: false }
 import { getDocument, type Document } from '@/lib/api/documents'
 import { useDeleteDocument, useDownloadDocument } from '@/hooks/useDocuments'
 import toast from 'react-hot-toast'
+import { getApiBaseUrl } from '@/lib/env'
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
@@ -50,11 +52,13 @@ const formatDate = (dateString: string): string => {
 }
 
 export default function DocumentDetailPage() {
+  const { data: session } = useSession()
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
   const documentId = params?.id as string
   const pdfPassword = searchParams?.get('pdf_password') || undefined
+  const accessToken = session?.accessToken as string | undefined
 
   // Fetch document from API
   const { data: documentData, isLoading, error } = useQuery({
@@ -66,6 +70,17 @@ export default function DocumentDetailPage() {
   // Use the hooks for mutations
   const deleteDocumentMutation = useDeleteDocument()
   const downloadDocumentMutation = useDownloadDocument()
+
+  const previewUrl = useMemo(() => {
+    if (!documentData) return null
+    const base = getApiBaseUrl().replace(/\/$/, '')
+    return `${base}/documents/${documentData.id}/preview/`
+  }, [documentData])
+
+  const httpHeaders = useMemo(() => {
+    if (!accessToken) return undefined
+    return { Authorization: `Bearer ${accessToken}` }
+  }, [accessToken])
 
   const handleDownload = () => {
     if (documentId && documentData) {
@@ -196,8 +211,10 @@ export default function DocumentDetailPage() {
         <CardContent className="p-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Document Preview</h3>
-            {documentData.file_url ? (
-              <PdfViewer url={documentData.file_url} pdfPassword={pdfPassword} />
+            {previewUrl ? (
+              <div className="border rounded-lg bg-gray-50 min-h-96 max-h-[70vh] overflow-auto">
+                <PdfViewer url={previewUrl} pdfPassword={pdfPassword} httpHeaders={httpHeaders} />
+              </div>
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 min-h-[500px] flex items-center justify-center">
                 <div className="text-center">

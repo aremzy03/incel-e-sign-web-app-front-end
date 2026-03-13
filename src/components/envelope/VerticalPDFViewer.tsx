@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Document as PDFDocument, Page, pdfjs } from 'react-pdf'
 import { useDroppable } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react'
 import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
 import { Document as DocumentType } from '@/lib/api/documents'
+import { useSession } from 'next-auth/react'
 
 // Configure PDF.js worker
 if (typeof window !== 'undefined') {
@@ -59,6 +60,7 @@ export function VerticalPDFViewer({
   onPageMetricsChange,
   pdfPassword,
 }: VerticalPDFViewerProps) {
+  const { data: session } = useSession()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [documentPages, setDocumentPages] = useState<Record<string, number>>({})
@@ -66,6 +68,15 @@ export function VerticalPDFViewer({
   const [actualPDFDimensions, setActualPDFDimensions] = useState<Record<string, { width: number; height: number }>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const scale = 1
+
+  const accessToken = session?.accessToken as string | undefined
+
+  const pdfOptions = useMemo(() => {
+    const opts: { password?: string; httpHeaders?: Record<string, string> } = {}
+    if (pdfPassword) opts.password = pdfPassword
+    if (accessToken) opts.httpHeaders = { Authorization: `Bearer ${accessToken}` }
+    return Object.keys(opts).length > 0 ? opts : undefined
+  }, [pdfPassword, accessToken])
 
   // Calculate all pages to render
   const allPages: DocumentPageInfo[] = documents.flatMap(doc => {
@@ -222,24 +233,9 @@ export function VerticalPDFViewer({
           const document = documents.find(d => d.id === pageInfo.documentId)
           if (!document) return null
 
-          // Resolve relative URLs to backend origin (same as existing PdfViewer)
-          const resolveUrl = (url: string) => {
-            if (!url) return url
-            if (/^https?:\/\//i.test(url)) return url
-            const apiBase = getApiBaseUrl()
-            let backendOrigin = apiBase
-            try {
-              backendOrigin = new URL(apiBase).origin
-            } catch (_) {
-              // keep apiBase as-is if URL parsing fails
-            }
-            const path = url.startsWith('/') ? url : `/${url}`
-            return `${backendOrigin}${path}`
-          }
-          
-          const documentUrl = resolveUrl(
-            document.file_url || `${getApiBaseUrl()}/documents/${pageInfo.documentId}/download/`
-          )
+          // Always go through authenticated backend preview endpoint so we avoid direct S3 CORS issues
+          const apiBase = getApiBaseUrl().replace(/\/$/, '')
+          const documentUrl = `${apiBase}/documents/${pageInfo.documentId}/preview/`
           const pageKey = `${pageInfo.documentId}-${pageInfo.pageNumber}`
           const currentPageDimensions = pageDimensions[pageKey]
           const pageWidth = actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 595
@@ -286,7 +282,7 @@ export function VerticalPDFViewer({
                               setError(`Failed to load PDF: ${error.message}`)
                             }}
                             loading=""
-                            options={pdfPassword ? { password: pdfPassword } : undefined}
+                            options={pdfOptions}
                           >
                             <Page
                               pageNumber={pageInfo.pageNumber}

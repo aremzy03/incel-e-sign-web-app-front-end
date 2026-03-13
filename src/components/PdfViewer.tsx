@@ -40,6 +40,11 @@ interface PdfViewerProps {
    * When provided, it will be passed directly to pdf.js to avoid in-viewer prompts.
    */
   pdfPassword?: string
+  /**
+   * Optional HTTP headers (e.g. Authorization) for authenticated backend URLs.
+   * Passed to react-pdf's Document when loading PDFs from URLs that require auth.
+   */
+  httpHeaders?: Record<string, string>
 }
 
 export default function PdfViewer({
@@ -51,6 +56,7 @@ export default function PdfViewer({
   onDocumentLoad,
   onPageRender,
   pdfPassword,
+  httpHeaders,
 }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0)
   const isControlled = typeof controlledPageNumber === 'number'
@@ -69,13 +75,21 @@ export default function PdfViewer({
   const containerRef = useState<HTMLDivElement | null>(null)[0]
 
   const pdfOptions = useMemo(
-    () => (pdfPassword ? { password: pdfPassword } : undefined),
-    [pdfPassword]
+    () => {
+      const opts: { password?: string; httpHeaders?: Record<string, string> } = {}
+      if (pdfPassword) opts.password = pdfPassword
+      if (httpHeaders) opts.httpHeaders = httpHeaders
+      return Object.keys(opts).length > 0 ? opts : undefined
+    },
+    [pdfPassword, httpHeaders]
   )
 
   // Resolve relative URLs to backend origin (e.g., when file_url is '/media/...')
   const resolvedUrl = useMemo(() => {
     if (!url) return url
+    // For blob: URLs created on the frontend, use as-is so the browser
+    // looks them up on the correct origin instead of rewriting to backend.
+    if (/^blob:/i.test(url)) return url
     if (/^https?:\/\//i.test(url)) return url
     const apiBase = getApiBaseUrl()
     let backendOrigin = apiBase
@@ -141,7 +155,7 @@ export default function PdfViewer({
       </div>
       )}
 
-      <div className={`border ${showControls ? 'border-t-0 rounded-b-md' : 'rounded-md'} bg-gray-50 flex items-center justify-center min-h-[640px] overflow-auto`}>
+      <div className={`border ${showControls ? 'border-t-0 rounded-b-md' : 'rounded-md'} bg-gray-50 flex flex-col items-center min-h-[400px] overflow-auto py-4`}>
         {loading && !error && (
           <div className="flex items-center gap-2 text-gray-600">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading PDF...

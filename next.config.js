@@ -130,13 +130,15 @@ const nextConfig = {
     const connectSrc = "connect-src 'self'" + (apiOrigin ? ` ${apiOrigin}` : '')
 
     const cspHeader = [
-      "default-src 'self'",
+      // Allow blob: for inline PDF blobs created on the frontend
+      "default-src 'self' blob:",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed for PDF.js
       "style-src 'self' 'unsafe-inline'",
       imgSrc,
       "font-src 'self' data:",
       connectSrc,
-      "frame-src 'self'",
+      // Allow blob: frames for PDF.js if it uses blob: URLs in iframes
+      "frame-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

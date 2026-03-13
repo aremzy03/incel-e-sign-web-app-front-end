@@ -1,5 +1,8 @@
 'use client'
 
+import { useMemo } from 'react'
+import { useSession } from 'next-auth/react'
+
 import {
   Dialog,
   DialogContent,
@@ -12,6 +15,7 @@ import dynamic from 'next/dynamic'
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), { ssr: false })
 
 import { Document as ApiDocument } from '@/lib/api/documents'
+import { getApiBaseUrl } from '@/lib/env'
 
 interface DocumentPreviewModalProps {
   document: ApiDocument | null
@@ -37,6 +41,20 @@ const getStatusColor = (status: string) => {
 }
 
 export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }: DocumentPreviewModalProps) {
+  const { data: session } = useSession()
+  const accessToken = session?.accessToken as string | undefined
+
+  const previewUrl = useMemo(() => {
+    if (!document || !isOpen) return null
+    const base = getApiBaseUrl().replace(/\/$/, '')
+    return `${base}/documents/${document.id}/preview/`
+  }, [document, isOpen])
+
+  const httpHeaders = useMemo(() => {
+    if (!accessToken) return undefined
+    return { Authorization: `Bearer ${accessToken}` }
+  }, [accessToken])
+
   if (!document) return null
 
   return (
@@ -57,13 +75,19 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
             <div className="bg-gray-50 px-4 py-2 border-b">
               <h3 className="text-sm font-medium text-gray-700">PDF Preview</h3>
             </div>
-            {document.file_url ? (
-              <PdfViewer url={document.file_url} pdfPassword={pdfPassword} />
-            ) : (
-              <div className="h-96 bg-gray-100 flex items-center justify-center">
+            <div className="min-h-96 max-h-[65vh] overflow-auto bg-gray-100">
+              {previewUrl ? (
+                <div className="w-full p-4 flex justify-center">
+                  <PdfViewer
+                    url={previewUrl}
+                    pdfPassword={pdfPassword}
+                    httpHeaders={httpHeaders}
+                  />
+                </div>
+              ) : (
                 <div className="text-center text-gray-600">No preview available</div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Document Metadata */}

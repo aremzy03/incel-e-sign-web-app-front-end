@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 import { listUserSignatures, type ReusableSignature } from '@/lib/api/signatures'
 import { getApiBaseUrl } from '@/lib/env'
+import Link from 'next/link'
 
 // Configure PDF.js worker (same as envelope creation page)
 if (typeof window !== 'undefined') {
@@ -419,6 +420,26 @@ export default function SignEnvelopePage() {
   }
 
   if (loadingEnv || !envelope || !envelopeDocuments.length) return <div className="p-6">Loading envelope…</div>
+
+  // Signing must not be available for completed envelopes (PDF is on S3; backend rejects signing by design).
+  if ((envelope.status || '').toLowerCase() === 'completed') {
+    return (
+      <div className="max-w-3xl mx-auto p-6 space-y-4">
+        <h1 className="text-xl font-semibold">{envelope.name || 'Envelope'}</h1>
+        <div className="rounded-lg border bg-white p-4">
+          <p className="text-sm text-gray-800 font-medium">This envelope is completed.</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Signing is no longer available. You can view the finalized document(s) from the envelope details page.
+          </p>
+          <div className="flex items-center gap-2 mt-4">
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/envelopes/${envelopeId}`}>Back to envelope</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
   
   console.log('[Sign Page Render] Current envelope:', envelope)
   console.log('[Sign Page Render] Signing order count:', envelope?.signing_order?.length)

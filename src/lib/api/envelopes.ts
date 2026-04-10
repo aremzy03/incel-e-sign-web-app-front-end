@@ -1,5 +1,6 @@
 import apiClient from '@/lib/axios'
 import { logger } from '@/lib/logger'
+import { getCurrentFileUrl } from '@/lib/url'
 
 export interface EnvelopeDetail {
   id: number | string
@@ -329,6 +330,9 @@ export interface EnvelopeDocumentResponse {
   file_name: string;
   document_file_name: string;
   document_file_url: string; // This is the actual file URL for PDF viewer
+  current_file_url?: string;
+  signed_file_url?: string;
+  file_url?: string;
   file_size: number;
   status: string;
   created_at: string;
@@ -357,7 +361,11 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
       id: doc.document, // The ID for linking to document details etc.
       document: doc.document, // The actual document ID from backend
       file_name: doc.document_file_name || doc.file_name || `Document ${doc.document}`, // Fallback for display
-      document_file_url: doc.document_file_url || doc.file_url, // Use document_file_url for the PDF source
+      document_file_url:
+        doc.document_file_url ||
+        getCurrentFileUrl(doc) ||
+        doc.file_url ||
+        '', // Use document_file_url for the PDF source
       signer_document_positions: doc.signer_document_positions || [],
     })) as EnvelopeDocumentResponse[];
   } catch (error: any) {

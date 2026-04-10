@@ -1,9 +1,19 @@
 import apiClient from '@/lib/axios'
+import { getSession } from 'next-auth/react'
 
 export interface Document {
   id: string
   file_name: string
   file_url: string
+  /**
+   * Backend-computed "best" URL (signed_file_url || file_url).
+   * For completed docs this is typically a presigned (expiring) S3 URL.
+   */
+  current_file_url?: string
+  /**
+   * Latest signed output URL when present (may be /media/... during signing, https://... after completion).
+   */
+  signed_file_url?: string
   file_size: number
   status: 'draft' | 'pending' | 'completed' | 'rejected'
   created_at: string
@@ -17,6 +27,8 @@ export interface DocumentUploadResponse {
     id: string
     file_name: string
     file_url: string
+    current_file_url?: string
+    signed_file_url?: string
     file_size: number
     status: string
     created_at: string
@@ -73,6 +85,8 @@ export interface MergeDocumentsResponse {
   data: {
     id: string
     file_url: string
+    current_file_url?: string
+    signed_file_url?: string
     name?: string
   }
 }
@@ -113,6 +127,8 @@ export const getDocument = async (id: string): Promise<Document> => {
       id: doc.id,
       file_name: doc.file_name,
       file_url: doc.file_url || '',
+      current_file_url: doc.current_file_url || undefined,
+      signed_file_url: doc.signed_file_url || undefined,
       file_size: doc.file_size ?? 0,
       status: doc.status || 'draft',
       created_at: doc.created_at || '',
@@ -163,9 +179,34 @@ export const deleteDocument = async (id: string): Promise<void> => {
 
 // Download a document
 export const downloadDocument = async (id: string): Promise<Blob> => {
-  const response = await apiClient.get(`/documents/${id}/download/`, {
-    responseType: 'blob',
+  // Use Next proxy so browser downloads are resilient to backend 302→S3 redirects (and CORS),
+  // and so we don't depend on presigned URL timing.
+  const session = await getSession()
+  const accessToken = (session as any)?.accessToken as string | undefined
+
+  const res = await fetch(`/api/proxy/documents/${id}/download/`, {
+    method: 'GET',
+    headers: {
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
   })
-  
-  return response.data
+
+  if (!res.ok) {
+    // Try to surface backend error message (json or text)
+    let detail = ''
+    try {
+      const ct = res.headers.get('content-type') || ''
+      if (ct.includes('application/json')) {
+        const j: any = await res.json()
+        detail = j?.detail || j?.message || JSON.stringify(j)
+      } else {
+        detail = await res.text()
+      }
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(detail || `Download failed (${res.status})`)
+  }
+
+  return await res.blob()
 }

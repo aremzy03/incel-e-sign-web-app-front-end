@@ -106,7 +106,7 @@ describe('Authentication Integration Tests', () => {
       expect(screen.getByText('Welcome Back')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /sign in securely/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^sign in$/i })).toBeInTheDocument()
     })
 
     it('validates email format', async () => {
@@ -122,7 +122,7 @@ describe('Authentication Integration Tests', () => {
 
       const emailInput = screen.getByPlaceholderText('your@company.com')
       await user.type(emailInput, 'invalid-email')
-      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
       // The form should not proceed with invalid email
       expect(mockSignIn).not.toHaveBeenCalled()
@@ -138,7 +138,7 @@ describe('Authentication Integration Tests', () => {
 
       const passwordInput = screen.getByPlaceholderText('Enter your password')
       await user.type(passwordInput, '123')
-      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
       expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument()
     })
@@ -156,7 +156,7 @@ describe('Authentication Integration Tests', () => {
 
       await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
       await user.type(screen.getByPlaceholderText('Enter your password'), 'password123')
-      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
       expect(mockSignIn).toHaveBeenCalledWith('credentials', {
         email: 'test@example.com',
@@ -178,7 +178,7 @@ describe('Authentication Integration Tests', () => {
 
       await user.type(screen.getByPlaceholderText('your@company.com'), 'test@example.com')
       await user.type(screen.getByPlaceholderText('Enter your password'), 'wrongpassword')
-      await user.click(screen.getByRole('button', { name: /sign in securely/i }))
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
       await waitFor(() => {
         expect(screen.getByText('Invalid credentials')).toBeInTheDocument()

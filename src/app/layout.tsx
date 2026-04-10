@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
-import { Navigation } from '@/components/navigation'
+import { NavigationGate } from '@/components/navigation-gate'
 
 // Authority Design System Fonts
 const inter = Inter({ 
@@ -47,7 +47,7 @@ export default function RootLayout({
       <body className="font-body antialiased bg-background text-foreground">
         <Providers>
           <div className="min-h-screen bg-gray-50">
-            <Navigation />
+            <NavigationGate />
             <main className="flex-1">
               {children}
             </main>

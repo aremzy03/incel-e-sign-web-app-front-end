@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   authors: [{ name: 'INCEL E-Sign Team' }],
   creator: 'INCEL E-Sign',
   publisher: 'INCEL E-Sign',
+  icons: {
+    icon: '/icon.svg',
+  },
   openGraph: {
     title: 'INCEL E-Sign - Legal Authority in Digital Signatures',
     description: 'Professional e-signature platform with legal confidence and enterprise security',

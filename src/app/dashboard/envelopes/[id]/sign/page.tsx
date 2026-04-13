@@ -16,6 +16,7 @@ import { getEnvelopeDocuments, type EnvelopeDocumentResponse } from '@/lib/api/e
 import { listUserSignatures, type ReusableSignature } from '@/lib/api/signatures'
 import { getApiBaseUrl } from '@/lib/env'
 import Link from 'next/link'
+import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
 
 type ReactPdfModule = typeof import('react-pdf')
 type PdfComponents = Pick<ReactPdfModule, 'Document' | 'Page'> & { pdfjs: ReactPdfModule['pdfjs'] }
@@ -62,6 +63,7 @@ export default function SignEnvelopePage() {
   const queryClient = useQueryClient()
 
   const [pdf, setPdf] = useState<PdfComponents | null>(null)
+  const password = usePdfPasswordDialog()
   const [numPages, setNumPages] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selected, setSelected] = useState<SignerDocumentPositionEntry | null>(null)
@@ -505,7 +507,8 @@ export default function SignEnvelopePage() {
             <h3 className="text-lg font-semibold p-4 border-b text-gray-800">
               Document: {docItem.file_name || `Document ${docItem.id}`}
             </h3>
-            {docItem.document_file_url && pdf ? (
+            {password.dialog}
+            {docItem.document_file_url && pdf && !password.cancelled ? (
               <pdf.Document
                 file={pdfFileByDocumentId[docItem.document]}
                 onLoadSuccess={(info: { numPages: number }) => {
@@ -523,6 +526,7 @@ export default function SignEnvelopePage() {
                   console.error(`[Sign Page] PDF load error for ${docItem.id}:`, error);
                   toast.error(`Failed to load PDF for ${docItem.file_name || docItem.id}`);
                 }}
+                onPassword={password.onPassword as any}
                 loading=""
               >
                 {Array.from({ length: (pageDims[docItem.id] as any)?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => {
@@ -924,6 +928,10 @@ export default function SignEnvelopePage() {
                 );
               })}
             </pdf.Document>
+            ) : password.cancelled ? (
+              <div className="min-h-[200px] flex items-center justify-center text-gray-500">
+                PDF preview cancelled.
+              </div>
           ) : docItem.document_file_url ? (
             <div className="min-h-[200px] flex items-center justify-center text-gray-500">
               Loading PDF preview…

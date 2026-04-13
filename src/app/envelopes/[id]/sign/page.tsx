@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
 import { getApiBaseUrl } from '@/lib/env'
+import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
 
 // Configure pdf.js worker (uses the worker copied to /public during postinstall)
 if (typeof window !== 'undefined') {
@@ -72,6 +73,7 @@ export default function SignEnvelopePage() {
   const params = useParams<{ id: string }>()
   const envelopeId = params?.id
 
+  const password = usePdfPasswordDialog()
   const [numPages, setNumPages] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selected, setSelected] = useState<SigningOrderEntry | null>(null)
@@ -269,9 +271,15 @@ export default function SignEnvelopePage() {
     <div className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-xl font-semibold">{envelope.name || 'Sign Document'}</h1>
 
+      {password.dialog}
       <div className="border rounded-lg overflow-auto max-h-[85vh] bg-gray-50">
-        {documentUrl && (
-          <Document file={documentUrl} onLoadSuccess={(info: any) => setNumPages(info.numPages)} loading="">
+        {documentUrl && !password.cancelled ? (
+          <Document
+            file={documentUrl}
+            onLoadSuccess={(info: any) => setNumPages(info.numPages)}
+            onPassword={password.onPassword as any}
+            loading=""
+          >
             {Array.from({ length: numPages || 1 }, (_, i) => i + 1).map((pageNo) => (
               <div key={pageNo} className="relative" ref={setPageContainerRef(`${pageNo}`)}>
                 <Page
@@ -592,7 +600,11 @@ export default function SignEnvelopePage() {
               </div>
             ))}
           </Document>
-        )}
+        ) : password.cancelled ? (
+          <div className="min-h-[200px] flex items-center justify-center text-gray-500">
+            PDF preview cancelled.
+          </div>
+        ) : null}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setPreviewSignerId(null) }}>

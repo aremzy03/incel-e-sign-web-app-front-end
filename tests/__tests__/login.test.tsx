@@ -172,7 +172,7 @@ describe('LoginPage', () => {
     await user.click(submitButton)
     
     await waitFor(() => {
-      expect(submitButton).toBeDisabled()
+      expect(screen.getByRole('button', { name: /^sign in$/i })).toBeDisabled()
     })
   })
 })

@@ -140,7 +140,9 @@ describe('Authentication Integration Tests', () => {
       await user.type(passwordInput, '123')
       await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
-      expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument()
+      })
     })
 
     it('handles login success', async () => {

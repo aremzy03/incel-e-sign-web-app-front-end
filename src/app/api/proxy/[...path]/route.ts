@@ -38,30 +38,51 @@ export async function GET(
   const allowedOrigin = getAllowedOrigin(request)
   
   try {
+    const authHeader = request.headers.get('authorization') || ''
     const response = await fetch(targetUrl, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': request.headers.get('authorization') || '',
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        // Preserve Range requests for PDF streaming/preview where supported.
+        ...(request.headers.get('range') ? { Range: request.headers.get('range') as string } : {}),
       },
     })
     
     // Check if this is a download request (binary data)
     const contentType = response.headers.get('content-type') || ''
-    if (contentType.includes('application/pdf') || path.includes('/download')) {
+    const contentDisposition = response.headers.get('content-disposition') || ''
+    const isBinary = contentType.includes('application/pdf') || path.includes('/download') || contentDisposition !== ''
+
+    if (isBinary) {
+      // Stream binary responses instead of buffering whole files in memory.
+      // Buffering can cause "Failed to fetch" on the client if the proxy process OOMs or crashes.
+      const body = response.body
+      const headers: Record<string, string> = {
+        'Content-Type': contentType || 'application/octet-stream',
+        ...(contentDisposition ? { 'Content-Disposition': contentDisposition } : {}),
+        ...(allowedOrigin && {
+          'Access-Control-Allow-Origin': allowedOrigin,
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, Range',
+          'Access-Control-Allow-Credentials': 'true',
+        }),
+      }
+
+      // Forward Content-Length when present to improve download UX.
+      const contentLength = response.headers.get('content-length')
+      if (contentLength) headers['Content-Length'] = contentLength
+
+      if (body) {
+        return new NextResponse(body, {
+          status: response.status,
+          headers,
+        })
+      }
+
       const buffer = await response.arrayBuffer()
       return new NextResponse(buffer, {
         status: response.status,
-        headers: {
-          'Content-Type': contentType,
-          'Content-Disposition': response.headers.get('content-disposition') || '',
-          ...(allowedOrigin && {
-            'Access-Control-Allow-Origin': allowedOrigin,
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Credentials': 'true',
-          }),
-        },
+        headers,
       })
     }
     

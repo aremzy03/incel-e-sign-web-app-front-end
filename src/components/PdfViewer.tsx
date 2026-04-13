@@ -5,6 +5,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import { getApiBaseUrl } from '@/lib/env'
 import { Button } from '@/components/ui/button'
 import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
 
 // Configure pdf.js worker to bundled file to avoid network fetch issues
 // Prefer a locally bundled worker to avoid network fetch issues
@@ -73,6 +74,7 @@ export default function PdfViewer({
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const containerRef = useState<HTMLDivElement | null>(null)[0]
+  const password = usePdfPasswordDialog()
 
   const pdfOptions = useMemo(
     () => {
@@ -128,6 +130,7 @@ export default function PdfViewer({
     setLoading(true)
     setError(null)
     setPageNumber(1)
+    password.reset()
   }, [resolvedUrl])
 
   return (
@@ -164,11 +167,13 @@ export default function PdfViewer({
         {error && (
           <div className="text-sm text-red-600 px-4 py-2">{error}</div>
         )}
-        {!error && (
+        {password.dialog}
+        {!error && !password.cancelled && (
           <Document
             file={resolvedUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
+            onPassword={password.onPassword as any}
             loading=""
             options={pdfOptions}
           >
@@ -193,6 +198,9 @@ export default function PdfViewer({
               }}
             />
           </Document>
+        )}
+        {password.cancelled && (
+          <div className="text-sm text-gray-600 px-4 py-2">PDF preview cancelled.</div>
         )}
       </div>
     </div>

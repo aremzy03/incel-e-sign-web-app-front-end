@@ -184,7 +184,10 @@ export const downloadDocument = async (id: string): Promise<Blob> => {
   const session = await getSession()
   const accessToken = (session as any)?.accessToken as string | undefined
 
-  const res = await fetch(`/api/proxy/documents/${id}/download/`, {
+  // NOTE: Do NOT include trailing slash here. Next route handlers under `/api/proxy/[...path]`
+  // do not require it, and the trailing slash can trigger a 308 redirect. Some browsers
+  // have been observed to surface redirected binary downloads as `TypeError: Failed to fetch`.
+  const res = await fetch(`/api/proxy/documents/${id}/download`, {
     method: 'GET',
     headers: {
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

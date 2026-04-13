@@ -11,6 +11,7 @@ import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
 import { Document as DocumentType } from '@/lib/api/documents'
 import { useSession } from 'next-auth/react'
+import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
 
 // Configure PDF.js worker
 if (typeof window !== 'undefined') {
@@ -61,6 +62,7 @@ export function VerticalPDFViewer({
   pdfPassword,
 }: VerticalPDFViewerProps) {
   const { data: session } = useSession()
+  const password = usePdfPasswordDialog()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [documentPages, setDocumentPages] = useState<Record<string, number>>({})
@@ -77,6 +79,12 @@ export function VerticalPDFViewer({
     if (accessToken) opts.httpHeaders = { Authorization: `Bearer ${accessToken}` }
     return Object.keys(opts).length > 0 ? opts : undefined
   }, [pdfPassword, accessToken])
+
+  useEffect(() => {
+    // If the caller supplies a password (e.g. completed envelope lock), we should not show prompts.
+    // When documents change, reset any previous cancel state.
+    password.reset()
+  }, [documents.length])
 
   // Calculate all pages to render
   const allPages: DocumentPageInfo[] = documents.flatMap(doc => {
@@ -228,6 +236,7 @@ export function VerticalPDFViewer({
         ref={containerRef}
         className="flex-1 overflow-y-auto px-4 py-4"
       >
+        {password.dialog}
         <div className="flex flex-col items-center gap-4">
         {allPages.map((pageInfo, index) => {
           const document = documents.find(d => d.id === pageInfo.documentId)
@@ -273,7 +282,7 @@ export function VerticalPDFViewer({
                     >
                       {/* PDF Content (fills wrapper) */}
                       <div className="absolute inset-0">
-                        {!error && (
+                        {!error && !password.cancelled && (
                           <PDFDocument
                             file={documentUrl}
                             onLoadSuccess={(pdf) => onDocumentLoadSuccess(pageInfo.documentId, pdf.numPages)}
@@ -281,6 +290,7 @@ export function VerticalPDFViewer({
                               console.error('PDF load error:', error)
                               setError(`Failed to load PDF: ${error.message}`)
                             }}
+                            onPassword={password.onPassword as any}
                             loading=""
                             options={pdfOptions}
                           >
@@ -294,6 +304,11 @@ export function VerticalPDFViewer({
                               data-page-key={`${pageInfo.documentId}-${pageInfo.pageNumber}`}
                             />
                           </PDFDocument>
+                        )}
+                        {password.cancelled && (
+                          <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-600 bg-white/70">
+                            PDF preview cancelled.
+                          </div>
                         )}
                       </div>
 

@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Document, Page, pdfjs } from 'react-pdf'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
@@ -18,14 +17,8 @@ import { listUserSignatures, type ReusableSignature } from '@/lib/api/signatures
 import { getApiBaseUrl } from '@/lib/env'
 import Link from 'next/link'
 
-// Configure PDF.js worker (same as envelope creation page)
-if (typeof window !== 'undefined') {
-  const origin = window.location.origin
-  pdfjs.GlobalWorkerOptions.workerSrc = `${origin}/pdf.worker.min.mjs`
-  console.log('[Sign Page] Setting PDF.js worker to:', pdfjs.GlobalWorkerOptions.workerSrc)
-} else {
-  pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
-}
+type ReactPdfModule = typeof import('react-pdf')
+type PdfComponents = Pick<ReactPdfModule, 'Document' | 'Page'> & { pdfjs: ReactPdfModule['pdfjs'] }
 
 interface Position {
   page: number
@@ -67,6 +60,7 @@ export default function SignEnvelopePage() {
   const currentUserId = session?.user?.id
   const queryClient = useQueryClient()
 
+  const [pdf, setPdf] = useState<PdfComponents | null>(null)
   const [numPages, setNumPages] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selected, setSelected] = useState<SignerDocumentPositionEntry | null>(null)
@@ -80,6 +74,31 @@ export default function SignEnvelopePage() {
   const setPageContainerRef = useCallback((docId: string, pageNo: number) => (el: HTMLDivElement | null) => {
     if (!pageContainersRef.current[docId]) pageContainersRef.current[docId] = {}
     pageContainersRef.current[docId][pageNo] = el
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const mod = (await import('react-pdf')) as ReactPdfModule
+
+        // Keep PDF rendering libs out of SSR.
+        // `pdfjs-dist` can crash when evaluated server-side under Webpack.
+        mod.pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`
+
+        if (!cancelled) {
+          setPdf({ Document: mod.Document, Page: mod.Page, pdfjs: mod.pdfjs })
+        }
+      } catch (e) {
+        console.error('[Sign Page] Failed to load PDF renderer:', e)
+        toast.error('Failed to initialize PDF preview')
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
   const measurePageCanvas = useCallback((docId: string, pageNo: number) => {
     const container = pageContainersRef.current[docId]?.[pageNo]
@@ -464,8 +483,8 @@ export default function SignEnvelopePage() {
             <h3 className="text-lg font-semibold p-4 border-b text-gray-800">
               Document: {docItem.file_name || `Document ${docItem.id}`}
             </h3>
-            {docItem.document_file_url ? (
-              <Document
+            {docItem.document_file_url && pdf ? (
+              <pdf.Document
                 file={resolveUrl(docItem.document_file_url)}
                 onLoadSuccess={(info: { numPages: number }) => {
                   console.log(`[Sign Page] PDF for ${docItem.id} loaded successfully, numPages:`, info.numPages);
@@ -488,7 +507,7 @@ export default function SignEnvelopePage() {
                   console.log(`[Sign Page] Rendering page ${pageNo} for document ${docItem.id}`);
                   return (
                   <div key={`${docItem.id}-${pageNo}`} className="relative" ref={setPageContainerRef(docItem.id, pageNo)}>
-                    <Page
+                    <pdf.Page
                       pageNumber={pageNo}
                       renderAnnotationLayer={false}
                       renderTextLayer={false}
@@ -878,7 +897,11 @@ export default function SignEnvelopePage() {
                   </div>
                 );
               })}
-            </Document>
+            </pdf.Document>
+          ) : docItem.document_file_url ? (
+            <div className="min-h-[200px] flex items-center justify-center text-gray-500">
+              Loading PDF preview…
+            </div>
           ) : (
             <div className="min-h-[200px] flex items-center justify-center text-gray-500">
               No PDF preview available for this document.

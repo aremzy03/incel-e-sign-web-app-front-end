@@ -6,7 +6,7 @@ on:
       next_public_api_url:
         description: 'NEXT_PUBLIC_API_URL for build'
         required: true
-        default: 'https://esignapi.incelgroup.com/'
+        default: 'https://esignapi.incelgroup.com/api'
         type: string
 
 # Future trigger - uncomment to enable automatic runs on push to main

@@ -58,6 +58,7 @@ export default function SignEnvelopePage() {
   const router = useRouter()
   const { data: session } = useSession()
   const currentUserId = session?.user?.id
+  const accessToken = (session as any)?.accessToken as string | undefined
   const queryClient = useQueryClient()
 
   const [pdf, setPdf] = useState<PdfComponents | null>(null)
@@ -143,6 +144,27 @@ export default function SignEnvelopePage() {
     const path = url.startsWith('/') ? url : `/${url}`
     return `${backendOrigin}${path}`
   }, [])
+
+  // Prefer backend proxy endpoint for PDF bytes to avoid CORS/range issues on /media/*
+  const getPreviewUrl = useCallback((documentId?: string | null) => {
+    if (!documentId) return ''
+    return resolveUrl(`/api/documents/${documentId}/preview/`)
+  }, [resolveUrl])
+
+  const pdfFileByDocumentId = useMemo(() => {
+    const map: Record<string, { url: string; httpHeaders?: Record<string, string> }> = {}
+    for (const d of envelopeDocuments) {
+      const docId = d.document
+      if (!docId) continue
+      const url = getPreviewUrl(docId)
+      if (!url) continue
+      map[docId] = {
+        url,
+        ...(accessToken ? { httpHeaders: { Authorization: `Bearer ${accessToken}` } } : {}),
+      }
+    }
+    return map
+  }, [accessToken, envelopeDocuments, getPreviewUrl])
 
   // Fetch envelope detail (raw to preserve signing_order positions)
   const { data: envelope, isLoading: loadingEnv } = useQuery<EnvelopeResponse>({
@@ -485,7 +507,7 @@ export default function SignEnvelopePage() {
             </h3>
             {docItem.document_file_url && pdf ? (
               <pdf.Document
-                file={resolveUrl(docItem.document_file_url)}
+                file={pdfFileByDocumentId[docItem.document]}
                 onLoadSuccess={(info: { numPages: number }) => {
                   console.log(`[Sign Page] PDF for ${docItem.id} loaded successfully, numPages:`, info.numPages);
                   // We need to store numPages per document to render all pages correctly
@@ -506,12 +528,16 @@ export default function SignEnvelopePage() {
                 {Array.from({ length: (pageDims[docItem.id] as any)?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => {
                   console.log(`[Sign Page] Rendering page ${pageNo} for document ${docItem.id}`);
                   return (
-                  <div key={`${docItem.id}-${pageNo}`} className="relative" ref={setPageContainerRef(docItem.id, pageNo)}>
+                  <div
+                    key={`${docItem.id}-${pageNo}`}
+                    className="relative w-fit max-w-full mx-auto mb-8"
+                    ref={setPageContainerRef(docItem.id, pageNo)}
+                  >
                     <pdf.Page
                       pageNumber={pageNo}
                       renderAnnotationLayer={false}
                       renderTextLayer={false}
-                      className="shadow"
+                      className="shadow w-fit max-w-full"
                       loading=""
                       data-page-key={`${docItem.id}-${pageNo}`}
                       onRenderSuccess={(page: any) => {

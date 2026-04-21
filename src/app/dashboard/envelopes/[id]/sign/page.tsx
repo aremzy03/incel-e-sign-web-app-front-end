@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -153,19 +153,28 @@ export default function SignEnvelopePage() {
     return resolveUrl(`/api/documents/${documentId}/preview/`)
   }, [resolveUrl])
 
+  // Keep stable object identity for react-pdf `file` prop to avoid reload warnings
+  const pdfFileCacheRef = useRef<Record<string, { url: string; httpHeaders?: Record<string, string> }>>({})
+
   const pdfFileByDocumentId = useMemo(() => {
-    const map: Record<string, { url: string; httpHeaders?: Record<string, string> }> = {}
+    const nextMap: Record<string, { url: string; httpHeaders?: Record<string, string> }> = {}
+    const prevMap = pdfFileCacheRef.current
     for (const d of envelopeDocuments) {
       const docId = d.document
       if (!docId) continue
       const url = getPreviewUrl(docId)
       if (!url) continue
-      map[docId] = {
-        url,
-        ...(accessToken ? { httpHeaders: { Authorization: `Bearer ${accessToken}` } } : {}),
+
+      const nextHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+      const prev = prevMap[docId]
+      if (prev && prev.url === url && prev.httpHeaders?.Authorization === nextHeaders?.Authorization) {
+        nextMap[docId] = prev
+      } else {
+        nextMap[docId] = { url, ...(nextHeaders ? { httpHeaders: nextHeaders } : {}) }
       }
     }
-    return map
+    pdfFileCacheRef.current = nextMap
+    return nextMap
   }, [accessToken, envelopeDocuments, getPreviewUrl])
 
   // Fetch envelope detail (raw to preserve signing_order positions)

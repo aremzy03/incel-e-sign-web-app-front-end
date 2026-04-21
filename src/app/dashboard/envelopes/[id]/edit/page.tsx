@@ -15,6 +15,7 @@ import { toast } from 'react-hot-toast'
 
 import { EnvelopeCreationSidebar } from '@/components/envelope/EnvelopeCreationSidebar'
 import dynamic from 'next/dynamic'
+import { useSidebar } from '@/app/dashboard/dashboard-client-layout'
 import { useEditEnvelope, useEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { useDocuments } from '@/hooks/useDocuments'
@@ -30,6 +31,7 @@ export default function EditEnvelopePage() {
     () => dynamic(() => import('@/components/envelope/VerticalPDFViewer').then(m => m.VerticalPDFViewer), { ssr: false }),
     []
   )
+  const { isCollapsed } = useSidebar()
   const router = useRouter()
   const { mutateAsync: editAsync, isPending: saving } = useEditEnvelope()
   const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
@@ -56,6 +58,11 @@ export default function EditEnvelopePage() {
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
   const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
   const [isMerging, setIsMerging] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const [initialized, setInitialized] = useState(false)
   const [description, setDescription] = useState<string>('')
 
@@ -229,8 +236,8 @@ export default function EditEnvelopePage() {
       page,
       x,
       y,
-      width: 200,
-      height: 50,
+      width: 116.8,
+      height: 36.8,
       assignedTo: null,
       documentId,
     }
@@ -778,34 +785,38 @@ export default function EditEnvelopePage() {
       {/* Main Content */}
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
         <div className="flex-1 flex min-h-0 bg-gray-100">
-          <div className="flex flex-1 max-w-7xl mx-auto gap-3 px-3 py-3 overflow-hidden">
+          <div className={`${isCollapsed ? 'max-w-[96rem] px-2' : 'max-w-7xl px-3'} mx-auto flex flex-1 gap-3 py-3 overflow-hidden`}>
             {/* Left Sidebar */}
-            <div className="w-[240px] flex-shrink-0 hidden md:flex">
-              <EnvelopeCreationSidebar
-                uploadedDocuments={uploadedDocuments}
-                recipients={recipients}
-                fieldPositions={fieldPositions}
-                onDocumentAdd={addDocument}
-                onDocumentRemove={removeDocument}
-                onDocumentSelect={selectDocument}
-                onRecipientAdd={addRecipient}
-                onRecipientRemove={removeRecipient}
-                onRecipientReorder={reorderRecipient}
-                onFieldDrop={handleFieldDrop}
-                onMergeDocuments={handleMergeDocuments}
-                isMerging={isMerging}
-                envelopeName={envelopeName}
-                onEnvelopeNameChange={setEnvelopeName}
-                description={description || ''}
-                onDescriptionChange={setDescription}
-                onSaveDraft={handleSaveDraft}
-                onSend={handleSend}
-                creating={saving}
-                sending={sending}
-                isValidating={isValidating}
-                hasValidationErrors={validationErrors.length > 0}
-                onShowShortcuts={() => setShowKeyboardShortcuts(true)}
-              />
+            <div className={`${isCollapsed ? 'w-[320px]' : 'w-[240px]'} flex-shrink-0 hidden md:flex`}>
+              {mounted ? (
+                <EnvelopeCreationSidebar
+                  uploadedDocuments={uploadedDocuments}
+                  recipients={recipients}
+                  fieldPositions={fieldPositions}
+                  onDocumentAdd={addDocument}
+                  onDocumentRemove={removeDocument}
+                  onDocumentSelect={selectDocument}
+                  onRecipientAdd={addRecipient}
+                  onRecipientRemove={removeRecipient}
+                  onRecipientReorder={reorderRecipient}
+                  onFieldDrop={handleFieldDrop}
+                  onMergeDocuments={handleMergeDocuments}
+                  isMerging={isMerging}
+                  envelopeName={envelopeName}
+                  onEnvelopeNameChange={setEnvelopeName}
+                  description={description || ''}
+                  onDescriptionChange={setDescription}
+                  onSaveDraft={handleSaveDraft}
+                  onSend={handleSend}
+                  creating={saving}
+                  sending={sending}
+                  isValidating={isValidating}
+                  hasValidationErrors={validationErrors.length > 0}
+                  onShowShortcuts={() => setShowKeyboardShortcuts(true)}
+                />
+              ) : (
+                <div className="w-full" />
+              )}
             </div>
 
             {/* Central PDF Canvas */}

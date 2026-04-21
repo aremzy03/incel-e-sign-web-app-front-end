@@ -9,11 +9,13 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle, AlertCircle, Save, Send, Keyboard } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { CheckCircle, AlertCircle, Save, Send, Keyboard, Lock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import { EnvelopeCreationSidebar } from '@/components/envelope/EnvelopeCreationSidebar'
 import dynamic from 'next/dynamic'
+import { useSidebar } from '@/app/dashboard/dashboard-client-layout'
 import { useCreateEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { useDocuments } from '@/hooks/useDocuments'
@@ -26,6 +28,7 @@ export default function CreateEnvelopePage() {
     () => dynamic(() => import('@/components/envelope/VerticalPDFViewer').then(m => m.VerticalPDFViewer), { ssr: false }),
     []
   )
+  const { isCollapsed } = useSidebar()
   const router = useRouter()
   const { data: existingDocuments } = useDocuments()
   const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
@@ -46,7 +49,13 @@ export default function CreateEnvelopePage() {
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
   const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
   const [isMerging, setIsMerging] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const [description, setDescription] = useState<string>('')
+  const [pdfPasswordProtectionEnabled, setPdfPasswordProtectionEnabled] = useState(false)
 
   // Add recipient with color assignment
   const addRecipient = useCallback((recipient: { email: string; name?: string }) => {
@@ -140,8 +149,8 @@ export default function CreateEnvelopePage() {
       page,
       x,
       y,
-      width: 200,
-      height: 50,
+      width: 116.8,
+      height: 36.8,
       assignedTo: null,
       documentId,
     }
@@ -483,6 +492,7 @@ export default function CreateEnvelopePage() {
         ...(fields.length > 0 ? { fields } : {}),
         ...(envelopeName && { name: envelopeName }),
         ...(trimmedDescription ? { description: trimmedDescription } : {}),
+        pdf_password_protection_enabled: pdfPasswordProtectionEnabled,
       }
 
       try {
@@ -495,7 +505,7 @@ export default function CreateEnvelopePage() {
       setError(e?.message || 'Failed to create envelope')
       return null
     }
-  }, [uploadedDocuments, recipients, fieldPositions, envelopeName, description, validateRecipients])
+  }, [uploadedDocuments, recipients, fieldPositions, envelopeName, description, validateRecipients, pdfPasswordProtectionEnabled])
 
   // Save draft
   const handleSaveDraft = useCallback(async () => {
@@ -609,6 +619,17 @@ export default function CreateEnvelopePage() {
                 <Save className="h-3.5 w-3.5" />
                 <span>Save draft</span>
               </Button>
+              <div className="hidden sm:flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 h-8 shadow-sm">
+                <Switch
+                  checked={pdfPasswordProtectionEnabled}
+                  onCheckedChange={setPdfPasswordProtectionEnabled}
+                  aria-label="Enable PDF password protection on completion"
+                />
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 whitespace-nowrap">
+                  <Lock className="h-3.5 w-3.5 text-slate-600" />
+                  Lock PDF
+                </span>
+              </div>
               <Button
                 size="sm"
                 onClick={handleSend}
@@ -674,34 +695,38 @@ export default function CreateEnvelopePage() {
       {/* Main Content */}
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
         <div className="flex-1 flex min-h-0 bg-gray-100">
-          <div className="flex flex-1 max-w-7xl mx-auto gap-3 px-3 py-3 overflow-hidden">
+          <div className={`${isCollapsed ? 'max-w-[96rem] px-2' : 'max-w-7xl px-3'} mx-auto flex flex-1 gap-3 py-3 overflow-hidden`}>
             {/* Left Sidebar */}
-            <div className="w-[240px] flex-shrink-0 hidden md:flex">
-              <EnvelopeCreationSidebar
-                uploadedDocuments={uploadedDocuments}
-                recipients={recipients}
-                fieldPositions={fieldPositions}
-                onDocumentAdd={addDocument}
-                onDocumentRemove={removeDocument}
-                onDocumentSelect={selectDocument}
-                onRecipientAdd={addRecipient}
-                onRecipientRemove={removeRecipient}
-                onRecipientReorder={reorderRecipient}
-                onFieldDrop={handleFieldDrop}
-                onMergeDocuments={handleMergeDocuments}
-                isMerging={isMerging}
-                envelopeName={envelopeName}
-                onEnvelopeNameChange={setEnvelopeName}
-                description={description}
-                onDescriptionChange={setDescription}
-                onSaveDraft={handleSaveDraft}
-                onSend={handleSend}
-                creating={creating}
-                sending={sending}
-                isValidating={isValidating}
-                hasValidationErrors={validationErrors.length > 0}
-                onShowShortcuts={() => setShowKeyboardShortcuts(true)}
-              />
+            <div className={`${isCollapsed ? 'w-[320px]' : 'w-[240px]'} flex-shrink-0 hidden md:flex`}>
+              {mounted ? (
+                <EnvelopeCreationSidebar
+                  uploadedDocuments={uploadedDocuments}
+                  recipients={recipients}
+                  fieldPositions={fieldPositions}
+                  onDocumentAdd={addDocument}
+                  onDocumentRemove={removeDocument}
+                  onDocumentSelect={selectDocument}
+                  onRecipientAdd={addRecipient}
+                  onRecipientRemove={removeRecipient}
+                  onRecipientReorder={reorderRecipient}
+                  onFieldDrop={handleFieldDrop}
+                  onMergeDocuments={handleMergeDocuments}
+                  isMerging={isMerging}
+                  envelopeName={envelopeName}
+                  onEnvelopeNameChange={setEnvelopeName}
+                  description={description}
+                  onDescriptionChange={setDescription}
+                  onSaveDraft={handleSaveDraft}
+                  onSend={handleSend}
+                  creating={creating}
+                  sending={sending}
+                  isValidating={isValidating}
+                  hasValidationErrors={validationErrors.length > 0}
+                  onShowShortcuts={() => setShowKeyboardShortcuts(true)}
+                />
+              ) : (
+                <div className="w-full" />
+              )}
             </div>
 
             {/* Central PDF Canvas */}

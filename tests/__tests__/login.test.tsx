@@ -155,9 +155,9 @@ describe('LoginPage', () => {
 
   it('shows loading state during form submission', async () => {
     const user = userEvent.setup()
+    let resolveSignIn: ((value: any) => void) | null = null
     const pending = new Promise((resolve) => {
-      // keep pending until assertions complete
-      setTimeout(() => resolve({ error: null }), 1000)
+      resolveSignIn = resolve
     })
     mockSignIn.mockReturnValue(pending as any)
     
@@ -174,5 +174,8 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /^sign in$/i })).toBeDisabled()
     })
+
+    // cleanup: resolve pending sign-in to avoid leaks
+    resolveSignIn?.({ error: null })
   })
 })

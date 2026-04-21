@@ -122,7 +122,7 @@ export function EnvelopeCreationSidebar({
   const unassignedCount = getUnassignedFieldCount()
 
   return (
-      <div className="w-[240px] bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden">
+      <div className="w-full bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden">
         <div className="flex-1 overflow-y-auto space-y-3 p-2.5 w-full min-w-0">
           {/* Envelope Details / Actions */}
           <Card className="w-full min-w-0 shadow-none border border-gray-200">

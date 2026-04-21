@@ -89,6 +89,11 @@ export interface CreateEnvelopeRequest {
     order: number
   }>
   documents_with_positions: DocumentWithPositions[]
+  /**
+   * When true, backend will apply PDF password protection on completion.
+   * Defaults to false when omitted.
+   */
+  pdf_password_protection_enabled?: boolean
 }
 
 export interface EditEnvelopeRequest {

@@ -22,6 +22,7 @@ import {
 import { registerSchema, type RegisterFormData } from '@/lib/validations'
 import { authAPI } from '@/lib/api/auth'
 import { getApiBaseUrl } from '@/lib/env'
+import { getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect'
 import { createEntrance, pageVariants } from '@/lib/motion'
 import { IncelLogo } from '@/components/ui/incel-logo'
 
@@ -31,7 +32,7 @@ export const dynamic = 'force-dynamic'
 function GoogleButton() {
   const searchParams = useSearchParams()
   const apiBaseUrl = getApiBaseUrl()
-  const nextParam = searchParams?.get('next') || '/dashboard'
+  const nextParam = getSafePostLoginPath(searchParams?.get('next'), POST_LOGIN_FALLBACK)
   const googleLoginUrl = `${apiBaseUrl}/auth/google/login/?next=${encodeURIComponent(nextParam)}`
   
   return (

@@ -1,4 +1,5 @@
 import { getSession } from 'next-auth/react'
+import { buildLoginUrlFromBrowser } from '@/lib/post-login-redirect'
 
 // Check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
@@ -21,7 +22,7 @@ export const requireAuth = async (): Promise<boolean> => {
     sessionStorage.clear()
     
     // Redirect to login page
-    window.location.href = '/login'
+    window.location.href = buildLoginUrlFromBrowser()
     return false
   }
   

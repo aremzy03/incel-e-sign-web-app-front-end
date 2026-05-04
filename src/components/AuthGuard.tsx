@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { useSessionMonitor } from '@/hooks/useSessionMonitor'
+import { buildLoginUrl } from '@/lib/post-login-redirect'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -37,7 +38,11 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
       // If no session or no access token, redirect to login
       if (status === 'unauthenticated' || !session?.accessToken) {
         console.log('No valid session found, redirecting to login')
-        router.push('/login')
+        const next =
+          typeof window !== 'undefined'
+            ? window.location.pathname + (window.location.search || '')
+            : ''
+        router.push(buildLoginUrl({ next: next || undefined }))
         return
       }
 

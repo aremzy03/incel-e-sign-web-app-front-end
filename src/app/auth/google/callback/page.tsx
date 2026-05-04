@@ -4,6 +4,7 @@ import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
+import { buildLoginUrl, getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ function GoogleOAuthCallbackHandler() {
     const status = searchParams?.get('status')
     const access = searchParams?.get('access')
     const refresh = searchParams?.get('refresh')
-    const next = searchParams?.get('next') || '/dashboard'
+    const next = getSafePostLoginPath(searchParams?.get('next'), POST_LOGIN_FALLBACK)
     const message = searchParams?.get('message')
 
     const handleAuth = async () => {
@@ -27,7 +28,7 @@ function GoogleOAuthCallbackHandler() {
         }
 
         // Default back to login, preserving a generic error message
-        router.replace('/login?message=auth_failed')
+        router.replace(buildLoginUrl({ message: 'auth_failed' }))
         return
       }
 
@@ -40,16 +41,16 @@ function GoogleOAuthCallbackHandler() {
 
         if (result?.error) {
           toast.error('Google sign-in failed. Please try again.')
-          router.replace('/login?message=auth_failed')
+          router.replace(buildLoginUrl({ message: 'auth_failed' }))
           return
         }
 
         toast.success('Signed in with Google')
-        router.replace(next || '/dashboard')
+        router.replace(next)
       } catch (err) {
         console.error('Error during Google OAuth callback handling:', err)
         toast.error('An unexpected error occurred during Google sign-in.')
-        router.replace('/login?message=auth_failed')
+        router.replace(buildLoginUrl({ message: 'auth_failed' }))
       }
     }
 

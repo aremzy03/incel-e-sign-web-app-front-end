@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { buildLoginUrlFromBrowser } from '@/lib/post-login-redirect'
 
 export function useSessionMonitor() {
   const { data: session, status } = useSession()
@@ -25,14 +26,14 @@ export function useSessionMonitor() {
       // Sign out and redirect to login
       signOut({ 
         redirect: true, 
-        callbackUrl: '/login?message=session_expired' 
+        callbackUrl: buildLoginUrlFromBrowser('session_expired'),
       }).then(() => {
         // Reset the flag after successful logout
         hasHandledError.current = false
       }).catch((error) => {
         console.error('Error during signOut:', error)
         // Fallback to manual redirect if signOut fails
-        window.location.href = '/login?message=session_expired'
+        window.location.href = buildLoginUrlFromBrowser('session_expired')
         hasHandledError.current = false
       })
     }

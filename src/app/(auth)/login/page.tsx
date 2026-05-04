@@ -24,6 +24,7 @@ import {
 import { createEntrance, pageVariants } from '../../../lib/motion';
 import { getApiBaseUrl } from '../../../lib/env';
 import { loginSchema, type LoginFormData } from '@/lib/validations';
+import { getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect';
 import { IncelLogo } from '../../../components/ui/incel-logo';
 
 // Force dynamic rendering
@@ -57,7 +58,8 @@ function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }
           const payload = JSON.parse(atob(session.accessToken.split('.')[1]));
           const currentTime = Math.floor(Date.now() / 1000);
           if (payload.exp > currentTime) {
-            router.push('/dashboard');
+            const next = searchParams?.get('next');
+            router.push(getSafePostLoginPath(next, POST_LOGIN_FALLBACK));
           }
         } catch (error) {
           console.error('Error checking token validity:', error);
@@ -73,7 +75,7 @@ function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }
 function GoogleButton() {
   const searchParams = useSearchParams();
   const apiBaseUrl = getApiBaseUrl();
-  const nextParam = searchParams?.get('next') || '/dashboard';
+  const nextParam = getSafePostLoginPath(searchParams?.get('next'), POST_LOGIN_FALLBACK);
   const googleLoginUrl = `${apiBaseUrl}/auth/google/login/?next=${encodeURIComponent(nextParam)}`;
   
   return (
@@ -152,7 +154,11 @@ export default function LoginPage() {
         const session = await getSession();
         if (session) {
           toast.success('Welcome back!');
-          router.push('/dashboard');
+          const next =
+            typeof window !== 'undefined'
+              ? new URLSearchParams(window.location.search).get('next')
+              : null;
+          router.push(getSafePostLoginPath(next, POST_LOGIN_FALLBACK));
         } else {
           setError('Login failed - no session created');
           toast.error('Login failed - no session created');

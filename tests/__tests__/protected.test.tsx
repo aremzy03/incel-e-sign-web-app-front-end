@@ -2,6 +2,14 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
+
+let mockHeaderGetImpl: (name: string) => string | null = () => null
+jest.mock('next/headers', () => ({
+  headers: jest.fn(async () => ({
+    get: (name: string) => mockHeaderGetImpl(name),
+  })),
+}))
+
 import DashboardLayout from '@/app/dashboard/layout'
 import { authOptions } from '@/pages/api/auth/[...nextauth]'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -32,6 +40,7 @@ const mockRedirect = redirect as jest.MockedFunction<typeof redirect>
 describe('Protected Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockHeaderGetImpl = () => null
   })
 
   it('renders dashboard layout when user is authenticated', async () => {
@@ -71,6 +80,21 @@ describe('Protected Routes', () => {
     }
 
     expect(mockRedirect).toHaveBeenCalledWith('/login')
+  })
+
+  it('redirects to login with next when x-return-path header is present', async () => {
+    mockHeaderGetImpl = (name: string) => (name === 'x-return-path' ? '/dashboard/inbox' : null)
+    mockGetServerSession.mockResolvedValue(null)
+
+    try {
+      await DashboardLayout({
+        children: <div>Dashboard Content</div>,
+      })
+    } catch {
+      // redirect throws
+    }
+
+    expect(mockRedirect).toHaveBeenCalledWith('/login?next=%2Fdashboard%2Finbox')
   })
 
   it('redirects to login when session is undefined', async () => {

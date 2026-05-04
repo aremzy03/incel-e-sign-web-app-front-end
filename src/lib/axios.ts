@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getSession, signOut } from 'next-auth/react'
 import { getApiBaseUrl } from '@/lib/env'
+import { buildLoginUrlFromBrowser } from '@/lib/post-login-redirect'
 
 // Create axios instance with base configuration
 const backendBaseUrl = getApiBaseUrl()
@@ -24,7 +25,7 @@ apiClient.interceptors.request.use(
         sessionStorage.clear()
         
         // Use signOut to properly clear the session and redirect
-        await signOut({ redirect: true, callbackUrl: '/login?message=session_expired' })
+        await signOut({ redirect: true, callbackUrl: buildLoginUrlFromBrowser('session_expired') })
       }
       
       // Reject the request to prevent it from proceeding with invalid token
@@ -55,7 +56,7 @@ apiClient.interceptors.response.use(
         sessionStorage.clear()
         
         // Use signOut to properly clear the session and redirect
-        await signOut({ redirect: true, callbackUrl: '/login?message=auth_failed' })
+        await signOut({ redirect: true, callbackUrl: buildLoginUrlFromBrowser('auth_failed') })
       }
     }
     
@@ -69,7 +70,7 @@ apiClient.interceptors.response.use(
         sessionStorage.clear()
         
         // Use signOut to properly clear the session and redirect
-        await signOut({ redirect: true, callbackUrl: '/login?message=session_expired' })
+        await signOut({ redirect: true, callbackUrl: buildLoginUrlFromBrowser('session_expired') })
       }
     }
     

@@ -1,6 +1,8 @@
 import { getServerSession } from 'next-auth'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/pages/api/auth/[...nextauth]'
+import { buildLoginUrl } from '@/lib/post-login-redirect'
 import { DashboardClientLayout } from './dashboard-client-layout'
 
 export default async function DashboardLayout({
@@ -10,9 +12,11 @@ export default async function DashboardLayout({
 }) {
   const session = await getServerSession(authOptions)
 
-  // Redirect to login if no session exists
+  // Redirect to login if no session exists (fallback when middleware did not run)
   if (!session) {
-    redirect('/login')
+    const h = await headers()
+    const returnPath = h.get('x-return-path')
+    redirect(buildLoginUrl({ next: returnPath ?? undefined }))
   }
 
   // Pass user data to client layout

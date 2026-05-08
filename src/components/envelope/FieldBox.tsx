@@ -170,6 +170,8 @@ export function FieldBox({
       onStart={handleDragStart}
       onStop={handleDragStop}
       disabled={isResizing}
+      // Prevent accidental drags when interacting with controls (recipient select, delete, resize handle, inputs)
+      cancel='[data-no-drag="true"],button,select,option,input,textarea,[role="listbox"],[role="option"]'
       bounds={{
         left: 0,
         top: 0,
@@ -256,6 +258,7 @@ export function FieldBox({
           variant="ghost"
           size="sm"
           className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full bg-red-500 hover:bg-red-600 text-white"
+          data-no-drag="true"
           onClick={(e) => {
             e.stopPropagation()
             onDelete(field.id)
@@ -270,19 +273,20 @@ export function FieldBox({
             'absolute bottom-0 right-0 w-3 h-3 cursor-se-resize opacity-60 hover:opacity-100',
             'border-r-2 border-b-2 border-current'
           )}
+          data-no-drag="true"
           onMouseDown={handleResizeStart}
           style={{ borderColor: fieldColor }}
         />
 
         {/* Recipient selection dropdown */}
         {showRecipientSelect && (
-          <div className="absolute bottom-full left-0 mb-1 z-30 bg-white border border-gray-300 rounded-md shadow-xl min-w-48">
-            <div className="p-2">
+          <div data-no-drag="true" className="absolute bottom-full left-0 mb-1 z-30 bg-white border border-gray-300 rounded-md shadow-xl min-w-48">
+            <div data-no-drag="true" className="p-2">
               <div className="text-xs font-medium text-gray-700 mb-2">
                 Assign to recipient:
               </div>
               <Select onValueChange={handleRecipientSelect}>
-                <SelectTrigger className="h-8">
+                <SelectTrigger data-no-drag="true" className="h-8">
                   <SelectValue placeholder="Select recipient" />
                 </SelectTrigger>
                 <SelectContent>

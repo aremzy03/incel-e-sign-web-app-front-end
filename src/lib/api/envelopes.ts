@@ -174,14 +174,22 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
 }
 
 // Get all envelopes
-export const getEnvelopes = async (page: number = 1, pageSize: number = 10): Promise<EnvelopesListResponse> => {
-  logger.debug('Fetching envelopes', { page, pageSize })
-  
+export const getEnvelopes = async (
+  page: number = 1,
+  pageSize: number = 10,
+  status?: string,
+  search?: string,
+): Promise<EnvelopesListResponse> => {
+  const trimmedSearch = search?.trim()
+  logger.debug('Fetching envelopes', { page, pageSize, status, search: trimmedSearch })
+
   try {
     const response = await apiClient.get('/envelopes/', {
       params: {
         page,
         page_size: pageSize,
+        ...(status ? { status } : {}),
+        ...(trimmedSearch ? { search: trimmedSearch } : {}),
       },
     })
     

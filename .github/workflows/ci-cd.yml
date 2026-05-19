@@ -17,6 +17,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  NEXT_PUBLIC_API_URL_DEFAULT: https://esignapi.incelgroup.com/api
 
 jobs:
   test-and-lint:
@@ -73,7 +74,7 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ inputs.next_public_api_url || 'http://localhost:8000/api' }}
+          NEXT_PUBLIC_API_URL: ${{ inputs.next_public_api_url || env.NEXT_PUBLIC_API_URL_DEFAULT }}
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: build-placeholder-must-override-at-runtime
 
@@ -127,7 +128,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ inputs.next_public_api_url || 'http://localhost:8000/api' }}
+            NEXT_PUBLIC_API_URL=${{ inputs.next_public_api_url || env.NEXT_PUBLIC_API_URL_DEFAULT }}
             NEXTAUTH_URL=http://localhost:3000
             NEXTAUTH_SECRET=build-placeholder-must-override-at-runtime
           cache-from: type=gha

@@ -13,13 +13,26 @@ import {
 } from '@/lib/api/envelopes'
 import { editEnvelope } from '@/lib/api/envelopes'
 
+function normalizeEnvelopeSearch(search?: string) {
+  const trimmed = search?.trim()
+  return trimmed || undefined
+}
+
 // Hook to get envelopes list
-export const useEnvelopes = (page: number = 1, pageSize: number = 10) => {
+export const useEnvelopes = (
+  page: number = 1,
+  pageSize: number = 10,
+  status?: string,
+  search?: string,
+) => {
+  const normalizedSearch = normalizeEnvelopeSearch(search)
+
   return useQuery({
-    queryKey: ['envelopes', page, pageSize],
-    queryFn: () => getEnvelopes(page, pageSize),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['envelopes', page, pageSize, status, normalizedSearch],
+    queryFn: () => getEnvelopes(page, pageSize, status, normalizedSearch),
+    staleTime: 5 * 60 * 1000,
     retry: 1,
+    placeholderData: (previousData) => previousData,
   })
 }
 

@@ -77,6 +77,8 @@ describe('Documents Integration Tests', () => {
     it('should display documents correctly when loaded', async () => {
       const mockDocuments = {
         count: 2,
+        next: null,
+        previous: null,
         results: [
           {
             id: '1',
@@ -92,7 +94,7 @@ describe('Documents Integration Tests', () => {
             file_name: 'another-document.pdf',
             file_size: 2048000,
             file_type: 'application/pdf',
-            status: 'pending',
+            status: 'sent',
             owner: { email: 'test@example.com' },
             created_at: '2024-01-02T00:00:00Z',
           },
@@ -114,6 +116,8 @@ describe('Documents Integration Tests', () => {
     it('should handle empty state when no documents', async () => {
       const mockDocuments = {
         count: 0,
+        next: null,
+        previous: null,
         results: [],
       }
 
@@ -148,6 +152,8 @@ describe('Documents Integration Tests', () => {
     it('should delete document when delete button is clicked', async () => {
       const mockDocuments = {
         count: 1,
+        next: null,
+        previous: null,
         results: [
           {
             id: '1',

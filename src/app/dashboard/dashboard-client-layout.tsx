@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { signOut, getSession } from 'next-auth/react'
 import { authAPI } from '@/lib/api/auth'
@@ -165,22 +166,59 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
         isMobileMenuOpen ? "translate-x-0 fixed inset-y-0 z-40" : "-translate-x-full fixed inset-y-0 z-40"
       )}>
         {/* Logo Section */}
-        <div className="p-6 border-b flex items-center justify-end">
+        <motion.div
+          className={cn(
+            'border-b flex gap-1.5',
+            isCollapsed
+              ? 'flex-col items-center px-2 py-3.5'
+              : 'items-center justify-between px-4 py-3.5'
+          )}
+        >
+          <Link
+            href="/dashboard"
+            className={cn(
+              'flex min-w-0 items-center gap-2.5 group',
+              isCollapsed && 'justify-center'
+            )}
+            title="INCEL E-Sign"
+          >
+            <motion.div
+              className="flex shrink-0 items-center justify-center"
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              <IncelLogo variant="icon" size={isCollapsed ? 28 : 32} />
+            </motion.div>
+            {!isCollapsed && (
+              <motion.div className="flex min-w-0 flex-col leading-snug">
+                <span className="truncate text-base font-bold font-heading text-navy-900 transition-colors group-hover:text-blue-600">
+                  INCEL E-Sign
+                </span>
+                <span className="truncate text-xs font-medium text-gray-500">
+                  Legal Authority
+                </span>
+              </motion.div>
+            )}
+          </Link>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:inline-flex h-10 w-10 text-gray-600 hover:text-gray-900"
+            className={cn(
+              'hidden h-9 w-9 shrink-0 text-gray-600 hover:text-gray-900 md:inline-flex',
+              isCollapsed && 'w-full'
+            )}
             onClick={() => setIsCollapsed(!isCollapsed)}
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
-              <PanelLeftOpen className="h-5 w-5" />
+              <PanelLeftOpen className="h-[18px] w-[18px]" />
             ) : (
-              <PanelLeftClose className="h-5 w-5" />
+              <PanelLeftClose className="h-[18px] w-[18px]" />
             )}
             <span className="sr-only">Toggle sidebar</span>
           </Button>
-        </div>
+        </motion.div>
         
         {/* Navigation */}
         <nav className="mt-6 px-3">
@@ -328,7 +366,7 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
         </header>
 
         {/* Mobile Header */}
-        <header className="md:hidden bg-white shadow-sm border-b px-4 py-3 mt-16">
+        <header className="md:hidden bg-white shadow-sm border-b px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-800">
             {dashboardNav.find(item => item.href === pathname)?.name || 'Dashboard'}
           </h1>

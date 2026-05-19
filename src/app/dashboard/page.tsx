@@ -73,9 +73,9 @@ export default function DashboardPage() {
   // Get user's display name
   const userName = session?.user?.full_name || 'User';
   
-  const { data: documentsData, isLoading: docsLoading } = useQuery<Document[]>({
+  const { data: documentsData, isLoading: docsLoading } = useQuery({
     queryKey: ['documents', 'recent'],
-    queryFn: getDocuments,
+    queryFn: () => getDocuments({ page: 1, pageSize: 20 }),
     staleTime: 30_000,
   });
   
@@ -85,14 +85,7 @@ export default function DashboardPage() {
     staleTime: 30_000,
   });
 
-  // Normalize documents to always be an array regardless of backend shape
-  const documents: Document[] = Array.isArray(documentsData)
-    ? documentsData
-    : Array.isArray((documentsData as any)?.results)
-      ? (documentsData as any).results
-      : Array.isArray((documentsData as any)?.data)
-        ? (documentsData as any).data
-        : [];
+  const documents: Document[] = documentsData?.results ?? [];
 
   const { data: metrics, isLoading: metricsLoading } = useQuery<EnvelopeMetrics>({
     queryKey: ['envelopes', 'metrics'],

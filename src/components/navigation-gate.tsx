@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { Navigation } from '@/components/navigation'
 
-const HIDE_NAV_PREFIXES = ['/login', '/register', '/auth']
+const HIDE_NAV_PREFIXES = ['/login', '/register', '/auth', '/dashboard']
 
 export function NavigationGate() {
   const pathname = usePathname() || '/'

@@ -15,7 +15,7 @@ export interface Document {
    */
   signed_file_url?: string
   file_size: number
-  status: 'draft' | 'pending' | 'completed' | 'rejected'
+  status: 'draft' | 'sent' | 'completed' | 'rejected'
   created_at: string
   updated_at: string
 }
@@ -36,8 +36,43 @@ export interface DocumentUploadResponse {
   }
 }
 
-// Backend returns direct array, not paginated
-export type DocumentsListResponse = Document[]
+export interface DocumentsListResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: Document[]
+}
+
+export interface GetDocumentsParams {
+  page?: number
+  pageSize?: number
+  status?: string
+  search?: string
+}
+
+function normalizeDocumentsList(payload: unknown): DocumentsListResponse {
+  const unwrapped: any = (payload as any)?.data ?? payload
+
+  if (Array.isArray(unwrapped)) {
+    return {
+      count: unwrapped.length,
+      next: null,
+      previous: null,
+      results: unwrapped,
+    }
+  }
+
+  if (unwrapped && Array.isArray(unwrapped.results)) {
+    return {
+      count: typeof unwrapped.count === 'number' ? unwrapped.count : unwrapped.results.length,
+      next: unwrapped.next ?? null,
+      previous: unwrapped.previous ?? null,
+      results: unwrapped.results,
+    }
+  }
+
+  return { count: 0, next: null, previous: null, results: [] }
+}
 
 // Upload a new document
 export const uploadDocument = async (file: File): Promise<DocumentUploadResponse> => {
@@ -62,21 +97,22 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
   }
 }
 
-// Get all documents
-export const getDocuments = async (): Promise<DocumentsListResponse> => {
-  console.log('=== getDocuments API called ===')
-  console.log('Timestamp:', new Date().toISOString())
-  console.log('API URL: /documents/')
-  
-  const response = await apiClient.get('/documents/')
-  
-  console.log('getDocuments response:', {
-    status: response.status,
-    dataLength: response.data?.length || 0,
-    data: response.data
+export const getDocuments = async (
+  params: GetDocumentsParams = {},
+): Promise<DocumentsListResponse> => {
+  const { page = 1, pageSize = 20, status, search } = params
+  const trimmedSearch = search?.trim()
+
+  const response = await apiClient.get('/documents/', {
+    params: {
+      page,
+      page_size: pageSize,
+      ...(status ? { status } : {}),
+      ...(trimmedSearch ? { search: trimmedSearch } : {}),
+    },
   })
-  
-  return response.data
+
+  return normalizeDocumentsList(response.data)
 }
 
 export interface MergeDocumentsResponse {

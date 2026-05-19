@@ -18,7 +18,6 @@ import dynamic from 'next/dynamic'
 import { useSidebar } from '@/app/dashboard/dashboard-client-layout'
 import { useCreateEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
-import { useDocuments } from '@/hooks/useDocuments'
 import { Document, mergeDocuments } from '@/lib/api/documents'
 import { FieldPosition, FieldPositions, RecipientInput, RECIPIENT_COLORS } from '@/types/envelope'
 
@@ -30,7 +29,6 @@ export default function CreateEnvelopePage() {
   )
   const { isCollapsed } = useSidebar()
   const router = useRouter()
-  const { data: existingDocuments } = useDocuments()
   const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
   const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
   const { validateRecipients, isValidating } = useEnvelopeUserValidation()

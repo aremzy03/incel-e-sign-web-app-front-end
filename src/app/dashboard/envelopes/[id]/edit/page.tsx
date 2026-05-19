@@ -18,7 +18,6 @@ import dynamic from 'next/dynamic'
 import { useSidebar } from '@/app/dashboard/dashboard-client-layout'
 import { useEditEnvelope, useEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
-import { useDocuments } from '@/hooks/useDocuments'
 import { Document, mergeDocuments } from '@/lib/api/documents'
 import { FieldPosition, FieldPositions, RecipientInput, RECIPIENT_COLORS } from '@/types/envelope'
 import { getEnvelopeDocuments } from '@/lib/api/envelopes'
@@ -36,7 +35,6 @@ export default function EditEnvelopePage() {
   const { mutateAsync: editAsync, isPending: saving } = useEditEnvelope()
   const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
   const { validateRecipients, isValidating } = useEnvelopeUserValidation()
-  const { data: existingDocuments } = useDocuments()
   const { data: envelope, isLoading: envelopeLoading } = useEnvelope(envelopeId)
   const { data: envelopeDocuments, isLoading: envelopeDocumentsLoading } = useQuery({
     queryKey: ['envelope-documents', envelopeId, 'edit'],

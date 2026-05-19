@@ -42,6 +42,7 @@ jest.mock('@/hooks/useUsers', () => ({
     isValidating: false,
   }),
   useUserSearch: () => ({ mutate: jest.fn(), isPending: false }),
+  useUser: () => ({ data: null, isLoading: false }),
 }))
 
 describe('Envelopes Pages', () => {
@@ -57,9 +58,15 @@ describe('Envelopes Pages', () => {
 
   beforeEach(() => {
     useEnvelopes.mockReturnValue({
-      data: { results: [{ id: 'env-1', name: 'Test Envelope', status: 'draft', recipients: [], documents: [] }] },
+      data: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [{ id: 'env-1', name: 'Test Envelope', status: 'draft', recipients: [], documents: [], creator: { id: 'u1', email: 'a@test.com', full_name: 'A' } }],
+      },
       isLoading: false,
       error: null,
+      isFetching: false,
     })
     useEnvelope.mockReturnValue({
       data: {
@@ -76,7 +83,7 @@ describe('Envelopes Pages', () => {
     useSendEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useRejectEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useDeleteEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
-    useDocuments.mockReturnValue({ data: [], isLoading: false, error: null })
+    useDocuments.mockReturnValue({ data: { count: 0, next: null, previous: null, results: [] }, isLoading: false, error: null })
     useUploadDocument.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
   })
 

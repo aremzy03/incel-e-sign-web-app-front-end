@@ -41,7 +41,14 @@ interface SignaturePosition {
 
 export default function CreateEnvelopePage() {
   const router = useRouter()
-  const { data: documents, isLoading: loadingDocs } = useDocuments()
+  const { data: documentsData, isLoading: loadingDocs } = useDocuments({
+    page: 1,
+    pageSize: 100,
+  })
+  const documents = useMemo(
+    () => documentsData?.results ?? [],
+    [documentsData]
+  )
   const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
   const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
   const { validateRecipients, isValidating } = useEnvelopeUserValidation()

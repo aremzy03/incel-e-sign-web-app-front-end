@@ -131,7 +131,7 @@ export default function EnvelopesPage() {
               <Skeleton className="h-10 w-full" />
             </div>
           )}
-          {error && !data && (
+          {!!error && !data && (
             <p className="text-red-600">Failed to load envelopes. Please try again.</p>
           )}
           {!isLoading && !error && envelopes.length === 0 && (

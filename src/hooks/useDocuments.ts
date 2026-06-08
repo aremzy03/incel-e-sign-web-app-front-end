@@ -1,4 +1,5 @@
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query'
+import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
 import {
   uploadDocument,
   getDocuments,
@@ -26,6 +27,7 @@ export interface UseDocumentsParams {
 }
 
 export const useDocuments = (params: UseDocumentsParams = {}) => {
+  const { isReady } = useAuthReady()
   const normalized = {
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
@@ -36,8 +38,9 @@ export const useDocuments = (params: UseDocumentsParams = {}) => {
   return useQuery<DocumentsListResponse>({
     queryKey: ['documents', normalized],
     queryFn: () => getDocuments(normalized),
+    enabled: isReady,
     staleTime: 0,
-    retry: 1,
+    retry: shouldRetryAuthQuery,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     placeholderData: (previousData) => previousData,
@@ -45,6 +48,7 @@ export const useDocuments = (params: UseDocumentsParams = {}) => {
 }
 
 export const useDocumentStatusCounts = (search?: string) => {
+  const { isReady } = useAuthReady()
   const normalizedSearch = normalizeSearch(search)
 
   const queries = useQueries({
@@ -57,8 +61,9 @@ export const useDocumentStatusCounts = (search?: string) => {
           status: tab === 'all' ? undefined : tab,
           search: normalizedSearch,
         }),
+      enabled: isReady,
       staleTime: 30_000,
-      retry: 1,
+      retry: shouldRetryAuthQuery,
     })),
   })
 
@@ -75,12 +80,14 @@ export const useDocumentStatusCounts = (search?: string) => {
 
 // Hook to get a specific document
 export const useDocument = (id: string) => {
+  const { isReady } = useAuthReady()
+
   return useQuery<Document>({
     queryKey: ['document', id],
     queryFn: () => getDocument(id),
-    enabled: !!id,
+    enabled: isReady && !!id,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: shouldRetryAuthQuery,
   })
 }
 

@@ -1,5 +1,5 @@
 import apiClient from '@/lib/axios'
-import { getSession } from 'next-auth/react'
+import { getCachedAccessToken } from '@/lib/auth-session-cache'
 
 export interface Document {
   id: string
@@ -217,8 +217,7 @@ export const deleteDocument = async (id: string): Promise<void> => {
 export const downloadDocument = async (id: string): Promise<Blob> => {
   // Use Next proxy so browser downloads are resilient to backend 302→S3 redirects (and CORS),
   // and so we don't depend on presigned URL timing.
-  const session = await getSession()
-  const accessToken = (session as any)?.accessToken as string | undefined
+  const accessToken = getCachedAccessToken() ?? undefined
 
   // NOTE: Do NOT include trailing slash here. Next route handlers under `/api/proxy/[...path]`
   // do not require it, and the trailing slash can trigger a 308 redirect. Some browsers

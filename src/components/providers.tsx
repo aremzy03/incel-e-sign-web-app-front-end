@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 import { Toaster } from 'react-hot-toast'
 import { useState } from 'react'
 import { SessionMonitor } from './SessionMonitor'
+import { SessionTokenSync } from './SessionTokenSync'
 import { ErrorBoundary } from './ErrorBoundary'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -22,8 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ErrorBoundary>
-      <SessionProvider>
+      <SessionProvider refetchOnWindowFocus={false}>
         <QueryClientProvider client={queryClient}>
+          <SessionTokenSync />
           <SessionMonitor />
           {children}
           <Toaster

@@ -4,7 +4,9 @@ import React from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
-import { signOut, getSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
+import { getCachedRefreshToken } from '@/lib/auth-session-cache'
+import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
 import { authAPI } from '@/lib/api/auth'
 import { useState, createContext, useContext } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -87,11 +89,14 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const queryClient = useQueryClient()
+  const { isReady } = useAuthReady()
   const { data: profile } = useProfile()
   const { data: notificationsData } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: listNotifications,
+    enabled: isReady,
     staleTime: 30_000,
+    retry: shouldRetryAuthQuery,
   })
   // Normalize notifications to always be an array, regardless of backend shape
   const notifications: NotificationItem[] = Array.isArray(notificationsData)
@@ -115,8 +120,7 @@ export function DashboardClientLayout({ children, user }: DashboardClientLayoutP
 
   const handleLogout = async () => {
     try {
-      const session = await getSession()
-      const refresh = (session as any)?.refreshToken
+      const refresh = getCachedRefreshToken()
       if (refresh) {
         await authAPI.logout(refresh)
       }

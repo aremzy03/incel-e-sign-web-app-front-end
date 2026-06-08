@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
+import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
 import { 
   getEnvelopes, 
   getEnvelope, 
@@ -26,24 +27,28 @@ export const useEnvelopes = (
   search?: string,
 ) => {
   const normalizedSearch = normalizeEnvelopeSearch(search)
+  const { isReady } = useAuthReady()
 
   return useQuery({
     queryKey: ['envelopes', page, pageSize, status, normalizedSearch],
     queryFn: () => getEnvelopes(page, pageSize, status, normalizedSearch),
+    enabled: isReady,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: shouldRetryAuthQuery,
     placeholderData: (previousData) => previousData,
   })
 }
 
 // Hook to get a specific envelope
 export const useEnvelope = (id: string) => {
+  const { isReady } = useAuthReady()
+
   return useQuery({
     queryKey: ['envelope', id],
     queryFn: () => getEnvelope(id),
-    enabled: !!id, // Only run query if id is available
+    enabled: isReady && !!id,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: shouldRetryAuthQuery,
   })
 }
 

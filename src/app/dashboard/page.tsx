@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady';
 import { 
   FileText, 
   Send, 
@@ -69,6 +70,7 @@ const StatCard = ({
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const { isReady } = useAuthReady();
   
   // Get user's display name
   const userName = session?.user?.full_name || 'User';
@@ -76,13 +78,17 @@ export default function DashboardPage() {
   const { data: documentsData, isLoading: docsLoading } = useQuery({
     queryKey: ['documents', 'recent'],
     queryFn: () => getDocuments({ page: 1, pageSize: 20 }),
+    enabled: isReady,
     staleTime: 30_000,
+    retry: shouldRetryAuthQuery,
   });
   
   const { data: envelopesResp, isLoading: envLoading } = useQuery<EnvelopesListResponse>({
     queryKey: ['envelopes', { page: 1, pageSize: 10 }],
     queryFn: () => getEnvelopes(1, 10),
+    enabled: isReady,
     staleTime: 30_000,
+    retry: shouldRetryAuthQuery,
   });
 
   const documents: Document[] = documentsData?.results ?? [];
@@ -90,7 +96,9 @@ export default function DashboardPage() {
   const { data: metrics, isLoading: metricsLoading } = useQuery<EnvelopeMetrics>({
     queryKey: ['envelopes', 'metrics'],
     queryFn: getEnvelopeMetrics,
+    enabled: isReady,
     staleTime: 60_000,
+    retry: shouldRetryAuthQuery,
   });
 
   const recentDocs = documents.slice(0, 3);

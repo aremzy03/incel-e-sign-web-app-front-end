@@ -1,79 +1,67 @@
 import axios from 'axios'
-import { getSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { getApiBaseUrl } from '@/lib/env'
 import { buildLoginUrlFromBrowser } from '@/lib/post-login-redirect'
+import {
+  clearAuthSession,
+  getCachedAccessToken,
+  hasRefreshAccessTokenError,
+} from '@/lib/auth-session-cache'
 
 // Create axios instance with base configuration
 const backendBaseUrl = getApiBaseUrl()
 
 const apiClient = axios.create({
   baseURL: backendBaseUrl,
-  timeout: 10000,
+  timeout: 30000,
 })
 
-// Request interceptor to add auth token
+let signOutInProgress = false
+
+async function handleAuthFailure(callbackUrl: string) {
+  if (signOutInProgress || typeof window === 'undefined') return
+  if (window.location.pathname.includes('/login')) return
+
+  signOutInProgress = true
+  clearAuthSession()
+  localStorage.removeItem('nextauth.session')
+  sessionStorage.clear()
+
+  try {
+    await signOut({ redirect: true, callbackUrl })
+  } finally {
+    signOutInProgress = false
+  }
+}
+
+// Request interceptor to add auth token from in-memory cache (synced by SessionTokenSync)
 apiClient.interceptors.request.use(
-  async (config) => {
-    const session = await getSession()
-    
-    // Check if session has a refresh error before making the request
-    if (session?.error === 'RefreshAccessTokenError') {
-      // Only redirect if we're in the browser and not already on login page
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        // Clear any existing session data
-        localStorage.removeItem('nextauth.session')
-        sessionStorage.clear()
-        
-        // Use signOut to properly clear the session and redirect
-        await signOut({ redirect: true, callbackUrl: buildLoginUrlFromBrowser('session_expired') })
-      }
-      
-      // Reject the request to prevent it from proceeding with invalid token
+  (config) => {
+    if (hasRefreshAccessTokenError()) {
+      void handleAuthFailure(buildLoginUrlFromBrowser('session_expired'))
       return Promise.reject(new Error('Session expired - user logged out'))
     }
-    
-    if (session?.accessToken) {
-      config.headers.Authorization = `Bearer ${session.accessToken}`
+
+    const accessToken = getCachedAccessToken()
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`
     }
-    
+
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
 // Response interceptor to handle auth errors
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Handle 401 errors by redirecting to login
     if (error.response?.status === 401) {
-      // Only redirect if we're in the browser and not already on login page
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        // Clear any existing session data
-        localStorage.removeItem('nextauth.session')
-        sessionStorage.clear()
-        
-        // Use signOut to properly clear the session and redirect
-        await signOut({ redirect: true, callbackUrl: buildLoginUrlFromBrowser('auth_failed') })
-      }
+      await handleAuthFailure(buildLoginUrlFromBrowser('auth_failed'))
+    } else if (hasRefreshAccessTokenError()) {
+      await handleAuthFailure(buildLoginUrlFromBrowser('session_expired'))
     }
-    
-    // Also check if the session has been invalidated during the request
-    const session = await getSession()
-    if (session?.error === 'RefreshAccessTokenError') {
-      // Only redirect if we're in the browser and not already on login page
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        // Clear any existing session data
-        localStorage.removeItem('nextauth.session')
-        sessionStorage.clear()
-        
-        // Use signOut to properly clear the session and redirect
-        await signOut({ redirect: true, callbackUrl: buildLoginUrlFromBrowser('session_expired') })
-      }
-    }
-    
+
     return Promise.reject(error)
   }
 )

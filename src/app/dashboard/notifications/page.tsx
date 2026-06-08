@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Bell, Send, PenTool, XCircle, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { listNotifications, markNotificationRead, type NotificationItem, markAllNotificationsRead } from '@/lib/api/notifications'
+import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -24,10 +25,13 @@ const getNotificationIcon = (type: string) => {
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient()
+  const { isReady } = useAuthReady()
   const { data, isLoading, error } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: listNotifications,
+    enabled: isReady,
     staleTime: 30_000,
+    retry: shouldRetryAuthQuery,
   })
 
   const markOne = useMutation({

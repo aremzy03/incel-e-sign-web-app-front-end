@@ -41,6 +41,15 @@ describe('Notifications Page', () => {
   ]
 
   beforeEach(() => {
+    const { useSession } = require('next-auth/react')
+    useSession.mockReturnValue({
+      data: {
+        accessToken: 'test-token',
+        user: { id: '1', email: 'a@test.com', full_name: 'Test User' },
+      },
+      status: 'authenticated',
+    })
+
     const api = require('@/lib/api/notifications')
     api.listNotifications.mockResolvedValue(mockNotifications)
     api.markNotificationRead.mockResolvedValue(undefined)

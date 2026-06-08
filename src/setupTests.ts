@@ -76,14 +76,19 @@ const mockAxiosInstance = {
   },
 }
 
-jest.mock('axios', () => ({
-  create: jest.fn(() => mockAxiosInstance),
-  get: mockAxiosInstance.get,
-  post: mockAxiosInstance.post,
-  put: mockAxiosInstance.put,
-  patch: mockAxiosInstance.patch,
-  delete: mockAxiosInstance.delete,
-}))
+jest.mock('axios', () => {
+  const actualAxios = jest.requireActual<typeof import('axios')>('axios')
+  return {
+    ...actualAxios,
+    create: jest.fn(() => mockAxiosInstance),
+    get: mockAxiosInstance.get,
+    post: mockAxiosInstance.post,
+    put: mockAxiosInstance.put,
+    patch: mockAxiosInstance.patch,
+    delete: mockAxiosInstance.delete,
+    isAxiosError: actualAxios.isAxiosError,
+  }
+})
 
 beforeEach(() => {
   mockAxiosInstance.get.mockReset()

@@ -9,10 +9,10 @@ on:
         default: 'https://esignapi.app.incelgroup.com/api'
         type: string
 
-# Future trigger - uncomment to enable automatic runs on push to main
-  push:
-    branches:
-      - main
+# # Future trigger - uncomment to enable automatic runs on push to main
+#   push:
+#     branches:
+#       - main
 
 env:
   REGISTRY: ghcr.io

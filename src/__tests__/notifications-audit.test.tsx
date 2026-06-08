@@ -16,6 +16,15 @@ function wrapper(children: React.ReactNode) {
 describe('Notifications + Audit integration', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+
+    const { useSession } = require('next-auth/react')
+    useSession.mockReturnValue({
+      data: {
+        accessToken: 'test-token',
+        user: { id: '1', email: 'a@test.com', full_name: 'Test User' },
+      },
+      status: 'authenticated',
+    })
   })
 
   test('Notifications render and mark as read', async () => {

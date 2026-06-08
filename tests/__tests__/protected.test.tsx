@@ -144,6 +144,18 @@ jest.mock('next-auth/react', () => ({
   ...jest.requireActual('next-auth/react'),
   signOut: jest.fn(),
   getSession: jest.fn(),
+  useSession: jest.fn(() => ({
+    data: {
+      accessToken: 'mock-access-token',
+      refreshToken: 'mock-refresh-token',
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        full_name: 'John Doe',
+      },
+    },
+    status: 'authenticated',
+  })),
 }))
 
 const mockSignOut = signOut as jest.MockedFunction<typeof signOut>

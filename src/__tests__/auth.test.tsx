@@ -20,9 +20,6 @@ jest.mock('@/hooks/useProfile', () => ({
   useProfile: jest.fn(),
 }))
 
-// Mock axios
-jest.mock('axios')
-
 const getMockApi = () => {
   const axios = require('axios')
   return (axios.create as jest.Mock).mock.results[0]?.value || (axios.create as jest.Mock)()

@@ -185,7 +185,7 @@ export default function DashboardPage() {
             <h2 className="text-h2">Quick Actions</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Upload Document */}
             <Card className="authority-container group hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
@@ -231,6 +231,31 @@ export default function DashboardPage() {
                   <Link href="/dashboard/envelopes/create">
                     <Send className="w-4 h-4" />
                     Create Envelope
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Sign yourself */}
+            <Card className="authority-container group hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-200 transition-colors">
+                    <PenTool className="w-6 h-6 text-violet-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-h3">Sign Yourself</CardTitle>
+                    <CardDescription>
+                      Upload, sign, and complete in one step
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button variant="outline" size="lg" className="w-full" asChild>
+                  <Link href="/dashboard/envelopes/self-sign">
+                    <PenTool className="w-4 h-4" />
+                    Sign a Document
                   </Link>
                 </Button>
               </CardContent>

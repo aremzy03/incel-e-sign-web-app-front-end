@@ -13,6 +13,7 @@ import {
   Envelope
 } from '@/lib/api/envelopes'
 import { editEnvelope } from '@/lib/api/envelopes'
+import { selfSignEnvelope, type SelfSignRequest } from '@/lib/api/signatures'
 
 function normalizeEnvelopeSearch(search?: string) {
   const trimmed = search?.trim()
@@ -25,13 +26,14 @@ export const useEnvelopes = (
   pageSize: number = 10,
   status?: string,
   search?: string,
+  isSelfSign?: boolean,
 ) => {
   const normalizedSearch = normalizeEnvelopeSearch(search)
   const { isReady } = useAuthReady()
 
   return useQuery({
-    queryKey: ['envelopes', page, pageSize, status, normalizedSearch],
-    queryFn: () => getEnvelopes(page, pageSize, status, normalizedSearch),
+    queryKey: ['envelopes', page, pageSize, status, normalizedSearch, isSelfSign],
+    queryFn: () => getEnvelopes(page, pageSize, status, normalizedSearch, isSelfSign),
     enabled: isReady,
     staleTime: 5 * 60 * 1000,
     retry: shouldRetryAuthQuery,
@@ -158,6 +160,43 @@ export const useRejectEnvelope = () => {
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           'Failed to reject envelope'
+      toast.error(errorMessage)
+    },
+  })
+}
+
+// Hook to self-sign documents in one call
+export const useSelfSignEnvelope = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: SelfSignRequest) => selfSignEnvelope(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes'] })
+      toast.success('Document signed successfully!')
+    },
+    onError: (error: any) => {
+      console.error('Self-sign error:', error)
+      let errorMessage = 'Failed to self-sign document'
+
+      if (error.response?.status === 400) {
+        const data = error.response?.data
+        if (data?.message) {
+          errorMessage = data.message
+        } else if (data?.data && typeof data.data === 'object') {
+          const fieldErrors = Object.entries(data.data).map(([field, messages]) =>
+            `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+          ).join('; ')
+          errorMessage = fieldErrors || 'Validation failed'
+        } else if (data?.detail) {
+          errorMessage = data.detail
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      }
+
       toast.error(errorMessage)
     },
   })

@@ -11,7 +11,7 @@ jest.mock('next/headers', () => ({
 }))
 
 import DashboardLayout from '@/app/dashboard/layout'
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
+import { authOptions } from '@/lib/auth-options'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // Mock Next.js navigation
@@ -26,7 +26,7 @@ jest.mock('next-auth', () => ({
 }))
 
 // Mock the auth options
-jest.mock('@/pages/api/auth/[...nextauth]', () => ({
+jest.mock('@/lib/auth-options', () => ({
   authOptions: {},
 }))
 

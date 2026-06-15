@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
+import { authOptions } from '@/lib/auth-options'
 import { buildLoginUrl } from '@/lib/post-login-redirect'
 import { DashboardClientLayout } from './dashboard-client-layout'
 

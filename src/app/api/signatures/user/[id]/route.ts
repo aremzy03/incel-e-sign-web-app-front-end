@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
+import { authOptions } from '@/lib/auth-options'
 import { getApiBaseUrl, getAllowedOrigins, isProduction } from '@/lib/env'
 
 const API_BASE_URL = getApiBaseUrl()

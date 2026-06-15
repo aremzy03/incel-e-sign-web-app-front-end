@@ -135,20 +135,70 @@ if (!global.URL.revokeObjectURL) {
   global.URL.revokeObjectURL = jest.fn()
 }
 
+// Avoid async next/dynamic loadable updates that trigger act(...) warnings in tests
+jest.mock('next/dynamic', () => {
+  const React = require('react')
+  return () => {
+    const Dynamic = () => React.createElement('div', { 'data-testid': 'dynamic-mock' })
+    Dynamic.displayName = 'DynamicMock'
+    return Dynamic
+  }
+})
+
 // Mock Radix UI Select to simplify interaction in tests
 jest.mock('@radix-ui/react-select', () => {
   const React = require('react')
+
+  const radixOnlyProps = new Set([
+    'asChild',
+    'onValueChange',
+    'value',
+    'defaultValue',
+    'open',
+    'defaultOpen',
+    'onOpenChange',
+    'disabled',
+    'name',
+    'required',
+    'dir',
+    'modal',
+    'onSelect',
+    'textValue',
+  ])
+
+  const domProps = (props: Record<string, unknown>) => {
+    const filtered: Record<string, unknown> = {}
+    for (const [key, val] of Object.entries(props)) {
+      if (!radixOnlyProps.has(key)) {
+        filtered[key] = val
+      }
+    }
+    return filtered
+  }
+
   const make = (role?: string) => {
-    const Cmp = ({ children, ...props }: any) => React.createElement(role ? 'div' : 'div', role ? { role, ...props } : props, children)
+    const Cmp = ({ children, ...props }: any) =>
+      React.createElement('div', role ? { role, ...domProps(props) } : domProps(props), children)
     Cmp.displayName = 'Mock'
     return Cmp
   }
+
   const Root = make()
-  const Trigger = ({ children, ...props }: any) => React.createElement('button', { role: 'combobox', ...props }, children)
+  const Trigger = ({ children, ...props }: any) =>
+    React.createElement('button', { role: 'combobox', ...domProps(props) }, children)
   Trigger.displayName = 'Trigger'
   const Content = make('listbox')
   Content.displayName = 'Content'
-  const Item = ({ children, value, onSelect, ...props }: any) => React.createElement('div', { role: 'option', onClick: () => (onSelect ? onSelect(value) : null), ...props }, children)
+  const Item = ({ children, value, onSelect, ...props }: any) =>
+    React.createElement(
+      'div',
+      {
+        role: 'option',
+        onClick: () => (onSelect ? onSelect(value) : null),
+        ...domProps(props),
+      },
+      children
+    )
   Item.displayName = 'Item'
   const ItemIndicator = make()
   const ItemText = ({ children }: any) => React.createElement('span', null, children)
@@ -159,7 +209,8 @@ jest.mock('@radix-ui/react-select', () => {
   const Group = make()
   const Label = make()
   const Separator = make()
-  const Icon = make()
+  const Icon = ({ children, asChild }: any) =>
+    asChild && React.isValidElement(children) ? children : React.createElement('span', null, children)
   const Portal = ({ children }: any) => React.createElement(React.Fragment, null, children)
   const Viewport = make()
   return {

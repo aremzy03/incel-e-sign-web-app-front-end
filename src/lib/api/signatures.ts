@@ -1,4 +1,5 @@
 import apiClient from '@/lib/axios'
+import type { Position } from '@/lib/api/envelopes'
 
 export interface ReusableSignature {
   id: string
@@ -169,6 +170,34 @@ export async function signEnvelopeWithInline(
 export async function declineEnvelope(envelopeId: string | number, declineMessage: string) {
   const response = await apiClient.post(`/signatures/${envelopeId}/decline/`, { decline_message: declineMessage })
   return response.data
+}
+
+export interface SelfSignRequest {
+  document_ids: string[]
+  name?: string
+  description?: string | null
+  documents_with_positions?: Array<{
+    document_id: string
+    signer_document_positions: Array<{ position: Position }>
+  }>
+  fields?: Array<Record<string, unknown>>
+  signature_id?: string
+  signature_image?: string
+  pdf_password_protection_enabled?: boolean
+}
+
+export interface SelfSignResponse {
+  id: string
+  status: string
+  is_self_sign: boolean
+  pdf_lock_password?: string | null
+  name?: string
+}
+
+export async function selfSignEnvelope(data: SelfSignRequest): Promise<SelfSignResponse> {
+  const response = await apiClient.post('/signatures/self-sign/', data)
+  const payload = response.data
+  return (payload?.data ?? payload) as SelfSignResponse
 }
 
 

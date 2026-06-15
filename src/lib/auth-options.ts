@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from 'next-auth'
+import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import axios from 'axios'
 import { getApiBaseUrl, getNextAuthSecret, getNextAuthUrl } from '@/lib/env'
@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -27,22 +27,20 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
             password: credentials.password,
           })
-          
-          // Handle the actual backend response format
+
           if (response.data.status === 'success' && response.data.data) {
             const { access, refresh } = response.data.data
-            
-            // Fetch user profile using the access token
+
             try {
               const profileResponse = await axios.get(`${API_BASE_URL}/auth/profile/`, {
                 headers: {
                   Authorization: `Bearer ${access}`,
                 },
               })
-              
+
               if (profileResponse.data.status === 'success' && profileResponse.data.data) {
                 const userProfile = profileResponse.data.data
-                
+
                 return {
                   id: userProfile.id,
                   email: userProfile.email,
@@ -52,8 +50,7 @@ export const authOptions: NextAuthOptions = {
                   user: userProfile,
                 }
               }
-            } catch (profileError) {
-              // Fallback to basic user object
+            } catch {
               const user = {
                 id: 'temp-id',
                 email: credentials.email,
@@ -62,7 +59,7 @@ export const authOptions: NextAuthOptions = {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
               }
-              
+
               return {
                 id: user.id,
                 email: user.email,
@@ -74,7 +71,6 @@ export const authOptions: NextAuthOptions = {
             }
           }
         } catch (error: any) {
-          // Log error details only in development
           if (process.env.NODE_ENV === 'development') {
             console.error('Login error:', error.response?.data || error.message)
           }
@@ -82,7 +78,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         return null
-      }
+      },
     }),
     CredentialsProvider({
       id: 'google-jwt',
@@ -97,7 +93,6 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Use the provided access token to fetch the user profile
           const profileResponse = await axios.get(`${API_BASE_URL}/auth/profile/`, {
             headers: {
               Authorization: `Bearer ${credentials.access}`,
@@ -124,37 +119,33 @@ export const authOptions: NextAuthOptions = {
 
         return null
       },
-    })
+    }),
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      // Initial sign in
       if (account && user) {
         return {
           ...token,
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
           user: user.user,
-          accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+          accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         }
       }
 
-      // Return previous token if the access token has not expired yet
       if (Date.now() < token.accessTokenExpires) {
         return token
       }
 
-      // Access token has expired, try to update it
       const refreshedToken = await refreshAccessToken(token)
-      
-      // If refresh failed (token blacklisted), return error token to force re-authentication
+
       if (refreshedToken === null) {
         return {
           ...token,
-          error: 'RefreshAccessTokenError'
+          error: 'RefreshAccessTokenError',
         }
       }
-      
+
       return refreshedToken
     },
     async session({ session, token }) {
@@ -164,7 +155,7 @@ export const authOptions: NextAuthOptions = {
         session.refreshToken = token.refreshToken
         session.error = token.error
       }
-      
+
       return session
     },
   },
@@ -173,7 +164,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    maxAge: 7 * 24 * 60 * 60,
   },
   secret: getNextAuthSecret(),
 }
@@ -184,36 +175,32 @@ async function refreshAccessToken(token: any) {
       refresh: token.refreshToken,
     })
 
-    
-    // Handle the actual backend response format - direct access/refresh tokens
     if (response.data.access) {
       return {
         ...token,
         accessToken: response.data.access,
         refreshToken: response.data.refresh || token.refreshToken,
-        accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+        accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000,
       }
     }
-    
+
     throw new Error('Invalid refresh response')
   } catch (error: any) {
-    // Log error details only in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Token refresh error:', error)
     }
-    
-    // If token is blacklisted or invalid, return null to force re-authentication
-    if (error.response?.data?.code === 'token_not_valid' || 
-        error.response?.data?.detail?.includes('blacklisted') ||
-        error.response?.status === 401) {
+
+    if (
+      error.response?.data?.code === 'token_not_valid' ||
+      error.response?.data?.detail?.includes('blacklisted') ||
+      error.response?.status === 401
+    ) {
       return null
     }
-    
+
     return {
       ...token,
       error: 'RefreshAccessTokenError',
     }
   }
 }
-
-export default NextAuth(authOptions)

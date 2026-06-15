@@ -28,6 +28,8 @@ const isProduction = process.env.NODE_ENV === 'production'
 const nextConfig = {
   // App Router is enabled by default in Next.js 14
   trailingSlash: false,
+  // Pin workspace root so Next.js doesn't pick up unrelated lockfiles (e.g. ~/package-lock.json)
+  outputFileTracingRoot: require('path').join(__dirname),
   webpack: (config, { isServer }) => {
     // Ensure react-pdf's deep import to its bundled pdfjs-dist resolves to the top-level package
     config.resolve = config.resolve || {}

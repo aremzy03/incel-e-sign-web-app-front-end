@@ -157,6 +157,7 @@ export default function EnvelopeDetailPage() {
   // Check if current user is the creator
   const currentUserId = session?.user?.id
   const isCreator = currentUserId && (creatorId === currentUserId)
+  const isSelfSign = envelope.is_self_sign === true
   
   // Check if current user is a recipient
   const isRecipient = currentUserId && envelope?.recipients?.some((r: any) => {
@@ -173,6 +174,11 @@ export default function EnvelopeDetailPage() {
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge(envelope.status)}`}>
               {envelope.status}
             </span>
+            {isSelfSign && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-violet-100 text-violet-800">
+                Self-signed
+              </span>
+            )}
             <div className="flex items-center space-x-2 text-gray-600">
               <span>Creator:</span>
               {creatorId ? (
@@ -197,8 +203,8 @@ export default function EnvelopeDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Sign Document - Only for recipients */}
-          {isRecipient && (envelope.status === 'draft' || envelope.status === 'pending') && (
+          {/* Sign Document - Only for recipients on multi-party envelopes */}
+          {!isSelfSign && isRecipient && (envelope.status === 'draft' || envelope.status === 'pending') && (
             <Button
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/sign`)}
               disabled={false}
@@ -209,8 +215,8 @@ export default function EnvelopeDetailPage() {
               <PenTool className="h-4 w-4" />
             </Button>
           )}
-          {/* Edit - Only for creator in draft or rejected status */}
-          {isCreator && (envelope.status === 'draft' || envelope.status === 'rejected') && (
+          {/* Edit - Only for creator in draft or rejected status (multi-party) */}
+          {!isSelfSign && isCreator && (envelope.status === 'draft' || envelope.status === 'rejected') && (
             <Button
               variant="outline"
               onClick={() => router.push(`/dashboard/envelopes/${envelope.id}/edit`)}
@@ -221,8 +227,8 @@ export default function EnvelopeDetailPage() {
               <Pencil className="h-4 w-4" />
             </Button>
           )}
-          {/* Send - Only for creator in draft status */}
-          {isCreator && envelope.status === 'draft' && (
+          {/* Send - Only for creator in draft status (multi-party) */}
+          {!isSelfSign && isCreator && envelope.status === 'draft' && (
             <Button
               onClick={async () => {
                 if (window.confirm('Are you sure you want to send this envelope?')) {
@@ -237,8 +243,8 @@ export default function EnvelopeDetailPage() {
               <Send className="h-4 w-4" />
             </Button>
           )}
-          {/* Reject - Only for creator when sent */}
-          {isCreator && envelope.status === 'pending' && (
+          {/* Reject - Only for creator when sent (multi-party) */}
+          {!isSelfSign && isCreator && envelope.status === 'pending' && (
             <Button
               variant="destructive"
               onClick={async () => {
@@ -325,8 +331,14 @@ export default function EnvelopeDetailPage() {
               <div>Loading documents...</div>
             ) : envelopeDocuments && envelopeDocuments.length > 0 ? (
               envelopeDocuments.map((doc: EnvelopeDocumentResponse) => {
-                const href =
-                  envelope.status === 'completed' && envelope.pdf_lock_password
+                const signedUrl =
+                  (doc as EnvelopeDocumentResponse & { document_signed_file_url?: string }).document_signed_file_url ||
+                  doc.signed_file_url
+                const useSignedDirectLink =
+                  isSelfSign && envelope.status === 'completed' && !!signedUrl
+                const href = useSignedDirectLink
+                  ? signedUrl!
+                  : envelope.status === 'completed' && envelope.pdf_lock_password
                     ? `/dashboard/documents/${doc.id}?pdf_password=${encodeURIComponent(
                         envelope.pdf_lock_password
                       )}`
@@ -348,19 +360,33 @@ export default function EnvelopeDetailPage() {
                           {doc.file_name || `Document ${doc.id}`}
                         </p>
                         <p className="text-[11px] text-gray-500">
-                          Click “Open” to view the latest version of this document.
+                          {useSignedDirectLink
+                            ? 'Open the signed PDF version of this document.'
+                            : 'Click “Open” to view the latest version of this document.'}
                         </p>
                       </div>
                     </div>
-                    <Link href={href}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-xs flex items-center gap-1.5"
-                      >
-                        <span>Open</span>
-                      </Button>
-                    </Link>
+                    {useSignedDirectLink ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs flex items-center gap-1.5"
+                        >
+                          <span>Open signed</span>
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link href={href}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs flex items-center gap-1.5"
+                        >
+                          <span>Open</span>
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 )
               })
@@ -373,8 +399,12 @@ export default function EnvelopeDetailPage() {
 
       <Card className="bg-white shadow-sm">
         <CardHeader>
-          <CardTitle>Recipients ({envelope.recipients?.length || 0})</CardTitle>
-          <CardDescription>Signing order and status</CardDescription>
+          <CardTitle>
+            {isSelfSign ? 'Signer' : `Recipients (${envelope.recipients?.length || 0})`}
+          </CardTitle>
+          <CardDescription>
+            {isSelfSign ? 'You signed this document' : 'Signing order and status'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -396,7 +426,9 @@ export default function EnvelopeDetailPage() {
         <CardContent>
           <ul className="text-sm text-gray-700 space-y-1">
             <li>Created: {new Date(envelope.created_at).toLocaleString()}</li>
-            {envelope.sent_at && <li>Sent: {new Date(envelope.sent_at).toLocaleString()}</li>}
+            {envelope.sent_at && !isSelfSign && (
+              <li>Sent: {new Date(envelope.sent_at).toLocaleString()}</li>
+            )}
             {envelope.completed_at && <li>Completed: {new Date(envelope.completed_at).toLocaleString()}</li>}
             {envelope.rejected_at && <li>Rejected: {new Date(envelope.rejected_at).toLocaleString()}</li>}
           </ul>

@@ -28,6 +28,8 @@ import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 10
 
+type EnvelopeTypeFilter = 'all' | 'multi_party' | 'self_sign'
+
 const getStatusBadge = (status: string) => {
   const map: Record<string, string> = {
     draft: 'bg-gray-100 text-gray-800',
@@ -46,6 +48,7 @@ export default function EnvelopesPage() {
 
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [envelopeTypeFilter, setEnvelopeTypeFilter] = useState<EnvelopeTypeFilter>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
@@ -58,12 +61,15 @@ export default function EnvelopesPage() {
   }, [searchTerm])
 
   const listStatus = statusFilter === 'all' ? undefined : statusFilter
+  const isSelfSign =
+    envelopeTypeFilter === 'self_sign' ? true : envelopeTypeFilter === 'multi_party' ? false : undefined
 
   const { data, isLoading, error, isFetching } = useEnvelopes(
     page,
     PAGE_SIZE,
     listStatus,
     debouncedSearch || undefined,
+    isSelfSign,
   )
   const { mutateAsync: rejectAsync, isPending: rejecting } = useRejectEnvelope()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteEnvelope()
@@ -79,9 +85,14 @@ export default function EnvelopesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Envelopes</h1>
           <p className="text-gray-600 mt-1">Manage your document envelopes and track their status</p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/envelopes/create">Create New Envelope</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/envelopes/self-sign">Sign yourself</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard/envelopes/create">Create New Envelope</Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="bg-white shadow-sm">
@@ -95,24 +106,56 @@ export default function EnvelopesPage() {
             </CardDescription>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                setStatusFilter(value)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div
+                className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5"
+                role="group"
+                aria-label="Envelope type"
+              >
+                {(
+                  [
+                    { value: 'all', label: 'All' },
+                    { value: 'multi_party', label: 'Multi-party' },
+                    { value: 'self_sign', label: 'Signed by me' },
+                  ] as const
+                ).map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      setEnvelopeTypeFilter(value)
+                      setPage(1)
+                    }}
+                    className={cn(
+                      'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                      envelopeTypeFilter === value
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => {
+                  setStatusFilter(value)
+                  setPage(1)
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="md:w-64 space-y-1">
               <Input
                 type="search"
@@ -166,11 +209,18 @@ export default function EnvelopesPage() {
                           <CreatorCell creator={env.creator} />
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(env.status)}`}
-                          >
-                            {env.status}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(env.status)}`}
+                            >
+                              {env.status}
+                            </span>
+                            {env.is_self_sign && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-800">
+                                Self-signed
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <RecipientAvatars recipients={env.recipients || []} />

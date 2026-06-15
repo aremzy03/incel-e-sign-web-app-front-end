@@ -55,6 +55,7 @@ export interface Envelope {
     signer_document_positions?: Array<{ signer_id: string; position: Position }>
   }>
   status: 'draft' | 'pending' | 'completed' | 'rejected'
+  is_self_sign?: boolean
   created_at: string
   updated_at: string
   sent_at?: string
@@ -179,9 +180,10 @@ export const getEnvelopes = async (
   pageSize: number = 10,
   status?: string,
   search?: string,
+  isSelfSign?: boolean,
 ): Promise<EnvelopesListResponse> => {
   const trimmedSearch = search?.trim()
-  logger.debug('Fetching envelopes', { page, pageSize, status, search: trimmedSearch })
+  logger.debug('Fetching envelopes', { page, pageSize, status, search: trimmedSearch, isSelfSign })
 
   try {
     const response = await apiClient.get('/envelopes/', {
@@ -190,6 +192,8 @@ export const getEnvelopes = async (
         page_size: pageSize,
         ...(status ? { status } : {}),
         ...(trimmedSearch ? { search: trimmedSearch } : {}),
+        ...(isSelfSign === true ? { is_self_sign: true } : {}),
+        ...(isSelfSign === false ? { is_self_sign: false } : {}),
       },
     })
     
@@ -242,10 +246,11 @@ export const getEnvelopes = async (
         id: r.id,
         name: r.name,
         description: r.description ?? null,
-      pdf_lock_code: r.pdf_lock_code ?? null,
+        pdf_lock_password: r.pdf_lock_password ?? r.pdf_lock_code ?? null,
         creator,
         recipients,
         status: r.status || 'draft',
+        is_self_sign: Boolean(r.is_self_sign),
         created_at: r.created_at || '',
         updated_at: r.updated_at || '',
         sent_at: r.sent_at,
@@ -299,6 +304,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
       recipients,
       signatures: r.signatures || [],
       status: r.status || 'draft',
+      is_self_sign: Boolean(r.is_self_sign),
       created_at: r.created_at || '',
       updated_at: r.updated_at || '',
       sent_at: r.sent_at,
@@ -345,6 +351,7 @@ export interface EnvelopeDocumentResponse {
   document_file_url: string; // This is the actual file URL for PDF viewer
   current_file_url?: string;
   signed_file_url?: string;
+  document_signed_file_url?: string;
   file_url?: string;
   file_size: number;
   status: string;
@@ -379,6 +386,11 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
         getCurrentFileUrl(doc) ||
         doc.file_url ||
         '', // Use document_file_url for the PDF source
+      signed_file_url:
+        doc.document_signed_file_url ||
+        doc.signed_file_url ||
+        undefined,
+      document_signed_file_url: doc.document_signed_file_url || doc.signed_file_url || undefined,
       signer_document_positions: doc.signer_document_positions || [],
     })) as EnvelopeDocumentResponse[];
   } catch (error: any) {

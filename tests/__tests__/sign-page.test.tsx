@@ -3,6 +3,16 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import EnvelopeSignPage from '@/app/dashboard/envelopes/[id]/sign/page'
 
+jest.mock('next-auth/react', () => ({
+  ...jest.requireActual('next-auth/react'),
+  useSession: jest.fn(),
+}))
+
+const mockSession = {
+  user: { id: 'user-1', email: 'test@example.com', name: 'Test User' },
+  accessToken: 'mock-access-token',
+}
+
 jest.mock('next/navigation', () => ({
   useParams: () => ({ id: '123' }),
   useRouter: () => ({ push: jest.fn() }),
@@ -47,12 +57,19 @@ describe('Sign Page', () => {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>
   }
 
+  beforeEach(() => {
+    require('next-auth/react').useSession.mockReturnValue({
+      data: mockSession,
+      status: 'authenticated',
+    })
+  })
+
   it('renders signature actions', async () => {
     const axios = require('axios')
     const mockApi = (axios.create as jest.Mock).mock.results[0]?.value || (axios.create as jest.Mock)()
-    mockApi.get
-      .mockResolvedValueOnce({ data: { id: '123', name: 'Test Envelope', signing_order: [], documents: [] } })
-      .mockResolvedValueOnce({ data: [] })
+    mockApi.get.mockResolvedValueOnce({
+      data: { id: '123', status: 'pending', name: 'Test Envelope', signing_order: [] },
+    })
 
     render(<EnvelopeSignPage />, { wrapper })
     expect(await screen.findByText('Select Your Signature')).toBeInTheDocument()

@@ -46,6 +46,10 @@ function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }
           toast.error('Authentication failed. Please log in again.');
           onSetError('Authentication failed. Please log in again.');
           break;
+        case 'confirm_email':
+          toast.success('Registration successful. Confirm your email, then sign in.');
+          onSetError('Confirm your email before signing in.');
+          break;
         default:
           break;
       }

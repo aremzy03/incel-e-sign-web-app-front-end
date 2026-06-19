@@ -8,6 +8,12 @@ import {
   hasRefreshAccessTokenError,
 } from '@/lib/auth-session-cache'
 
+declare module 'axios' {
+  export interface InternalAxiosRequestConfig {
+    __hadAuthHeader?: boolean
+  }
+}
+
 // Create axios instance with base configuration
 const backendBaseUrl = getApiBaseUrl()
 
@@ -46,6 +52,7 @@ apiClient.interceptors.request.use(
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`
     }
+    config.__hadAuthHeader = !!accessToken
 
     return config
   },
@@ -57,7 +64,10 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await handleAuthFailure(buildLoginUrlFromBrowser('auth_failed'))
+      const hadAuthHeader = error.config?.__hadAuthHeader === true
+      if (hadAuthHeader) {
+        await handleAuthFailure(buildLoginUrlFromBrowser('auth_failed'))
+      }
     } else if (hasRefreshAccessTokenError()) {
       await handleAuthFailure(buildLoginUrlFromBrowser('session_expired'))
     }

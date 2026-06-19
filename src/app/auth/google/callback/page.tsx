@@ -4,6 +4,8 @@ import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
+import axios from 'axios'
+import { getApiBaseUrl } from '@/lib/env'
 import { buildLoginUrl, getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect'
 
 export const dynamic = 'force-dynamic'
@@ -14,25 +16,37 @@ function GoogleOAuthCallbackHandler() {
 
   useEffect(() => {
     const status = searchParams?.get('status')
-    const access = searchParams?.get('access')
-    const refresh = searchParams?.get('refresh')
+    const exchangeCode = searchParams?.get('exchange_code')
     const next = getSafePostLoginPath(searchParams?.get('next'), POST_LOGIN_FALLBACK)
     const message = searchParams?.get('message')
 
     const handleAuth = async () => {
-      if (status !== 'success' || !access || !refresh) {
+      if (status !== 'success' || !exchangeCode) {
         if (message) {
           toast.error(message)
         } else {
           toast.error('Google authentication failed. Please try again.')
         }
 
-        // Default back to login, preserving a generic error message
         router.replace(buildLoginUrl({ message: 'auth_failed' }))
         return
       }
 
       try {
+        const response = await axios.post(`${getApiBaseUrl()}/auth/google/exchange/`, {
+          exchange_code: exchangeCode,
+        })
+
+        const tokens = response.data?.data
+        const access = tokens?.access
+        const refresh = tokens?.refresh
+
+        if (response.data?.status !== 'success' || !access || !refresh) {
+          toast.error('Google sign-in failed. Please try again.')
+          router.replace(buildLoginUrl({ message: 'auth_failed' }))
+          return
+        }
+
         const result = await signIn('google-jwt', {
           access,
           refresh,
@@ -54,7 +68,6 @@ function GoogleOAuthCallbackHandler() {
       }
     }
 
-    // Only run on client when params are available
     if (searchParams) {
       void handleAuth()
     }
@@ -88,5 +101,3 @@ export default function GoogleOAuthCallbackPage() {
     </Suspense>
   )
 }
-
-

@@ -129,7 +129,7 @@ export const authOptions: NextAuthOptions = {
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
           user: user.user,
-          accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+          accessTokenExpires: Date.now() + 60 * 60 * 1000,
         }
       }
 
@@ -164,7 +164,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 24 * 60 * 60,
   },
   secret: getNextAuthSecret(),
 }

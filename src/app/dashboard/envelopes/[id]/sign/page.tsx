@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
 import { getUserById, type User } from '@/lib/api/users'
 import { useSession } from 'next-auth/react'
+import { useAuthReady, shouldRetryAuthQuery } from '@/hooks/useAuthReady'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -58,6 +59,7 @@ export default function SignEnvelopePage() {
   const envelopeId = params?.id
   const router = useRouter()
   const { data: session } = useSession()
+  const { isReady } = useAuthReady()
   const currentUserId = session?.user?.id
   const accessToken = (session as any)?.accessToken as string | undefined
   const queryClient = useQueryClient()
@@ -180,7 +182,8 @@ export default function SignEnvelopePage() {
   // Fetch envelope detail (raw to preserve signing_order positions)
   const { data: envelope, isLoading: loadingEnv } = useQuery<EnvelopeResponse>({
     queryKey: ['sign-envelope', envelopeId],
-    enabled: !!envelopeId,
+    enabled: isReady && !!envelopeId,
+    retry: shouldRetryAuthQuery,
     queryFn: async () => {
       const res = await apiClient.get(`/envelopes/${envelopeId}/`)
       const envelope = (res.data?.data ?? res.data) as EnvelopeResponse
@@ -198,6 +201,8 @@ export default function SignEnvelopePage() {
   // Fetch current user's reusable signatures via shared helper
   const { data: mySignatures } = useQuery<ReusableSignature[]>({
     queryKey: ['my-signatures'],
+    enabled: isReady,
+    retry: shouldRetryAuthQuery,
     queryFn: async () => {
       const sigs = await listUserSignatures()
       console.log('[Sign Page] Fetched reusable signatures:', sigs)
@@ -223,7 +228,7 @@ export default function SignEnvelopePage() {
 
   // Get document URLs for the envelope
   useEffect(() => {
-    if (!envelopeId) return
+    if (!envelopeId || !isReady) return
     
     const fetchDocuments = async () => {
       try {
@@ -236,11 +241,11 @@ export default function SignEnvelopePage() {
       }
     }
     fetchDocuments()
-  }, [envelopeId])
+  }, [envelopeId, isReady])
 
   // Fetch signer details for all signers in the envelope
   useEffect(() => {
-    if (!envelope?.signing_order) return
+    if (!envelope?.signing_order || !isReady) return
     
     const fetchSignerDetails = async () => {
       const details: Record<string, User> = {}
@@ -264,7 +269,7 @@ export default function SignEnvelopePage() {
     }
     
     fetchSignerDetails()
-  }, [envelope?.signing_order])
+  }, [envelope?.signing_order, isReady])
 
   const handleSignatureSelect = (signature: any) => {
     console.log('[Sign Page] Selected signature:', signature)
@@ -471,7 +476,7 @@ export default function SignEnvelopePage() {
     }
   }
 
-  if (loadingEnv || !envelope || !envelopeDocuments.length) return <div className="p-6">Loading envelope…</div>
+  if (!isReady || loadingEnv || !envelope || !envelopeDocuments.length) return <div className="p-6">Loading envelope…</div>
 
   // Signing must not be available for completed envelopes (PDF is on S3; backend rejects signing by design).
   if ((envelope.status || '').toLowerCase() === 'completed') {

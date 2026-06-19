@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
-import { getSession, signIn } from 'next-auth/react'
+import { getSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight } from 'lucide-react'
 
@@ -22,7 +22,7 @@ import {
 import { registerSchema, type RegisterFormData } from '@/lib/validations'
 import { authAPI } from '@/lib/api/auth'
 import { getApiBaseUrl } from '@/lib/env'
-import { getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect'
+import { getSafePostLoginPath, POST_LOGIN_FALLBACK, buildLoginUrl } from '@/lib/post-login-redirect'
 import { createEntrance, pageVariants } from '@/lib/motion'
 import { IncelLogo } from '@/components/ui/incel-logo'
 
@@ -113,30 +113,8 @@ export default function RegisterPage() {
         full_name: `${data.firstName} ${data.lastName}`,
       })
 
-      toast.success('Registration successful! Logging you in...')
-      
-      // Automatically log the user in after successful registration
-      const result = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        // If auto-login fails, redirect to login page
-        toast.error('Registration successful, but auto-login failed. Please log in manually.')
-        router.push('/login')
-      } else {
-        // Check if session was created successfully
-        const session = await getSession()
-        if (session) {
-          toast.success('Welcome! Redirecting to dashboard...')
-          router.push('/dashboard')
-        } else {
-          toast.error('Registration successful, but session creation failed. Please log in manually.')
-          router.push('/login')
-        }
-      }
+      toast.success('Registration successful! Check your email to confirm your account before signing in.')
+      router.push(buildLoginUrl({ message: 'confirm_email' }))
     } catch (error: any) {
       let errorMessage = 'An error occurred during registration'
       

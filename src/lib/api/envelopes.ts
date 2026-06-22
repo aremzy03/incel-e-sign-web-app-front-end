@@ -1,6 +1,7 @@
 import apiClient from '@/lib/axios'
 import { logger } from '@/lib/logger'
 import { getCurrentFileUrl } from '@/lib/url'
+import { normalizeSignerPositionEntries } from '@/lib/utils/field-geometry'
 
 export interface EnvelopeDetail {
   id: number | string
@@ -47,6 +48,7 @@ export interface Envelope {
   }
   recipients: EnvelopeRecipient[]
   signatures?: EnvelopeSignature[]
+  documents_with_positions?: DocumentWithPositions[]
   // Optional: some responses may inline associated documents
   documents?: Array<{
     id: string
@@ -79,6 +81,62 @@ export interface SignerDocumentPosition {
 export interface DocumentWithPositions {
   document_id: string
   signer_document_positions: SignerDocumentPosition[]
+}
+
+/** Normalize recipients from either `recipients` or `signing_order`, enriched with signature metadata. */
+export function normalizeEnvelopeRecipients(raw: {
+  recipients?: unknown
+  signing_order?: unknown
+  signatures?: EnvelopeSignature[]
+}): EnvelopeRecipient[] {
+  const signatures = Array.isArray(raw.signatures) ? raw.signatures : []
+
+  const fromList = (list: unknown[]): EnvelopeRecipient[] =>
+    list.map((entry, idx) => {
+      const s = entry as Record<string, unknown>
+      const nestedSigner =
+        s.signer && typeof s.signer === 'object'
+          ? (s.signer as Record<string, unknown>)
+          : null
+      const signerId = String(
+        s.signer_id ?? s.id ?? nestedSigner?.id ?? idx,
+      )
+      const sig = signatures.find(
+        (item) =>
+          String(item.signer) === signerId ||
+          String((item as { signer_id?: string }).signer_id) === signerId,
+      )
+
+      return {
+        id: signerId,
+        email: String(
+          s.email ??
+            nestedSigner?.email ??
+            sig?.signer_email ??
+            '',
+        ),
+        name: String(
+          s.name ??
+            s.full_name ??
+            nestedSigner?.full_name ??
+            nestedSigner?.name ??
+            sig?.signer_name ??
+            '',
+        ),
+        order: Number(s.order ?? idx + 1),
+        status: (s.status ?? sig?.status ?? 'pending') as EnvelopeRecipient['status'],
+        signed_at: (s.signed_at as string | undefined) ?? sig?.signed_at,
+        rejected_at: s.rejected_at as string | undefined,
+      }
+    })
+
+  if (Array.isArray(raw.recipients) && raw.recipients.length > 0) {
+    return fromList(raw.recipients)
+  }
+  if (Array.isArray(raw.signing_order) && raw.signing_order.length > 0) {
+    return fromList(raw.signing_order)
+  }
+  return []
 }
 
 export interface CreateEnvelopeRequest {
@@ -230,17 +288,7 @@ export const getEnvelopes = async (
             full_name: r.creator_full_name || r.creator?.full_name || (r.creator_email || ''),
           }
 
-      const recipients: EnvelopeRecipient[] = Array.isArray(r.recipients)
-        ? r.recipients
-        : Array.isArray(r.signing_order)
-          ? r.signing_order.map((s: any, idx: number) => ({
-              id: s.signer_id || String(idx),
-              email: s.email || '',
-              name: s.name || '',
-              order: s.order ?? idx + 1,
-              status: (s.status || 'pending') as any,
-            }))
-          : []
+      const recipients = normalizeEnvelopeRecipients(r)
 
       return {
         id: r.id,
@@ -283,17 +331,7 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
           full_name: r.creator_full_name || r.creator?.full_name || (r.creator_email || ''),
         }
 
-    const recipients: EnvelopeRecipient[] = Array.isArray(r.recipients)
-      ? r.recipients
-      : Array.isArray(r.signing_order)
-        ? r.signing_order.map((s: any, idx: number) => ({
-            id: s.signer_id || String(idx),
-            email: s.email || '',
-            name: s.name || '',
-            order: s.order ?? idx + 1,
-            status: (s.status || 'pending') as any,
-          }))
-        : []
+    const recipients = normalizeEnvelopeRecipients(r)
 
     return {
       id: r.id,
@@ -303,6 +341,9 @@ export const getEnvelope = async (id: string): Promise<Envelope> => {
       creator,
       recipients,
       signatures: r.signatures || [],
+      documents_with_positions: Array.isArray(r.documents_with_positions)
+        ? r.documents_with_positions
+        : [],
       status: r.status || 'draft',
       is_self_sign: Boolean(r.is_self_sign),
       created_at: r.created_at || '',
@@ -376,23 +417,31 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
     }
     logger.debug('Fetched documents for envelope', { envelopeId, count: documents.length });
     // Map the documents to ensure correct IDs and file names are used
-    return documents.map(doc => ({
-      ...doc,
-      id: doc.document, // The ID for linking to document details etc.
-      document: doc.document, // The actual document ID from backend
-      file_name: doc.document_file_name || doc.file_name || `Document ${doc.document}`, // Fallback for display
-      document_file_url:
-        doc.document_file_url ||
-        getCurrentFileUrl(doc) ||
-        doc.file_url ||
-        '', // Use document_file_url for the PDF source
-      signed_file_url:
-        doc.document_signed_file_url ||
-        doc.signed_file_url ||
-        undefined,
-      document_signed_file_url: doc.document_signed_file_url || doc.signed_file_url || undefined,
-      signer_document_positions: doc.signer_document_positions || [],
-    })) as EnvelopeDocumentResponse[];
+    return documents.map(doc => {
+      const documentId = doc.document || doc.id
+      return {
+        ...doc,
+        id: documentId,
+        document: documentId,
+        file_name: doc.document_file_name || doc.file_name || `Document ${documentId}`,
+        document_file_url:
+          doc.document_file_url ||
+          getCurrentFileUrl(doc) ||
+          doc.file_url ||
+          '',
+        signed_file_url:
+          doc.document_signed_file_url ||
+          doc.signed_file_url ||
+          undefined,
+        document_signed_file_url: doc.document_signed_file_url || doc.signed_file_url || undefined,
+        signer_document_positions: normalizeSignerPositionEntries(
+          doc.signer_document_positions ??
+            doc.signer_positions ??
+            doc.positions ??
+            [],
+        ),
+      }
+    }) as EnvelopeDocumentResponse[];
   } catch (error: any) {
     logger.errorSafe(error, `Error fetching documents for envelope ${envelopeId}`)
     throw error

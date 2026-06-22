@@ -133,6 +133,7 @@ export const useEditEnvelope = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['envelope', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['envelope-documents', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
       toast.success('Envelope saved successfully!')
     },

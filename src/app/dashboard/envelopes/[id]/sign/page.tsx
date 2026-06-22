@@ -18,6 +18,7 @@ import { listUserSignatures, type ReusableSignature } from '@/lib/api/signatures
 import { getApiBaseUrl } from '@/lib/env'
 import Link from 'next/link'
 import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
+import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 
 type ReactPdfModule = typeof import('react-pdf')
 type PdfComponents = Pick<ReactPdfModule, 'Document' | 'Page'> & { pdfjs: ReactPdfModule['pdfjs'] }
@@ -127,6 +128,9 @@ export default function SignEnvelopePage() {
     })
   }, [])
   const [envelopeDocuments, setEnvelopeDocuments] = useState<EnvelopeDocumentResponse[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(false)
+  const [docsError, setDocsError] = useState<string | null>(null)
+  const [pdfLoadedByDocId, setPdfLoadedByDocId] = useState<Record<string, boolean>>({})
   const [signerDetails, setSignerDetails] = useState<Record<string, User>>({})
   const [selectedSignature, setSelectedSignature] = useState<any>(null)
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false)
@@ -179,6 +183,10 @@ export default function SignEnvelopePage() {
     return nextMap
   }, [accessToken, envelopeDocuments, getPreviewUrl])
 
+  useEffect(() => {
+    setPdfLoadedByDocId({})
+  }, [pdfFileByDocumentId])
+
   // Fetch envelope detail (raw to preserve signing_order positions)
   const { data: envelope, isLoading: loadingEnv } = useQuery<EnvelopeResponse>({
     queryKey: ['sign-envelope', envelopeId],
@@ -229,15 +237,23 @@ export default function SignEnvelopePage() {
   // Get document URLs for the envelope
   useEffect(() => {
     if (!envelopeId || !isReady) return
-    
+
     const fetchDocuments = async () => {
+      setLoadingDocs(true)
+      setDocsError(null)
       try {
         console.log('[Sign Page] Fetching all documents for envelope:', envelopeId)
         const docs = await getEnvelopeDocuments(envelopeId)
         setEnvelopeDocuments(docs)
+        if (docs.length === 0) {
+          setDocsError('No documents found for this envelope.')
+        }
       } catch (error) {
         console.error('[Sign Page] Failed to fetch envelope documents:', error)
+        setDocsError('Failed to load documents for signing')
         toast.error('Failed to load documents for signing')
+      } finally {
+        setLoadingDocs(false)
       }
     }
     fetchDocuments()
@@ -476,7 +492,39 @@ export default function SignEnvelopePage() {
     }
   }
 
-  if (!isReady || loadingEnv || !envelope || !envelopeDocuments.length) return <div className="p-6">Loading envelope…</div>
+  if (!isReady || loadingEnv || !envelope) {
+    return (
+      <div className="p-6">
+        <PdfLoadingIndicator label="Loading envelope…" />
+      </div>
+    )
+  }
+
+  if (loadingDocs) {
+    return (
+      <div className="p-6">
+        <PdfLoadingIndicator label="Loading documents…" />
+      </div>
+    )
+  }
+
+  if (docsError || envelopeDocuments.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto p-6 space-y-4">
+        <h1 className="text-xl font-semibold">{envelope.name || 'Envelope'}</h1>
+        <div className="rounded-lg border bg-white p-4">
+          <p className="text-sm text-gray-800 font-medium">
+            {docsError || 'No documents found for this envelope.'}
+          </p>
+          <div className="flex items-center gap-2 mt-4">
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/envelopes/${envelopeId}`}>Back to envelope</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Signing must not be available for completed envelopes (PDF is on S3; backend rejects signing by design).
   if ((envelope.status || '').toLowerCase() === 'completed') {
@@ -522,11 +570,18 @@ export default function SignEnvelopePage() {
               Document: {docItem.file_name || `Document ${docItem.id}`}
             </h3>
             {password.dialog}
-            {docItem.document_file_url && pdf && !password.cancelled ? (
+            {!pdf ? (
+              <PdfLoadingIndicator label="Initializing PDF viewer…" />
+            ) : docItem.document_file_url && !password.cancelled ? (
+              <div className="relative">
+                {!pdfLoadedByDocId[docItem.id] && (
+                  <PdfLoadingIndicator label="Loading document…" />
+                )}
               <pdf.Document
                 file={pdfFileByDocumentId[docItem.document]}
                 onLoadSuccess={(info: { numPages: number }) => {
                   console.log(`[Sign Page] PDF for ${docItem.id} loaded successfully, numPages:`, info.numPages);
+                  setPdfLoadedByDocId((prev) => ({ ...prev, [docItem.id]: true }))
                   // We need to store numPages per document to render all pages correctly
                   setPageDims(prev => ({
                     ...prev,
@@ -538,10 +593,11 @@ export default function SignEnvelopePage() {
                 }}
                 onLoadError={(error: any) => {
                   console.error(`[Sign Page] PDF load error for ${docItem.id}:`, error);
+                  setPdfLoadedByDocId((prev) => ({ ...prev, [docItem.id]: false }))
                   toast.error(`Failed to load PDF for ${docItem.file_name || docItem.id}`);
                 }}
                 onPassword={password.onPassword as any}
-                loading=""
+                loading={<PdfLoadingIndicator label="Loading document…" />}
               >
                 {Array.from({ length: (pageDims[docItem.id] as any)?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => {
                   console.log(`[Sign Page] Rendering page ${pageNo} for document ${docItem.id}`);
@@ -556,7 +612,7 @@ export default function SignEnvelopePage() {
                       renderAnnotationLayer={false}
                       renderTextLayer={false}
                       className="shadow w-fit max-w-full"
-                      loading=""
+                      loading={<PdfLoadingIndicator size="sm" label="Loading page…" />}
                       data-page-key={`${docItem.id}-${pageNo}`}
                       onRenderSuccess={(page: any) => {
                         try {
@@ -942,14 +998,13 @@ export default function SignEnvelopePage() {
                 );
               })}
             </pdf.Document>
+              </div>
             ) : password.cancelled ? (
               <div className="min-h-[200px] flex items-center justify-center text-gray-500">
                 PDF preview cancelled.
               </div>
           ) : docItem.document_file_url ? (
-            <div className="min-h-[200px] flex items-center justify-center text-gray-500">
-              Loading PDF preview…
-            </div>
+            <PdfLoadingIndicator label="Loading PDF preview…" />
           ) : (
             <div className="min-h-[200px] flex items-center justify-center text-gray-500">
               No PDF preview available for this document.

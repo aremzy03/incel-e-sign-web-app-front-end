@@ -20,6 +20,7 @@ import { useCreateEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { Document, mergeDocuments } from '@/lib/api/documents'
 import { FieldPosition, FieldPositions, RecipientInput, RECIPIENT_COLORS } from '@/types/envelope'
+import { viewportPositionToBackend } from '@/lib/utils/field-geometry'
 
 export default function CreateEnvelopePage() {
   // Avoid SSR of PDF viewer (uses DOM APIs)
@@ -45,7 +46,6 @@ export default function CreateEnvelopePage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
-  const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
   const [isMerging, setIsMerging] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -165,11 +165,6 @@ export default function CreateEnvelopePage() {
     setActiveFieldId(fieldId)
     toast.success(`${fieldType} field added`)
   }, [nextFieldId])
-
-  // Receive per-page metrics from PDF viewer
-  const handlePageMetricsChange = useCallback((pageKey: string, metrics: { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }) => {
-    setPageMetrics((prev) => ({ ...prev, [pageKey]: metrics }))
-  }, [])
 
   // DnD handlers (page-level)
   const handleDragStart = useCallback((event: any) => {
@@ -371,26 +366,15 @@ export default function CreateEnvelopePage() {
         }
       })
 
-      // Helper to convert from rendered CSS pixels to PDF points (top-left Y)
-      const cssPxToPoints = (px: number) => (px * 72) / 96
-      const convertFieldGeometry = (docId: string, field: FieldPosition) => {
-        const pageKey = `${docId}-${field.page}`
-        const metrics = pageMetrics[pageKey]
-        if (!metrics) {
-          return { x: field.x, y: field.y, width: field.width, height: field.height }
-        }
-        const scale = metrics.scale || 1
-        const x1 = field.x / scale
-        const y1 = field.y / scale
-        const w1 = field.width / scale
-        const h1 = field.height / scale
-        return {
-          x: cssPxToPoints(x1),
-          y: cssPxToPoints(y1),
-          width: cssPxToPoints(w1),
-          height: cssPxToPoints(h1),
-        }
-      }
+      // Send canvas coordinates unchanged to the backend.
+      const convertFieldGeometry = (_docId: string, field: FieldPosition) =>
+        viewportPositionToBackend({
+          page: field.page,
+          x: field.x,
+          y: field.y,
+          width: field.width,
+          height: field.height,
+        })
 
       // Build documents with positions (only signature fields for backend)
       const documents_with_positions = Object.entries(fieldPositions).map(([docId, docFields]) => {
@@ -399,17 +383,10 @@ export default function CreateEnvelopePage() {
           .map(field => {
             const recipient = recipients.find(r => r.id.toString() === field.assignedTo)
             const validRecipient = valid.find(v => v.email.toLowerCase() === recipient?.email.toLowerCase())
-            const geom = convertFieldGeometry(docId, field)
-            
+
             return {
               signer_id: validRecipient!.user.id,
-              position: {
-                page: field.page,
-                x: geom.x,
-                y: geom.y,
-                width: geom.width,
-                height: geom.height,
-              },
+              position: convertFieldGeometry(docId, field),
             }
           })
 

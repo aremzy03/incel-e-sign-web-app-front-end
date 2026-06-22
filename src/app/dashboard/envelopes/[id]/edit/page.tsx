@@ -19,8 +19,14 @@ import { useSidebar } from '@/app/dashboard/dashboard-client-layout'
 import { useEditEnvelope, useEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { Document, mergeDocuments } from '@/lib/api/documents'
+import { getUserById } from '@/lib/api/users'
 import { FieldPosition, FieldPositions, RecipientInput, RECIPIENT_COLORS } from '@/types/envelope'
 import { getEnvelopeDocuments } from '@/lib/api/envelopes'
+import {
+  backendPositionToViewport,
+  normalizeSignerPositionEntries,
+  viewportPositionToBackend,
+} from '@/lib/utils/field-geometry'
 
 export default function EditEnvelopePage() {
   const params = useParams<{ id: string }>()
@@ -54,7 +60,6 @@ export default function EditEnvelopePage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
-  const [pageMetrics, setPageMetrics] = useState<Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>>({})
   const [isMerging, setIsMerging] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -67,79 +72,134 @@ export default function EditEnvelopePage() {
   useEffect(() => {
     if (!envelope || !envelopeDocuments || initialized) return
 
-    const sortedRecipients = (Array.isArray(envelope.recipients) ? [...envelope.recipients] : [])
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    let cancelled = false
 
-    const initialRecipients: RecipientInput[] = sortedRecipients.map((recipient, index) => ({
-      id: index + 1,
-      name: recipient.name || recipient.email,
-      email: recipient.email,
-      order: recipient.order ?? index + 1,
-      color: RECIPIENT_COLORS[index % RECIPIENT_COLORS.length],
-    }))
+    const initializeEnvelope = async () => {
+      const sortedRecipients = (Array.isArray(envelope.recipients) ? [...envelope.recipients] : [])
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
-    setRecipients(initialRecipients)
-    setNextRecipientId(initialRecipients.length + 1)
-    setEnvelopeName(envelope.name || '')
-    setDescription(envelope.description || '')
+      const enrichedRecipients = await Promise.all(
+        sortedRecipients.map(async (recipient) => {
+          if (recipient.email?.trim()) {
+            return recipient
+          }
+          if (!recipient.id) {
+            return recipient
+          }
+          try {
+            const user = await getUserById(String(recipient.id))
+            return {
+              ...recipient,
+              email: user.email || recipient.email,
+              name: recipient.name || user.full_name || recipient.email,
+            }
+          } catch {
+            return recipient
+          }
+        }),
+      )
 
-    const initialDocuments: Document[] = envelopeDocuments.map((doc): Document => ({
-      id: doc.id,
-      file_name: doc.file_name || doc.document_file_name || `Document ${doc.id}`,
-      file_url: doc.document_file_url || '',
-      file_size: doc.file_size ?? 0,
-      status: 'draft',
-      created_at: doc.created_at || new Date().toISOString(),
-      updated_at: doc.updated_at || new Date().toISOString(),
-    }))
-    setUploadedDocuments(initialDocuments)
+      if (cancelled) return
 
-    const recipientIdBySigner: Record<string, number> = {}
-    sortedRecipients.forEach((recipient, index) => {
-      const localId = index + 1
-      if (recipient?.id) {
-        const key = String(recipient.id)
-        recipientIdBySigner[key] = localId
-        recipientIdBySigner[key.toLowerCase()] = localId
-      }
-      if (recipient?.email) {
-        const emailKey = recipient.email.toLowerCase()
-        recipientIdBySigner[emailKey] = localId
-      }
-    })
+      const initialRecipients: RecipientInput[] = enrichedRecipients.map((recipient, index) => ({
+        id: index + 1,
+        name: recipient.name || recipient.email || `Signer ${index + 1}`,
+        email: recipient.email,
+        order: recipient.order ?? index + 1,
+        color: RECIPIENT_COLORS[index % RECIPIENT_COLORS.length],
+      }))
 
-    const initialFieldPositions: FieldPositions = {}
-    let fieldCounter = 1
+      setRecipients(initialRecipients)
+      setNextRecipientId(initialRecipients.length + 1)
+      setEnvelopeName(envelope.name || '')
+      setDescription(envelope.description || '')
 
-    envelopeDocuments.forEach((doc) => {
-      const docPositions: Record<string, FieldPosition> = {}
+      const initialDocuments: Document[] = envelopeDocuments.map((doc): Document => ({
+        id: String(doc.id || doc.document),
+        file_name: doc.file_name || doc.document_file_name || `Document ${doc.id || doc.document}`,
+        file_url: doc.document_file_url || '',
+        file_size: doc.file_size ?? 0,
+        status: 'draft',
+        created_at: doc.created_at || new Date().toISOString(),
+        updated_at: doc.updated_at || new Date().toISOString(),
+      }))
+      setUploadedDocuments(initialDocuments)
 
-      doc.signer_document_positions?.forEach((entry) => {
-        if (!entry?.position) return
-        const signerIdKey = String(entry.signer_id ?? '')
-        const localRecipientId = recipientIdBySigner[signerIdKey] ?? recipientIdBySigner[signerIdKey.toLowerCase()]
-        const fieldId = `field-${fieldCounter++}`
-        docPositions[fieldId] = {
-          id: fieldId,
-          type: 'signature',
-          page: entry.position.page,
-          x: entry.position.x,
-          y: entry.position.y,
-          width: entry.position.width,
-          height: entry.position.height,
-          assignedTo: localRecipientId ? String(localRecipientId) : null,
-          documentId: doc.id,
+      const recipientIdBySigner: Record<string, number> = {}
+      enrichedRecipients.forEach((recipient, index) => {
+        const localId = index + 1
+        if (recipient?.id) {
+          const key = String(recipient.id)
+          recipientIdBySigner[key] = localId
+          recipientIdBySigner[key.toLowerCase()] = localId
+        }
+        if (recipient?.email) {
+          recipientIdBySigner[recipient.email.toLowerCase()] = localId
         }
       })
 
-      if (Object.keys(docPositions).length > 0) {
-        initialFieldPositions[doc.id] = docPositions
+      const resolveLocalRecipientId = (signerId: string, fallbackIndex: number) => {
+        const key = String(signerId ?? '').trim()
+        if (!key) {
+          return enrichedRecipients[fallbackIndex] ? fallbackIndex + 1 : null
+        }
+        return (
+          recipientIdBySigner[key] ??
+          recipientIdBySigner[key.toLowerCase()] ??
+          (enrichedRecipients.length === 1 ? 1 : null)
+        )
       }
-    })
 
-    setFieldPositions(initialFieldPositions)
-    setNextFieldId(fieldCounter)
-    setInitialized(true)
+      const envelopePositionsByDocument = new Map(
+        (envelope.documents_with_positions ?? []).map((docWithPositions) => [
+          String(docWithPositions.document_id),
+          normalizeSignerPositionEntries(docWithPositions.signer_document_positions),
+        ]),
+      )
+
+      const initialFieldPositions: FieldPositions = {}
+      let fieldCounter = 1
+
+      envelopeDocuments.forEach((doc) => {
+        const docPositions: Record<string, FieldPosition> = {}
+        const documentId = String(doc.id || doc.document)
+        const rawPositions =
+          doc.signer_document_positions?.length
+            ? doc.signer_document_positions
+            : envelopePositionsByDocument.get(documentId) ?? []
+
+        normalizeSignerPositionEntries(rawPositions).forEach((entry, index) => {
+          const localRecipientId = resolveLocalRecipientId(entry.signer_id, index)
+          const fieldId = `field-${fieldCounter++}`
+          const viewportPosition = backendPositionToViewport(entry.position)
+          docPositions[fieldId] = {
+            id: fieldId,
+            type: 'signature',
+            page: viewportPosition.page,
+            x: viewportPosition.x,
+            y: viewportPosition.y,
+            width: viewportPosition.width,
+            height: viewportPosition.height,
+            assignedTo: localRecipientId ? String(localRecipientId) : null,
+            documentId,
+          }
+        })
+
+        if (Object.keys(docPositions).length > 0) {
+          initialFieldPositions[documentId] = docPositions
+        }
+      })
+
+      setFieldPositions(initialFieldPositions)
+      setNextFieldId(fieldCounter)
+      setInitialized(true)
+    }
+
+    void initializeEnvelope()
+
+    return () => {
+      cancelled = true
+    }
   }, [envelope, envelopeDocuments, initialized])
 
   // Add recipient with color assignment
@@ -252,11 +312,6 @@ export default function EditEnvelopePage() {
     setActiveFieldId(fieldId)
     toast.success(`${fieldType} field added`)
   }, [nextFieldId])
-
-  // Receive per-page metrics from PDF viewer
-  const handlePageMetricsChange = useCallback((pageKey: string, metrics: { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }) => {
-    setPageMetrics((prev) => ({ ...prev, [pageKey]: metrics }))
-  }, [])
 
   // DnD handlers (page-level)
   const handleDragStart = useCallback((event: any) => {
@@ -458,26 +513,15 @@ export default function EditEnvelopePage() {
         }
       })
 
-      // Helper to convert from rendered CSS pixels to PDF points (top-left Y)
-      const cssPxToPoints = (px: number) => (px * 72) / 96
-      const convertFieldGeometry = (docId: string, field: FieldPosition) => {
-        const pageKey = `${docId}-${field.page}`
-        const metrics = pageMetrics[pageKey]
-        if (!metrics) {
-          return { x: field.x, y: field.y, width: field.width, height: field.height }
-        }
-        const scale = metrics.scale || 1
-        const x1 = field.x / scale
-        const y1 = field.y / scale
-        const w1 = field.width / scale
-        const h1 = field.height / scale
-        return {
-          x: cssPxToPoints(x1),
-          y: cssPxToPoints(y1),
-          width: cssPxToPoints(w1),
-          height: cssPxToPoints(h1),
-        }
-      }
+      // Match create page: send canvas coordinates unchanged to the backend.
+      const convertFieldGeometry = (_docId: string, field: FieldPosition) =>
+        viewportPositionToBackend({
+          page: field.page,
+          x: field.x,
+          y: field.y,
+          width: field.width,
+          height: field.height,
+        })
 
       // Build documents with positions (only signature fields for backend)
       const documents_with_positions = Object.entries(fieldPositions).map(([docId, docFields]) => {
@@ -486,17 +530,10 @@ export default function EditEnvelopePage() {
           .map(field => {
             const recipient = recipients.find(r => r.id.toString() === field.assignedTo)
             const validRecipient = valid.find(v => v.email.toLowerCase() === recipient?.email.toLowerCase())
-            const geom = convertFieldGeometry(docId, field)
-            
+
             return {
               signer_id: validRecipient!.user.id,
-              position: {
-                page: field.page,
-                x: geom.x,
-                y: geom.y,
-                width: geom.width,
-                height: geom.height,
-              },
+              position: convertFieldGeometry(docId, field),
             }
           })
 
@@ -829,7 +866,6 @@ export default function EditEnvelopePage() {
                   onFieldPositionChange={handleFieldPositionChange}
                   onFieldDelete={handleFieldDelete}
                   onFieldDrop={handleFieldDrop}
-                  onPageMetricsChange={handlePageMetricsChange}
                 />
               </div>
             </div>

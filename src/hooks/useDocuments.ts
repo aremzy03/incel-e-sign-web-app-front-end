@@ -96,19 +96,13 @@ export const useUploadDocument = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: uploadDocument,
-    onSuccess: (data) => {
+    mutationFn: (file: File) => uploadDocument(file),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] })
       queryClient.refetchQueries({ queryKey: ['documents'] })
-      toast.success(`Document "${data.data.file_name}" uploaded successfully!`)
     },
     onError: (error: any) => {
       console.error('Upload error:', error)
-      const errorMessage =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        'Failed to upload document'
-      toast.error(errorMessage)
     },
   })
 }

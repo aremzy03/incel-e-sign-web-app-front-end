@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { getApiBaseUrl } from '@/lib/env'
 import { Button } from '@/components/ui/button'
-import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
+import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 
 // Configure pdf.js worker to bundled file to avoid network fetch issues
 // Prefer a locally bundled worker to avoid network fetch issues
@@ -160,9 +161,7 @@ export default function PdfViewer({
 
       <div className={`border ${showControls ? 'border-t-0 rounded-b-md' : 'rounded-md'} bg-gray-50 flex flex-col items-center min-h-[400px] overflow-auto py-4`}>
         {loading && !error && (
-          <div className="flex items-center gap-2 text-gray-600">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading PDF...
-          </div>
+          <PdfLoadingIndicator label="Loading PDF..." />
         )}
         {error && (
           <div className="text-sm text-red-600 px-4 py-2">{error}</div>

@@ -250,7 +250,7 @@ export function VerticalPDFViewer({
           const pageWidth = actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 595
           const pageHeight = actualPDFDimensions[pageKey]?.height || currentPageDimensions?.height || 842
           const fieldsForPage = Object.values(fieldPositions[pageInfo.documentId] || {})
-            .filter(field => field.page === pageInfo.pageNumber)
+            .filter(field => Number(field.page) === pageInfo.pageNumber)
 
           return (
             <div key={pageKey} className="relative w-full max-w-4xl">
@@ -313,23 +313,21 @@ export function VerticalPDFViewer({
                       </div>
 
                       {/* Field Overlays - fills the same wrapper */}
-                      {currentPageDimensions && (
-                        <div className="absolute inset-0 pointer-events-none z-[999]">
-                          {fieldsForPage.map(field => (
-                            <FieldBox
-                              key={field.id}
-                              field={field}
-                              recipients={recipients}
-                              isActive={activeFieldId === field.id}
-                              onPositionChange={onFieldPositionChange}
-                              onSelect={onFieldSelect}
-                              onDelete={onFieldDelete}
-                              maxWidth={pageWidth}
-                              maxHeight={pageHeight}
-                            />
-                          ))}
-                        </div>
-                      )}
+                      <div className="absolute inset-0 pointer-events-none z-[999]">
+                        {fieldsForPage.map(field => (
+                          <FieldBox
+                            key={field.id}
+                            field={field}
+                            recipients={recipients}
+                            isActive={activeFieldId === field.id}
+                            onPositionChange={onFieldPositionChange}
+                            onSelect={onFieldSelect}
+                            onDelete={onFieldDelete}
+                            maxWidth={pageWidth}
+                            maxHeight={pageHeight}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </PageDropZone>
                 </div>

@@ -231,6 +231,16 @@ export function FieldBox({
                   : 'Head of Operations'
                 return <span className="px-2 truncate w-full">{value}</span>
               }
+              if (field.type === 'signature') {
+                return (
+                  <div className="flex flex-col items-center justify-center w-full h-full pt-3 gap-0.5">
+                    <span className="text-base leading-none">{FIELD_TYPE_ICONS.signature}</span>
+                    <span className="text-[10px] truncate max-w-full px-1 opacity-80">
+                      {assignedRecipient?.name || assignedRecipient?.email || 'Signature'}
+                    </span>
+                  </div>
+                )
+              }
               // text
               const placeholder = field.placeholder || 'Sample text'
               const value = (field.prefill_value && field.prefill_value.trim() !== '') ? field.prefill_value! : ''

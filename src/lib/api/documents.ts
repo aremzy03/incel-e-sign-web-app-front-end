@@ -75,20 +75,29 @@ function normalizeDocumentsList(payload: unknown): DocumentsListResponse {
 }
 
 // Upload a new document
-export const uploadDocument = async (file: File): Promise<DocumentUploadResponse> => {
+export const uploadDocument = async (
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<DocumentUploadResponse> => {
   console.log('=== uploadDocument called ===')
   console.log('File:', file.name, file.size, file.type)
   console.log('API Client baseURL:', apiClient.defaults.baseURL)
   console.log('Upload URL will be:', `${apiClient.defaults.baseURL}/documents/upload/`)
-  
+
   const formData = new FormData()
   formData.append('file', file)
-  
+
   console.log('FormData created, making request...')
-  
+
   try {
     // Do NOT set Content-Type manually; let the browser set the multipart boundary
-    const response = await apiClient.post('/documents/upload/', formData)
+    const response = await apiClient.post('/documents/upload/', formData, {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          onProgress?.(Math.round((progressEvent.loaded * 100) / progressEvent.total))
+        }
+      },
+    })
     console.log('Upload response received:', response.status)
     return response.data
   } catch (error) {

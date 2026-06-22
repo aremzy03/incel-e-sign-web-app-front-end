@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Document, Page, pdfjs } from 'react-pdf'
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
 import { getApiBaseUrl } from '@/lib/env'
 import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
+import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 
 // Configure pdf.js worker (uses the worker copied to /public during postinstall)
 if (typeof window !== 'undefined') {
@@ -101,6 +102,7 @@ export default function SignEnvelopePage() {
     })
   }, [])
   const [activeFieldPreview, setActiveFieldPreview] = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(true)
 
   // Resolve possibly relative URLs to backend origin
   const resolveUrl = useCallback((url?: string | null) => {
@@ -185,6 +187,12 @@ export default function SignEnvelopePage() {
     return resolveUrl(raw)
   }, [envelope, resolveUrl])
 
+  useEffect(() => {
+    if (documentUrl) {
+      setPdfLoading(true)
+    }
+  }, [documentUrl])
+
   // Map signer id to name if backend provides it on public sign page
   const signerIdToName = useMemo(() => {
     const map: Record<string, string> = {}
@@ -261,7 +269,13 @@ export default function SignEnvelopePage() {
     },
   })
 
-  if (loadingEnv || !envelope) return <div className="p-6">Loading…</div>
+  if (loadingEnv || !envelope) {
+    return (
+      <div className="p-6">
+        <PdfLoadingIndicator label="Loading envelope…" />
+      </div>
+    )
+  }
 
   console.log('[Sign Page Render] Current envelope:', envelope)
   console.log('[Sign Page Render] Signing order count:', envelope?.signing_order?.length)
@@ -274,11 +288,21 @@ export default function SignEnvelopePage() {
       {password.dialog}
       <div className="border rounded-lg overflow-auto max-h-[85vh] bg-gray-50">
         {documentUrl && !password.cancelled ? (
+          <div className="relative">
+            {pdfLoading && <PdfLoadingIndicator label="Loading document…" />}
           <Document
             file={documentUrl}
-            onLoadSuccess={(info: any) => setNumPages(info.numPages)}
+            onLoadSuccess={(info: any) => {
+              setNumPages(info.numPages)
+              setPdfLoading(false)
+            }}
+            onLoadError={(error: any) => {
+              console.error('[Sign Page] PDF load error:', error)
+              setPdfLoading(false)
+              toast.error('Failed to load document')
+            }}
             onPassword={password.onPassword as any}
-            loading=""
+            loading={<PdfLoadingIndicator label="Loading document…" />}
           >
             {Array.from({ length: numPages || 1 }, (_, i) => i + 1).map((pageNo) => (
               <div key={pageNo} className="relative" ref={setPageContainerRef(`${pageNo}`)}>
@@ -287,7 +311,7 @@ export default function SignEnvelopePage() {
                   renderAnnotationLayer={false}
                   renderTextLayer={false}
                   className="shadow"
-                  loading=""
+                  loading={<PdfLoadingIndicator size="sm" label="Loading page…" />}
                   data-page-key={`public-${pageNo}`}
                   onRenderSuccess={(page: any) => {
                     try {
@@ -600,6 +624,7 @@ export default function SignEnvelopePage() {
               </div>
             ))}
           </Document>
+          </div>
         ) : password.cancelled ? (
           <div className="min-h-[200px] flex items-center justify-center text-gray-500">
             PDF preview cancelled.

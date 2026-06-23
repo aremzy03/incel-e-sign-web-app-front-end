@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#211300",
+                    "tertiary-container": "#3c2600",
+                    "success-light": "#D1FAE5",
+                    "info-light": "#DBEAFE",
+                    "status-completed": "#059669",
+                    "on-error": "#ffffff",
+                    "error": "#DC2626",
+                    "on-background": "#1b1b1e",
+                    "surface-bright": "#fbf8fc",
+                    "secondary": "#006a61",
+                    "secondary-fixed": "#89f5e7",
+                    "on-secondary": "#ffffff",
+                    "status-pending": "#F59E0B",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "primary-container": "#1b2a4a",
+                    "outline-variant": "#c5c6cf",
+                    "on-primary-container": "#8392b7",
+                    "status-draft": "#94A3B8",
+                    "inverse-primary": "#b7c6ee",
+                    "surface-container-lowest": "#ffffff",
+                    "warning-light": "#FEF3C7",
+                    "success": "#059669",
+                    "surface-variant": "#e4e2e5",
+                    "on-surface-variant": "#45464e",
+                    "outline": "#75777f",
+                    "error-light": "#FEE2E2",
+                    "muted": "#64748B",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#303033",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "primary-hover": "#243656",
+                    "surface-container": "#efedf0",
+                    "inverse-on-surface": "#f2f0f3",
+                    "accent-hover": "#0F766E",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "on-surface": "#1b1b1e",
+                    "tertiary-fixed": "#ffddb0",
+                    "surface": "#F1F5F9",
+                    "accent-light": "#CCFBF1",
+                    "info": "#2563EB",
+                    "surface-dim": "#dbd9dc",
+                    "error-container": "#ffdad6",
+                    "primary": "#041534",
+                    "body": "#1E293B",
+                    "primary-light": "#EEF1F7",
+                    "surface-container-highest": "#e4e2e5",
+                    "status-your-turn": "#0D9488",
+                    "primary-fixed": "#d9e2ff",
+                    "on-tertiary": "#ffffff",
+                    "background": "#fbf8fc",
+                    "on-secondary-container": "#006f66",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed-variant": "#384668",
+                    "secondary-container": "#86f2e4",
+                    "bg": "#F8FAFC",
+                    "surface-container-high": "#eae7eb",
+                    "warning": "#D97706",
+                    "on-tertiary-fixed": "#281800",
+                    "on-secondary-fixed-variant": "#005049",
+                    "surface-tint": "#4f5e81",
+                    "status-rejected": "#DC2626",
+                    "on-tertiary-container": "#ae8c5b",
+                    "border": "#E2E8F0",
+                    "on-primary-fixed": "#0a1a3a",
+                    "surface-container-low": "#f5f3f6",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "on-secondary-fixed": "#00201d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "8": "32px",
+                    "2": "8px",
+                    "max-content-width": "1280px",
+                    "6": "24px",
+                    "4": "16px",
+                    "3": "12px",
+                    "16": "64px",
+                    "1": "4px",
+                    "12": "48px",
+                    "sidebar-width": "240px",
+                    "topbar-height": "64px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "caption-xs": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-base": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "label-xs": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .paper-texture {
+            background-color: #ffffff;
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-background font-body-base text-body-base">
+<!-- Sidebar (Shared Component) -->
+<aside class="w-[240px] h-screen fixed left-0 top-0 bg-primary dark:bg-primary-container shadow-md flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-xl font-headline-xl font-bold text-on-primary dark:text-inverse-primary">SignatureFlow</h1>
+<p class="text-on-primary-container text-caption-xs uppercase tracking-widest mt-1">Legal Enterprise</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover dark:hover:bg-primary-fixed-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover dark:hover:bg-primary-fixed-variant transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">description</span>
+<span class="font-label-sm text-label-sm">Documents</span>
+</a>
+<a class="flex items-center text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover dark:hover:bg-primary-fixed-variant transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">style</span>
+<span class="font-label-sm text-label-sm">Templates</span>
+</a>
+<a class="flex items-center text-secondary-fixed font-bold border-l-4 border-secondary-fixed pl-3 py-3 bg-primary-hover" href="#">
+<span class="material-symbols-outlined mr-3">history_edu</span>
+<span class="font-label-sm text-label-sm">My Signatures</span>
+</a>
+<a class="flex items-center text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover dark:hover:bg-primary-fixed-variant transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+<span class="font-label-sm text-label-sm">Archive</span>
+</a>
+<a class="flex items-center text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover dark:hover:bg-primary-fixed-variant transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-secondary text-on-primary py-3 rounded-xl font-label-sm text-label-sm flex items-center justify-center gap-2 hover:bg-accent-hover transition-all active:scale-95 shadow-lg shadow-secondary/20" onclick="toggleModal('add-signature-modal')">
+<span class="material-symbols-outlined">add</span>
+                New Document
+            </button>
+<div class="mt-6 border-t border-primary-hover pt-4">
+<a class="flex items-center text-primary-fixed-dim font-medium pl-4 py-2 hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">help_outline</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="h-topbar-height w-full sticky top-0 z-40 bg-surface-container-lowest dark:bg-surface-dim border-b border-border dark:border-outline-variant shadow-sm flex items-center justify-between px-8 max-w-max-content-width ml-[240px]">
+<div class="flex items-center gap-8">
+<h2 class="text-headline-lg font-headline-lg font-bold text-primary dark:text-primary-fixed">My Signatures</h2>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-body-sm">search</span>
+</span>
+<input class="bg-surface-container border-none rounded-xl py-2 pl-10 pr-4 w-64 focus:ring-2 focus:ring-secondary text-body-sm" placeholder="Search signatures..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">history</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-primary">Alex Sterling</p>
+<p class="text-caption-xs text-muted">Legal Associate</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold overflow-hidden border-2 border-white shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a legal associate in a high-end, minimalist law firm. The lighting is soft and flattering, emphasizing a clean corporate aesthetic. The subject wears a sharp navy suit, looking confident and approachable. The background is a softly blurred office environment with modern glass partitions and warm wood tones, suggesting a premium, secure legal workspace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYklA5nt6RpxHIKRfvdeQyVnJo-a4LENMB5zuukl_-80PAl3m6uP6emcnFSMx7KaBjIRUJN93HFl0LIvD8mECx1zt1OP-Pio4ur_01RYjRQurav0aVIbDGee70z6nfKIXzyLb-KOXw9b1N8ICK5HOtPFl-wS6TMQXDUO4aZ5IMDY81NDjeEaM6S6lsUsELNrqr_sUdxWLaIlcPwV3mQ1To0g8kKuRfkKuL3gR5RkFnqBbziOZl_ldorURr7k0UUO5D-CyrJD3o8lEe"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[240px] p-8 max-w-max-content-width">
+<!-- Header Actions -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<p class="text-muted font-body-sm text-body-sm">Manage your personal and professional signatures for quick document processing.</p>
+</div>
+<button class="bg-secondary text-on-primary px-6 py-3 rounded-xl font-headline-lg text-label-sm flex items-center gap-2 hover:bg-accent-hover transition-all shadow-md active:scale-95" onclick="toggleModal('add-signature-modal')">
+<span class="material-symbols-outlined">add</span>
+                Add Signature
+            </button>
+</div>
+<!-- Section 1: Active Signatures Grid -->
+<section class="mb-12">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1: Default -->
+<div class="bg-surface-container-lowest border border-border rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
+<div class="h-40 paper-texture flex items-center justify-center p-6 relative">
+<span class="absolute top-3 left-3 bg-accent-light text-secondary px-3 py-1 rounded-full text-label-xs font-bold flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span> Default
+                        </span>
+<img class="max-h-full max-w-full drop-shadow-sm" data-alt="A clean, elegant cursive signature in professional blue ink, positioned perfectly in the center of a white, subtly textured high-quality paper background. The signature looks authentic, showing realistic pen pressure variations. The lighting is even and bright, emphasizing the crisp lines of the legal signature." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfqSFttEP1W28YtC7UbOzwLPAkJ21obpzharsCK3MJ4bn8z9SCTIFIsSWZBjoySZPUhq-EOcMKtJb_R8tZ8pApqoBx3DhJvpk8cSeoujSE9lpIsAlGVS5h5MTBaovb7F10ssPOvYmI8Eq-e6Fm3--WZLx9I1ZYsGnPGbiwljfk4TJgXDgopEvSswY05GQQtlRiEfdjsKcP4qoiYAk7IMFDCpTiTh2Rsfyy0GXFjO9vAPvcfQrW9TzMnQACieRpix7vImbxL8RujXRX"/>
+</div>
+<div class="p-4 border-t border-border flex justify-between items-center bg-white">
+<div>
+<p class="text-label-sm font-bold text-primary">Main Business Signature</p>
+<p class="text-caption-xs text-muted">Created on Oct 12, 2023</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-error hover:bg-error-light rounded-lg transition-colors material-symbols-outlined" title="Delete">delete</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-border rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
+<div class="h-40 paper-texture flex items-center justify-center p-6">
+<img class="max-h-full max-w-full grayscale opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A stylized, quick-stroke signature in black archival ink on a pristine white paper-like background. The signature features a distinct, professional flair. The background has a very light, natural paper grain texture that adds depth and realism to the digital representation of the legal signature." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApp8FG4RzNOlZCAjjcOS5LaHlDRfLf2Mw9yBZa5G1XjxeNSHIQ0yXG8rDIgGPdcjw30yOgZiDSASpcyw8f3iXp3AdaAPrkiLsQGUQwYBbRmrJAePyjxW1IbixA7cl07WV0xw-7bq3IkIMtDIS6IGc3LWcD0joT5sCdtHy_fU7d0fkzR7H2r201NuCEvn8WGajJvrEPUggkTul3gvRgA0xjJUFFssDEur9F1_SDdseh_5aqcIQ5syAOtDcYtQMv-BPOBxDbV6MyoVxY"/>
+</div>
+<div class="p-4 border-t border-border flex justify-between items-center bg-white">
+<div>
+<p class="text-label-sm font-bold text-primary">Initial Stamping</p>
+<p class="text-caption-xs text-muted">Created on Nov 05, 2023</p>
+</div>
+<div class="flex gap-1">
+<button class="px-3 py-1.5 text-secondary hover:bg-accent-light rounded-lg transition-colors text-label-xs font-bold border border-secondary/20">Set as Default</button>
+<button class="p-2 text-error hover:bg-error-light rounded-lg transition-colors material-symbols-outlined">delete</button>
+</div>
+</div>
+</div>
+<!-- Empty State Card (Internal Grid version) -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center h-full min-h-[224px] bg-surface-container/30 hover:bg-surface-container/50 transition-colors cursor-pointer group" onclick="toggleModal('add-signature-modal')">
+<div class="w-12 h-12 rounded-full bg-primary-light text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</div>
+<p class="text-label-sm font-bold text-primary">Add Another Signature</p>
+<p class="text-caption-xs text-muted px-8 text-center mt-1">Draw or upload an alternative signature for different legal needs.</p>
+</div>
+</div>
+</section>
+<!-- Section 2: Inline Signature Picker (As requested for UI preview) -->
+<section class="mb-12 bg-white rounded-xl p-6 shadow-sm border border-border">
+<h3 class="text-label-sm font-bold text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">gesture</span>
+                Active Signature Picker Preview
+            </h3>
+<div class="flex items-center gap-4 overflow-x-auto pb-4 custom-scrollbar">
+<button class="flex-shrink-0 w-48 h-28 border-2 border-secondary rounded-lg paper-texture flex flex-col items-center justify-center relative overflow-hidden group">
+<span class="absolute top-1 right-1 material-symbols-outlined text-secondary bg-white rounded-full">check_circle</span>
+<img class="h-12 w-auto" data-alt="A small thumbnail preview of a professional ink signature. The ink is a deep navy blue, perfectly rendered on a bright white background with a light paper texture. The lines are smooth and suggest a high-resolution scan of a real hand-signed document signature." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqeECzaNQf0EZ5B3ngApUBwzgCy6Jt0sce21OhgBJRZeB1mGsdYE-DqPxpxEimPslZX1VqWv2Ore8R_O8K5CfDJo3vFVjcBt0Vs7OvCrGHFRhXjdsvrxUeu0sf6vvzL39rWaPeZDKW5D56PrRZ3QfEWwtIC8x3nly10nXHWRQdBi9JDbLBXlHiFkMDNnW73s8lTEaueJr1JZfJirIitP4GCQ1Kr6S_TTnxl22Y8coPtY4ayjzoTV0vRdhEIiRHTh5vitGFqFwwguOR"/>
+<span class="text-label-xs text-secondary font-bold mt-2">Primary Signature</span>
+</button>
+<button class="flex-shrink-0 w-48 h-28 border border-border rounded-lg paper-texture flex flex-col items-center justify-center hover:border-secondary/50 transition-all group">
+<img class="h-10 w-auto opacity-60 group-hover:opacity-100" data-alt="A minimalist black ink initial signature. The strokes are bold and confident, appearing as a thumbnail-sized preview on a white background. The aesthetic is professional and clean, fitting into a modern legal SaaS interface for quick signature selection." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGI92WJDnV0e2pmT9FSwz4_snClO_oVNJWG2_Uw_ICTEdFvrxJ0nFKwfZxBMEqk4Tzt_tmlbYr1rDfELJdmJhekrzH05t9E8wTMeea2RLEd3YhJBmSqw0sk3BQazsvnxJxWnHAsDekigQNIEyDxTJekC7Bot_f3Z8dSktcIVg2JJ3y0NoIWYOdG5qnTYAhBafXrLVXUZaFQSlvlA9mC8l627qMdBF7yOLKM03r-Br3E5Gn95BhsqjymOl82A1mM6Cxo8TAJaE-NINt"/>
+<span class="text-label-xs text-muted group-hover:text-primary mt-2">Personal Initials</span>
+</button>
+<button class="flex-shrink-0 w-28 h-28 border-2 border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-muted">add</span>
+<span class="text-label-xs text-muted mt-1">New</span>
+</button>
+</div>
+<p class="text-caption-xs text-muted mt-4">This inline picker appears during the document signing flow for rapid selection.</p>
+</section>
+<!-- Section 3: Empty State (Dedicated Section for new users) -->
+<section class="py-16 bg-surface-container-lowest rounded-2xl border border-border flex flex-col items-center text-center">
+<div class="w-64 h-64 mb-8">
+
+</div>
+<h3 class="text-headline-xl font-headline-xl text-primary mb-2">Create a signature to speed up signing</h3>
+<p class="text-body-base text-muted max-w-md mb-8">Your saved signatures are encrypted and ready to use across all your enterprise legal agreements.</p>
+<div class="flex gap-4">
+<button class="px-6 py-3 border border-secondary text-secondary rounded-xl font-label-sm text-label-sm hover:bg-accent-light transition-all active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined">draw</span> Draw Signature
+                </button>
+<button class="px-6 py-3 border border-secondary text-secondary rounded-xl font-label-sm text-label-sm hover:bg-accent-light transition-all active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined">upload</span> Upload Signature
+                </button>
+</div>
+</section>
+</main>
+<!-- Add Signature Modal -->
+<div class="fixed inset-0 z-[100] hidden" id="add-signature-modal">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-primary/60 backdrop-blur-sm" onclick="toggleModal('add-signature-modal')"></div>
+<!-- Modal Content -->
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+<div class="px-8 py-6 border-b border-border flex justify-between items-center bg-primary text-on-primary">
+<h3 class="text-headline-lg font-headline-lg">Add New Signature</h3>
+<button class="material-symbols-outlined hover:rotate-90 transition-transform duration-300 cursor-pointer" onclick="toggleModal('add-signature-modal')">close</button>
+</div>
+<div class="p-8">
+<!-- Tabs -->
+<div class="flex border-b border-border mb-6">
+<button class="px-6 py-3 text-secondary font-bold border-b-2 border-secondary flex items-center gap-2" id="tab-draw">
+<span class="material-symbols-outlined">draw</span> Draw
+                    </button>
+<button class="px-6 py-3 text-muted hover:text-primary transition-colors flex items-center gap-2" id="tab-upload">
+<span class="material-symbols-outlined">cloud_upload</span> Upload
+                    </button>
+</div>
+<!-- Preview Area -->
+<div class="w-full h-64 bg-surface rounded-xl border-2 border-dashed border-outline-variant paper-texture relative flex items-center justify-center group overflow-hidden">
+<canvas class="absolute inset-0 w-full h-full cursor-crosshair z-10" id="signature-canvas"></canvas>
+<div class="flex flex-col items-center text-outline pointer-events-none group-active:opacity-0 transition-opacity">
+<span class="material-symbols-outlined text-4xl mb-2">gesture</span>
+<p class="text-label-sm">Draw your signature here</p>
+</div>
+<button class="absolute bottom-4 right-4 z-20 bg-white/80 hover:bg-white p-2 rounded-lg text-error shadow-sm transition-colors material-symbols-outlined" title="Clear Canvas">refresh</button>
+</div>
+<div class="mt-8 space-y-4">
+<div class="flex items-center gap-3">
+<input class="w-5 h-5 rounded text-secondary focus:ring-secondary border-outline-variant cursor-pointer" id="set-default" type="checkbox"/>
+<label class="text-body-sm text-primary font-medium cursor-pointer" for="set-default">Set as default signature</label>
+</div>
+<p class="text-caption-xs text-muted">By clicking "Save Signature", I understand that this digital signature is a legal representation of my handwriting for document execution.</p>
+</div>
+</div>
+<div class="px-8 py-6 bg-surface-container flex justify-end gap-4 border-t border-border">
+<button class="px-6 py-2.5 text-primary font-label-sm text-label-sm hover:bg-surface-variant transition-colors rounded-xl" onclick="toggleModal('add-signature-modal')">Cancel</button>
+<button class="px-8 py-2.5 bg-secondary text-on-primary font-label-sm text-label-sm hover:bg-accent-hover transition-all rounded-xl shadow-md active:scale-95">Save Signature</button>
+</div>
+</div>
+</div>
+<script>
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Basic Canvas Interaction Mockup
+        const canvas = document.getElementById('signature-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+
+            canvas.addEventListener('mousedown', () => drawing = true);
+            canvas.addEventListener('mouseup', () => {
+                drawing = false;
+                ctx.beginPath();
+            });
+            canvas.addEventListener('mousemove', draw);
+
+            function draw(e) {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#004a44';
+
+                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            }
+        }
+    </script>
+</body></html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Envelopes - Incel E-Sign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .avatar-stack {
+            display: flex;
+            align-items: center;
+        }
+        .avatar-stack > div {
+            margin-right: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 9999px;
+            position: relative;
+        }
+        .pulse-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
+            box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(13, 148, 136, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#303033",
+                      "tertiary-container": "#3c2600",
+                      "surface": "#F1F5F9",
+                      "muted": "#64748B",
+                      "warning": "#D97706",
+                      "on-background": "#1b1b1e",
+                      "on-error-container": "#93000a",
+                      "status-pending": "#F59E0B",
+                      "on-primary-container": "#8392b7",
+                      "on-tertiary-fixed": "#281800",
+                      "info": "#2563EB",
+                      "on-tertiary-fixed-variant": "#5c4218",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#384668",
+                      "secondary-fixed-dim": "#6bd8cb",
+                      "primary-container": "#1b2a4a",
+                      "primary-light": "#EEF1F7",
+                      "info-light": "#DBEAFE",
+                      "surface-tint": "#4f5e81",
+                      "on-secondary-fixed": "#00201d",
+                      "secondary": "#006a61",
+                      "surface-variant": "#e4e2e5",
+                      "on-secondary-container": "#006f66",
+                      "on-primary-fixed": "#0a1a3a",
+                      "error-light": "#FEE2E2",
+                      "body": "#1E293B",
+                      "inverse-on-surface": "#f2f0f3",
+                      "tertiary": "#211300",
+                      "status-draft": "#94A3B8",
+                      "status-your-turn": "#0D9488",
+                      "accent-light": "#CCFBF1",
+                      "border": "#E2E8F0",
+                      "status-rejected": "#DC2626",
+                      "primary": "#041534",
+                      "warning-light": "#FEF3C7",
+                      "primary-hover": "#243656",
+                      "on-surface-variant": "#45464e",
+                      "surface-container-low": "#f5f3f6",
+                      "tertiary-fixed": "#ffddb0",
+                      "surface-container-high": "#eae7eb",
+                      "on-surface": "#1b1b1e",
+                      "bg": "#F8FAFC",
+                      "outline-variant": "#c5c6cf",
+                      "surface-container-lowest": "#ffffff",
+                      "background": "#fbf8fc",
+                      "accent-hover": "#0F766E",
+                      "primary-fixed": "#d9e2ff",
+                      "on-secondary-fixed-variant": "#005049",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed-dim": "#e7c08b",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e4e2e5",
+                      "surface-container": "#efedf0",
+                      "surface-bright": "#fbf8fc",
+                      "success-light": "#D1FAE5",
+                      "error": "#DC2626",
+                      "on-primary": "#ffffff",
+                      "primary-fixed-dim": "#b7c6ee",
+                      "status-completed": "#059669",
+                      "on-tertiary-container": "#ae8c5b",
+                      "inverse-primary": "#b7c6ee",
+                      "secondary-container": "#86f2e4",
+                      "outline": "#75777f",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed": "#89f5e7",
+                      "surface-dim": "#dbd9dc",
+                      "success": "#059669"
+              },
+              "borderRadius": {
+                      "DEFAULT": "2px",
+                      "lg": "4px",
+                      "xl": "8px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "4": "16px",
+                      "2": "8px",
+                      "1": "4px",
+                      "max-content-width": "1280px",
+                      "12": "48px",
+                      "6": "24px",
+                      "topbar-height": "64px",
+                      "3": "12px",
+                      "sidebar-width": "240px",
+                      "8": "32px",
+                      "16": "64px"
+              },
+              "fontFamily": {
+                      "headline-xl": ["Inter"],
+                      "headline-2xl": ["Inter"],
+                      "body-base": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "label-xs": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-3xl": ["Inter"],
+                      "caption-xs": ["Inter"],
+                      "headline-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-xl": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                      "headline-2xl": ["30px", { "lineHeight": "36px", "fontWeight": "700" }],
+                      "body-base": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                      "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                      "label-xs": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                      "label-sm": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                      "headline-3xl": ["36px", { "lineHeight": "44px", "fontWeight": "700" }],
+                      "caption-xs": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                      "headline-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-bg font-body-base text-body-base text-on-surface">
+<!-- Shell: Sidebar -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary flex flex-col py-6 shadow-md z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-lg font-headline-lg text-on-primary">Incel E-Sign</h1>
+<p class="text-label-sm font-label-sm text-on-primary-container">Professional Edition</p>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full bg-secondary hover:bg-accent-hover text-on-secondary font-label-sm py-2 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined">add</span>
+<span>+ New</span>
+</button>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-primary-container">dashboard</span>
+<span class="font-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-primary-container">description</span>
+<span class="font-label-sm">Documents</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary font-bold border-l-4 border-secondary bg-primary-hover rounded-r-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">mail</span>
+<span class="font-label-sm">Envelopes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-primary-container">contacts</span>
+<span class="font-label-sm">Contacts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-primary-container">stylus</span>
+<span class="font-label-sm">My Signatures</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-primary-container">settings</span>
+<span class="font-label-sm">Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<div class="flex items-center gap-3 p-2 rounded-lg bg-primary-container">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Professional headshot of a corporate user Julian Vane, neutral expression, soft office lighting, modern executive appearance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBXKZHPuruHeHZKirK3dTKeNvsiZI9hsJiL4qaPxLFpBfK8BS_QRnawZ1uJCmr6hRWLXa5PhDfNua4k4tW5lwfCL6fI8jo96-E81U5e4sJWikA12Nq3XlGX9AAACJrZzeYTWIoM-jlrkWLWLeJFTeZ1GnoACteSg5P_0Xo3Wku7djFxnqzhxwSc6oTj5-epp2rH6LzOJ3N-p1NvSQ9nqh4ZP6EBbt6fOmisw-46uG803Au9N0kThXvWWS4l9HagCBxqpEhiFGTpnx3"/>
+<div class="overflow-hidden">
+<p class="text-label-sm font-bold text-on-primary truncate">Julian Vane</p>
+<p class="text-caption-xs text-on-primary-container truncate">Admin Account</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Shell: Topbar -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-topbar-height bg-surface-container-lowest border-b border-border flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-xl text-body-sm focus:ring-2 focus:ring-secondary transition-all" placeholder="Search envelopes, signers, or documents..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-[1px] bg-border"></div>
+<div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+<div class="text-right">
+<p class="text-label-sm font-bold text-on-surface">Envelopes</p>
+<p class="text-caption-xs text-muted">Legal Queue</p>
+</div>
+<img class="w-8 h-8 rounded-full border border-border" data-alt="Minimalist avatar placeholder for a professional user profile, soft gray tones, circular frame." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvTXzPFXhKLxdPQcqiybd042GFdEQOYkiseF3UCxD_SHrTf_uRh16G2wub0nY4oSa4Kk0u2ei3Zr5zx8cQiD89focStBYU6uCahd6pqEYkZh3wbiupiFBSL8lBAsrWmhBD1kljBnpD0nOWTdN2z5r_sGL1F-5toqWSUvU4AvW0J5nD6aDZH9d3NkLiLLSzOsnErruEP2jCMuJlQ5fDDD9TBMnWhjiv9hIYUeFXgGZqJZKEAOpabDpF1gHDeP1p-yFh6JW1BtiffzHp"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[240px] pt-[64px] min-h-screen">
+<div class="max-w-max-content-width mx-auto p-8">
+<!-- Page Header -->
+<div class="mb-8">
+<h2 class="font-headline-2xl text-headline-2xl text-primary mb-6">Envelopes</h2>
+<!-- Quick Filter Pills -->
+<div class="flex flex-wrap items-center gap-3 mb-8">
+<button class="px-5 py-2 rounded-full border border-border text-label-sm font-medium hover:bg-surface-container-high transition-colors">All</button>
+<button class="px-5 py-2 rounded-full bg-accent-light text-secondary border border-secondary text-label-sm font-bold shadow-sm">Waiting for Me</button>
+<button class="px-5 py-2 rounded-full border border-border text-label-sm font-medium hover:bg-surface-container-high transition-colors">Waiting for Others</button>
+<button class="px-5 py-2 rounded-full border border-border text-label-sm font-medium hover:bg-surface-container-high transition-colors">Drafts</button>
+<button class="px-5 py-2 rounded-full border border-border text-label-sm font-medium hover:bg-surface-container-high transition-colors">Completed</button>
+<button class="px-5 py-2 rounded-full border border-border text-label-sm font-medium hover:bg-surface-container-high transition-colors">Rejected</button>
+<button class="px-5 py-2 rounded-full border border-border text-label-sm font-medium hover:bg-surface-container-high transition-colors">Self-Signed</button>
+</div>
+<!-- Action Bar -->
+<div class="flex flex-col md:flex-row items-center justify-between gap-4 py-4 border-b border-border">
+<div class="flex items-center gap-4 w-full md:w-auto">
+<div class="relative w-full md:w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">filter_list</span>
+<input class="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-body-sm focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" placeholder="Filter by name..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<label class="text-caption-xs font-bold text-muted uppercase tracking-wider">Sort by:</label>
+<select class="bg-surface-container-lowest border border-border rounded-lg px-4 py-2 text-body-sm focus:ring-2 focus:ring-secondary outline-none cursor-pointer">
+<option>Newest First</option>
+<option>Status</option>
+<option>Expiring Soon</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Envelopes List -->
+<div class="space-y-4">
+<!-- 1. Waiting for Me (Urgent) -->
+<div class="bg-primary-light border-l-4 border-status-your-turn rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<h3 class="font-headline-lg text-headline-lg text-primary">Service Agreement Q4</h3>
+<span class="px-3 py-1 bg-accent-light text-status-your-turn text-label-xs font-bold rounded-full border border-status-your-turn uppercase">Your Turn</span>
+</div>
+<p class="text-body-sm text-body mb-3">Needs your signature for final approval</p>
+<div class="flex items-center gap-4 text-caption-xs text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">person</span> Julian Vane</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">description</span> 2 documents</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 15 mins ago</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-3 shrink-0">
+<div class="avatar-stack">
+<div class="w-8 h-8 bg-success-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-success text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="w-8 h-8 bg-success-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-success text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="w-8 h-8 bg-accent-light flex items-center justify-center rounded-full">
+<div class="pulse-ring"></div>
+<span class="material-symbols-outlined text-secondary text-[18px]">person</span>
+</div>
+</div>
+<button class="bg-secondary hover:bg-accent-hover text-on-secondary font-label-sm py-2 px-8 rounded-xl shadow-md transition-all active:scale-95">Sign Now</button>
+</div>
+</div>
+<!-- 2. Waiting for Others -->
+<div class="bg-surface-container-lowest border border-border rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<h3 class="font-headline-lg text-headline-lg text-primary">Employment Offer - Alex Rivera</h3>
+<span class="px-3 py-1 bg-warning-light text-warning text-label-xs font-bold rounded-full border border-warning uppercase">Pending</span>
+</div>
+<p class="text-body-sm text-muted mb-3">Waiting on Alex Rivera</p>
+<div class="flex items-center gap-4 text-caption-xs text-muted">
+<span class="flex items-center gap-1 text-primary font-medium italic">Created by you</span>
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] font-bold">3 DOCUMENTS</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 4 hours ago</span>
+</div>
+</div>
+<div class="flex items-center gap-4 shrink-0">
+<div class="avatar-stack">
+<div class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-muted text-[18px]">person</span></div>
+</div>
+<button class="text-secondary hover:underline font-label-sm px-4">Remind</button>
+</div>
+</div>
+<!-- 3. Completed -->
+<div class="bg-surface-container-lowest border border-border rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-md transition-shadow opacity-90">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<h3 class="font-headline-lg text-headline-lg text-primary">NDA - Vendor Final</h3>
+<span class="px-3 py-1 bg-success-light text-status-completed text-label-xs font-bold rounded-full border border-status-completed uppercase">Completed</span>
+</div>
+<p class="text-body-sm text-muted mb-3">All signatures captured</p>
+<div class="flex items-center gap-4 text-caption-xs text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">person</span> Sarah Smith</span>
+<span class="flex items-center gap-1 font-bold text-status-completed"><span class="material-symbols-outlined text-[16px]">task_alt</span> Certified</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 2 hours ago</span>
+</div>
+</div>
+<div class="flex items-center gap-6 shrink-0">
+<div class="avatar-stack">
+<div class="w-8 h-8 bg-success-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-success text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="w-8 h-8 bg-success-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-success text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+</div>
+<button class="border border-border hover:bg-surface text-primary font-label-sm py-2 px-6 rounded-lg flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Download
+                        </button>
+</div>
+</div>
+<!-- 4. Draft -->
+<div class="bg-surface-container-lowest border border-border border-dashed rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<h3 class="font-headline-lg text-headline-lg text-muted">Consulting Terms Update</h3>
+<span class="px-3 py-1 bg-surface-variant text-status-draft text-label-xs font-bold rounded-full uppercase">Draft</span>
+</div>
+<p class="text-body-sm text-muted mb-3">Incomplete - Last saved by you</p>
+<div class="flex items-center gap-4 text-caption-xs text-muted">
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] font-bold">1 DOCUMENT</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> Yesterday</span>
+</div>
+</div>
+<div class="flex items-center gap-4 shrink-0">
+<button class="bg-primary hover:bg-primary-hover text-on-primary font-label-sm py-2 px-6 rounded-lg transition-all">View/Edit</button>
+<button class="text-error hover:bg-error-light p-2 rounded-lg transition-all"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</div>
+<!-- 5. Rejected -->
+<div class="bg-error-light/20 border border-error/20 rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<h3 class="font-headline-lg text-headline-lg text-status-rejected line-through">Office Lease Agreement</h3>
+<span class="px-3 py-1 bg-error-light text-status-rejected text-label-xs font-bold rounded-full border border-status-rejected uppercase">Rejected</span>
+</div>
+<p class="text-body-sm text-status-rejected mb-3">Declined by recipient: "Terms in Section 4.2 must be revised"</p>
+<div class="flex items-center gap-4 text-caption-xs text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">person</span> Landlord Corp</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> Yesterday</span>
+</div>
+</div>
+<div class="flex items-center gap-6 shrink-0">
+<div class="avatar-stack">
+<div class="w-8 h-8 bg-success-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-success text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="w-8 h-8 bg-error-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-error text-[18px]" style="font-variation-settings: 'FILL' 1;">cancel</span></div>
+</div>
+<button class="border border-status-rejected text-status-rejected hover:bg-error-light font-label-sm py-2 px-6 rounded-lg transition-all">Review Reason</button>
+</div>
+</div>
+<!-- 6. Waiting for Others (Multi-signer) -->
+<div class="bg-surface-container-lowest border border-border rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<h3 class="font-headline-lg text-headline-lg text-primary">Project Apollo Scope</h3>
+<span class="px-3 py-1 bg-warning-light text-warning text-label-xs font-bold rounded-full border border-warning uppercase">Pending</span>
+</div>
+<p class="text-body-sm text-muted mb-3">Waiting on Legal Team</p>
+<div class="flex items-center gap-4 text-caption-xs text-muted">
+<span class="flex items-center gap-1 text-primary font-medium italic">Created by you</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">groups</span> 4 signers</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 3 days ago</span>
+</div>
+</div>
+<div class="flex items-center gap-6 shrink-0">
+<div class="flex flex-col items-end gap-2">
+<div class="avatar-stack">
+<div class="w-8 h-8 bg-success-light flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-success text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="w-8 h-8 bg-accent-light flex items-center justify-center rounded-full">
+<div class="pulse-ring"></div>
+<span class="material-symbols-outlined text-secondary text-[18px]">person</span>
+</div>
+<div class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-muted text-[18px]">person</span></div>
+<div class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-full"><span class="material-symbols-outlined text-muted text-[18px]">person</span></div>
+</div>
+<span class="text-caption-xs text-muted font-medium">1 / 4 Complete</span>
+</div>
+<button class="text-primary hover:text-secondary font-label-sm flex items-center gap-1">
+                            Details <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-12 flex items-center justify-between text-body-sm text-muted border-t border-border pt-6">
+<p>Showing 1 to 6 of 42 envelopes</p>
+<div class="flex items-center gap-2">
+<button class="p-2 border border-border rounded hover:bg-surface transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-primary text-on-primary rounded font-bold">1</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-surface rounded">2</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-surface rounded">3</button>
+<button class="p-2 border border-border rounded hover:bg-surface transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Micro-interaction: Sidebar Toggle logic (conceptual for larger scale, but implemented with hover styles) -->
+<script>
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if(this.getAttribute('href') === '#') e.preventDefault();
+                // Simple state change logic would go here
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('header input');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-secondary/20');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-secondary/20');
+        });
+    </script>
+</body></html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignFlow - Self-Sign Start</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface": "#1b1b1e",
+                    "error-light": "#FEE2E2",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#86f2e4",
+                    "secondary": "#006a61",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "inverse-primary": "#b7c6ee",
+                    "background": "#fbf8fc",
+                    "warning": "#D97706",
+                    "tertiary-container": "#3c2600",
+                    "muted": "#64748B",
+                    "success": "#059669",
+                    "inverse-on-surface": "#f2f0f3",
+                    "surface-container-highest": "#e4e2e5",
+                    "error-container": "#ffdad6",
+                    "body": "#1E293B",
+                    "surface-tint": "#4f5e81",
+                    "secondary-fixed": "#89f5e7",
+                    "surface-variant": "#e4e2e5",
+                    "info": "#2563EB",
+                    "surface-container-low": "#f5f3f6",
+                    "on-error": "#ffffff",
+                    "border": "#E2E8F0",
+                    "bg": "#F8FAFC",
+                    "on-background": "#1b1b1e",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#303033",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed": "#ffddb0",
+                    "primary-container": "#1b2a4a",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "on-primary-fixed": "#0a1a3a",
+                    "primary-light": "#EEF1F7",
+                    "error": "#DC2626",
+                    "accent-light": "#CCFBF1",
+                    "on-secondary-container": "#006f66",
+                    "success-light": "#D1FAE5",
+                    "on-secondary-fixed": "#00201d",
+                    "outline": "#75777f",
+                    "info-light": "#DBEAFE",
+                    "surface-dim": "#dbd9dc",
+                    "status-pending": "#F59E0B",
+                    "status-completed": "#059669",
+                    "on-surface-variant": "#45464e",
+                    "surface-bright": "#fbf8fc",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "on-primary-container": "#8392b7",
+                    "primary-fixed": "#d9e2ff",
+                    "status-rejected": "#DC2626",
+                    "status-draft": "#94A3B8",
+                    "on-tertiary-fixed": "#281800",
+                    "on-primary-fixed-variant": "#384668",
+                    "accent-hover": "#0F766E",
+                    "surface-container": "#efedf0",
+                    "primary-hover": "#243656",
+                    "surface-container-high": "#eae7eb",
+                    "on-secondary-fixed-variant": "#005049",
+                    "outline-variant": "#c5c6cf",
+                    "tertiary": "#211300",
+                    "on-tertiary-container": "#ae8c5b",
+                    "on-primary": "#ffffff",
+                    "surface": "#F1F5F9",
+                    "status-your-turn": "#0D9488",
+                    "warning-light": "#FEF3C7",
+                    "primary": "#041534",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "4": "16px",
+                    "2": "8px",
+                    "6": "24px",
+                    "sidebar-width": "240px",
+                    "max-content-width": "1280px",
+                    "topbar-height": "64px",
+                    "8": "32px",
+                    "1": "4px",
+                    "3": "12px",
+                    "16": "64px",
+                    "12": "48px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "label-xs": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-base": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "caption-xs": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbf8fc;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+        .upload-dashed {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%23C5C6CFFF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest border-b border-border fixed top-0 left-0 right-0 z-50">
+<div class="flex justify-between items-center h-[64px] px-8 w-full max-w-[1280px] mx-auto">
+<div class="font-headline-xl text-headline-xl font-bold text-primary">SignFlow</div>
+<div class="flex items-center gap-6">
+<a class="text-muted font-label-sm text-label-sm hover:text-primary-hover transition-colors cursor-pointer active:scale-95 duration-150" href="#">Help</a>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:bg-surface-container-low px-3 py-2 rounded transition-colors cursor-pointer active:scale-95 duration-150">Exit</button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow pt-[100px] pb-[120px] px-8">
+<div class="max-w-[800px] mx-auto space-y-12">
+<!-- Header Section -->
+<div class="text-center space-y-2">
+<h1 class="font-headline-3xl text-headline-3xl text-primary">Sign a document yourself</h1>
+<p class="font-body-base text-body-base text-muted">Upload a document to add your digital signature instantly.</p>
+</div>
+<!-- Upload Dropzone -->
+<div class="upload-dashed bg-surface rounded-xl p-16 flex flex-col items-center justify-center transition-all duration-300 hover:bg-surface-container-low group cursor-pointer" id="dropzone">
+<div class="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-primary text-[40px]" data-icon="upload_file">upload_file</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-primary mb-2">Drop PDF or Word file here</h3>
+<p class="font-body-sm text-body-sm text-muted">or <span class="text-status-your-turn font-semibold underline">click to browse files</span></p>
+<input class="hidden" id="fileInput" type="file"/>
+</div>
+<!-- Secondary Section: Select from documents -->
+<section class="space-y-6">
+<div class="flex justify-between items-center">
+<h2 class="font-headline-lg text-headline-lg text-primary">Select from my documents</h2>
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted text-[20px]" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-white border border-border rounded-lg text-label-sm font-label-sm focus:ring-2 focus:ring-status-your-turn focus:border-status-your-turn outline-none" placeholder="Search files..." type="text"/>
+</div>
+</div>
+<!-- Document Grid (High-end layout) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Doc Item 1 -->
+<div class="group bg-white p-4 border border-border rounded-xl shadow-sm hover:shadow-md hover:border-status-your-turn transition-all cursor-pointer flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-sm text-label-sm text-primary group-hover:text-status-your-turn transition-colors">Employment_Contract_Final.pdf</p>
+<p class="font-caption-xs text-caption-xs text-muted">Updated 2 days ago • 1.2 MB</p>
+</div>
+<span class="material-symbols-outlined text-muted opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Doc Item 2 -->
+<div class="group bg-white p-4 border border-border rounded-xl shadow-sm hover:shadow-md hover:border-status-your-turn transition-all cursor-pointer flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary-container/20 rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-secondary" data-icon="article">article</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-sm text-label-sm text-primary group-hover:text-status-your-turn transition-colors">NDA_Standard_v3.docx</p>
+<p class="font-caption-xs text-caption-xs text-muted">Updated Jan 12 • 840 KB</p>
+</div>
+<span class="material-symbols-outlined text-muted opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Doc Item 3 -->
+<div class="group bg-white p-4 border border-border rounded-xl shadow-sm hover:shadow-md hover:border-status-your-turn transition-all cursor-pointer flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-sm text-label-sm text-primary group-hover:text-status-your-turn transition-colors">Project_Proposal_Draft.pdf</p>
+<p class="font-caption-xs text-caption-xs text-muted">Updated Yesterday • 2.5 MB</p>
+</div>
+<span class="material-symbols-outlined text-muted opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Doc Item 4 -->
+<div class="group bg-white p-4 border border-border rounded-xl shadow-sm hover:shadow-md hover:border-status-your-turn transition-all cursor-pointer flex items-center gap-4">
+<div class="w-12 h-12 bg-error-light/40 rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-error" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-sm text-label-sm text-primary group-hover:text-status-your-turn transition-colors">Rental_Agreement_2024.pdf</p>
+<p class="font-caption-xs text-caption-xs text-muted">Updated Jan 15 • 1.1 MB</p>
+</div>
+<span class="material-symbols-outlined text-muted opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Sticky Bottom Footer with Primary Action -->
+<footer class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md py-6 px-8 flex justify-end items-center z-40">
+<div class="max-w-[1280px] w-full mx-auto flex justify-end items-center">
+<button class="flex items-center gap-2 bg-status-your-turn hover:bg-accent-hover text-white px-8 py-3.5 rounded-xl font-label-sm text-label-sm shadow-lg shadow-status-your-turn/20 transition-all duration-200 active:scale-95">
+                Continue to Signing
+                <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</footer>
+<script>
+        // Dropzone interaction
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('bg-primary-light');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('bg-primary-light');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-primary-light');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                console.log('File dropped:', files[0].name);
+                // In a real app, handle the file upload here
+                alert('File uploaded: ' + files[0].name);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                console.log('File selected:', e.target.files[0].name);
+                alert('File selected: ' + e.target.files[0].name);
+            }
+        });
+
+        // Simple animation for the dropzone icon on hover
+        dropzone.addEventListener('mouseenter', () => {
+            const icon = dropzone.querySelector('.material-symbols-outlined');
+            icon.style.transform = 'translateY(-4px)';
+            icon.style.transition = 'transform 0.3s ease';
+        });
+        dropzone.addEventListener('mouseleave', () => {
+            const icon = dropzone.querySelector('.material-symbols-outlined');
+            icon.style.transform = 'translateY(0)';
+        });
+    </script>
+</body></html>

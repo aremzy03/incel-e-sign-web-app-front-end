@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignatureFlow - Envelope Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-light": "#FEE2E2",
+                        "on-secondary-fixed-variant": "#005049",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "on-background": "#1b1b1e",
+                        "success": "#059669",
+                        "on-tertiary-fixed": "#281800",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "on-secondary-fixed": "#00201d",
+                        "inverse-surface": "#303033",
+                        "accent-light": "#CCFBF1",
+                        "status-your-turn": "#0D9488",
+                        "primary-light": "#EEF1F7",
+                        "status-completed": "#059669",
+                        "surface-container-high": "#eae7eb",
+                        "surface-container-low": "#f5f3f6",
+                        "status-rejected": "#DC2626",
+                        "on-secondary-container": "#006f66",
+                        "on-primary-fixed": "#0a1a3a",
+                        "primary": "#041534",
+                        "outline": "#75777f",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-tertiary-container": "#ae8c5b",
+                        "secondary-container": "#86f2e4",
+                        "surface": "#F1F5F9",
+                        "on-tertiary": "#ffffff",
+                        "body": "#1E293B",
+                        "accent-hover": "#0F766E",
+                        "surface-dim": "#dbd9dc",
+                        "tertiary": "#211300",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#4f5e81",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-primary-container": "#8392b7",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c5c6cf",
+                        "info": "#2563EB",
+                        "tertiary-container": "#3c2600",
+                        "status-draft": "#94A3B8",
+                        "error": "#DC2626",
+                        "on-surface-variant": "#45464e",
+                        "surface-container-highest": "#e4e2e5",
+                        "surface-bright": "#fbf8fc",
+                        "success-light": "#D1FAE5",
+                        "warning-light": "#FEF3C7",
+                        "background": "#fbf8fc",
+                        "muted": "#64748B",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#006a61",
+                        "primary-hover": "#243656",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "border": "#E2E8F0",
+                        "on-surface": "#1b1b1e",
+                        "bg": "#F8FAFC",
+                        "on-error-container": "#93000a",
+                        "info-light": "#DBEAFE",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e4e2e5",
+                        "status-pending": "#F59E0B",
+                        "on-primary-fixed-variant": "#384668",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-container": "#1b2a4a",
+                        "surface-container": "#efedf0",
+                        "secondary-fixed": "#89f5e7",
+                        "inverse-primary": "#b7c6ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "topbar-height": "64px",
+                        "max-content-width": "1280px",
+                        "4": "16px",
+                        "sidebar-width": "240px",
+                        "8": "32px",
+                        "12": "48px",
+                        "6": "24px",
+                        "1": "4px",
+                        "16": "64px",
+                        "3": "12px",
+                        "2": "8px"
+                    },
+                    "fontFamily": {
+                        "body-base": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-fill { font-variation-settings: 'FILL' 1; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    </style>
+</head>
+<body class="bg-surface font-body-base text-body-base">
+<!-- Sidebar Navigation -->
+<aside class="w-[240px] h-screen fixed left-0 top-0 bg-primary dark:bg-primary-container shadow-md flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-xl font-headline-xl font-bold text-on-primary dark:text-inverse-primary">SignatureFlow</h1>
+<p class="text-on-primary-container font-label-sm text-label-sm opacity-80">Legal Enterprise</p>
+</div>
+<button class="mx-4 mb-8 bg-secondary hover:bg-accent-hover text-on-secondary px-4 py-3 rounded-xl font-label-sm text-label-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add</span>
+            New Document
+        </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 text-secondary-fixed font-bold border-l-4 border-secondary-fixed pl-3 py-3 hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined active-fill">description</span>
+                Documents
+            </a>
+<a class="flex items-center gap-3 text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">style</span>
+                Templates
+            </a>
+<a class="flex items-center gap-3 text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                Archive
+            </a>
+<a class="flex items-center gap-3 text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="mt-auto px-4">
+<a class="flex items-center gap-3 text-primary-fixed-dim font-medium pl-4 py-3 hover:bg-primary-hover rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+                Support
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-[240px] flex flex-col min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="h-topbar-height w-full sticky top-0 z-40 bg-surface-container-lowest dark:bg-surface-dim border-b border-border dark:border-outline-variant shadow-sm flex items-center justify-between px-8">
+<div class="flex items-center gap-8">
+<span class="text-headline-lg font-headline-lg font-bold text-primary dark:text-primary-fixed">Document Tracking</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary-hover font-label-sm text-label-sm transition-colors" href="#">All Agreements</a>
+<a class="text-secondary font-bold border-b-2 border-secondary pb-1 font-label-sm text-label-sm" href="#">Pending My Action</a>
+<a class="text-on-surface-variant hover:text-primary-hover font-label-sm text-label-sm transition-colors" href="#">Completed</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border">
+<img class="w-full h-full object-cover" data-alt="A professional corporate headshot of a senior legal executive with a confident expression, set against a blurred modern office background with neutral gray and blue tones, styled in a crisp high-resolution photography style for a premium SaaS interface profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg7ZCLT8H_VFgsc8HTiLmcOGWPe9vg_UDovZkovk3MfskPyHsw4y4ptPlgYA89mZudz-8SdReNfoOWqIerOoyFemDdI6SkbNmYlsFlzD2FEOTM1A0SMpWUu5m5ioUkhQ_t8PDK2PqrGRd-1XkBaSSZyKr1M1ZXnsxvvK8kWj7RpvM9uPyXo_ET8wEwqxnIbuBcAD0JG03qkkshDVkDD9cNNiX24PZi5woVpkICiFyFh3XPF7TQK5GgmU90CgiamGTLreSaGUpNCBJz"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 p-8 max-w-max-content-width mx-auto w-full">
+<!-- Breadcrumbs / Action Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div>
+<div class="flex items-center gap-3 mb-1">
+<h2 class="text-headline-xl font-headline-xl font-bold text-primary">Q4 Commercial Lease Expansion</h2>
+<span class="bg-warning-light text-warning px-3 py-0.5 rounded-full text-label-xs font-label-xs border border-warning/20">Pending</span>
+</div>
+<p class="text-on-surface-variant text-body-sm font-body-sm">Created: Oct 20, 2024</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors border border-transparent hover:border-border rounded-xl">Cancel Envelope</button>
+<button class="px-4 py-2 text-primary border border-primary hover:bg-primary-light font-label-sm text-label-sm rounded-xl transition-all active:scale-95">Resend Reminder</button>
+<button class="px-6 py-2 bg-secondary text-on-secondary hover:bg-accent-hover font-label-sm text-label-sm rounded-xl shadow-md transition-all active:scale-95">Edit</button>
+</div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column (40%) -->
+<div class="col-span-12 lg:col-span-5 space-y-6">
+<!-- Envelope Details Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border/50">
+<h3 class="text-headline-lg font-headline-lg text-primary mb-4">Envelope Details</h3>
+<p class="text-on-surface-variant text-body-base font-body-base leading-relaxed">
+                            Standard lease agreement for the new Austin office expansion. Includes standard maintenance and utilities clauses.
+                        </p>
+</section>
+<!-- Documents Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border/50">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-headline-lg font-headline-lg text-primary">Documents</h3>
+<span class="text-on-surface-variant font-label-sm text-label-sm">2 files</span>
+</div>
+<div class="space-y-3">
+<!-- File 1 -->
+<div class="flex items-center justify-between p-3 border border-border rounded-lg hover:border-secondary transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-12 bg-surface flex items-center justify-center rounded border border-border overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist PDF document thumbnail showing a structural page layout with text lines and a professional blue header, designed for a legal software interface representing a lease agreement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUor86Z1N5uu11561pE2FWOKIyfq3y_NsAEJ9edaAxTc67lf2qbAufKdriVrhIsRF4np6eeKDwJocXP4uGcAWLms4SmIpYg8vDFwQrnXH0r9mqmwCpnfBa4hyH4wg6Ky0ZuNHMdkV9khgPpa5G3QLGaKe5N5SSsEWl1_eZF5ieysZzFNC_EELCMWrCV6_LTghcgrGLs7nsveYIGzoFiYW2vlDIUldcy6vPFW9WR9h3XNjF6l7rc56Y5UTrgaP1uWK0l6yAwbeJfNco"/>
+</div>
+<div>
+<p class="text-on-surface font-label-sm text-label-sm">Lease_Agreement_v2.pdf</p>
+<p class="text-muted font-caption-xs text-caption-xs">2.4 MB • PDF</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<!-- File 2 -->
+<div class="flex items-center justify-between p-3 border border-border rounded-lg hover:border-secondary transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-12 bg-surface flex items-center justify-center rounded border border-border overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A technical floorplan thumbnail for a commercial office space, featuring clean architectural lines, room labels, and spatial measurements in a professional blue and gray blueprint aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYx2YRlTpFgNdW5AWatn9d3ltfvPuRVbBzKQYnz6jTEblbcWJ5SmObzt-ZMv1i7JutREBcg4Pm_-wkfBtFPhTkrwQlZGRXcrWbJAxrZiNzKH7gpqWlrpyyeG4jJS2MM15h1ZZmctjdd_asjG4L7pnVvBHFXq2IoGhBAgFXgvVayqUDykKWYFp7MgmE7VYGnuc5qcs2yHmypEo3GrjQmH3exemYYyf50NcI48riM5cPBQ-uWaD9cv4sbgUAhXBs4p2A6kzgikdgei-_"/>
+</div>
+<div>
+<p class="text-on-surface font-label-sm text-label-sm">Austin_Floorplan.pdf</p>
+<p class="text-muted font-caption-xs text-caption-xs">5.1 MB • PDF</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Settings Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border/50">
+<h3 class="text-headline-lg font-headline-lg text-primary mb-4">Settings</h3>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+<span class="font-body-base text-body-base">Password Protection</span>
+</div>
+<span class="bg-accent-light text-on-secondary-fixed-variant px-3 py-1 rounded-full text-label-xs font-bold border border-secondary-container">ON</span>
+</div>
+</section>
+</div>
+<!-- Right Column (60%) -->
+<div class="col-span-12 lg:col-span-7 space-y-6">
+<!-- Signing Progress (Vertical Timeline) -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-border/50">
+<h3 class="text-headline-lg font-headline-lg text-primary mb-8">Signing Progress</h3>
+<div class="relative space-y-12 ml-4">
+<!-- Timeline Line -->
+<div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-border z-0"></div>
+<!-- Step 1: Completed -->
+<div class="relative z-10 flex gap-6">
+<div class="w-6 h-6 rounded-full bg-success flex items-center justify-center text-white ring-4 ring-white">
+<span class="material-symbols-outlined text-[16px] font-bold">check</span>
+</div>
+<div class="flex-1 -mt-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-on-surface font-bold font-body-base text-body-base">Alex Sterling</p>
+<p class="text-muted font-body-sm text-body-sm">alex.s@incel-legal.com</p>
+</div>
+<div class="text-right">
+<span class="text-success font-label-sm text-label-sm font-bold flex items-center gap-1">
+                                                Signed
+                                            </span>
+<p class="text-muted font-caption-xs text-caption-xs mt-1">Oct 21, 10:45 AM</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 2: Active -->
+<div class="relative z-10 flex gap-6">
+<div class="w-6 h-6 rounded-full bg-status-your-turn flex items-center justify-center text-white ring-4 ring-white animate-pulse">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</div>
+<div class="flex-1 -mt-1 p-4 bg-accent-light/30 border border-secondary-container rounded-xl">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-on-surface font-bold font-body-base text-body-base">Julian Vane</p>
+<p class="text-muted font-body-sm text-body-sm">j.vane@global-ventures.io</p>
+</div>
+<div class="text-right">
+<span class="bg-status-your-turn text-white px-3 py-1 rounded-full text-label-xs font-bold shadow-sm">
+                                                Waiting for Sign
+                                            </span>
+<p class="text-status-your-turn font-caption-xs text-caption-xs mt-2 italic font-medium">Signing now...</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 3: Pending -->
+<div class="relative z-10 flex gap-6">
+<div class="w-6 h-6 rounded-full bg-surface-container-high border-2 border-border flex items-center justify-center text-muted ring-4 ring-white">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+</div>
+<div class="flex-1 -mt-1">
+<div class="flex justify-between items-start opacity-60">
+<div>
+<p class="text-on-surface font-bold font-body-base text-body-base">Sarah Jenkins</p>
+<p class="text-muted font-body-sm text-body-sm">sarah.j@partner-group.com</p>
+</div>
+<div class="text-right">
+<span class="text-muted font-label-sm text-label-sm">Pending</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Activity Feed Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border/50">
+<h3 class="text-headline-lg font-headline-lg text-primary mb-6">Activity Feed</h3>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="mt-1 w-2 h-2 rounded-full bg-border shrink-0"></div>
+<div class="flex-1 flex justify-between items-center">
+<p class="text-on-surface-variant font-body-sm text-body-sm">Envelope created by <span class="text-on-surface font-medium">Alex Sterling</span></p>
+<span class="text-muted font-caption-xs text-caption-xs">Oct 20, 09:12 AM</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="mt-1 w-2 h-2 rounded-full bg-success shrink-0"></div>
+<div class="flex-1 flex justify-between items-center">
+<p class="text-on-surface-variant font-body-sm text-body-sm"><span class="text-on-surface font-medium">Alex Sterling</span> signed</p>
+<span class="text-muted font-caption-xs text-caption-xs">Oct 21, 10:45 AM</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="mt-1 w-2 h-2 rounded-full bg-status-your-turn shrink-0"></div>
+<div class="flex-1 flex justify-between items-center">
+<p class="text-on-surface-variant font-body-sm text-body-sm">Reminder sent to <span class="text-on-surface font-medium">Julian Vane</span></p>
+<span class="text-muted font-caption-xs text-caption-xs">Oct 22, 02:30 PM</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Bottom Actions -->
+<div class="mt-12 flex justify-end">
+<button class="flex items-center gap-2 px-8 py-3 bg-surface-container-high border border-border text-on-surface-variant font-label-sm text-label-sm rounded-xl hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined">cloud_download</span>
+                    Download All (Available when completed)
+                </button>
+</div>
+</main>
+</div>
+<!-- Floating Action Button (FAB) Suppression: Details screen doesn't need a New Action FAB as it has context-specific actions -->
+<script>
+        // Simple micro-interaction for document hover
+        document.querySelectorAll('.group').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.classList.add('shadow-md');
+            });
+            item.addEventListener('mouseleave', () => {
+                item.classList.remove('shadow-md');
+            });
+        });
+
+        // Simulating some dynamic status changes for Julian Vane
+        const typingLabel = document.querySelector('.italic');
+        if(typingLabel) {
+            let dots = 0;
+            setInterval(() => {
+                dots = (dots + 1) % 4;
+                typingLabel.innerText = 'Signing now' + '.'.repeat(dots);
+            }, 500);
+        }
+    </script>
+</body></html>

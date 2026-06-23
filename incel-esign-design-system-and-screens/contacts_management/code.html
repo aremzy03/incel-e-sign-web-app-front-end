@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contacts - SignetLegal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#00201d",
+                        "surface": "#F1F5F9",
+                        "inverse-surface": "#303033",
+                        "outline-variant": "#c5c6cf",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#006a61",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-tertiary-fixed": "#281800",
+                        "on-primary-fixed-variant": "#384668",
+                        "surface-variant": "#e4e2e5",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "tertiary-container": "#3c2600",
+                        "background": "#fbf8fc",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-hover": "#243656",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ae8c5b",
+                        "error": "#DC2626",
+                        "accent-light": "#CCFBF1",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-primary-fixed": "#0a1a3a",
+                        "success-light": "#D1FAE5",
+                        "status-completed": "#059669",
+                        "surface-tint": "#4f5e81",
+                        "on-error-container": "#93000a",
+                        "primary-light": "#EEF1F7",
+                        "body": "#1E293B",
+                        "surface-bright": "#fbf8fc",
+                        "surface-container-low": "#f5f3f6",
+                        "status-rejected": "#DC2626",
+                        "inverse-primary": "#b7c6ee",
+                        "status-pending": "#F59E0B",
+                        "primary-container": "#1b2a4a",
+                        "status-your-turn": "#0D9488",
+                        "accent-hover": "#0F766E",
+                        "secondary-container": "#86f2e4",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#89f5e7",
+                        "status-draft": "#94A3B8",
+                        "on-secondary-container": "#006f66",
+                        "on-error": "#ffffff",
+                        "on-background": "#1b1b1e",
+                        "border": "#E2E8F0",
+                        "on-surface": "#1b1b1e",
+                        "outline": "#75777f",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "muted": "#64748B",
+                        "error-light": "#FEE2E2",
+                        "surface-dim": "#dbd9dc",
+                        "info": "#2563EB",
+                        "surface-container-highest": "#e4e2e5",
+                        "warning": "#D97706",
+                        "success": "#059669",
+                        "surface-container-high": "#eae7eb",
+                        "on-primary-container": "#8392b7",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "primary": "#041534",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-surface-variant": "#45464e",
+                        "warning-light": "#FEF3C7",
+                        "surface-container": "#efedf0",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "tertiary": "#211300",
+                        "bg": "#F8FAFC",
+                        "info-light": "#DBEAFE"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "8": "32px",
+                        "2": "8px",
+                        "sidebar-width": "240px",
+                        "max-content-width": "1280px",
+                        "6": "24px",
+                        "16": "64px",
+                        "4": "16px",
+                        "3": "12px",
+                        "1": "4px",
+                        "topbar-height": "64px",
+                        "12": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "caption-xs": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "body-base": ["Inter"],
+                        "headline-xl": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item-active { background-color: #006a61; color: white; }
+        .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-surface text-body min-h-screen">
+<!-- Sidebar (LegalCorp) -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-primary dark:bg-primary-container shadow-lg flex flex-col py-6 border-r border-primary-hover z-[60]">
+<div class="px-6 mb-12">
+<h1 class="font-headline-lg text-headline-lg font-black text-on-primary">LegalCorp</h1>
+<p class="font-label-sm text-label-sm text-on-primary/70">Enterprise E-Signature</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center px-6 py-3 text-on-primary/70 hover:text-on-primary transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary/70 hover:text-on-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3">description</span>
+<span class="font-label-sm text-label-sm">Documents</span>
+</a>
+<a class="flex items-center px-4 py-3 bg-secondary dark:bg-secondary-container text-on-secondary dark:text-on-secondary-container rounded-lg mx-2 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+<span class="font-label-sm text-label-sm">Contacts</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary/70 hover:text-on-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3">layers</span>
+<span class="font-label-sm text-label-sm">Templates</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary/70 hover:text-on-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<div class="px-4 mb-8">
+<button class="w-full bg-secondary text-white py-3 rounded-xl font-label-sm text-label-sm hover:bg-accent-hover transition-colors flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Document
+            </button>
+</div>
+<div class="border-t border-primary-hover pt-4">
+<a class="flex items-center px-6 py-3 text-on-primary/70 hover:text-on-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3">headset_mic</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary/70 hover:text-on-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3">account_circle</span>
+<span class="font-label-sm text-label-sm">Account</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-sidebar-width right-0 h-16 bg-surface-container-lowest z-50 flex justify-between items-center px-8 border-b border-border shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full w-64 focus:ring-2 focus:ring-secondary text-body-sm transition-all" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-muted hover:text-primary transition-colors cursor-pointer active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-muted hover:text-primary transition-colors cursor-pointer active:scale-95 duration-150">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-3 pl-6 border-l border-border">
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-primary font-semibold">Julian Pierce</p>
+<p class="font-caption-xs text-caption-xs text-muted">Legal Admin</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container-high object-cover" data-alt="A professional headshot of a middle-aged man with sharp facial features and clean-shaven look, wearing a high-quality navy blue business suit. He is set against a soft, out-of-focus modern office background with warm lighting, reflecting a corporate and trustworthy persona in a high-end legal SaaS environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVAYX6iyTP9KbwEA7HU8uqxZLTI6wgm9zjl293DOtuNfv8OGLbhVAkvzDsDyhGx59UKedFEohMCP35VRZGoe_FQFFUgAHwVN4KcGcEDQUXV0CSqpqbtbIlIUXOxYJ_-1FKy9OsWDqzyGJYsii1ZokWZwUxsLLnuCZo6Fgem-_mMD2dVR54dQZKenLdJ26Zfs_BMFCk4doFWwL_RH7kVrwJhOqk3OHh6adumOfQ5gzPwz3F1aFSG9rEG5Z7EMGYrmsuyTqvbKMF7_qM"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-sidebar-width mt-16 p-8 min-h-[calc(100vh-64px)]">
+<div class="max-w-max-content-width mx-auto">
+<!-- Page Header -->
+<div class="flex items-end justify-between mb-8">
+<div>
+<h2 class="font-headline-2xl text-headline-2xl text-primary mb-1">Contacts</h2>
+<p class="text-muted font-body-sm text-body-sm flex items-center gap-2">
+<span class="inline-block w-2 h-2 bg-secondary rounded-full"></span>
+                        24 Total Contacts
+                    </p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-lowest border border-border text-primary px-6 py-2.5 rounded-xl font-label-sm text-label-sm hover:bg-surface-container-low transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">file_download</span>
+                        Export
+                    </button>
+<button class="bg-secondary text-white px-6 py-2.5 rounded-xl font-label-sm text-label-sm hover:bg-accent-hover transition-all flex items-center gap-2 shadow-md" onclick="document.getElementById('add-contact-modal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-lg">person_add</span>
+                        + Add Contact
+                    </button>
+</div>
+</div>
+<!-- Search & Actions Bar -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-border shadow-sm mb-6 flex gap-4">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-muted transition-colors group-focus-within:text-secondary">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-secondary text-body-sm placeholder:text-muted transition-all" placeholder="Search by name or email" type="text"/>
+</div>
+<button class="bg-surface-container-low text-primary px-5 rounded-lg font-label-sm text-label-sm hover:bg-surface-container-high transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+                    Filter
+                </button>
+</div>
+<!-- Contacts Table Container -->
+<div class="bg-surface-container-lowest rounded-xl border border-border shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface border-b border-border">
+<th class="px-6 py-4 font-label-sm text-label-sm text-muted uppercase tracking-wider">Name</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-muted uppercase tracking-wider">Email</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-muted uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-muted uppercase tracking-wider">Last Used</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-muted uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border">
+<!-- Row 1: Alex Rivera -->
+<tr class="hover:bg-primary-light transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm">AR</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary font-bold">Alex Rivera</p>
+<p class="text-caption-xs text-caption-xs text-muted">Acme Corp</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">alex.rivera@acme.com</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-accent-light text-on-secondary-container text-[11px] font-bold uppercase tracking-tight">
+                                    On Incel E-Sign
+                                </span>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">2 hours ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-border px-3 py-1.5 rounded-lg text-secondary font-label-sm text-label-sm hover:border-secondary">
+                                        Use in Envelope
+                                    </button>
+<button class="text-muted hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Sarah Jenkins -->
+<tr class="hover:bg-primary-light transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A portrait of a confident young woman with glasses and professional attire, standing in a brightly lit, minimalist contemporary office space. The image follows a high-key lighting style with cool teal and white tones, creating a clean, high-density corporate aesthetic suitable for a modern SaaS platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZLPEAQX68jzcgIEe5K05Sk5AczO1qzx4X1ZOTQ9z98AdX2DGps8lYO4NiZJ2JBtuG7mJ8SQPyQS4SAuzy0K1HisPk7IcZLbbE666kArCAodCN0gdVuZWsklFKtvJVT0_gTSQe4yUBIe1hUad_D7Id4HdZ7R7UkDZOEWsF3ciFOAIaSdT2U7E0jTyABOXM4kLrmpIjDTcKlQqRsYG49yEindOZNfMc8Kds7anfwGc3pT3QII8O3LyRJUE0B7wKFD4wJbS9L9GxTk1o"/>
+<div>
+<p class="font-label-sm text-label-sm text-primary font-bold">Sarah Jenkins</p>
+<p class="text-caption-xs text-caption-xs text-muted">Freelance Designer</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">s.jenkins@studio.io</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-accent-light text-on-secondary-container text-[11px] font-bold uppercase tracking-tight">
+                                    On Incel E-Sign
+                                </span>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">Yesterday</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-border px-3 py-1.5 rounded-lg text-secondary font-label-sm text-label-sm hover:border-secondary">
+                                        Use in Envelope
+                                    </button>
+<button class="text-muted hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: David Chen -->
+<tr class="hover:bg-primary-light transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold text-label-sm">DC</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary font-bold">David Chen</p>
+<p class="text-caption-xs text-caption-xs text-muted">Global Logistics</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">d.chen@global.net</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold uppercase tracking-tight">
+                                    Invited
+                                </span>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">Jan 12, 2024</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-border px-3 py-1.5 rounded-lg text-secondary font-label-sm text-label-sm hover:border-secondary">
+                                        Use in Envelope
+                                    </button>
+<button class="text-muted hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Marcus Thorne -->
+<tr class="hover:bg-primary-light transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim text-on-primary-fixed flex items-center justify-center font-bold text-label-sm">MT</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary font-bold">Marcus Thorne</p>
+<p class="text-caption-xs text-caption-xs text-muted">Thorne Legal</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">marcus@thorne.com</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-accent-light text-on-secondary-container text-[11px] font-bold uppercase tracking-tight">
+                                    On Incel E-Sign
+                                </span>
+</td>
+<td class="px-6 py-5 text-body-sm font-body-sm text-muted">3 days ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-border px-3 py-1.5 rounded-lg text-secondary font-label-sm text-label-sm hover:border-secondary">
+                                        Use in Envelope
+                                    </button>
+<button class="text-muted hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="px-6 py-4 bg-surface-container-low flex items-center justify-between">
+<p class="text-caption-xs text-caption-xs text-muted">Showing 1 to 4 of 24 contacts</p>
+<div class="flex gap-2">
+<button class="p-2 text-muted hover:bg-surface transition-colors rounded-lg disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-secondary text-white rounded-lg text-label-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center text-muted hover:bg-surface rounded-lg text-label-sm">2</button>
+<button class="w-8 h-8 flex items-center justify-center text-muted hover:bg-surface rounded-lg text-label-sm">3</button>
+<button class="p-2 text-muted hover:bg-surface transition-colors rounded-lg">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Add Contact Modal (State 1 Example Overlay) -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center hidden" id="add-contact-modal">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" onclick="document.getElementById('add-contact-modal').classList.add('hidden')"></div>
+<!-- Modal Card -->
+<div class="relative w-full max-w-lg bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+<div class="px-8 py-6 border-b border-border flex justify-between items-center">
+<h3 class="font-headline-xl text-headline-xl text-primary">Add New Contact</h3>
+<button class="text-muted hover:text-primary transition-colors" onclick="document.getElementById('add-contact-modal').classList.add('hidden')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-8">
+<div class="mb-6">
+<label class="block font-label-sm text-label-sm text-primary mb-2">Email Address</label>
+<div class="relative">
+<input class="w-full pl-4 pr-12 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition-all" id="contact-search-input" placeholder="Enter email address..." type="email" value="marcus@example.com"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-secondary hover:bg-secondary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</div>
+<!-- Search Result: State 1 (Found) -->
+<div class="bg-primary-light p-6 rounded-xl border border-secondary/20 flex items-center justify-between" id="result-found">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-primary-fixed-dim text-on-primary-fixed flex items-center justify-center font-bold text-headline-lg">MT</div>
+<div>
+<p class="font-headline-lg text-headline-lg text-primary">Marcus Thorne</p>
+<p class="text-body-sm text-body-sm text-muted">marcus@example.com</p>
+</div>
+</div>
+<button class="text-secondary font-label-sm text-label-sm flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-base">check_circle</span>
+                        Verified
+                    </button>
+</div>
+<!-- Search Result: State 2 (Not Found) - Hidden by default for demo -->
+<div class="hidden p-6 rounded-xl border border-dashed border-border flex flex-col items-center text-center" id="result-not-found">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-muted">person_off</span>
+</div>
+<p class="font-label-sm text-label-sm text-primary">User not found</p>
+<p class="text-caption-xs text-caption-xs text-muted mt-1 max-w-[200px]">We couldn't find an existing account for this email. Send an invite instead.</p>
+</div>
+</div>
+<div class="px-8 py-6 bg-surface border-t border-border flex justify-end gap-3">
+<button class="px-6 py-2.5 text-muted hover:text-primary font-label-sm text-label-sm transition-colors" onclick="document.getElementById('add-contact-modal').classList.add('hidden')">
+                    Cancel
+                </button>
+<button class="bg-primary text-white px-8 py-2.5 rounded-xl font-label-sm text-label-sm hover:bg-primary-hover transition-all shadow-md">
+                    Add to Contacts
+                </button>
+</div>
+</div>
+</div>
+<!-- Empty State Logic (Script for demonstration) -->
+<script>
+        function toggleEmptyState(show) {
+            const table = document.querySelector('.bg-surface-container-lowest.rounded-xl.border');
+            if (show) {
+                table.innerHTML = `
+                    <div class="py-20 flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 bg-primary-light rounded-full flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-4xl text-secondary">group_add</span>
+                        </div>
+                        <h4 class="font-headline-lg text-headline-lg text-primary mb-2">No contacts yet</h4>
+                        <p class="text-muted font-body-sm text-body-sm max-w-sm mx-auto mb-8">Add people you send documents to frequently for faster workflows and tracking.</p>
+                        <button onclick="document.getElementById('add-contact-modal').classList.remove('hidden')" class="bg-secondary text-white px-8 py-3 rounded-xl font-label-sm text-label-sm hover:bg-accent-hover transition-all">
+                            Add Your First Contact
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Mock state switcher for demo
+        const contactInput = document.getElementById('contact-search-input');
+        contactInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const found = document.getElementById('result-found');
+            const notFound = document.getElementById('result-not-found');
+            
+            if (val.includes('marcus')) {
+                found.classList.remove('hidden');
+                notFound.classList.add('hidden');
+            } else if (val.length > 5) {
+                found.classList.add('hidden');
+                notFound.classList.remove('hidden');
+            }
+        });
+    </script>
+</body></html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign - Envelope Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .step-active {
+            color: #006a61;
+            font-weight: 600;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#006f66",
+                        "on-primary-fixed": "#0a1a3a",
+                        "status-rejected": "#DC2626",
+                        "secondary-fixed": "#89f5e7",
+                        "on-secondary-fixed": "#00201d",
+                        "success": "#059669",
+                        "warning": "#D97706",
+                        "on-tertiary": "#ffffff",
+                        "status-pending": "#F59E0B",
+                        "tertiary-container": "#3c2600",
+                        "on-primary-container": "#8392b7",
+                        "border": "#E2E8F0",
+                        "surface-container-low": "#f5f3f6",
+                        "primary": "#041534",
+                        "body": "#1E293B",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "primary-light": "#EEF1F7",
+                        "success-light": "#D1FAE5",
+                        "outline": "#75777f",
+                        "warning-light": "#FEF3C7",
+                        "status-your-turn": "#0D9488",
+                        "error": "#DC2626",
+                        "primary-hover": "#243656",
+                        "outline-variant": "#c5c6cf",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-surface": "#1b1b1e",
+                        "info-light": "#DBEAFE",
+                        "accent-light": "#CCFBF1",
+                        "accent-hover": "#0F766E",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#ae8c5b",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "surface-container-highest": "#e4e2e5",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#efedf0",
+                        "on-background": "#1b1b1e",
+                        "primary-fixed": "#d9e2ff",
+                        "surface-dim": "#dbd9dc",
+                        "error-light": "#FEE2E2",
+                        "status-completed": "#059669",
+                        "on-primary-fixed-variant": "#384668",
+                        "background": "#fbf8fc",
+                        "surface-variant": "#e4e2e5",
+                        "secondary-container": "#86f2e4",
+                        "primary-container": "#1b2a4a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#4f5e81",
+                        "inverse-primary": "#b7c6ee",
+                        "on-tertiary-fixed": "#281800",
+                        "secondary": "#006a61",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-surface-variant": "#45464e",
+                        "muted": "#64748B",
+                        "on-secondary-fixed-variant": "#005049",
+                        "status-draft": "#94A3B8",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#211300",
+                        "surface": "#F1F5F9",
+                        "bg": "#F8FAFC",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fbf8fc",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#303033",
+                        "info": "#2563EB",
+                        "surface-container-high": "#eae7eb",
+                        "on-tertiary-fixed-variant": "#5c4218"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "2": "8px",
+                        "3": "12px",
+                        "1": "4px",
+                        "sidebar-width": "240px",
+                        "16": "64px",
+                        "12": "48px",
+                        "max-content-width": "1280px",
+                        "6": "24px",
+                        "4": "16px",
+                        "topbar-height": "64px",
+                        "8": "32px"
+                    },
+                    "fontFamily": {
+                        "label-xs": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "body-base": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-base overflow-hidden flex h-screen">
+<!-- Sidebar Shell -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary dark:bg-primary-container shadow-md flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-lg font-headline-lg text-on-primary dark:text-primary-fixed">Incel E-Sign</h1>
+<p class="text-label-xs text-on-primary-container">Professional Edition</p>
+</div>
+<nav class="flex-grow">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant font-label-sm hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="dashboard">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-secondary dark:text-secondary-fixed font-bold border-l-4 border-secondary transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="description">description</span>
+                        Documents
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant font-label-sm hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="mail">mail</span>
+                        Envelopes
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant font-label-sm hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="contacts">contacts</span>
+                        Contacts
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant font-label-sm hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="stylus">stylus</span>
+                        My Signatures
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant font-label-sm hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-secondary text-on-secondary font-label-sm py-3 px-4 rounded-xl flex items-center justify-center hover:bg-accent-hover transition-all scale-95 duration-150">
+<span class="material-symbols-outlined mr-2" data-icon="add">add</span>
+                New
+            </button>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<main class="ml-sidebar-width flex-grow flex flex-col relative h-full">
+<!-- Top Navigation Area (Stepper) -->
+<header class="h-16 bg-surface-container-lowest flex items-center justify-center px-8 border-b border-border z-40">
+<nav class="flex items-center space-x-12">
+<div class="flex items-center text-muted">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-success text-on-primary text-[10px] font-bold mr-2">
+<span class="material-symbols-outlined text-sm" data-icon="check">check</span>
+</span>
+<span class="text-label-sm font-label-sm">Add Documents</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center text-muted">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-success text-on-primary text-[10px] font-bold mr-2">
+<span class="material-symbols-outlined text-sm" data-icon="check">check</span>
+</span>
+<span class="text-label-sm font-label-sm">Add Recipients</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center text-muted">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-success text-on-primary text-[10px] font-bold mr-2">
+<span class="material-symbols-outlined text-sm" data-icon="check">check</span>
+</span>
+<span class="text-label-sm font-label-sm">Place Fields</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center text-secondary">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-on-secondary text-[10px] font-bold mr-2">4</span>
+<span class="text-label-sm font-label-sm font-bold">Settings</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center text-muted">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-bold mr-2">5</span>
+<span class="text-label-sm font-label-sm">Review</span>
+</div>
+</nav>
+</header>
+<!-- Content Area -->
+<section class="flex-grow overflow-y-auto custom-scrollbar p-8 bg-surface-container-low">
+<div class="max-w-max-content-width mx-auto">
+<div class="mb-8">
+<h2 class="text-headline-xl font-headline-xl text-primary">Envelope Settings</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Configure security and notification details for your envelope.</p>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Settings Form -->
+<div class="col-span-8 space-y-6">
+<!-- Security Settings Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border">
+<div class="flex items-center mb-4">
+<span class="material-symbols-outlined text-primary mr-2" data-icon="security">security</span>
+<h3 class="text-headline-lg font-headline-lg">Security Settings</h3>
+</div>
+<div class="flex items-start justify-between p-4 bg-primary-light rounded-lg">
+<div class="flex-grow pr-4">
+<h4 class="font-bold text-primary text-body-base">PDF Password Protection</h4>
+<p class="text-body-sm text-on-primary-fixed-variant mt-1">Completed PDFs will be password-protected. Password shown after signing.</p>
+</div>
+<div class="flex items-center h-6">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-secondary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Envelope Details Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border">
+<div class="flex items-center mb-4">
+<span class="material-symbols-outlined text-primary mr-2" data-icon="edit_note">edit_note</span>
+<h3 class="text-headline-lg font-headline-lg">Envelope Details</h3>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Envelope Name</label>
+<input class="w-full border-border rounded-lg bg-surface focus:ring-2 focus:ring-secondary focus:border-secondary transition-all px-4 py-2 font-body-base" type="text" value="Service Agreement - Q4 Expansion"/>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Description (Internal use only)</label>
+<textarea class="w-full border-border rounded-lg bg-surface focus:ring-2 focus:ring-secondary focus:border-secondary transition-all px-4 py-2 font-body-base" rows="3">Standard service agreement for new regional vendors. Includes non-disclosure and compliance clauses.</textarea>
+</div>
+</div>
+</div>
+<!-- Message to Recipients Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border">
+<div class="flex items-center mb-4">
+<span class="material-symbols-outlined text-primary mr-2" data-icon="chat_bubble">chat_bubble</span>
+<h3 class="text-headline-lg font-headline-lg">Message to Recipients</h3>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Email Subject</label>
+<input class="w-full border-border rounded-lg bg-surface focus:ring-2 focus:ring-secondary focus:border-secondary transition-all px-4 py-2 font-body-base" placeholder="Please sign: Service Agreement - Q4 Expansion" type="text"/>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Email Message</label>
+<textarea class="w-full border-border rounded-lg bg-surface focus:ring-2 focus:ring-secondary focus:border-secondary transition-all px-4 py-2 font-body-base" placeholder="Please review and sign the attached service agreement at your earliest convenience." rows="6">Hi there,
+
+Attached is the Service Agreement for our Q4 Expansion project. Please review the terms and complete the signature fields. 
+
+If you have any questions regarding the compliance clauses, feel free to reach out directly.
+
+Best regards,
+The Operations Team</textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Summary Panel -->
+<div class="col-span-4 space-y-6">
+<!-- Signing Order Summary Card -->
+<div class="bg-surface-container p-6 rounded-xl border border-outline-variant">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary mr-2" data-icon="list_alt">list_alt</span>
+<h3 class="text-label-sm font-bold uppercase tracking-wider text-primary">Signing Order Summary</h3>
+</div>
+<button class="text-secondary text-label-xs font-bold hover:underline">Edit</button>
+</div>
+<div class="space-y-3 relative">
+<!-- Vertical connecting line -->
+<div class="absolute left-4 top-4 bottom-4 w-0.5 bg-outline-variant"></div>
+<div class="relative flex items-center bg-surface-container-lowest p-3 rounded-lg border border-border">
+<div class="z-10 flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-on-secondary text-label-xs font-bold mr-3">1</div>
+<div>
+<p class="font-bold text-body-sm text-primary">Sarah Jenkins</p>
+<p class="text-caption-xs text-on-surface-variant">sarah.j@example.com</p>
+</div>
+</div>
+<div class="relative flex items-center bg-surface-container-lowest p-3 rounded-lg border border-border">
+<div class="z-10 flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-on-secondary text-label-xs font-bold mr-3">2</div>
+<div>
+<p class="font-bold text-body-sm text-primary">Marcus Thorne</p>
+<p class="text-caption-xs text-on-surface-variant">m.thorne@partner.com</p>
+</div>
+</div>
+<div class="relative flex items-center bg-surface-container-lowest p-3 rounded-lg border border-border">
+<div class="z-10 flex items-center justify-center w-8 h-8 rounded-full bg-outline-variant text-on-surface-variant text-label-xs font-bold mr-3">3</div>
+<div>
+<p class="font-bold text-body-sm text-primary">Legal Compliance (CC)</p>
+<p class="text-caption-xs text-on-surface-variant">compliance@incel-esign.com</p>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant">
+<div class="flex justify-between text-body-sm mb-2">
+<span class="text-on-surface-variant">Total Documents</span>
+<span class="font-bold">2 Documents</span>
+</div>
+<div class="flex justify-between text-body-sm">
+<span class="text-on-surface-variant">Est. Processing Time</span>
+<span class="font-bold">2-3 Business Days</span>
+</div>
+</div>
+</div>
+<!-- Help / Guidance Card -->
+<div class="bg-primary text-on-primary p-6 rounded-xl">
+<h4 class="font-headline-lg mb-2">Final Step Tips</h4>
+<ul class="space-y-2 text-body-sm opacity-90">
+<li class="flex items-start">
+<span class="material-symbols-outlined text-accent-light text-sm mr-2" data-icon="lightbulb">lightbulb</span>
+                                    Personalizing the email message increases completion rates by 24%.
+                                </li>
+<li class="flex items-start">
+<span class="material-symbols-outlined text-accent-light text-sm mr-2" data-icon="security">security</span>
+                                    Password protection adds a second layer of legal verification.
+                                </li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Actions -->
+<footer class="h-20 bg-surface-container-lowest border-t border-border flex items-center justify-between px-8 z-40">
+<button class="flex items-center px-6 py-2 rounded-lg border border-border text-on-surface-variant font-label-sm hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined mr-2" data-icon="arrow_back">arrow_back</span>
+                Back
+            </button>
+<div class="flex items-center space-x-4">
+<button class="px-6 py-2 rounded-lg text-on-surface-variant font-label-sm hover:bg-surface-container transition-colors">
+                    Save as Draft
+                </button>
+<button class="bg-secondary text-on-secondary px-8 py-2 rounded-lg font-label-sm font-bold shadow-md hover:bg-accent-hover transition-all flex items-center">
+                    Next: Review
+                    <span class="material-symbols-outlined ml-2" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</footer>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        // Simple logic for the toggle switch interaction
+        const toggle = document.querySelector('input[type="checkbox"]');
+        const infoNote = document.querySelector('.bg-primary-light p');
+        
+        toggle.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                infoNote.parentElement.parentElement.classList.remove('opacity-50');
+                infoNote.innerText = 'Completed PDFs will be password-protected. Password shown after signing.';
+            } else {
+                infoNote.parentElement.parentElement.classList.add('opacity-50');
+                infoNote.innerText = 'Security protection is currently disabled for this envelope.';
+            }
+        });
+
+        // Simple button ripple effect simulation or hover state handling could go here
+    </script>
+</body></html>

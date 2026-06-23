@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign - Review &amp; Send</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-step-shadow {
+            box-shadow: 0 4px 14px 0 rgba(0, 111, 102, 0.39);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E2E8F0;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#006f66",
+                      "on-primary-fixed": "#0a1a3a",
+                      "status-rejected": "#DC2626",
+                      "secondary-fixed": "#89f5e7",
+                      "on-secondary-fixed": "#00201d",
+                      "success": "#059669",
+                      "warning": "#D97706",
+                      "on-tertiary": "#ffffff",
+                      "status-pending": "#F59E0B",
+                      "tertiary-container": "#3c2600",
+                      "on-primary-container": "#8392b7",
+                      "border": "#E2E8F0",
+                      "surface-container-low": "#f5f3f6",
+                      "primary": "#041534",
+                      "body": "#1E293B",
+                      "primary-fixed-dim": "#b7c6ee",
+                      "primary-light": "#EEF1F7",
+                      "success-light": "#D1FAE5",
+                      "outline": "#75777f",
+                      "warning-light": "#FEF3C7",
+                      "status-your-turn": "#0D9488",
+                      "error": "#DC2626",
+                      "primary-hover": "#243656",
+                      "outline-variant": "#c5c6cf",
+                      "tertiary-fixed": "#ffddb0",
+                      "on-surface": "#1b1b1e",
+                      "info-light": "#DBEAFE",
+                      "accent-light": "#CCFBF1",
+                      "accent-hover": "#0F766E",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#ae8c5b",
+                      "tertiary-fixed-dim": "#e7c08b",
+                      "surface-container-highest": "#e4e2e5",
+                      "on-secondary": "#ffffff",
+                      "surface-container": "#efedf0",
+                      "on-background": "#1b1b1e",
+                      "primary-fixed": "#d9e2ff",
+                      "surface-dim": "#dbd9dc",
+                      "error-light": "#FEE2E2",
+                      "status-completed": "#059669",
+                      "on-primary-fixed-variant": "#384668",
+                      "background": "#fbf8fc",
+                      "surface-variant": "#e4e2e5",
+                      "secondary-container": "#86f2e4",
+                      "primary-container": "#1b2a4a",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-tint": "#4f5e81",
+                      "inverse-primary": "#b7c6ee",
+                      "on-tertiary-fixed": "#281800",
+                      "secondary": "#006a61",
+                      "inverse-on-surface": "#f2f0f3",
+                      "on-surface-variant": "#45464e",
+                      "muted": "#64748B",
+                      "on-secondary-fixed-variant": "#005049",
+                      "secondary-fixed-dim": "#6bd8cb",
+                      "error-container": "#ffdad6",
+                      "tertiary": "#211300",
+                      "surface": "#F1F5F9",
+                      "bg": "#F8FAFC",
+                      "on-primary": "#ffffff",
+                      "surface-bright": "#fbf8fc",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#303033",
+                      "info": "#2563EB",
+                      "surface-container-high": "#eae7eb",
+                      "on-tertiary-fixed-variant": "#5c4218"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "2": "8px",
+                      "3": "12px",
+                      "1": "4px",
+                      "sidebar-width": "240px",
+                      "16": "64px",
+                      "12": "48px",
+                      "max-content-width": "1280px",
+                      "6": "24px",
+                      "4": "16px",
+                      "topbar-height": "64px",
+                      "8": "32px"
+              },
+              "fontFamily": {
+                      "label-xs": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-3xl": ["Inter"],
+                      "body-base": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-2xl": ["Inter"],
+                      "caption-xs": ["Inter"]
+              },
+              "fontSize": {
+                      "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                      "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                      "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background font-body-base text-body">
+<!-- App Shell: SideNav -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary flex flex-col py-6 shadow-md z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-lg font-headline-lg text-on-primary">Incel E-Sign</h1>
+<p class="text-label-sm font-label-sm text-on-primary-container">Professional Edition</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center px-6 py-3 text-secondary font-bold border-l-4 border-secondary bg-primary-hover transition-colors font-label-sm text-label-sm group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="description">description</span>
+                Documents
+            </a>
+<a class="flex items-center px-6 py-3 text-on-primary-container hover:bg-primary-hover transition-colors font-label-sm text-label-sm group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="mail">mail</span>
+                Envelopes
+            </a>
+<a class="flex items-center px-6 py-3 text-on-primary-container hover:bg-primary-hover transition-colors font-label-sm text-label-sm group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="contacts">contacts</span>
+                Contacts
+            </a>
+<a class="flex items-center px-6 py-3 text-on-primary-container hover:bg-primary-hover transition-colors font-label-sm text-label-sm group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="stylus">stylus</span>
+                My Signatures
+            </a>
+</nav>
+<div class="mt-auto px-6 pt-6 border-t border-primary-container">
+<a class="flex items-center px-2 py-3 text-on-primary-container hover:bg-primary-hover transition-colors font-label-sm text-label-sm rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+                Settings
+            </a>
+<div class="flex items-center mt-6 space-x-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate executive for a user profile avatar. The subject is a middle-aged woman with a confident expression, wearing a tailored navy blue blazer. The lighting is soft and professional, set against a neutral, high-key studio background that matches a clean, modern SaaS interface aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApJR2-nL2itAmE7aUy34Es4V0u7bL-mr-PgUfypE1FbTScrw9ls0sOGWS2-Cnvwd0dUYLNGn0G0Jm73o7nkC7JxkAJS-l7T6LLqYS7zxevGD1h_D_MrDM6Rg20IlSwgMlIwkFy7laR9ekt-PrIZkyTPwKTiZgRA8rklT-0sJBOZYbCS831k-BC9v1fhpNGl7dQC1NiPuhV-IzFAaJW3_VFfd4NV8zedOp_xRVFJ9oSMC_nBlgiPC0ALUuL03Zr4rY6w-NZW8mi5Toy"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-sm font-label-sm text-on-primary truncate">Alex Rivera</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-sidebar-width flex flex-col min-h-screen">
+<!-- TopAppBar & Stepper -->
+<header class="h-topbar-height bg-surface-container-lowest flex items-center justify-between px-8 w-full sticky top-0 z-40 shadow-sm border-b border-border">
+<div class="flex items-center space-x-4">
+<h2 class="font-headline-lg text-headline-lg text-primary">Envelope Builder</h2>
+<div class="h-4 w-px bg-border mx-2"></div>
+<span class="text-body-sm font-body-sm text-muted">Purchase Agreement - Q4</span>
+</div>
+<!-- Stepper -->
+<div class="flex items-center space-x-2">
+<div class="flex items-center space-x-2">
+<span class="w-6 h-6 rounded-full bg-success flex items-center justify-center text-[10px] text-white">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</span>
+<span class="text-label-sm font-label-sm text-muted">Upload</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center space-x-2">
+<span class="w-6 h-6 rounded-full bg-success flex items-center justify-center text-[10px] text-white">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</span>
+<span class="text-label-sm font-label-sm text-muted">Recipients</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center space-x-2">
+<span class="w-6 h-6 rounded-full bg-success flex items-center justify-center text-[10px] text-white">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</span>
+<span class="text-label-sm font-label-sm text-muted">Fields</span>
+</div>
+<div class="w-8 h-px bg-border"></div>
+<div class="flex items-center space-x-2 px-3 py-1 bg-secondary-container/20 rounded-full border border-secondary/30">
+<span class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-[10px] font-bold text-white">4</span>
+<span class="text-label-sm font-label-sm text-secondary">Review &amp; Send</span>
+</div>
+</div>
+<div class="flex items-center space-x-3">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-opacity">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Corporate professional avatar for the top navigation bar, featuring a clean and friendly close-up of a person in business casual attire. The visual style is minimal and high-end, utilizing soft, natural lighting and a high-contrast white background that integrates seamlessly with a modern legal SaaS platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU7siDkR9CXVt4iATy_6WjrJw3nmVjv4GQvUGl6Kpeyff66dr8UnPmU2EcEgSX9MaWaTICK8HdvDoveNtpcGHclPJlXxnYzNAkG1Rb3_mmmbMUph9UQWhbOQ8DCrojzscZdJ8_P8u55zsXk01-G0l2zTZ_t9qQS63W9mnfwZ9PYHjXT69rT-F2XXnBoKrC5MYyS48xrwK1L0Vx2K7q3yggPiDFloatTePbxnFlNl1STCeWdOhkoe3OFGDMcMF2HMMOiJAww2y0SAAt"/>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-8 flex-1 max-w-max-content-width mx-auto w-full">
+<div class="flex flex-col gap-8">
+<!-- Page Title -->
+<div>
+<h3 class="font-headline-2xl text-headline-2xl text-primary">Final Review</h3>
+<p class="text-body-base font-body-base text-muted mt-2">Double-check the document details and recipient assignments before sending the legal envelope.</p>
+</div>
+<!-- Bento Style Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Documents & Settings -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<!-- Documents Card -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-border">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-headline-lg text-headline-lg text-primary flex items-center">
+<span class="material-symbols-outlined mr-2 text-secondary" data-icon="description">description</span>
+                                    Documents
+                                </h4>
+<button class="text-secondary hover:underline text-label-sm font-label-sm">Edit</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center p-3 rounded-lg bg-surface border border-border/50">
+<span class="material-symbols-outlined text-primary-fixed-variant mr-3" data-icon="picture_as_pdf">picture_as_pdf</span>
+<div class="flex-1">
+<p class="text-label-sm font-bold text-primary truncate">Master_Agreement_v4.pdf</p>
+<p class="text-caption-xs font-caption-xs text-muted">12 pages • 2.4 MB</p>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-lg bg-surface border border-border/50">
+<span class="material-symbols-outlined text-primary-fixed-variant mr-3" data-icon="picture_as_pdf">picture_as_pdf</span>
+<div class="flex-1">
+<p class="text-label-sm font-bold text-primary truncate">Addendum_B_Pricing.pdf</p>
+<p class="text-caption-xs font-caption-xs text-muted">2 pages • 840 KB</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Settings Card -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-border">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-headline-lg text-headline-lg text-primary flex items-center">
+<span class="material-symbols-outlined mr-2 text-secondary" data-icon="settings">settings</span>
+                                    Settings
+                                </h4>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between py-2 border-b border-border/40">
+<div>
+<p class="text-label-sm font-bold text-primary">Password Protection</p>
+<p class="text-caption-xs text-muted">Require code to open</p>
+</div>
+<span class="px-2 py-1 rounded bg-success-light text-success font-label-sm text-[11px] uppercase tracking-wider">On</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-border/40">
+<div>
+<p class="text-label-sm font-bold text-primary">Email Notifications</p>
+<p class="text-caption-xs text-muted">Reminder every 2 days</p>
+</div>
+<span class="px-2 py-1 rounded bg-success-light text-success font-label-sm text-[11px] uppercase tracking-wider">On</span>
+</div>
+<div>
+<p class="text-label-sm font-bold text-primary mb-2">Message to Recipients</p>
+<div class="bg-surface p-4 rounded-lg italic text-body-sm text-on-surface-variant border-l-4 border-secondary/40">
+                                        "Please review and sign the Q4 purchase agreement. Reach out if you have any questions regarding the pricing addendum."
+                                    </div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Recipients & Warnings -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+<!-- Recipients Timeline -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-border flex-1">
+<div class="flex items-center justify-between mb-8">
+<h4 class="font-headline-lg text-headline-lg text-primary flex items-center">
+<span class="material-symbols-outlined mr-2 text-secondary" data-icon="group">group</span>
+                                    Recipients &amp; Signing Order
+                                </h4>
+<button class="text-secondary hover:underline text-label-sm font-label-sm">Manage Order</button>
+</div>
+<!-- Timeline -->
+<div class="relative pl-12 space-y-12">
+<!-- Vertical Line -->
+<div class="absolute left-5 top-2 bottom-2 w-0.5 bg-border"></div>
+<!-- Step 1 -->
+<div class="relative">
+<div class="absolute -left-12 w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-body-sm z-10 border-4 border-surface-container-lowest">1</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between bg-surface-container p-4 rounded-xl">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white">
+<img class="w-full h-full object-cover" data-alt="A close-up portrait of a professional male recipient in his late 30s for a legal document signing workflow. He has a friendly but serious expression, wearing a crisp white dress shirt. The background is a clean, corporate office setting with soft bokeh, rendered in a sophisticated palette of greys and teals to match the UI's professional identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUV6tGXpoISabbjXH2I5hvzPY9p_7UpuDBnMGFQifyd3ZxQklI8vIy0bEQdEg1Mvvs5a_0F41R0Lzp_ZzKMHDPErcz1CqUL9v081SaxoNQoBfUHgTtfjzkervCnEUCiTDR8MuJxVfAW1iXAUnYGgEED-YklDn-gQ2YomkiCOLAsRFOdqTOMQkXZ2dk2GR8QryywxPiyqPK5YgZ-Aai8SktsmJp3oZ2Rtw_AuuYu7V65hK-KzbN76heR4owUDYMIzu1r4EzDa47rdzo"/>
+</div>
+<div>
+<p class="text-label-sm font-bold text-primary">Marcus Thorne</p>
+<p class="text-caption-xs text-muted">m.thorne@globalenterprises.com</p>
+</div>
+</div>
+<div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+<div class="px-3 py-1 rounded-full bg-white border border-border text-label-sm font-medium text-primary flex items-center">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="edit_square">edit_square</span>
+                                                8 fields placed
+                                            </div>
+<div class="px-3 py-1 rounded-full bg-success/10 text-success text-label-sm font-medium border border-success/20">Signer</div>
+</div>
+</div>
+</div>
+<!-- Step 2 (Warning State) -->
+<div class="relative">
+<div class="absolute -left-12 w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-body-sm z-10 border-4 border-surface-container-lowest">2</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between bg-surface-container p-4 rounded-xl border border-error/20 ring-1 ring-error/10">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white grayscale">
+<img class="w-full h-full object-cover" data-alt="Professional profile photo of a female executive recipient for an e-signature platform. The woman has a focused expression and wears a charcoal grey business suit. The shot is well-lit with a bright, minimalist corporate background, designed to convey trust and authority within a high-end legal SaaS environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqoMzfPejMNGKwhjjEDznUDQCxkTi6jq0J5xWwZLNu97WXvxVFDg-ly_D_Y3BswowiEYB6R1RistrlwHeZNB7lgh3uP2PntGXCLvCI-ng5jyZLI49RzO4OAb8MlmmD1AGmo-Ovz8A-m3_ThnWKPdsQFaXGZSxQBMB_iSaL9ehTfkQwRnjz3sTljdXvxLnFdVN3f-4aGCs4StPUgCmjLsOgdTlIV72QDJJErCAG9rxiMbOHFaP-rcjVvX9OfCJ_pEqwBpHMg59W5rvf"/>
+</div>
+<div>
+<p class="text-label-sm font-bold text-primary">Sarah Smith</p>
+<p class="text-caption-xs text-muted">sarah.smith@partnergroup.com</p>
+</div>
+</div>
+<div class="mt-4 md:mt-0 flex flex-wrap gap-2 items-center">
+<div class="px-3 py-1 rounded-full bg-error-container text-error text-label-sm font-bold flex items-center animate-pulse">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="warning">warning</span>
+                                                No fields placed for Sarah Smith
+                                            </div>
+<div class="px-3 py-1 rounded-full bg-success/10 text-success text-label-sm font-medium border border-success/20">Signer</div>
+</div>
+</div>
+<div class="mt-3 flex items-start text-error text-caption-xs font-medium ml-4">
+<span class="material-symbols-outlined text-[14px] mr-1" data-icon="info">info</span>
+                                        Action required: Drag signing fields onto the document for this recipient.
+                                    </div>
+</div>
+<!-- Step 3 -->
+<div class="relative">
+<div class="absolute -left-12 w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-body-sm z-10 border-4 border-surface-container-lowest">3</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between bg-surface-container p-4 rounded-xl">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white">
+<img class="w-full h-full object-cover" data-alt="Close-up professional portrait of a senior legal counsel for a profile avatar. The man has grey-flecked hair and a calm, reliable look, wearing a pinstripe navy suit. The image is crisp, with studio lighting creating a premium, modern aesthetic against a light-grey textured background, consistent with a secure corporate signing application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFM9XMPZrxRH_HT1Oq2d0rIuvVw9ev8vZ4StyM_PWsGUxuN9G_SYRuBWmKRJ3Q-Pwb4aTIQvUBHSDR0XZLdUKti3AwqSpjT161f4BV0dKAb9aihceSlnsi3fp9SNR7wL_OO4G0bkEqvtUTVm0iBl9Pc8DOUu8LdCBQVgu3LY3gjbXgLluBB6xI7t-TvkWW3GAc4QDwMDLWTIjDzQZfVRKXzESd5ISmigDNq2oPYooarhuCkREDze1zyA1rsWvCy74B561M-AhtgNCD"/>
+</div>
+<div>
+<p class="text-label-sm font-bold text-primary">David Chen</p>
+<p class="text-caption-xs text-muted">d.chen@legalops.io</p>
+</div>
+</div>
+<div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+<div class="px-3 py-1 rounded-full bg-white border border-border text-label-sm font-medium text-primary flex items-center">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="visibility">visibility</span>
+                                                View Only
+                                            </div>
+<div class="px-3 py-1 rounded-full bg-info-light text-info text-label-sm font-medium border border-info/20">Carbon Copy</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Summary Notice -->
+<div class="bg-warning-light p-4 rounded-xl border border-warning/20 flex items-start">
+<span class="material-symbols-outlined text-warning mr-3 mt-1" data-icon="lightbulb">lightbulb</span>
+<div>
+<p class="text-label-sm font-bold text-tertiary">Quick Tip</p>
+<p class="text-body-sm text-on-tertiary-container">Sending this envelope will trigger notifications to all recipients in the order shown. You can still void the envelope after sending if needed.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Footer Actions -->
+<footer class="h-20 bg-surface-container-lowest border-t border-border px-8 flex items-center justify-between mt-auto">
+<button class="flex items-center px-6 py-2 text-on-surface-variant hover:bg-surface rounded-lg transition-colors font-label-sm text-label-sm group">
+<span class="material-symbols-outlined mr-2 opacity-50 group-hover:opacity-100" data-icon="drafts">drafts</span>
+                Save as Draft
+            </button>
+<div class="flex items-center space-x-4">
+<button class="px-8 py-2.5 border border-border text-primary hover:bg-surface rounded-lg transition-colors font-label-sm text-label-sm font-semibold">
+                    Back
+                </button>
+<button class="px-10 py-2.5 bg-primary hover:bg-primary-hover text-on-primary rounded-lg shadow-lg flex items-center transition-all transform active:scale-95 font-label-sm text-label-sm font-bold group">
+                    Send for Signature
+                    <span class="material-symbols-outlined ml-2 transition-transform group-hover:translate-x-1" data-icon="send">send</span>
+</button>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if(this.classList.contains('bg-primary')) {
+                    // Small visual feedback for the main CTA
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2" data-icon="sync">sync</span> Sending...';
+                    this.disabled = true;
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        alert('In a real app, this would initiate the envelope sending process.');
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign - Notifications</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        /* Custom Scrollbar for Notification Panel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E2E8F0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #CBD5E1;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "surface-tint": "#4f5e81",
+                "on-secondary": "#ffffff",
+                "muted": "#64748B",
+                "surface": "#F1F5F9",
+                "background": "#fbf8fc",
+                "warning-light": "#FEF3C7",
+                "primary-fixed-dim": "#b7c6ee",
+                "inverse-on-surface": "#f2f0f3",
+                "on-surface": "#1b1b1e",
+                "surface-container-highest": "#e4e2e5",
+                "primary-container": "#1b2a4a",
+                "accent-hover": "#0F766E",
+                "on-secondary-fixed-variant": "#005049",
+                "status-your-turn": "#0D9488",
+                "error-light": "#FEE2E2",
+                "tertiary-fixed": "#ffddb0",
+                "outline-variant": "#c5c6cf",
+                "secondary-fixed-dim": "#6bd8cb",
+                "status-completed": "#059669",
+                "surface-variant": "#e4e2e5",
+                "on-secondary-container": "#006f66",
+                "primary-fixed": "#d9e2ff",
+                "on-error-container": "#93000a",
+                "tertiary-fixed-dim": "#e7c08b",
+                "error": "#DC2626",
+                "surface-container-low": "#f5f3f6",
+                "success": "#059669",
+                "status-pending": "#F59E0B",
+                "primary-light": "#EEF1F7",
+                "inverse-primary": "#b7c6ee",
+                "on-primary-fixed": "#0a1a3a",
+                "on-surface-variant": "#45464e",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-container": "#ae8c5b",
+                "secondary-fixed": "#89f5e7",
+                "tertiary": "#211300",
+                "on-tertiary": "#ffffff",
+                "tertiary-container": "#3c2600",
+                "on-tertiary-fixed": "#281800",
+                "bg": "#F8FAFC",
+                "on-primary": "#ffffff",
+                "error-container": "#ffdad6",
+                "border": "#E2E8F0",
+                "on-secondary-fixed": "#00201d",
+                "surface-container-high": "#eae7eb",
+                "primary": "#041534",
+                "inverse-surface": "#303033",
+                "success-light": "#D1FAE5",
+                "status-rejected": "#DC2626",
+                "on-primary-container": "#8392b7",
+                "info": "#2563EB",
+                "outline": "#75777f",
+                "surface-container": "#efedf0",
+                "on-error": "#ffffff",
+                "on-background": "#1b1b1e",
+                "accent-light": "#CCFBF1",
+                "surface-dim": "#dbd9dc",
+                "primary-hover": "#243656",
+                "status-draft": "#94A3B8",
+                "secondary-container": "#86f2e4",
+                "info-light": "#DBEAFE",
+                "secondary": "#006a61",
+                "on-tertiary-fixed-variant": "#5c4218",
+                "on-primary-fixed-variant": "#384668",
+                "warning": "#D97706",
+                "surface-bright": "#fbf8fc",
+                "body": "#1E293B"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+              },
+              "spacing": {
+                "1": "4px",
+                "4": "16px",
+                "6": "24px",
+                "max-content-width": "1280px",
+                "topbar-height": "64px",
+                "3": "12px",
+                "8": "32px",
+                "12": "48px",
+                "sidebar-width": "240px",
+                "2": "8px",
+                "16": "64px"
+              },
+              "fontFamily": {
+                "headline-2xl": ["Inter"],
+                "label-xs": ["Inter"],
+                "headline-lg": ["Inter"],
+                "headline-xl": ["Inter"],
+                "body-base": ["Inter"],
+                "label-sm": ["Inter"],
+                "headline-3xl": ["Inter"],
+                "caption-xs": ["Inter"],
+                "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-surface font-body-base text-body">
+<!-- Sidebar Wrapper (Fixed Left) -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary dark:bg-primary-container shadow-md flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-lg font-headline-lg text-on-primary dark:text-primary-fixed">Incel E-Sign</h1>
+<p class="text-label-xs text-on-primary-container">Professional Edition</p>
+</div>
+<button class="mx-6 mb-8 bg-secondary hover:bg-accent-hover text-on-secondary py-3 px-4 rounded-xl font-label-sm transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">add</span>
+            + New
+        </button>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary dark:text-secondary-fixed font-bold border-l-4 border-secondary bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors rounded-r-lg" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-sm text-label-sm">Documents</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors rounded-r-lg" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-sm text-label-sm">Envelopes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors rounded-r-lg" href="#">
+<span class="material-symbols-outlined">contacts</span>
+<span class="font-label-sm text-label-sm">Contacts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors rounded-r-lg" href="#">
+<span class="material-symbols-outlined">stylus</span>
+<span class="font-label-sm text-label-sm">My Signatures</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors rounded-r-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<div class="flex items-center gap-3 pt-6 border-t border-on-primary-container/20">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border-2 border-on-primary">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior executive in a corporate setting, soft studio lighting, sharp focus on facial features, neutral office background with glass partitions, deep navy and teal accents in the environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ0L6wJi_odT7Mw5Aah1ml_bTg4cofTj_aVwVBbIDkwCB1vjjQMBolnW8_CWHNxuTXN1rBYoduGMuZXd52xIOdc4_z9fL4k7IsE2RCm63wHj7IN8j6zPAhNLSVczuzViwWXN5zpGu76jttMbwoJQV1MCahtToGvi5FlsrCwH6R8h-ozh5mBoGlunSC2eVW_ZPu_UMZmzh4YHhw9_FiZc1CvHHl2rTf6eRGBQk9kUuEi-UHoJo_Q70Y6cLmOxobPJVqYCQw59jnRQhQ"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-label-sm text-on-primary truncate">Alex Sterling</p>
+<p class="text-caption-xs text-on-primary-container truncate">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-topbar-height bg-surface-container-lowest border-b border-border flex items-center justify-between px-8 z-40">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface rounded-lg border-none focus:ring-2 focus:ring-secondary text-body-sm outline-none" placeholder="Search documents, envelopes..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<!-- Notification Bell with Dropdown Trigger -->
+<div class="relative" id="notification-wrapper">
+<button class="relative p-2 rounded-full hover:bg-surface transition-colors" id="notification-bell">
+<span class="material-symbols-outlined text-primary">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-error rounded-full border-2 border-white"></span>
+</button>
+<!-- NOTIFICATION DROPDOWN PANEL -->
+<div class="absolute right-0 mt-2 w-[420px] bg-white rounded-xl shadow-xl border border-border overflow-hidden opacity-0 invisible scale-95 transition-all duration-200 origin-top-right" id="notification-panel">
+<!-- Header -->
+<div class="px-6 py-4 border-b border-border flex items-center justify-between bg-surface-container-lowest">
+<h3 class="text-headline-lg font-headline-lg text-primary">Notifications</h3>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider">3 New</span>
+</div>
+<!-- List Content -->
+<div class="max-height-[520px] overflow-y-auto custom-scrollbar">
+<!-- Notification Item: Your Turn -->
+<div class="px-6 py-4 bg-accent-light border-b border-border/50 flex gap-4 hover:bg-white transition-colors cursor-pointer group">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-status-your-turn/10 flex items-center justify-center text-status-your-turn relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">error</span>
+<span class="absolute top-0 right-0 w-3 h-3 bg-info rounded-full border-2 border-white"></span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-bold text-primary leading-tight">Your turn to sign Q4 Lease Agreement</p>
+<span class="text-caption-xs text-muted">2m ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">Residential Services Ltd. is waiting for your signature to finalize the contract.</p>
+</div>
+</div>
+<!-- Notification Item: Sign Request -->
+<div class="px-6 py-4 bg-accent-light border-b border-border/50 flex gap-4 hover:bg-white transition-colors cursor-pointer group">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary relative">
+<span class="material-symbols-outlined">edit_square</span>
+<span class="absolute top-0 right-0 w-3 h-3 bg-info rounded-full border-2 border-white"></span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-bold text-primary leading-tight">New sign request: Vendor Onboarding</p>
+<span class="text-caption-xs text-muted">45m ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">Global Logistics Inc. has requested your signature on 3 documents.</p>
+</div>
+</div>
+<!-- Notification Item: Completed -->
+<div class="px-6 py-4 border-b border-border/50 flex gap-4 hover:bg-surface transition-colors cursor-pointer">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-status-completed/10 flex items-center justify-center text-status-completed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-body-sm text-primary leading-tight">Completed: Employment Contract - S. Chen</p>
+<span class="text-caption-xs text-muted">3h ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">All parties have signed. Document is now legally binding and archived.</p>
+</div>
+</div>
+<!-- Notification Item: Rejected -->
+<div class="px-6 py-4 border-b border-border/50 flex gap-4 hover:bg-surface transition-colors cursor-pointer">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-status-rejected/10 flex items-center justify-center text-status-rejected">
+<span class="material-symbols-outlined">cancel</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-body-sm text-primary leading-tight">Declined: Project Proposal Update</p>
+<span class="text-caption-xs text-muted">5h ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">Mark Thompson declined to sign. Reason: "Incorrect billing details".</p>
+</div>
+</div>
+<!-- Notification Item: Sign Request (Unread) -->
+<div class="px-6 py-4 bg-accent-light border-b border-border/50 flex gap-4 hover:bg-white transition-colors cursor-pointer group">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary relative">
+<span class="material-symbols-outlined">edit_square</span>
+<span class="absolute top-0 right-0 w-3 h-3 bg-info rounded-full border-2 border-white"></span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-bold text-primary leading-tight">Action Required: NDA for Project X</p>
+<span class="text-caption-xs text-muted">8h ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">Please review and sign the non-disclosure agreement for the new project.</p>
+</div>
+</div>
+<!-- Notification Item: Completed -->
+<div class="px-6 py-4 border-b border-border/50 flex gap-4 hover:bg-surface transition-colors cursor-pointer">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-status-completed/10 flex items-center justify-center text-status-completed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-body-sm text-primary leading-tight">Completed: Q3 Financial Audit</p>
+<span class="text-caption-xs text-muted">1d ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">The audit trail is now available for download in your documents folder.</p>
+</div>
+</div>
+<!-- Notification Item: Alert -->
+<div class="px-6 py-4 border-b border-border/50 flex gap-4 hover:bg-surface transition-colors cursor-pointer">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-status-pending/10 flex items-center justify-center text-status-pending">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-body-sm text-primary leading-tight">Expiring Soon: Partner Agreement</p>
+<span class="text-caption-xs text-muted">1d ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">This document will expire in 24 hours. Remind signers now?</p>
+</div>
+</div>
+<!-- Notification Item: Completed -->
+<div class="px-6 py-4 border-b border-border/50 flex gap-4 hover:bg-surface transition-colors cursor-pointer">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-status-completed/10 flex items-center justify-center text-status-completed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<p class="text-body-sm font-body-sm text-primary leading-tight">Completed: Office Rental Addendum</p>
+<span class="text-caption-xs text-muted">2d ago</span>
+</div>
+<p class="text-caption-xs text-on-surface-variant">Successfully signed by all 4 participants.</p>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="px-6 py-4 bg-surface-container-low flex items-center justify-between">
+<button class="text-label-sm font-label-sm text-secondary hover:text-accent-hover transition-colors">Mark all as read</button>
+<button class="text-label-sm font-label-sm text-primary font-bold hover:underline transition-colors flex items-center gap-1">
+                            View all
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<button class="p-2 rounded-full hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-primary">help_outline</span>
+</button>
+<div class="h-8 w-px bg-border"></div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm font-label-sm text-primary">Alex Sterling</span>
+<span class="material-symbols-outlined text-muted text-sm">expand_more</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-sidebar-width mt-topbar-height p-8 min-h-screen">
+<div class="max-w-max-content-width mx-auto">
+<header class="mb-8 flex items-end justify-between">
+<div>
+<h2 class="text-headline-3xl font-headline-3xl text-primary mb-2">Welcome back, Alex</h2>
+<p class="text-body-base text-muted">You have <span class="font-bold text-secondary">3 documents</span> that require your immediate attention.</p>
+</div>
+<div class="flex gap-4">
+<div class="bg-white p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
+<div class="p-3 bg-secondary-container text-on-secondary-container rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">draw</span>
+</div>
+<div>
+<p class="text-caption-xs text-muted uppercase font-bold tracking-wider">Pending signatures</p>
+<p class="text-headline-xl font-headline-xl text-primary">12</p>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
+<div class="p-3 bg-info-light text-info rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+</div>
+<div>
+<p class="text-caption-xs text-muted uppercase font-bold tracking-wider">Completed this month</p>
+<p class="text-headline-xl font-headline-xl text-primary">84</p>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Bento Grid: Main Action Card -->
+<div class="col-span-12 lg:col-span-8 bg-white rounded-xl shadow-sm border border-border overflow-hidden relative group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+<div class="p-8 relative z-10">
+<div class="flex justify-between items-start mb-12">
+<div>
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-label-xs font-bold mb-4 inline-block">ACTION REQUIRED</span>
+<h3 class="text-headline-2xl font-headline-2xl text-primary max-w-md">Finalize the Q4 Executive Lease Agreement</h3>
+<p class="text-body-base text-on-surface-variant mt-2 max-w-lg">Requested by <span class="font-bold">Real Estate Dept.</span> • Expires in 48 hours</p>
+</div>
+<div class="w-16 h-16 rounded-2xl bg-surface flex items-center justify-center border border-border">
+<span class="material-symbols-outlined text-3xl text-primary">description</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-secondary text-white px-8 py-3 rounded-xl font-label-sm hover:bg-accent-hover transition-all flex items-center gap-2 shadow-lg shadow-secondary/20">
+<span class="material-symbols-outlined">edit</span>
+                                Review and Sign
+                            </button>
+<button class="text-primary font-label-sm hover:underline">View Document Details</button>
+</div>
+</div>
+<div class="absolute right-0 bottom-0 w-1/3 h-full opacity-10 group-hover:opacity-20 transition-opacity">
+<div class="w-full h-full" data-alt="A macro shot of high-quality textured paper with subtle ink strokes and legal watermarks, minimalist corporate aesthetic, monochromatic blue and grey tones, soft lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDA3t5Phsl7uNwKc4HN6dbgaiWYMATR_W15lFHy0-8mqvlfR-nh4Ld7V-HvrzuqNTzN1BM1zEBOWsycj4MkQu0F0G1P_O51k_Seoh4lRlTQzX-ui_TluV7UOuWttPCCS3ztA2FjC-0UnW_2ebFny-BMiE5TIS0BNRD4fq0LSCJzCvrow2fOWO5AiJxyEz-jJibin9bh0k0xEalwQy6Avcy3MUJC2xTrXK_vwgjb-HlgTilxiCG5oGxZ7pmtD7vkFyg41__7cCfFcO8j')"></div>
+</div>
+</div>
+<!-- Bento Grid: Secondary Status -->
+<div class="col-span-12 lg:col-span-4 grid gap-6">
+<div class="bg-primary text-on-primary p-6 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-secondary text-3xl">verified_user</span>
+<span class="text-caption-xs bg-white/10 px-2 py-1 rounded">SECURE</span>
+</div>
+<div>
+<p class="text-headline-lg font-headline-lg mb-1">Your ID is Verified</p>
+<p class="text-caption-xs text-on-primary-container">Next verification check: Oct 2025</p>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-border">
+<div class="flex justify-between items-center mb-4">
+<h4 class="font-bold text-primary">Storage Usage</h4>
+<span class="text-label-xs text-muted">74%</span>
+</div>
+<div class="w-full h-2 bg-surface rounded-full overflow-hidden mb-4">
+<div class="h-full bg-secondary rounded-full" style="width: 74%"></div>
+</div>
+<p class="text-caption-xs text-muted">1.8GB of 2.5GB used. <a class="text-secondary font-bold" href="#">Upgrade Plan</a></p>
+</div>
+</div>
+<!-- Recent Activity Table-like Card -->
+<div class="col-span-12 bg-white rounded-xl shadow-sm border border-border">
+<div class="px-8 py-6 border-b border-border flex items-center justify-between">
+<h3 class="text-headline-lg font-headline-lg text-primary">Recent Documents</h3>
+<div class="flex gap-2">
+<button class="px-4 py-2 text-body-sm border border-border rounded-lg hover:bg-surface transition-colors">Filters</button>
+<button class="px-4 py-2 text-body-sm bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors">Export Report</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface text-muted text-label-xs uppercase tracking-wider">
+<tr>
+<th class="px-8 py-4 font-bold">Document Name</th>
+<th class="px-8 py-4 font-bold">Status</th>
+<th class="px-8 py-4 font-bold">Participants</th>
+<th class="px-8 py-4 font-bold">Last Activity</th>
+<th class="px-8 py-4 font-bold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border">
+<tr class="hover:bg-surface/50 transition-colors">
+<td class="px-8 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-muted">picture_as_pdf</span>
+<div>
+<p class="text-body-sm font-bold text-primary">Vendor_Agreement_V4.pdf</p>
+<p class="text-caption-xs text-muted">Ref: #INV-20932</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-4">
+<span class="px-3 py-1 bg-success-light text-status-completed rounded-full text-[10px] font-bold">COMPLETED</span>
+</td>
+<td class="px-8 py-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden" title="Sarah">
+<img class="w-full h-full object-cover" data-alt="A portrait of a professional woman in her 30s, smiling, corporate attire, soft focus background, high-end professional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn8YL_xeqCtLQdYEJlBl8RC7KwUgrl4NWV2R5LK-z0fuyiSyF1C_EQ1cVlNwydelTYqAphD5XMNLS6CykrcBaZYXyIx_tBTeMCX4E9wF8wu3pYj6keZ-YG-3D3ysyTXHLxW-B0qJV5h4Ty7q1vD1ZFuf36G0ZVU5f3iFw8FOU1KiLKDYaK56cO2ejLJgGRZQev_Jxi2p4HAZHG-X7mP7UyGlYE-P6v7yw4equaP85VAE26ZprdZaQN17JcKmriuM8XmcF1LdZHZCc3"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                +2
+                                            </div>
+</div>
+</td>
+<td class="px-8 py-4 text-body-sm text-muted">2 hours ago</td>
+<td class="px-8 py-4 text-right">
+<button class="p-2 hover:bg-surface rounded-lg transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface/50 transition-colors">
+<td class="px-8 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-muted">description</span>
+<div>
+<p class="text-body-sm font-bold text-primary">Q4_Marketing_Budget.xlsx</p>
+<p class="text-caption-xs text-muted">Ref: #BUD-001</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-4">
+<span class="px-3 py-1 bg-warning-light text-status-pending rounded-full text-[10px] font-bold uppercase">Pending Signature</span>
+</td>
+<td class="px-8 py-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A corporate executive man, mid-40s, sharp suit, confident expression, minimalist workspace background, modern lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsa-maIRDWPNy4U7vgTSQGmeE_tQqd2Y6IveAf4lhzwZuR1_ZL2m3wkAeXW8NIpYaSJhQv8Zym1Jv0sVtfs2Ri6FGiFy9AM9LVTkBProtnzpgNzSU9OvIC9KrEbh6TbA1K1gl5sSvcA4_rMfKOWgjA7cvxqG-qWqMk2cAHMApFr3wWyNW0kp5RWJ5fo2Sr6EgXkUvxwaaZym3Soo3FsbXD9mNMyJTmaimGKBYIGGTDs84iiI5C6ubksMe6YGM6HVT3b-Y5M8CNx6VZ"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A diversity-inclusive corporate headshot, young professional in modern tech office, soft bokeh background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMOfj2ZfymOWzoCz1BJHsZyu-elg_AFZ6_2GhkHCzgJU0RzyhKDeX0i2TRDpnnDA3MiiZWFvSAGQT8sHAziLsoMOujM1s6_Eq2GpEvZiBY_1MMq0aXixSHY8fiFHkamdVVETI-9WecV4zv5bik3GXTlEW8AdieDQhRv5HJqm5c_hmSLGGutsiwh6PNjDJiNKIhD-3aqPGmaLXMvQ8RVB6NR9UQrg1WviASm4amAUT3ozfsWF2bgA65c0gzuY0ibrBILkUGZLqZGV2z"/>
+</div>
+</div>
+</td>
+<td class="px-8 py-4 text-body-sm text-muted">5 hours ago</td>
+<td class="px-8 py-4 text-right">
+<button class="p-2 hover:bg-surface rounded-lg transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bell = document.getElementById('notification-bell');
+            const panel = document.getElementById('notification-panel');
+            const wrapper = document.getElementById('notification-wrapper');
+
+            let isOpen = false;
+
+            const togglePanel = (e) => {
+                e.stopPropagation();
+                isOpen = !isOpen;
+                if (isOpen) {
+                    panel.classList.remove('opacity-0', 'invisible', 'scale-95');
+                    panel.classList.add('opacity-100', 'visible', 'scale-100');
+                } else {
+                    panel.classList.remove('opacity-100', 'visible', 'scale-100');
+                    panel.classList.add('opacity-0', 'invisible', 'scale-95');
+                }
+            };
+
+            bell.addEventListener('click', togglePanel);
+
+            // Close on click outside
+            document.addEventListener('click', (e) => {
+                if (isOpen && !wrapper.contains(e.target)) {
+                    isOpen = false;
+                    panel.classList.remove('opacity-100', 'visible', 'scale-100');
+                    panel.classList.add('opacity-0', 'invisible', 'scale-95');
+                }
+            });
+
+            // Auto-open on load to showcase the requested feature
+            setTimeout(() => {
+                togglePanel({ stopPropagation: () => {} });
+            }, 500);
+        });
+    </script>
+</body></html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign - Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* Custom scrollbar for sidebar */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "bg": "#F8FAFC",
+                        "border": "#E2E8F0",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#303033",
+                        "on-background": "#1b1b1e",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "primary-container": "#1b2a4a",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#006f66",
+                        "accent-light": "#CCFBF1",
+                        "on-primary-fixed": "#0a1a3a",
+                        "primary-light": "#EEF1F7",
+                        "error": "#DC2626",
+                        "secondary": "#006a61",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "error-light": "#FEE2E2",
+                        "on-surface": "#1b1b1e",
+                        "warning": "#D97706",
+                        "tertiary-container": "#3c2600",
+                        "muted": "#64748B",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "inverse-primary": "#b7c6ee",
+                        "background": "#fbf8fc",
+                        "surface-container-highest": "#e4e2e5",
+                        "inverse-on-surface": "#f2f0f3",
+                        "success": "#059669",
+                        "surface-variant": "#e4e2e5",
+                        "info": "#2563EB",
+                        "surface-container-low": "#f5f3f6",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-tint": "#4f5e81",
+                        "error-container": "#ffdad6",
+                        "body": "#1E293B",
+                        "on-secondary-fixed-variant": "#005049",
+                        "outline-variant": "#c5c6cf",
+                        "on-tertiary-container": "#ae8c5b",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#211300",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "on-error-container": "#93000a",
+                        "warning-light": "#FEF3C7",
+                        "primary": "#041534",
+                        "status-your-turn": "#0D9488",
+                        "surface": "#F1F5F9",
+                        "on-secondary-fixed": "#00201d",
+                        "success-light": "#D1FAE5",
+                        "surface-dim": "#dbd9dc",
+                        "outline": "#75777f",
+                        "info-light": "#DBEAFE",
+                        "status-rejected": "#DC2626",
+                        "status-draft": "#94A3B8",
+                        "surface-bright": "#fbf8fc",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "on-primary-container": "#8392b7",
+                        "primary-fixed": "#d9e2ff",
+                        "status-pending": "#F59E0B",
+                        "status-completed": "#059669",
+                        "on-surface-variant": "#45464e",
+                        "surface-container-high": "#eae7eb",
+                        "primary-hover": "#243656",
+                        "surface-container": "#efedf0",
+                        "on-tertiary-fixed": "#281800",
+                        "on-primary-fixed-variant": "#384668",
+                        "accent-hover": "#0F766E",
+                        "sidebar-width": "240px",
+                        "topbar-height": "64px"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "6": "24px",
+                        "sidebar-width": "240px",
+                        "4": "16px",
+                        "2": "8px",
+                        "topbar-height": "64px",
+                        "8": "32px",
+                        "max-content-width": "1280px",
+                        "3": "12px",
+                        "1": "4px",
+                        "16": "64px",
+                        "12": "48px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg text-body overflow-x-hidden">
+<!-- SIDEBAR -->
+<!-- Managed by SideNavBar JSON: Fixed 240px navy sidebar -->
+<aside class="fixed h-screen w-[240px] left-0 top-0 bg-primary text-on-primary shadow-md flex flex-col py-6 px-4 z-50 overflow-y-auto sidebar-scroll">
+<!-- Brand Header -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 bg-secondary-fixed-dim rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary fill-icon">draw</span>
+</div>
+<div>
+<h1 class="text-headline-lg font-headline-lg text-on-primary leading-tight">Incel E-Sign</h1>
+<p class="text-[10px] opacity-60 uppercase tracking-widest font-bold">Legal Authority</p>
+</div>
+</div>
+<!-- Primary CTA -->
+<button class="mb-8 w-full py-3 px-4 bg-secondary-fixed-dim hover:bg-on-secondary-container text-primary font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-black/20">
+<span class="material-symbols-outlined">add</span>
+<span>New Document</span>
+</button>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">description</span>
+                Documents
+            </a>
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">assignment_add</span>
+                Templates
+            </a>
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+                Audit Logs
+            </a>
+<!-- Active Profile Tab -->
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-secondary-fixed-dim font-bold border-l-4 border-secondary-fixed-dim pl-2 font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined fill-icon">settings</span>
+                Settings
+            </a>
+</nav>
+<!-- Footer Links -->
+<div class="mt-auto border-t border-white/10 pt-4 space-y-1">
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">help</span>
+                Help Center
+            </a>
+<a class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">logout</span>
+                Sign Out
+            </a>
+</div>
+</aside>
+<!-- TOP NAV -->
+<header class="fixed top-0 right-0 h-16 w-[calc(100%-240px)] bg-surface-container-lowest border-b border-border flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4 bg-surface rounded-full px-4 py-1.5 w-96">
+<span class="material-symbols-outlined text-muted text-body-base">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full outline-none" placeholder="Search envelopes, files, signers..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative p-2 text-muted hover:text-primary transition-all">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-surface-container-lowest"></span>
+</button>
+<button class="p-2 text-muted hover:text-primary transition-all">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-lg text-body-sm font-semibold hover:bg-primary-hover transition-all">
+                Upgrade
+            </button>
+<div class="h-8 w-px bg-border"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right">
+<p class="text-label-sm font-bold text-primary group-hover:text-secondary-fixed-dim transition-colors">Alex Sterling</p>
+<p class="text-caption-xs text-muted">Administrator</p>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-border overflow-hidden bg-surface">
+<img class="w-full h-full object-cover" src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN CONTENT AREA -->
+<main class="ml-[240px] pt-16 min-h-screen">
+<div class="max-w-[1280px] mx-auto p-8">
+<!-- Page Header -->
+<div class="mb-8">
+<h2 class="text-headline-3xl font-headline-3xl text-primary mb-1">Profile</h2>
+<p class="text-body-base text-muted">Manage your personal information and document history.</p>
+</div>
+<!-- BENTO GRID LAYOUT -->
+<div class="grid grid-cols-12 gap-8">
+<!-- PROFILE CARD (Left/Top) -->
+<section class="col-span-12 lg:col-span-4 space-y-8">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-border overflow-hidden">
+<div class="h-24 bg-primary relative">
+<!-- Decorative background accent -->
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-from),transparent)] from-secondary-fixed-dim"></div>
+</div>
+<div class="px-8 pb-8 -mt-12 relative flex flex-col items-center">
+<!-- Avatar with Camera Overlay -->
+<div class="relative group cursor-pointer mb-4">
+<div class="w-32 h-32 rounded-full border-4 border-surface-container-lowest overflow-hidden shadow-xl bg-white">
+<img class="w-full h-full object-cover transition-transform group-hover:scale-110" src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg"/>
+</div>
+<div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+</div>
+<div class="absolute bottom-1 right-1 bg-secondary-fixed-dim text-primary w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+<span class="material-symbols-outlined text-sm">edit</span>
+</div>
+</div>
+<div class="w-full space-y-4">
+<div class="space-y-1">
+<label class="text-label-xs font-label-xs text-muted uppercase tracking-wider">Full Name</label>
+<input class="w-full px-4 py-2 bg-surface rounded-lg border border-border focus:border-secondary-fixed-dim focus:ring-2 focus:ring-accent-light outline-none text-body-base font-semibold text-primary transition-all" type="text" value="Alex Sterling"/>
+</div>
+<div class="space-y-1">
+<label class="text-label-xs font-label-xs text-muted uppercase tracking-wider">Email Address</label>
+<div class="w-full px-4 py-2 bg-primary-light rounded-lg border border-border text-body-base text-muted flex items-center justify-between">
+<span>alex.s@incel-legal.com</span>
+<span class="material-symbols-outlined text-sm">lock</span>
+</div>
+</div>
+<button class="w-full mt-4 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary-hover transition-colors">
+                                    Update Profile
+                                </button>
+</div>
+</div>
+</div>
+<!-- Additional Metadata Stats Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-border p-6 flex justify-between items-center">
+<div class="text-center flex-1">
+<p class="text-headline-xl font-headline-xl text-primary">124</p>
+<p class="text-caption-xs text-muted uppercase">Sent</p>
+</div>
+<div class="w-px h-10 bg-border"></div>
+<div class="text-center flex-1">
+<p class="text-headline-xl font-headline-xl text-secondary">89</p>
+<p class="text-caption-xs text-muted uppercase">Signed</p>
+</div>
+<div class="w-px h-10 bg-border"></div>
+<div class="text-center flex-1">
+<p class="text-headline-xl font-headline-xl text-status-pending">12</p>
+<p class="text-caption-xs text-muted uppercase">Waiting</p>
+</div>
+</div>
+</section>
+<!-- COLLABORATION HISTORY SECTION (Right/Bottom) -->
+<section class="col-span-12 lg:col-span-8">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-border flex flex-col h-full">
+<div class="p-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h3 class="text-headline-lg font-headline-lg text-primary">Shared Envelopes</h3>
+<p class="text-body-sm text-muted">Your collaboration history across the platform.</p>
+</div>
+<!-- Search Bar for History -->
+<div class="relative w-full md:w-80">
+<input class="w-full pl-10 pr-4 py-2 bg-surface rounded-lg border border-border focus:border-secondary-fixed-dim focus:ring-1 focus:ring-secondary-fixed-dim outline-none text-body-sm" placeholder="Search user by email..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-secondary-container text-xl leading-none">search</span>
+</div>
+</div>
+<!-- History Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface">
+<tr>
+<th class="px-6 py-4 text-label-xs font-label-xs text-muted uppercase tracking-wider">Envelope Name</th>
+<th class="px-6 py-4 text-label-xs font-label-xs text-muted uppercase tracking-wider">Your Role</th>
+<th class="px-6 py-4 text-label-xs font-label-xs text-muted uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 text-label-xs font-label-xs text-muted uppercase tracking-wider">Date</th>
+<th class="px-6 py-4 text-label-xs font-label-xs text-muted uppercase tracking-wider"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border">
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/40">description</span>
+<span class="text-body-sm font-semibold text-primary">Q3 Master Service Agreement</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 rounded-full bg-primary-light text-primary text-[11px] font-bold uppercase">Creator</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-light text-status-completed text-[11px] font-bold uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-status-completed"></span>
+                                                Completed
+                                            </span>
+</td>
+<td class="px-6 py-4 text-body-sm text-muted">Oct 24, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="text-muted hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/40">description</span>
+<span class="text-body-sm font-semibold text-primary">Property Lease Renewal</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold uppercase">Signer</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-light text-status-your-turn text-[11px] font-bold uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-status-your-turn animate-pulse"></span>
+                                                Your Turn
+                                            </span>
+</td>
+<td class="px-6 py-4 text-body-sm text-muted">Oct 22, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="text-muted hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/40">description</span>
+<span class="text-body-sm font-semibold text-primary">NDA - Project Phoenix</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 rounded-full bg-primary-light text-primary text-[11px] font-bold uppercase">Creator</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-light text-status-pending text-[11px] font-bold uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-status-pending"></span>
+                                                Pending
+                                            </span>
+</td>
+<td class="px-6 py-4 text-body-sm text-muted">Oct 20, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="text-muted hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/40">description</span>
+<span class="text-body-sm font-semibold text-primary">Employment Offer Letter</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 rounded-full bg-primary-light text-primary text-[11px] font-bold uppercase">Creator</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-light text-status-completed text-[11px] font-bold uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-status-completed"></span>
+                                                Completed
+                                            </span>
+</td>
+<td class="px-6 py-4 text-body-sm text-muted">Oct 18, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="text-muted hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination/Footer of card -->
+<div class="mt-auto p-4 border-t border-border bg-surface flex items-center justify-between">
+<span class="text-caption-xs text-muted">Showing 4 of 1,240 shared envelopes</span>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded hover:bg-border text-muted"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-1 rounded hover:bg-border text-muted"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- SETTINGS & PREFERENCES (Full Width Bottom) -->
+<section class="col-span-12">
+<div class="bg-surface-container-low p-8 rounded-xl border-2 border-dashed border-border/60">
+<div class="max-w-2xl">
+<h4 class="text-headline-lg font-headline-lg text-primary mb-4">Security &amp; Verification</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-white p-4 rounded-lg shadow-sm border border-border flex items-start gap-4">
+<div class="bg-accent-light p-3 rounded-lg text-secondary">
+<span class="material-symbols-outlined fill-icon">verified_user</span>
+</div>
+<div>
+<p class="text-body-sm font-bold text-primary">Two-Factor Auth</p>
+<p class="text-caption-xs text-muted mb-3">Add an extra layer of security to your account.</p>
+<button class="text-secondary text-label-sm font-bold hover:underline">Enable 2FA</button>
+</div>
+</div>
+<div class="bg-white p-4 rounded-lg shadow-sm border border-border flex items-start gap-4">
+<div class="bg-primary-light p-3 rounded-lg text-primary">
+<span class="material-symbols-outlined fill-icon">history</span>
+</div>
+<div>
+<p class="text-body-sm font-bold text-primary">Active Sessions</p>
+<p class="text-caption-xs text-muted mb-3">View and manage your current active logins.</p>
+<button class="text-primary text-label-sm font-bold hover:underline">Manage Sessions</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simple search filter simulation
+        const searchInput = document.querySelector('input[placeholder="Search user by email..."]');
+        const rows = document.querySelectorAll('tbody tr');
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+
+        // Hover effect for avatar
+        const avatarWrapper = document.querySelector('.group');
+        avatarWrapper.addEventListener('mouseenter', () => {
+            console.log('Hovering avatar');
+        });
+    </script>
+</body></html>

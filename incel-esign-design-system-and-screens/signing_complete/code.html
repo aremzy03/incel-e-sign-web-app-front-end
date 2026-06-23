@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LegalSign - Document Signed Successfully</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#1b1b1e",
+                    "secondary-container": "#86f2e4",
+                    "inverse-primary": "#b7c6ee",
+                    "error-light": "#FEE2E2",
+                    "surface-dim": "#dbd9dc",
+                    "secondary": "#006a61",
+                    "outline": "#75777f",
+                    "info": "#2563EB",
+                    "status-completed": "#059669",
+                    "on-tertiary-container": "#ae8c5b",
+                    "tertiary": "#211300",
+                    "success-light": "#D1FAE5",
+                    "on-primary-fixed": "#0a1a3a",
+                    "status-draft": "#94A3B8",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "surface-container": "#efedf0",
+                    "info-light": "#DBEAFE",
+                    "muted": "#64748B",
+                    "success": "#059669",
+                    "accent-hover": "#0F766E",
+                    "surface-variant": "#e4e2e5",
+                    "on-primary-container": "#8392b7",
+                    "on-primary": "#ffffff",
+                    "background": "#fbf8fc",
+                    "primary-light": "#EEF1F7",
+                    "inverse-surface": "#303033",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "status-your-turn": "#0D9488",
+                    "warning": "#D97706",
+                    "inverse-on-surface": "#f2f0f3",
+                    "error": "#DC2626",
+                    "secondary-fixed": "#89f5e7",
+                    "on-secondary-fixed-variant": "#005049",
+                    "tertiary-fixed": "#ffddb0",
+                    "primary-fixed": "#d9e2ff",
+                    "on-surface-variant": "#45464e",
+                    "surface-tint": "#4f5e81",
+                    "on-surface": "#1b1b1e",
+                    "primary-container": "#1b2a4a",
+                    "bg": "#F8FAFC",
+                    "accent-light": "#CCFBF1",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#eae7eb",
+                    "primary": "#041534",
+                    "on-tertiary-fixed": "#281800",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c5c6cf",
+                    "surface-container-low": "#f5f3f6",
+                    "primary-hover": "#243656",
+                    "warning-light": "#FEF3C7",
+                    "surface-bright": "#fbf8fc",
+                    "status-rejected": "#DC2626",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#00201d",
+                    "on-secondary-container": "#006f66",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "on-error-container": "#93000a",
+                    "status-pending": "#F59E0B",
+                    "body": "#1E293B",
+                    "border": "#E2E8F0",
+                    "tertiary-container": "#3c2600",
+                    "surface": "#F1F5F9",
+                    "surface-container-highest": "#e4e2e5",
+                    "on-primary-fixed-variant": "#384668",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "max-content-width": "1280px",
+                    "16": "64px",
+                    "1": "4px",
+                    "4": "16px",
+                    "8": "32px",
+                    "sidebar-width": "240px",
+                    "3": "12px",
+                    "12": "48px",
+                    "6": "24px",
+                    "topbar-height": "64px",
+                    "2": "8px"
+            },
+            "fontFamily": {
+                    "label-xs": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "caption-xs": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-base": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-3xl": ["Inter"]
+            },
+            "fontSize": {
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-base min-h-screen flex flex-col items-center justify-center">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 left-0 w-full h-topbar-height z-50 flex items-center justify-between px-8 max-w-max-content-width mx-auto bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+<div class="font-headline-xl text-headline-xl font-bold text-primary">LegalSign</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors">help</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors">language</button>
+</div>
+</header>
+<canvas class="confetti-canvas" id="confetti"></canvas>
+<main class="w-full max-w-[600px] px-6 py-12 md:py-24 text-center animate-in fade-in zoom-in duration-700">
+<!-- Success Illustration -->
+<div class="relative mb-8 flex justify-center">
+<div class="w-24 h-24 bg-accent-light rounded-full flex items-center justify-center animate-bounce">
+<span class="material-symbols-outlined text-status-your-turn text-[48px]" style="font-variation-settings: 'wght' 700;">check_circle</span>
+</div>
+<div class="absolute -top-2 -right-2">
+<span class="material-symbols-outlined text-primary opacity-20 text-[64px]">verified_user</span>
+</div>
+</div>
+<!-- Heading & Message -->
+<h1 class="font-headline-3xl text-headline-3xl text-primary mb-4">You've signed successfully!</h1>
+<p class="font-body-base text-muted mb-12">
+            The document has been securely processed. The next signer <span class="font-semibold text-on-background">(Sarah Jenkins)</span> has been notified via email.
+        </p>
+<!-- Main Actions -->
+<div class="space-y-4 mb-8">
+<button class="w-full bg-primary hover:bg-primary-hover text-on-primary py-4 px-8 rounded-xl font-headline-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-md">
+<span class="material-symbols-outlined">download</span>
+                Download Signed Document
+            </button>
+</div>
+<!-- Info Box (Password Protected) -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-6 text-left relative overflow-hidden group mb-12">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-status-your-turn mt-1">lock</span>
+<div class="flex-1">
+<p class="font-label-sm text-on-surface-variant mb-1">Your document is password-protected.</p>
+<div class="flex items-center gap-2">
+<code class="font-headline-lg text-primary tracking-wider" id="password-text">ESIGN-2024</code>
+<button class="p-1 hover:bg-surface-container rounded transition-colors text-status-your-turn flex items-center gap-1 group/btn" onclick="copyToClipboard()">
+<span class="material-symbols-outlined text-label-sm">content_copy</span>
+<span class="font-label-xs">Copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Subtle accent bar -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-status-your-turn"></div>
+</div>
+<!-- Footer Link -->
+<a class="inline-flex items-center gap-2 text-on-primary-fixed-variant hover:text-primary transition-colors font-label-sm group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
+            Return to Dashboard
+        </a>
+</main>
+<!-- Global Footer -->
+<footer class="w-full py-6 px-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center max-w-max-content-width mx-auto bg-background fixed bottom-0">
+<div class="font-caption-xs text-muted mb-4 md:mb-0">
+            © 2024 LegalSign E-Signature Solutions. Secure &amp; Legally Binding.
+        </div>
+<div class="flex gap-6">
+<a class="font-caption-xs text-muted hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-caption-xs text-muted hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-caption-xs text-muted hover:text-primary transition-colors" href="#">Security Architecture</a>
+</div>
+</footer>
+<script>
+        // Micro-interaction: Clipboard Copy
+        function copyToClipboard() {
+            const password = document.getElementById('password-text').innerText;
+            navigator.clipboard.writeText(password).then(() => {
+                const btn = event.currentTarget;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined text-label-sm">check</span><span class="font-label-xs">Copied</span>';
+                btn.classList.add('text-status-completed');
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('text-status-completed');
+                }, 2000);
+            });
+        }
+
+        // Lightweight Confetti Effect
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const colors = ['#0D9488', '#041534', '#86f2e4', '#b7c6ee'];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -10;
+                this.size = Math.random() * 8 + 4;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 3 + 2;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 5 - 2.5;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.rotation += this.rotationSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function createParticles() {
+            if (particles.length < 50) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            createParticles();
+            particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+                if (p.y > canvas.height) particles.splice(index, 1);
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Stop creating after 3 seconds for professional feel
+        setTimeout(() => {
+            createParticles = () => {};
+        }, 3000);
+    </script>
+</body></html>

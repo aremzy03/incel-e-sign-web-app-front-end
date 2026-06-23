@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign - Add Recipients</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .drag-handle:hover { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .signing-line::before {
+            content: '';
+            position: absolute;
+            left: 51px;
+            top: 24px;
+            bottom: -24px;
+            width: 2px;
+            background: repeating-linear-gradient(to bottom, #006a61 0%, #006a61 50%, transparent 50%, transparent 100%);
+            background-size: 1px 8px;
+            z-index: 0;
+        }
+        .signing-line-end::before { display: none; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#006f66",
+                        "on-primary-fixed": "#0a1a3a",
+                        "status-rejected": "#DC2626",
+                        "secondary-fixed": "#89f5e7",
+                        "on-secondary-fixed": "#00201d",
+                        "success": "#059669",
+                        "warning": "#D97706",
+                        "on-tertiary": "#ffffff",
+                        "status-pending": "#F59E0B",
+                        "tertiary-container": "#3c2600",
+                        "on-primary-container": "#8392b7",
+                        "border": "#E2E8F0",
+                        "surface-container-low": "#f5f3f6",
+                        "primary": "#041534",
+                        "body": "#1E293B",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "primary-light": "#EEF1F7",
+                        "success-light": "#D1FAE5",
+                        "outline": "#75777f",
+                        "warning-light": "#FEF3C7",
+                        "status-your-turn": "#0D9488",
+                        "error": "#DC2626",
+                        "primary-hover": "#243656",
+                        "outline-variant": "#c5c6cf",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-surface": "#1b1b1e",
+                        "info-light": "#DBEAFE",
+                        "accent-light": "#CCFBF1",
+                        "accent-hover": "#0F766E",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#ae8c5b",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "surface-container-highest": "#e4e2e5",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#efedf0",
+                        "on-background": "#1b1b1e",
+                        "primary-fixed": "#d9e2ff",
+                        "surface-dim": "#dbd9dc",
+                        "error-light": "#FEE2E2",
+                        "status-completed": "#059669",
+                        "on-primary-fixed-variant": "#384668",
+                        "background": "#fbf8fc",
+                        "surface-variant": "#e4e2e5",
+                        "secondary-container": "#86f2e4",
+                        "primary-container": "#1b2a4a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#4f5e81",
+                        "inverse-primary": "#b7c6ee",
+                        "on-tertiary-fixed": "#281800",
+                        "secondary": "#006a61",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-surface-variant": "#45464e",
+                        "muted": "#64748B",
+                        "on-secondary-fixed-variant": "#005049",
+                        "status-draft": "#94A3B8",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#211300",
+                        "surface": "#F1F5F9",
+                        "bg": "#F8FAFC",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fbf8fc",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#303033",
+                        "info": "#2563EB",
+                        "surface-container-high": "#eae7eb",
+                        "on-tertiary-fixed-variant": "#5c4218"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "2": "8px",
+                        "3": "12px",
+                        "1": "4px",
+                        "sidebar-width": "240px",
+                        "16": "64px",
+                        "12": "48px",
+                        "max-content-width": "1280px",
+                        "6": "24px",
+                        "4": "16px",
+                        "topbar-height": "64px",
+                        "8": "32px"
+                    },
+                    "fontFamily": {
+                        "label-xs": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "body-base": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-body">
+<!-- App Shell: SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary dark:bg-primary-container flex flex-col py-6 shadow-md z-50">
+<div class="px-6 mb-10">
+<h1 class="text-headline-lg font-headline-lg text-on-primary">Incel E-Sign</h1>
+<p class="text-label-xs text-on-primary-container opacity-70">Professional Edition</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary font-bold border-l-4 border-secondary hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-sm text-label-sm">Documents</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary font-bold border-l-4 border-secondary bg-primary-hover" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-sm text-label-sm">Envelopes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">contacts</span>
+<span class="font-label-sm text-label-sm">Contacts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">stylus</span>
+<span class="font-label-sm text-label-sm">My Signatures</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-secondary text-on-secondary py-3 rounded-xl font-label-sm text-label-sm flex items-center justify-center gap-2 hover:bg-accent-hover transition-all">
+<span class="material-symbols-outlined">add</span>
+                New
+            </button>
+</div>
+</aside>
+<!-- App Shell: TopNavBar (Adjusted for Sidebar) -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-topbar-height bg-surface-container-lowest flex items-center justify-between px-8 shadow-sm z-40 border-b border-border">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-secondary focus:outline-none text-body-sm font-body-sm" placeholder="Search envelopes..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-primary">Alex Sterling</p>
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">Admin Account</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a corporate executive in a modern workspace, with soft natural lighting and a neutral blurred background, echoing a serious and trustworthy SaaS environment. The lighting is balanced and crisp, highlighting a calm, professional demeanor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC8hHBQBiy9L7pGPd8Z7ZPgu2q7Exmg3G3669f-MpmTBBwzIlKNB6A3sGjnwKwR7yyTaEhIqPrMTbgipJQVoFLyakyRARHPs1bbvb2Xd3xkPPTAzk-WUwiDc8XQ2VDQHDqFrJYJr6K8NXjWDFexqom-uZopZHWds0BgW1wVffBiorSoFinRW4iREbdoiNxcwTBoUTwqlpdqM0dO4soSB4QScnmE_LobQEL7h1WIb-3ulrDspoSlFHx1FbrnAu3UoHZBS4DXXs7nQM6"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-[88px] pl-sidebar-width min-h-screen bg-surface">
+<div class="max-w-max-content-width mx-auto px-8 pb-32">
+<!-- Persistent Top Stepper -->
+<div class="mb-8 flex justify-center">
+<div class="flex items-center w-full max-w-3xl">
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold mb-2 shadow-sm">
+<span class="material-symbols-outlined">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Add Documents</span>
+</div>
+<div class="h-1 flex-1 bg-secondary mx-[-20px] mb-8"></div>
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold mb-2 shadow-lg ring-4 ring-primary-light">
+                            2
+                        </div>
+<span class="font-label-sm text-label-sm text-primary font-bold">Add Recipients</span>
+</div>
+<div class="h-1 flex-1 bg-outline-variant mx-[-20px] mb-8"></div>
+<div class="flex flex-col items-center flex-1 opacity-50">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold mb-2">
+                            3
+                        </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Place Fields</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Envelope Identity -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-border">
+<h3 class="font-headline-lg text-headline-lg text-primary mb-4">Envelope Details</h3>
+<div class="space-y-4">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Envelope Name</label>
+<input class="w-full px-4 py-2.5 bg-background border border-outline-variant rounded-lg focus:ring-2 focus:ring-secondary focus:outline-none font-body-sm" type="text" value="Q4 Commercial Lease Agreement"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Internal Description</label>
+<textarea class="w-full px-4 py-2.5 bg-background border border-outline-variant rounded-lg focus:ring-2 focus:ring-secondary focus:outline-none font-body-sm" placeholder="Brief summary for internal tracking..." rows="4">Revised agreement for the Broadway Avenue expansion. Includes updated maintenance clauses and term extension options.</textarea>
+</div>
+</div>
+</div>
+<div class="bg-primary text-on-primary p-6 rounded-xl shadow-md">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary-fixed">info</span>
+<p class="font-label-sm text-label-sm text-secondary-fixed">Sequential Signing</p>
+</div>
+<p class="font-body-sm text-body-sm leading-relaxed opacity-80">
+                            Signers will sign one at a time in the specified order. Once a recipient completes their action, the document is automatically routed to the next person.
+                        </p>
+</div>
+</div>
+<!-- Right Column: Signing Order & Recipients -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<!-- Signing Order Section -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-border">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline-lg text-headline-lg text-primary">Signing Order</h3>
+<button class="flex items-center gap-2 text-secondary font-label-sm text-label-sm hover:underline">
+<span class="material-symbols-outlined">swap_vert</span>
+                                Change to Parallel
+                            </button>
+</div>
+<div class="relative space-y-6">
+<!-- Recipient 1 -->
+<div class="flex gap-6 items-start relative signing-line">
+<div class="flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-lg shadow-sm z-10">1</div>
+</div>
+<div class="flex-1 bg-background p-4 rounded-xl border border-outline-variant flex items-center gap-4 hover:shadow-md transition-all group">
+<div class="drag-handle text-outline-variant group-hover:text-on-surface-variant">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim border border-outline flex items-center justify-center text-primary font-bold">JD</div>
+<div class="flex-1 grid grid-cols-2 gap-4">
+<div>
+<p class="font-label-sm text-label-sm text-primary">Julianne Davies</p>
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">j.davies@incel-legal.com</p>
+</div>
+<div class="flex items-center justify-end gap-3">
+<select class="bg-surface border border-outline-variant rounded-lg px-3 py-1.5 text-body-sm focus:ring-2 focus:ring-secondary">
+<option selected="">Needs to Sign</option>
+<option>Receives a Copy</option>
+<option>Needs to View</option>
+</select>
+<button class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recipient 2 -->
+<div class="flex gap-6 items-start relative signing-line">
+<div class="flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container border-2 border-primary-container flex items-center justify-center font-bold text-lg shadow-sm z-10">2</div>
+</div>
+<div class="flex-1 bg-background p-4 rounded-xl border border-outline-variant flex items-center gap-4 hover:shadow-md transition-all group">
+<div class="drag-handle text-outline-variant group-hover:text-on-surface-variant">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-secondary-fixed border border-on-secondary-fixed-variant flex items-center justify-center text-secondary font-bold">MK</div>
+<div class="flex-1 grid grid-cols-2 gap-4">
+<div>
+<p class="font-label-sm text-label-sm text-primary">Marcus Kross</p>
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">marcus.k@globalventures.io</p>
+</div>
+<div class="flex items-center justify-end gap-3">
+<select class="bg-surface border border-outline-variant rounded-lg px-3 py-1.5 text-body-sm focus:ring-2 focus:ring-secondary">
+<option selected="">Needs to Sign</option>
+<option>Receives a Copy</option>
+<option>Needs to View</option>
+</select>
+<button class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recipient 3 -->
+<div class="flex gap-6 items-start relative signing-line-end">
+<div class="flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container border-2 border-primary-container flex items-center justify-center font-bold text-lg shadow-sm z-10">3</div>
+</div>
+<div class="flex-1 bg-background p-4 rounded-xl border border-outline-variant flex items-center gap-4 hover:shadow-md transition-all group">
+<div class="drag-handle text-outline-variant group-hover:text-on-surface-variant">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed border border-on-tertiary-fixed-variant flex items-center justify-center text-tertiary font-bold">EL</div>
+<div class="flex-1 grid grid-cols-2 gap-4">
+<div>
+<p class="font-label-sm text-label-sm text-primary">Elena Lombardi</p>
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">elena@lombardi-law.net</p>
+</div>
+<div class="flex items-center justify-end gap-3">
+<select class="bg-surface border border-outline-variant rounded-lg px-3 py-1.5 text-body-sm focus:ring-2 focus:ring-secondary">
+<option>Needs to Sign</option>
+<option selected="">Receives a Copy</option>
+<option>Needs to View</option>
+</select>
+<button class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Recipient Area -->
+<div class="mt-10 pt-8 border-t border-dashed border-outline-variant">
+<div class="flex flex-col md:flex-row gap-4">
+<div class="flex-1 relative">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Add New Recipient</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">person_add</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-secondary focus:outline-none font-body-sm" id="contact-search" placeholder="Search by name or email..." type="text"/>
+<!-- Suggestions Dropdown (Static Preview) -->
+<div class="absolute top-full left-0 right-0 mt-2 bg-surface-container-lowest border border-border shadow-xl rounded-xl overflow-hidden z-20 hidden" id="suggestions">
+<div class="px-4 py-2 bg-surface-container text-label-xs text-on-surface-variant uppercase tracking-wider">Suggested Contacts</div>
+<button class="w-full px-4 py-3 text-left hover:bg-primary-light flex items-center gap-3 transition-colors">
+<div class="w-8 h-8 rounded-full bg-info-light text-info flex items-center justify-center font-bold text-xs">SR</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary">Sarah Richards</p>
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">s.richards@techcorp.com</p>
+</div>
+</button>
+<button class="w-full px-4 py-3 text-left hover:bg-primary-light flex items-center gap-3 transition-colors">
+<div class="w-8 h-8 rounded-full bg-warning-light text-warning flex items-center justify-center font-bold text-xs">BT</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary">Ben Thompson</p>
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">ben@thompson-partners.com</p>
+</div>
+</button>
+</div>
+</div>
+</div>
+<div class="flex items-end">
+<button class="px-6 py-3 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm hover:bg-primary-hover transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                                        Add Signer
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom Action Footer -->
+<footer class="fixed bottom-0 right-0 w-[calc(100%-240px)] bg-surface-container-lowest border-t border-border px-8 py-4 flex items-center justify-between shadow-2xl z-40">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Step 2 of 3: Add Recipients</p>
+<p class="font-caption-xs text-caption-xs text-secondary font-medium">3 signers added</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-8 py-2.5 text-primary font-label-sm text-label-sm hover:bg-surface-container-high rounded-lg transition-colors border border-transparent">
+                Back
+            </button>
+<button class="px-10 py-2.5 bg-secondary text-on-secondary rounded-lg font-label-sm text-label-sm shadow-sm hover:bg-accent-hover transition-all flex items-center gap-2">
+                Next: Place Fields
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</footer>
+<script>
+        const searchInput = document.getElementById('contact-search');
+        const suggestions = document.getElementById('suggestions');
+
+        searchInput.addEventListener('focus', () => {
+            suggestions.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+                suggestions.classList.add('hidden');
+            }
+        });
+
+        // Simple mock interaction for the drag handles
+        document.querySelectorAll('.drag-handle').forEach(handle => {
+            handle.addEventListener('mousedown', () => {
+                handle.closest('.flex-1').classList.add('opacity-50', 'scale-[0.98]');
+            });
+            handle.addEventListener('mouseup', () => {
+                handle.closest('.flex-1').classList.remove('opacity-50', 'scale-[0.98]');
+            });
+        });
+    </script>
+</body></html>

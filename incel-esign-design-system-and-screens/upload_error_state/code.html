@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign | Upload Error</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Shared Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#ae8c5b",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#303033",
+                    "surface-bright": "#fbf8fc",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "surface-dim": "#dbd9dc",
+                    "muted": "#64748B",
+                    "status-completed": "#059669",
+                    "error-light": "#FEE2E2",
+                    "primary-light": "#EEF1F7",
+                    "info-light": "#DBEAFE",
+                    "on-primary-fixed": "#0a1a3a",
+                    "background": "#fbf8fc",
+                    "primary": "#041534",
+                    "on-primary-fixed-variant": "#384668",
+                    "on-primary": "#ffffff",
+                    "success": "#059669",
+                    "on-tertiary": "#ffffff",
+                    "bg": "#F8FAFC",
+                    "outline-variant": "#c5c6cf",
+                    "tertiary": "#211300",
+                    "info": "#2563EB",
+                    "secondary-container": "#86f2e4",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "on-background": "#1b1b1e",
+                    "surface-container-low": "#f5f3f6",
+                    "status-your-turn": "#0D9488",
+                    "outline": "#75777f",
+                    "primary-hover": "#243656",
+                    "on-secondary-container": "#006f66",
+                    "accent-hover": "#0F766E",
+                    "warning-light": "#FEF3C7",
+                    "secondary-fixed": "#89f5e7",
+                    "surface-variant": "#e4e2e5",
+                    "inverse-on-surface": "#f2f0f3",
+                    "surface-tint": "#4f5e81",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "error": "#DC2626",
+                    "warning": "#D97706",
+                    "on-surface-variant": "#45464e",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#006a61",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#281800",
+                    "success-light": "#D1FAE5",
+                    "surface-container-high": "#eae7eb",
+                    "on-secondary-fixed": "#00201d",
+                    "border": "#E2E8F0",
+                    "surface": "#F1F5F9",
+                    "on-secondary-fixed-variant": "#005049",
+                    "on-surface": "#1b1b1e",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#ffddb0",
+                    "accent-light": "#CCFBF1",
+                    "status-rejected": "#DC2626",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "on-primary-container": "#8392b7",
+                    "status-draft": "#94A3B8",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e4e2e5",
+                    "body": "#1E293B",
+                    "tertiary-container": "#3c2600",
+                    "inverse-primary": "#b7c6ee",
+                    "primary-fixed": "#d9e2ff",
+                    "primary-container": "#1b2a4a",
+                    "surface-container": "#efedf0",
+                    "status-pending": "#F59E0B"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "4": "16px",
+                    "16": "64px",
+                    "8": "32px",
+                    "1": "4px",
+                    "6": "24px",
+                    "topbar-height": "64px",
+                    "max-content-width": "1280px",
+                    "3": "12px",
+                    "sidebar-width": "240px",
+                    "12": "48px",
+                    "2": "8px"
+            },
+            "fontFamily": {
+                    "headline-2xl": ["Inter"],
+                    "body-base": ["Inter"],
+                    "label-xs": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "caption-xs": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-active { background-color: #006a61; color: white; border-radius: 0.5rem; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-base overflow-hidden">
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-topbar-height bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-6">
+<span class="text-headline-lg font-headline-lg text-primary">Incel E-Sign</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-base" href="#">Documents</a>
+<a class="text-secondary font-bold border-b-2 border-secondary pb-1 font-body-base" href="#">Envelopes</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-base" href="#">Templates</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-low transition-colors rounded-full">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-low transition-colors rounded-full">help_outline</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-primary-fixed overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional business headshot of a corporate executive in a modern, brightly lit office environment. The lighting is soft and natural, emphasizing a high-contrast corporate aesthetic with subtle navy blue and white tones in the background to match the professional brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnPGcWHWpp3QtsqLrBHWjanh5PcZWYyU8QVbA35tf7aSeu7rxMnlc0YWsrhl61A-Ap8dFSgmucSzDzaKmYgs9R788W9IM3TJFVlu12MaoQbMyPCHW0rqSoJha2B1PiOYX4ydVsRjFlx-r-WW1u_aJNl4V_rqIQ2xXDfAeeJI-I65EE2CKiAzJVuQSkOYvjWsfymKYW1HCZWbDYrHVTekuZ2no6Smm0-jSACJg-7mfBkU9dIBm1wkDlS5NxkRNS_cYg4qvddZeWQRst"/>
+</div>
+<button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label-sm hover:bg-accent-hover transition-transform active:scale-95">New Envelope</button>
+</div>
+</header>
+<!-- SideNavBar Shell -->
+<aside class="hidden lg:flex flex-col w-sidebar-width h-screen p-4 fixed left-0 top-0 bg-primary z-40">
+<div class="flex items-center gap-3 mb-8 pt-4">
+<div class="w-10 h-10 bg-on-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">signature</span>
+</div>
+<div>
+<h2 class="text-on-primary font-headline-xl text-[18px] leading-tight">Incel E-Sign</h2>
+<p class="text-on-primary-container text-label-xs opacity-70">Legal Workspace</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary text-on-secondary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">inbox</span>
+<span class="font-label-sm">Inbox</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">send</span>
+<span class="font-label-sm">Sent</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-sm">Drafts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">archive</span>
+<span class="font-label-sm">Archive</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 pt-4 border-t border-on-primary-container/20">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:bg-primary-hover rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-label-sm">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-sidebar-width pt-topbar-height h-screen overflow-y-auto">
+<div class="max-w-max-content-width mx-auto p-8">
+<!-- Breadcrumbs & Header -->
+<div class="mb-8">
+<nav class="flex text-label-xs text-muted mb-2 gap-2 items-center">
+<span>Envelopes</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-medium">New Request</span>
+</nav>
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-3xl text-headline-3xl text-primary mb-1">Create New Envelope</h1>
+<p class="text-body-base text-on-surface-variant">Step 1 of 3: Prepare your documents</p>
+</div>
+<div class="flex gap-2">
+<div class="w-12 h-1 bg-secondary rounded-full"></div>
+<div class="w-12 h-1 bg-surface-container-high rounded-full"></div>
+<div class="w-12 h-1 bg-surface-container-high rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Bento Layout for Document Builder -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Main Upload Area (Left) -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-outline-variant relative overflow-hidden">
+<!-- Instructional Header -->
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">upload_file</span>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg text-primary">Upload Documents</h3>
+<p class="text-body-sm text-on-surface-variant">Add the files you want to be signed by your recipients.</p>
+</div>
+</div>
+<!-- ERROR STATE DROPZONE -->
+<div class="relative group border-2 border-dashed border-error bg-error-light/10 rounded-xl p-12 transition-all duration-300 flex flex-col items-center justify-center text-center" id="dropzone">
+<!-- Error Visual Feedback -->
+<div class="w-20 h-20 bg-error-light rounded-full flex items-center justify-center mb-6 animate-pulse">
+<span class="material-symbols-outlined text-error text-[48px]" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<h4 class="font-headline-xl text-headline-xl text-error mb-2">Upload failed</h4>
+<div class="max-w-md mx-auto">
+<p class="text-body-base text-on-surface mb-6 leading-relaxed">
+                                    The file <span class="font-semibold italic">"Contract_Draft_Large.pdf"</span> is too large. 
+                                    Please upload a file smaller than <span class="font-bold">20MB</span> to ensure successful processing.
+                                </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-3">
+<button class="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-label-sm hover:bg-primary-hover transition-all flex items-center gap-2" onclick="resetDropzone()">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                                    Try Again
+                                </button>
+<button class="px-6 py-2.5 bg-on-primary border border-outline text-primary rounded-xl font-label-sm hover:bg-surface-container-low transition-all">
+                                    View Requirements
+                                </button>
+</div>
+<!-- Micro-Interaction Background Decoration -->
+<div class="absolute -right-12 -top-12 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[240px] text-error">cloud_off</span>
+</div>
+</div>
+<!-- Supported Formats Footer -->
+<div class="mt-8 pt-6 border-t border-outline-variant flex justify-between items-center text-caption-xs text-muted">
+<div class="flex gap-4">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> PDF (Preferred)</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> DOCX</span>
+</div>
+<span>Maximum file size: 20MB per file</span>
+</div>
+</div>
+<!-- Secondary Document List (Empty/Draft State) -->
+<div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant border-dashed">
+<div class="flex items-center justify-center py-8 text-on-surface-variant/40 italic">
+<p class="font-body-sm">No documents successfully added yet.</p>
+</div>
+</div>
+</div>
+<!-- Sidebar Details (Right) -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Progress Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant">
+<h4 class="font-headline-lg text-headline-lg text-primary mb-4">Envelope Progress</h4>
+<div class="space-y-6">
+<div class="flex gap-4 relative">
+<div class="absolute left-[11px] top-6 bottom-0 w-[2px] bg-outline-variant"></div>
+<div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-on-secondary z-10 shrink-0">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">edit</span>
+</div>
+<div class="pb-6">
+<p class="font-label-sm text-secondary">1. Upload Documents</p>
+<p class="text-caption-xs text-on-surface-variant">Select legal files for signing</p>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="absolute left-[11px] top-6 bottom-0 w-[2px] bg-outline-variant"></div>
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant z-10 shrink-0 border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]">group</span>
+</div>
+<div class="pb-6">
+<p class="font-label-sm text-on-surface-variant">2. Add Recipients</p>
+<p class="text-caption-xs text-muted">Who needs to sign?</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant z-10 shrink-0 border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]">send</span>
+</div>
+<div>
+<p class="font-label-sm text-on-surface-variant">3. Prepare &amp; Send</p>
+<p class="text-caption-xs text-muted">Review and finalize fields</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Security Badge Card -->
+<div class="bg-primary-container rounded-xl p-6 border border-primary/20">
+<div class="flex items-start gap-4 text-on-primary-container">
+<span class="material-symbols-outlined text-primary-fixed">verified_user</span>
+<div>
+<h5 class="font-label-sm text-on-primary-container">Enterprise Grade Security</h5>
+<p class="text-caption-xs opacity-80 mt-1">All documents are encrypted using AES-256 standards before storage. Audit trails are generated for every interaction.</p>
+</div>
+</div>
+</div>
+<!-- Tips Bento Item -->
+<div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant overflow-hidden relative">
+<div class="absolute inset-0 opacity-5 grayscale bg-cover bg-center" data-alt="A sophisticated abstract background featuring soft, blurred legal documents and high-end office materials in a corporate setting. The colors are muted navy and teal with clean lines, conveying professional authority and modern security." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCOFfOgr-0qJX3_H8CRGyAxDqPgufYxtIllHuljCZq1tE1jXa8J7JmCIXN-Kmo3g2LNJdHmv0Fd-FF39vgO8vOHXyjgOQD74Ng1u1ia4vyxuUAlmMuTt8MyhobJJOowpJeXiMBkBNS0CfwWMw1STFRcIjM5SV-iVJ7_BtoFdAAGIUmiHBCdSo41uO1fRp8fAJhlgezYCjaWNVvLmtSYFu39FeL7zKpos7aeTz-gATdE3hDXmXXDFXA_o-LzyVXCW2M5DqQxZ0RtGNvg')"></div>
+<div class="relative z-10">
+<h5 class="font-label-sm text-primary flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[18px]">lightbulb</span>
+                                Upload Tip
+                            </h5>
+<p class="text-body-sm text-on-surface-variant">Combine multiple small PDF files into a single envelope for a faster signing experience for your clients.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant h-16 flex items-center justify-around z-50">
+<button class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="text-[10px] font-medium">New</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">description</span>
+<span class="text-[10px] font-medium">Docs</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</button>
+</nav>
+<script>
+        function resetDropzone() {
+            const dropzone = document.getElementById('dropzone');
+            dropzone.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                location.reload(); // Simple reload for demo, usually would reset state
+            }, 300);
+        }
+
+        // Simple interactive feedback on button
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.classList.add('scale-95'));
+            btn.addEventListener('mouseup', () => btn.classList.remove('scale-95'));
+            btn.addEventListener('mouseleave', () => btn.classList.remove('scale-95'));
+        });
+    </script>
+</body></html>

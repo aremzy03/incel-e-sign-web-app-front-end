@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign | Place Fields</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .field-hover:hover {
+            outline: 2px solid #006a61;
+            outline-offset: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#006f66",
+                        "on-primary-fixed": "#0a1a3a",
+                        "status-rejected": "#DC2626",
+                        "secondary-fixed": "#89f5e7",
+                        "on-secondary-fixed": "#00201d",
+                        "success": "#059669",
+                        "warning": "#D97706",
+                        "on-tertiary": "#ffffff",
+                        "status-pending": "#F59E0B",
+                        "tertiary-container": "#3c2600",
+                        "on-primary-container": "#8392b7",
+                        "border": "#E2E8F0",
+                        "surface-container-low": "#f5f3f6",
+                        "primary": "#041534",
+                        "body": "#1E293B",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "primary-light": "#EEF1F7",
+                        "success-light": "#D1FAE5",
+                        "outline": "#75777f",
+                        "warning-light": "#FEF3C7",
+                        "status-your-turn": "#0D9488",
+                        "error": "#DC2626",
+                        "primary-hover": "#243656",
+                        "outline-variant": "#c5c6cf",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-surface": "#1b1b1e",
+                        "info-light": "#DBEAFE",
+                        "accent-light": "#CCFBF1",
+                        "accent-hover": "#0F766E",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#ae8c5b",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "surface-container-highest": "#e4e2e5",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#efedf0",
+                        "on-background": "#1b1b1e",
+                        "primary-fixed": "#d9e2ff",
+                        "surface-dim": "#dbd9dc",
+                        "error-light": "#FEE2E2",
+                        "status-completed": "#059669",
+                        "on-primary-fixed-variant": "#384668",
+                        "background": "#fbf8fc",
+                        "surface-variant": "#e4e2e5",
+                        "secondary-container": "#86f2e4",
+                        "primary-container": "#1b2a4a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#4f5e81",
+                        "inverse-primary": "#b7c6ee",
+                        "on-tertiary-fixed": "#281800",
+                        "secondary": "#006a61",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-surface-variant": "#45464e",
+                        "muted": "#64748B",
+                        "on-secondary-fixed-variant": "#005049",
+                        "status-draft": "#94A3B8",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#211300",
+                        "surface": "#F1F5F9",
+                        "bg": "#F8FAFC",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fbf8fc",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#303033",
+                        "info": "#2563EB",
+                        "surface-container-high": "#eae7eb",
+                        "on-tertiary-fixed-variant": "#5c4218"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "2": "8px",
+                        "3": "12px",
+                        "1": "4px",
+                        "sidebar-width": "240px",
+                        "16": "64px",
+                        "12": "48px",
+                        "max-content-width": "1280px",
+                        "6": "24px",
+                        "4": "16px",
+                        "topbar-height": "64px",
+                        "8": "32px"
+                    },
+                    "fontFamily": {
+                        "label-xs": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "body-base": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-body font-body-base overflow-hidden flex flex-col h-screen">
+<!-- Top Navigation Bar (Modified for Editor Flow) -->
+<header class="h-16 bg-surface-container-lowest border-b border-border flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-4">
+<div class="bg-primary px-3 py-1 rounded">
+<span class="text-on-primary font-headline-lg text-headline-lg tracking-tight">Incel E-Sign</span>
+</div>
+<div class="h-6 w-px bg-border"></div>
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-primary">Commercial_Lease_Agreement_v4.pdf</span>
+<span class="text-caption-xs font-caption-xs text-muted">Page 1 of 5</span>
+</div>
+</div>
+<!-- Stepper -->
+<nav class="flex items-center gap-8">
+<div class="flex items-center gap-2 opacity-50">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-xs font-label-xs">1</div>
+<span class="text-label-sm font-label-sm">Add Documents</span>
+</div>
+<div class="w-12 h-px bg-border"></div>
+<div class="flex items-center gap-2 opacity-50">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-xs font-label-xs">2</div>
+<span class="text-label-sm font-label-sm">Add Recipients</span>
+</div>
+<div class="w-12 h-px bg-border"></div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-label-xs font-label-xs ring-2 ring-secondary ring-offset-2">3</div>
+<span class="text-label-sm font-label-sm text-secondary font-bold">Place Fields</span>
+</div>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center border border-border">
+<span class="text-primary font-bold text-label-xs">AR</span>
+</div>
+</div>
+</header>
+<!-- Main Editor Shell -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Pane: Field Palette -->
+<aside class="w-[200px] bg-white border-r border-border flex flex-col p-4 z-40">
+<h2 class="text-label-sm font-label-sm text-muted uppercase tracking-wider mb-6">Field Palette</h2>
+<div class="space-y-3">
+<!-- Signature -->
+<div class="group cursor-grab active:cursor-grabbing">
+<div class="bg-blue-50 border border-blue-200 p-3 rounded flex items-center gap-3 group-hover:bg-blue-100 transition-colors">
+<span class="material-symbols-outlined text-blue-600">stylus</span>
+<span class="text-label-sm font-label-sm text-blue-900">Signature</span>
+</div>
+</div>
+<!-- Initials -->
+<div class="group cursor-grab active:cursor-grabbing">
+<div class="bg-purple-50 border border-purple-200 p-3 rounded flex items-center gap-3 group-hover:bg-purple-100 transition-colors">
+<span class="material-symbols-outlined text-purple-600">draw</span>
+<span class="text-label-sm font-label-sm text-purple-900">Initials</span>
+</div>
+</div>
+<!-- Date -->
+<div class="group cursor-grab active:cursor-grabbing">
+<div class="bg-emerald-50 border border-emerald-200 p-3 rounded flex items-center gap-3 group-hover:bg-emerald-100 transition-colors">
+<span class="material-symbols-outlined text-emerald-600">calendar_today</span>
+<span class="text-label-sm font-label-sm text-emerald-900">Date</span>
+</div>
+</div>
+<!-- Text -->
+<div class="group cursor-grab active:cursor-grabbing">
+<div class="bg-slate-50 border border-slate-200 p-3 rounded flex items-center gap-3 group-hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined text-slate-600">text_fields</span>
+<span class="text-label-sm font-label-sm text-slate-900">Text</span>
+</div>
+</div>
+<!-- Designation -->
+<div class="group cursor-grab active:cursor-grabbing">
+<div class="bg-amber-50 border border-amber-200 p-3 rounded flex items-center gap-3 group-hover:bg-amber-100 transition-colors">
+<span class="material-symbols-outlined text-amber-600">badge</span>
+<span class="text-label-sm font-label-sm text-amber-900">Designation</span>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-6 border-t border-border">
+<p class="text-caption-xs font-caption-xs text-muted leading-tight">Drag and drop fields onto the document to request information from signers.</p>
+</div>
+</aside>
+<!-- Center Pane: PDF Canvas -->
+<section class="flex-1 bg-surface-container-low overflow-auto flex justify-center p-8 custom-scrollbar">
+<div class="relative w-[850px] min-h-[1100px] bg-white shadow-xl ring-1 ring-black/5 p-16 flex flex-col gap-8">
+<!-- Watermark / Grid for visual density -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#041534 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- Document Content Mockup -->
+<div class="space-y-6 relative z-10">
+<h1 class="text-headline-xl font-headline-xl text-primary text-center underline">COMMERCIAL LEASE AGREEMENT</h1>
+<p class="text-body-sm font-body-sm leading-relaxed text-on-surface-variant">
+                        This Commercial Lease Agreement ("Lease") is made and effective this 24th day of May, 2024, by and between <strong>Global Property Holdings LLC</strong> ("Landlord") and <strong>Alex Rivera</strong> ("Tenant"). 
+                        The Landlord hereby leases to the Tenant, and the Tenant hereby leases from the Landlord, the premises located at 123 Tech Corridor, Building B, Suite 400.
+                    </p>
+<p class="text-body-sm font-body-sm leading-relaxed text-on-surface-variant">
+<strong>1. TERM.</strong> The term of this Lease shall be for a period of five (5) years, commencing on June 1, 2024, and ending on May 31, 2029.
+                    </p>
+<p class="text-body-sm font-body-sm leading-relaxed text-on-surface-variant">
+<strong>2. RENT.</strong> Tenant shall pay to Landlord annual rent in the amount of $48,000.00, payable in equal monthly installments of $4,000.00.
+                    </p>
+<div class="h-32 border-b border-dashed border-border"></div>
+<p class="text-body-sm font-body-sm leading-relaxed text-on-surface-variant">
+<strong>IN WITNESS WHEREOF</strong>, the parties hereto have executed this Lease as of the day and year first above written.
+                    </p>
+<!-- Placed Fields -->
+<div class="mt-12 flex justify-between items-end">
+<div class="w-1/2 space-y-4">
+<label class="text-caption-xs font-caption-xs text-muted uppercase">Tenant Signature</label>
+<div class="relative w-64 h-16 bg-blue-50/50 border-2 border-blue-400 border-dashed rounded flex items-center justify-center field-hover group cursor-move">
+<div class="absolute -top-3 -left-1 bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Signer 1</div>
+<span class="material-symbols-outlined text-blue-400">stylus</span>
+<span class="ml-2 text-blue-600 font-label-sm text-label-sm">Signature</span>
+</div>
+</div>
+<div class="w-1/3 space-y-4">
+<label class="text-caption-xs font-caption-xs text-muted uppercase">Date Signed</label>
+<div class="relative w-40 h-12 bg-emerald-50/50 border-2 border-emerald-400 border-dashed rounded flex items-center justify-center field-hover group cursor-move">
+<div class="absolute -top-3 -left-1 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Signer 1</div>
+<span class="material-symbols-outlined text-emerald-400">calendar_today</span>
+<span class="ml-2 text-emerald-600 font-label-sm text-label-sm">Date</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom of Page indicator -->
+<div class="mt-auto pt-8 border-t border-surface-container flex justify-center">
+<span class="text-caption-xs font-caption-xs text-muted italic">End of Page 1</span>
+</div>
+</div>
+</section>
+<!-- Right Pane: Properties & Signers -->
+<aside class="w-[240px] bg-white border-l border-border flex flex-col z-40">
+<!-- Signer Selection -->
+<div class="p-4 border-b border-border">
+<label class="text-caption-xs font-caption-xs text-muted block mb-2">Place fields for:</label>
+<div class="relative">
+<button class="w-full flex items-center justify-between p-3 border border-border rounded-xl bg-surface hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-[10px] text-on-secondary font-bold">AR</div>
+<span class="text-label-sm font-label-sm text-primary truncate">Alex Rivera</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Page Navigator -->
+<div class="flex-1 flex flex-col p-4 overflow-hidden">
+<h3 class="text-label-sm font-label-sm text-muted mb-4 uppercase tracking-wider">Pages</h3>
+<div class="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+<!-- Page Thumbnail Active -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-full aspect-[3/4] bg-white border-2 border-secondary rounded-lg shadow-sm flex items-center justify-center relative overflow-hidden">
+<div class="scale-50 opacity-40">
+<!-- Mini document preview -->
+<div class="space-y-1 w-20">
+<div class="h-1 bg-gray-200 rounded"></div>
+<div class="h-1 bg-gray-200 rounded"></div>
+<div class="h-1 w-3/4 bg-gray-200 rounded"></div>
+</div>
+</div>
+</div>
+<span class="text-caption-xs font-caption-xs text-secondary font-bold">Page 1</span>
+</div>
+<!-- Page Thumbnail Inactive -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer opacity-60 hover:opacity-100 transition-opacity">
+<div class="w-full aspect-[3/4] bg-surface-container border border-border rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-muted">description</span>
+</div>
+<span class="text-caption-xs font-caption-xs text-muted">Page 2</span>
+</div>
+<!-- Page Thumbnail Inactive -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer opacity-60 hover:opacity-100 transition-opacity">
+<div class="w-full aspect-[3/4] bg-surface-container border border-border rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-muted">description</span>
+</div>
+<span class="text-caption-xs font-caption-xs text-muted">Page 3</span>
+</div>
+</div>
+</div>
+<!-- Field Properties (Empty state or context sensitive) -->
+<div class="p-4 bg-surface border-t border-border h-48">
+<div class="flex flex-col items-center justify-center h-full text-center">
+<span class="material-symbols-outlined text-muted mb-2">touch_app</span>
+<p class="text-caption-xs font-caption-xs text-muted">Select a field on the canvas to edit its properties.</p>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer Actions -->
+<footer class="h-16 bg-white border-t border-border px-8 flex items-center justify-between z-50">
+<button class="flex items-center gap-2 px-6 py-2 border border-border rounded-full hover:bg-surface transition-colors text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-body-sm">arrow_back</span>
+            Back
+        </button>
+<div class="flex items-center gap-4">
+<button class="px-6 py-2 text-primary font-label-sm text-label-sm hover:underline">
+                Save and Finish Later
+            </button>
+<button class="bg-secondary text-on-secondary px-8 py-2.5 rounded-full font-label-sm text-label-sm hover:bg-accent-hover transition-colors shadow-sm flex items-center gap-2">
+                Next: Settings
+                <span class="material-symbols-outlined text-body-sm">arrow_forward</span>
+</button>
+</div>
+</footer>
+<!-- Micro-interaction script -->
+<script>
+        // Simple drag visual effect (simulation)
+        document.querySelectorAll('.cursor-grab').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.classList.add('scale-95');
+                el.classList.add('transition-transform');
+            });
+            el.addEventListener('mouseup', () => {
+                el.classList.remove('scale-95');
+            });
+        });
+
+        // Field selection simulation
+        document.querySelectorAll('.field-hover').forEach(field => {
+            field.addEventListener('click', function() {
+                // Clear previous selections
+                document.querySelectorAll('.field-hover').forEach(f => {
+                    f.classList.remove('border-secondary', 'border-solid');
+                    f.classList.add('border-dashed');
+                });
+                // Highlight this one
+                this.classList.remove('border-dashed');
+                this.classList.add('border-secondary', 'border-solid', 'ring-4', 'ring-secondary/10');
+            });
+        });
+    </script>
+</body></html>

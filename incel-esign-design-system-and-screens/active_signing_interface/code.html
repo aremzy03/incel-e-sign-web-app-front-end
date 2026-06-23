@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LegalSign | Active Signing - Q4 Commercial Lease Agreement</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+
+        /* Custom scrollbar for professional look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c5c6cf;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #75777f;
+        }
+
+        /* Document Field Pulsing Effect */
+        @keyframes field-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(13, 148, 136, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+        }
+        .field-pulse {
+            animation: field-pulse 2s infinite;
+        }
+
+        /* Signature Canvas simulation */
+        .signature-preview {
+            background-image: radial-gradient(#e4e2e5 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#1b1b1e",
+                        "secondary-container": "#86f2e4",
+                        "inverse-primary": "#b7c6ee",
+                        "error-light": "#FEE2E2",
+                        "surface-dim": "#dbd9dc",
+                        "secondary": "#006a61",
+                        "outline": "#75777f",
+                        "info": "#2563EB",
+                        "status-completed": "#059669",
+                        "on-tertiary-container": "#ae8c5b",
+                        "tertiary": "#211300",
+                        "success-light": "#D1FAE5",
+                        "on-primary-fixed": "#0a1a3a",
+                        "status-draft": "#94A3B8",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "surface-container": "#efedf0",
+                        "info-light": "#DBEAFE",
+                        "muted": "#64748B",
+                        "success": "#059669",
+                        "accent-hover": "#0F766E",
+                        "surface-variant": "#e4e2e5",
+                        "on-primary-container": "#8392b7",
+                        "on-primary": "#ffffff",
+                        "background": "#fbf8fc",
+                        "primary-light": "#EEF1F7",
+                        "inverse-surface": "#303033",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "status-your-turn": "#0D9488",
+                        "warning": "#D97706",
+                        "inverse-on-surface": "#f2f0f3",
+                        "error": "#DC2626",
+                        "secondary-fixed": "#89f5e7",
+                        "on-secondary-fixed-variant": "#005049",
+                        "tertiary-fixed": "#ffddb0",
+                        "primary-fixed": "#d9e2ff",
+                        "on-surface-variant": "#45464e",
+                        "surface-tint": "#4f5e81",
+                        "on-surface": "#1b1b1e",
+                        "primary-container": "#1b2a4a",
+                        "bg": "#F8FAFC",
+                        "accent-light": "#CCFBF1",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#eae7eb",
+                        "primary": "#041534",
+                        "on-tertiary-fixed": "#281800",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c5c6cf",
+                        "surface-container-low": "#f5f3f6",
+                        "primary-hover": "#243656",
+                        "warning-light": "#FEF3C7",
+                        "surface-bright": "#fbf8fc",
+                        "status-rejected": "#DC2626",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#00201d",
+                        "on-secondary-container": "#006f66",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "on-error-container": "#93000a",
+                        "status-pending": "#F59E0B",
+                        "body": "#1E293B",
+                        "border": "#E2E8F0",
+                        "tertiary-container": "#3c2600",
+                        "surface": "#F1F5F9",
+                        "surface-container-highest": "#e4e2e5",
+                        "on-primary-fixed-variant": "#384668",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "max-content-width": "1280px",
+                        "16": "64px",
+                        "1": "4px",
+                        "4": "16px",
+                        "8": "32px",
+                        "sidebar-width": "240px",
+                        "3": "12px",
+                        "12": "48px",
+                        "6": "24px",
+                        "topbar-height": "64px",
+                        "2": "8px"
+                    },
+                    "fontFamily": {
+                        "label-xs": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "caption-xs": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-base": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-3xl": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-base antialiased overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full h-topbar-height z-50 flex items-center justify-between px-8 bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-6">
+<h1 class="font-headline-xl text-headline-xl font-bold text-primary">LegalSign</h1>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Document</span>
+<span class="font-headline-lg text-headline-lg text-primary truncate max-w-[300px]">Q4 Commercial Lease Agreement</span>
+</div>
+</div>
+<!-- Zoom & Pagination Controls -->
+<div class="flex items-center gap-4 bg-surface-container-low px-4 py-1.5 rounded-full border border-outline-variant">
+<button class="flex items-center justify-center p-1 hover:bg-surface-variant rounded transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined text-on-surface-variant">remove</span>
+</button>
+<span class="font-label-sm text-label-sm px-2 text-on-surface">115%</span>
+<button class="flex items-center justify-center p-1 hover:bg-surface-variant rounded transition-colors" title="Zoom In">
+<span class="material-symbols-outlined text-on-surface-variant">add</span>
+</button>
+<div class="h-4 w-[1px] bg-outline-variant mx-1"></div>
+<span class="font-label-sm text-label-sm text-on-surface">Page 1 of 5</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center p-2 hover:bg-surface-container transition-colors rounded-full" title="Help">
+<span class="material-symbols-outlined text-on-surface-variant">help</span>
+</button>
+<button class="flex items-center justify-center p-2 hover:bg-surface-container transition-colors rounded-full" title="Language">
+<span class="material-symbols-outlined text-on-surface-variant">language</span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate executive for a legal software profile, set against a neutral, high-end studio background with soft cinematic lighting. The individual is wearing a dark navy blazer, reflecting the brand's sophisticated and trustworthy aesthetic. High resolution and professional demeanor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmf7wBOAbVKXoR1C5X2IA9jWQm81C63PyA8RfL4xkg1YyeVwPkh1ld0P9cBjbvyIzicfFAWkJLYay8NiCAWQXCXe2Bb_38O9Qc5i5QUieQfPUBCWCK9-QWfRHmQwMz8X79wr2LtnSpugxtTcVNv0cdX8rlQUtx83BfORffuuoHMsaxWxH5kFq209PicBvINRu6ipX6FoO_Qo-j6ktFrZGvtXf8dbmPb__QDZsX_lEbPv-xOP0rCZPkvyWK_xWYsvJSV7inDHzRAECT"/>
+</div>
+</div>
+</header>
+<!-- App Content Wrapper -->
+<main class="flex-grow pt-[64px] pb-[72px] flex overflow-hidden">
+<!-- Left Nav Rail (Condensed version of SideNavBar) -->
+<nav class="hidden md:flex flex-col w-[80px] bg-primary border-r border-outline-variant items-center py-6 gap-8">
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="p-3 rounded-xl bg-secondary-container text-on-secondary-container shadow-md">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_document</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-primary">Sign</span>
+</div>
+<div class="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+<div class="p-3">
+<span class="material-symbols-outlined text-on-primary-fixed-variant">visibility</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-primary-fixed-variant">Review</span>
+</div>
+<div class="mt-auto flex flex-col items-center gap-6">
+<span class="material-symbols-outlined text-on-primary-fixed-variant hover:text-white cursor-pointer">settings</span>
+<span class="material-symbols-outlined text-on-primary-fixed-variant hover:text-white cursor-pointer">contact_support</span>
+</div>
+</nav>
+<!-- Main Document Area -->
+<div class="flex-grow bg-surface-dim overflow-y-auto flex flex-col items-center p-8">
+<!-- Simulated PDF Container -->
+<div class="relative w-full max-w-[850px] bg-white shadow-2xl min-h-[1100px] p-[60px] flex flex-col gap-8 transition-all duration-300">
+<!-- Document Header -->
+<div class="border-b-2 border-primary pb-6 flex justify-between items-end">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-primary uppercase tracking-wider">Commercial Lease Agreement</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Reference: CLA-2024-Q4-089</p>
+</div>
+<div class="w-24 h-24 bg-surface-container border border-outline-variant flex items-center justify-center">
+<span class="text-caption-xs text-outline text-center">CORPORATE<br/>SEAL</span>
+</div>
+</div>
+<!-- Document Content (Skeleton Text for realism) -->
+<div class="space-y-6">
+<div class="space-y-2">
+<h3 class="font-label-sm text-label-sm font-bold text-primary">1. PARTIES</h3>
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+                            This Commercial Lease Agreement ("Lease") is entered into this 15th day of October, 2024, by and between <strong>METRO REALTY GROUP LLC</strong> ("Lessor") and <strong>SIGNER CORP</strong> ("Lessee").
+                        </p>
+</div>
+<div class="space-y-2">
+<h3 class="font-label-sm text-label-sm font-bold text-primary">2. PREMISES</h3>
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+                            Lessor hereby leases to Lessee, and Lessee hereby leases from Lessor, the premises located at 12300 Business Parkway, Suite 400, Chicago, IL 60601, comprising approximately 4,500 rentable square feet.
+                        </p>
+</div>
+<!-- Placeholder for content to fill space -->
+<div class="h-64 bg-surface-container-low rounded-lg border border-dashed border-outline-variant flex items-center justify-center">
+<span class="text-on-surface-variant italic font-body-sm">Section 3: Term &amp; Rent Details - Page 1 Cont.</span>
+</div>
+<!-- Interactive Field: Signature (Active Pulse) -->
+<div class="mt-12 p-6 border-t border-outline-variant bg-surface-container-lowest">
+<div class="grid grid-cols-2 gap-12">
+<div class="space-y-4">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-tighter">Lessee Signature</label>
+<div class="relative group cursor-pointer">
+<div class="h-16 w-full border-2 border-status-your-turn border-dashed rounded-lg bg-accent-light/30 flex items-center justify-center field-pulse group-hover:bg-accent-light/50 transition-all">
+<div class="flex items-center gap-2 text-status-your-turn">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+<span class="font-label-sm text-label-sm font-bold">CLICK TO SIGN</span>
+</div>
+</div>
+<div class="absolute -top-3 -left-2 bg-status-your-turn text-white px-2 py-0.5 rounded text-[10px] font-bold">REQUIRED</div>
+</div>
+</div>
+<div class="space-y-4">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-tighter">Date</label>
+<div class="h-16 w-full border-2 border-status-completed rounded-lg bg-success-light/30 flex items-center justify-center transition-all px-4">
+<div class="flex items-center gap-2 text-status-completed w-full">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span class="font-body-base text-body-base font-semibold">October 15, 2024</span>
+<span class="material-symbols-outlined ml-auto">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Page Footer Branding -->
+<div class="absolute bottom-8 left-[60px] right-[60px] flex justify-between border-t border-outline-variant pt-4 opacity-50">
+<span class="font-caption-xs text-caption-xs">LegalSign Verified - SHA256: 4e9f...2b1</span>
+<span class="font-caption-xs text-caption-xs">Page 1 of 5</span>
+</div>
+</div>
+</div>
+<!-- Right Sidebar (Your Fields) -->
+<aside class="hidden md:flex flex-col w-sidebar-width bg-surface-container-lowest border-l border-outline-variant shadow-lg z-10 overflow-y-auto">
+<div class="p-6 border-b border-outline-variant bg-surface-container-low">
+<h3 class="font-headline-lg text-headline-lg text-primary">Your Fields</h3>
+<div class="mt-4 flex items-center gap-3">
+<div class="flex-grow bg-outline-variant h-2 rounded-full overflow-hidden">
+<div class="bg-status-your-turn h-full w-[66%]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">2 of 3</span>
+</div>
+</div>
+<!-- Field Checklist -->
+<div class="p-4 space-y-2">
+<div class="flex items-center gap-3 p-3 bg-success-light/20 border border-success-light rounded-xl opacity-70">
+<span class="material-symbols-outlined text-status-completed">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface line-through">Full Legal Name</span>
+</div>
+<div class="flex items-center gap-3 p-3 bg-success-light/20 border border-success-light rounded-xl opacity-70">
+<span class="material-symbols-outlined text-status-completed">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface line-through">Signing Date</span>
+</div>
+<div class="flex items-center gap-3 p-3 bg-accent-light/40 border border-status-your-turn rounded-xl ring-2 ring-status-your-turn ring-opacity-20">
+<span class="material-symbols-outlined text-status-your-turn">pending</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Signature Required</span>
+</div>
+</div>
+<div class="mt-4 px-6 py-2">
+<div class="h-[1px] bg-outline-variant"></div>
+</div>
+<!-- Signature Picker -->
+<div class="p-6 space-y-6">
+<div class="flex justify-between items-center">
+<h4 class="font-label-sm text-label-sm font-bold text-primary uppercase">Saved Signatures</h4>
+<button class="text-status-your-turn font-label-xs text-label-xs hover:underline">Manage</button>
+</div>
+<div class="space-y-4">
+<button class="w-full h-24 border-2 border-primary rounded-xl p-4 bg-primary-light flex items-center justify-center group relative shadow-inner overflow-hidden">
+<img class="max-h-full max-w-full opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A clean, digitized black ink cursive signature of a person on a pristine white background. The stroke is confident and elegant, representing a professional legal endorsement for a modern SaaS platform like LegalSign. Minimalist, high-contrast, and focused exclusively on the signature stroke." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnWtHFvjinQ50I79qbQpRG8wfzbi3Ti0GH6xehvSWsv65cnnAkRu6z6_3rp5hSTyM2pb0z_fJo1nVEd4MXQhkSk-dCdZ37-KrklNOJcOczIQnz5pCx8F11pXmz1QrCh5c33i-GqobhzL3BILj6bq4C1tggeH0QvV3NPTeBB8aYNVceGAyRFEndzbzaF7Y39Chi-pLbi712CGEUqAtgAYagjbuCUcXDQi3CjS1DwWkckiPH6hL0MYqVv39oCPVdRhGo4vR4FiXg3tH6"/>
+<div class="absolute top-2 right-2 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</button>
+<button class="w-full h-24 border border-outline-variant border-dashed rounded-xl p-4 bg-surface-container-lowest flex items-center justify-center hover:bg-surface-container transition-colors signature-preview">
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">draw</span>
+<span class="font-label-xs text-label-xs">Draw New</span>
+</div>
+</button>
+<button class="w-full h-12 border border-outline-variant rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container transition-colors text-on-surface">
+<span class="material-symbols-outlined text-[20px]">upload_file</span>
+<span class="font-label-sm text-label-sm">Upload Image</span>
+</button>
+</div>
+</div>
+<div class="mt-auto p-6">
+<div class="bg-surface-container p-4 rounded-xl border border-outline-variant">
+<p class="font-caption-xs text-caption-xs text-on-surface-variant">
+                        By signing, you agree this is a legally binding signature under the ESIGN Act and UETA.
+                    </p>
+</div>
+</div>
+</aside>
+</main>
+<!-- Bottom Sticky Bar -->
+<footer class="fixed bottom-0 left-0 w-full h-[72px] bg-surface-container-lowest border-t border-outline-variant z-50 flex items-center px-8">
+<div class="flex items-center gap-4 w-1/3">
+<button class="px-6 py-2 rounded-lg border border-error text-error font-label-sm text-label-sm hover:bg-error-light transition-colors">
+                Decline
+            </button>
+<button class="text-on-surface-variant font-label-sm text-label-sm hover:underline">
+                Finish Later
+            </button>
+</div>
+<div class="w-1/3 flex flex-col items-center gap-1">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-widest">Progress</span>
+<div class="flex items-center gap-4 w-full max-w-[200px]">
+<div class="flex-grow h-1.5 bg-outline-variant rounded-full overflow-hidden">
+<div class="bg-status-your-turn h-full w-[66%]"></div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">2/3</span>
+</div>
+</div>
+<div class="w-1/3 flex justify-end">
+<button class="flex items-center gap-2 px-8 py-3 bg-primary/40 text-on-primary font-label-sm text-label-sm rounded-lg cursor-not-allowed transition-all shadow-md" disabled="">
+<span>Complete Signing</span>
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</button>
+</div>
+</footer>
+<!-- Mobile Signature Bottom Sheet (Hidden on Desktop) -->
+<div class="md:hidden fixed inset-0 bg-black/50 z-[60] hidden" id="mobile-sheet-overlay"></div>
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-white rounded-t-3xl p-6 z-[70] translate-y-full transition-transform" id="mobile-signature-sheet">
+<div class="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-6"></div>
+<h3 class="font-headline-lg text-headline-lg text-primary mb-4">Complete Your Signature</h3>
+<div class="h-48 border-2 border-dashed border-status-your-turn rounded-2xl bg-surface-container-low flex items-center justify-center signature-preview mb-6">
+<span class="text-on-surface-variant font-label-sm">Draw here...</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="w-full py-3 border border-outline-variant rounded-xl font-label-sm text-label-sm">Clear</button>
+<button class="w-full py-3 bg-primary text-white rounded-xl font-label-sm text-label-sm">Apply</button>
+</div>
+</div>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simple zoom interaction mockup
+        let zoom = 115;
+        const zoomDisplay = document.querySelector('.px-2.text-on-surface');
+        
+        document.querySelectorAll('button[title^="Zoom"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const isPlus = btn.title === "Zoom In";
+                zoom = isPlus ? Math.min(zoom + 10, 200) : Math.max(zoom - 10, 50);
+                zoomDisplay.innerText = `${zoom}%`;
+            });
+        });
+
+        // Click to sign simulation
+        const signZone = document.querySelector('.field-pulse');
+        const completeBtn = document.querySelector('button[disabled]');
+        
+        if(signZone) {
+            signZone.addEventListener('click', () => {
+                signZone.innerHTML = `
+                    <img src="https://image-placeholder.com/signature_applied" data-alt="A clean, digitized black ink cursive signature of a person on a pristine white background. The stroke is confident and elegant, representing a professional legal endorsement for a modern SaaS platform like LegalSign. Minimalist, high-contrast, and focused exclusively on the signature stroke." class="max-h-full">
+                `;
+                signZone.classList.remove('field-pulse', 'border-dashed', 'bg-accent-light/30');
+                signZone.classList.add('bg-white', 'border-solid');
+                
+                // Update Progress
+                const bars = document.querySelectorAll('.bg-status-your-turn.h-full');
+                bars.forEach(bar => bar.style.width = '100%');
+                
+                const texts = document.querySelectorAll('.font-label-sm.text-on-surface');
+                texts.forEach(t => { if(t.innerText.includes('2 of 3')) t.innerText = '3 of 3'; });
+                
+                const labels = document.querySelectorAll('.font-label-xs.text-on-surface-variant');
+                labels.forEach(l => { if(l.innerText.includes('2/3')) l.innerText = '3/3'; });
+
+                // Enable Final Button
+                completeBtn.removeAttribute('disabled');
+                completeBtn.classList.remove('bg-primary/40', 'cursor-not-allowed');
+                completeBtn.classList.add('bg-secondary', 'hover:bg-accent-hover');
+                
+                // Update Checkbox in sidebar
+                const pendingField = document.querySelector('.border-status-your-turn');
+                if(pendingField) {
+                    pendingField.classList.remove('bg-accent-light/40', 'border-status-your-turn', 'ring-2');
+                    pendingField.classList.add('bg-success-light/20', 'border-success-light', 'opacity-70');
+                    pendingField.querySelector('.material-symbols-outlined').innerText = 'check_circle';
+                    pendingField.querySelector('.material-symbols-outlined').classList.replace('text-status-your-turn', 'text-status-completed');
+                    pendingField.querySelector('span:last-child').classList.add('line-through');
+                    pendingField.querySelector('span:last-child').classList.remove('font-semibold');
+                }
+            });
+        }
+    </script>
+</body></html>

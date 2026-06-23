@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Email Confirmation | Incel E-Sign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fbf8fc",
+                        "on-surface-variant": "#45464e",
+                        "surface-container-highest": "#e4e2e5",
+                        "warning-light": "#FEF3C7",
+                        "background": "#fbf8fc",
+                        "muted": "#64748B",
+                        "success-light": "#D1FAE5",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#4f5e81",
+                        "inverse-on-surface": "#f2f0f3",
+                        "tertiary-container": "#3c2600",
+                        "status-draft": "#94A3B8",
+                        "error": "#DC2626",
+                        "on-primary-container": "#8392b7",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c5c6cf",
+                        "info": "#2563EB",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-container": "#1b2a4a",
+                        "inverse-primary": "#b7c6ee",
+                        "surface-container": "#efedf0",
+                        "secondary-fixed": "#89f5e7",
+                        "border": "#E2E8F0",
+                        "on-surface": "#1b1b1e",
+                        "bg": "#F8FAFC",
+                        "on-error-container": "#93000a",
+                        "info-light": "#DBEAFE",
+                        "tertiary-fixed": "#ffddb0",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#006a61",
+                        "primary-hover": "#243656",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "surface-variant": "#e4e2e5",
+                        "status-pending": "#F59E0B",
+                        "on-primary-fixed-variant": "#384668",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f5f3f6",
+                        "status-rejected": "#DC2626",
+                        "on-secondary-container": "#006f66",
+                        "surface-container-high": "#eae7eb",
+                        "warning": "#D97706",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-tertiary-container": "#ae8c5b",
+                        "on-primary-fixed": "#0a1a3a",
+                        "primary": "#041534",
+                        "outline": "#75777f",
+                        "on-background": "#1b1b1e",
+                        "success": "#059669",
+                        "on-tertiary-fixed": "#281800",
+                        "error-light": "#FEE2E2",
+                        "on-secondary-fixed-variant": "#005049",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "primary-light": "#EEF1F7",
+                        "status-completed": "#059669",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "on-secondary-fixed": "#00201d",
+                        "inverse-surface": "#303033",
+                        "accent-light": "#CCFBF1",
+                        "status-your-turn": "#0D9488",
+                        "accent-hover": "#0F766E",
+                        "surface-dim": "#dbd9dc",
+                        "body": "#1E293B",
+                        "tertiary": "#211300",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "surface": "#F1F5F9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "4": "16px",
+                        "topbar-height": "64px",
+                        "max-content-width": "1280px",
+                        "sidebar-width": "240px",
+                        "8": "32px",
+                        "12": "48px",
+                        "6": "24px",
+                        "1": "4px",
+                        "16": "64px",
+                        "3": "12px",
+                        "2": "8px"
+                    },
+                    "fontFamily": {
+                        "body-base": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbf8fc;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .float-animation {
+            animation: float 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6 relative overflow-hidden">
+<!-- Background Texture -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-40">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-secondary opacity-10 blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary opacity-5 blur-[120px]"></div>
+</div>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-md z-10">
+<!-- Logo Branding -->
+<div class="flex justify-center mb-8">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded-xl shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">gesture</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg text-primary tracking-tight">Incel E-Sign</span>
+<span class="font-label-xs text-label-xs text-muted uppercase tracking-widest">Legal Authority</span>
+</div>
+</div>
+</div>
+<!-- Confirmation Card -->
+<div class="glass-card shadow-xl rounded-xl p-8 text-center flex flex-col items-center">
+<!-- Illustration Area -->
+<div class="relative w-32 h-32 mb-6 flex items-center justify-center">
+<div class="absolute inset-0 bg-secondary-container opacity-20 rounded-full float-animation"></div>
+<div class="relative z-10 w-24 h-24 bg-white rounded-full shadow-md flex items-center justify-center">
+<span class="material-symbols-outlined text-[48px] text-status-your-turn" style="font-variation-settings: 'FILL' 0;">mail</span>
+</div>
+<!-- Decorative Elements -->
+<div class="absolute top-0 right-0 w-4 h-4 bg-status-completed rounded-full"></div>
+<div class="absolute bottom-4 left-0 w-3 h-3 bg-secondary rounded-full opacity-60"></div>
+</div>
+<!-- Content Header -->
+<h1 class="font-headline-xl text-headline-xl text-primary mb-2">Check your email</h1>
+<p class="font-body-base text-body-base text-on-surface-variant mb-8 px-2">
+                We sent a confirmation link to <span class="font-bold text-primary">alex@example.com</span>. Please click the link to verify your account.
+            </p>
+<!-- Action Buttons -->
+<div class="w-full space-y-4">
+<button class="w-full py-4 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm transition-all hover:bg-primary-hover hover:shadow-lg focus:ring-2 focus:ring-status-your-turn active:opacity-90">
+                    Open Email Client
+                </button>
+<div class="pt-4 border-t border-border flex flex-col gap-3">
+<button class="flex items-center justify-center gap-2 text-status-your-turn font-label-sm text-label-sm hover:underline py-2">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                        Resend link
+                    </button>
+<button class="text-muted font-label-sm text-label-sm hover:text-primary transition-colors py-2 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                        Back to login
+                    </button>
+</div>
+</div>
+</div>
+<!-- Support Text -->
+<div class="mt-8 text-center">
+<p class="font-caption-xs text-caption-xs text-muted">
+                Didn't receive the email? Check your spam folder or <a class="text-status-your-turn underline" href="#">contact support</a>.
+            </p>
+</div>
+</main>
+<!-- Footer Identity (Discrete) -->
+<footer class="absolute bottom-6 w-full text-center px-4">
+<div class="max-w-content-width mx-auto flex justify-center items-center gap-6 opacity-40">
+<span class="font-label-xs text-label-xs text-primary">Secure 256-bit AES Encryption</span>
+<span class="w-1 h-1 bg-primary rounded-full"></span>
+<span class="font-label-xs text-label-xs text-primary">SOC2 Compliant</span>
+<span class="w-1 h-1 bg-primary rounded-full"></span>
+<span class="font-label-xs text-label-xs text-primary">eIDAS Certified</span>
+</div>
+</footer>
+<!-- Micro-interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const resendBtn = document.querySelector('button:contains("Resend link")') || document.querySelectorAll('button')[1];
+            
+            resendBtn.addEventListener('click', () => {
+                const originalText = resendBtn.innerHTML;
+                resendBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Sending...';
+                resendBtn.disabled = true;
+                resendBtn.style.opacity = '0.7';
+                
+                setTimeout(() => {
+                    resendBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-status-completed">check_circle</span> Email sent!';
+                    resendBtn.classList.remove('text-status-your-turn');
+                    resendBtn.classList.add('text-status-completed');
+                    
+                    setTimeout(() => {
+                        resendBtn.innerHTML = originalText;
+                        resendBtn.classList.remove('text-status-completed');
+                        resendBtn.classList.add('text-status-your-turn');
+                        resendBtn.disabled = false;
+                        resendBtn.style.opacity = '1';
+                    }, 3000);
+                }, 1500);
+            });
+        });
+    </script>
+</body></html>

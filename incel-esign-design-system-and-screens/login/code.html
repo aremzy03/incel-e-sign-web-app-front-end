@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Incel E-Sign | Secure Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fbf8fc",
+                    "on-surface-variant": "#45464e",
+                    "surface-container-highest": "#e4e2e5",
+                    "warning-light": "#FEF3C7",
+                    "background": "#fbf8fc",
+                    "muted": "#64748B",
+                    "success-light": "#D1FAE5",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-tint": "#4f5e81",
+                    "inverse-on-surface": "#f2f0f3",
+                    "tertiary-container": "#3c2600",
+                    "status-draft": "#94A3B8",
+                    "error": "#DC2626",
+                    "on-primary-container": "#8392b7",
+                    "error-container": "#ffdad6",
+                    "outline-variant": "#c5c6cf",
+                    "info": "#2563EB",
+                    "primary-fixed": "#d9e2ff",
+                    "primary-container": "#1b2a4a",
+                    "inverse-primary": "#b7c6ee",
+                    "surface-container": "#efedf0",
+                    "secondary-fixed": "#89f5e7",
+                    "border": "#E2E8F0",
+                    "on-surface": "#1b1b1e",
+                    "bg": "#F8FAFC",
+                    "on-error-container": "#93000a",
+                    "info-light": "#DBEAFE",
+                    "tertiary-fixed": "#ffddb0",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#006a61",
+                    "primary-hover": "#243656",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "surface-variant": "#e4e2e5",
+                    "status-pending": "#F59E0B",
+                    "on-primary-fixed-variant": "#384668",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f5f3f6",
+                    "status-rejected": "#DC2626",
+                    "on-secondary-container": "#006f66",
+                    "surface-container-high": "#eae7eb",
+                    "warning": "#D97706",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "on-tertiary-container": "#ae8c5b",
+                    "on-primary-fixed": "#0a1a3a",
+                    "primary": "#041534",
+                    "outline": "#75777f",
+                    "on-background": "#1b1b1e",
+                    "success": "#059669",
+                    "on-tertiary-fixed": "#281800",
+                    "error-light": "#FEE2E2",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "primary-light": "#EEF1F7",
+                    "status-completed": "#059669",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "on-secondary-fixed": "#00201d",
+                    "inverse-surface": "#303033",
+                    "accent-light": "#CCFBF1",
+                    "status-your-turn": "#0D9488",
+                    "accent-hover": "#0F766E",
+                    "surface-dim": "#dbd9dc",
+                    "body": "#1E293B",
+                    "tertiary": "#211300",
+                    "on-primary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#86f2e4",
+                    "surface": "#F1F5F9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "4": "16px",
+                    "topbar-height": "64px",
+                    "max-content-width": "1280px",
+                    "sidebar-width": "240px",
+                    "8": "32px",
+                    "12": "48px",
+                    "6": "24px",
+                    "1": "4px",
+                    "16": "64px",
+                    "3": "12px",
+                    "2": "8px"
+            },
+            "fontFamily": {
+                    "body-base": ["Inter"],
+                    "label-xs": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "caption-xs": ["Inter"]
+            },
+            "fontSize": {
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .login-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-focus-effect:focus-within {
+            border-color: #0D9488;
+            box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-surface-bright text-on-surface antialiased overflow-hidden">
+<!-- Main Shell: Suppressing Sidebar/Navbar as per Transactional Rule -->
+<main class="flex min-h-screen">
+<!-- Left Panel: Branding & Illustration -->
+<section class="hidden lg:flex w-1/2 bg-primary relative overflow-hidden flex-col justify-between p-12">
+<!-- Background Decorative Element (Subtle Radial Gradient) -->
+<div class="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 bg-primary-container rounded-full blur-3xl opacity-50"></div>
+<div class="absolute bottom-0 left-0 -ml-32 -mb-32 w-96 h-96 bg-secondary opacity-20 rounded-full blur-3xl"></div>
+<!-- Logo Area (From JSON Context) -->
+<div class="relative z-10 flex items-center gap-3">
+<div class="w-10 h-10 bg-on-primary rounded-xl flex items-center justify-center text-primary shadow-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-primary tracking-tight">Incel E-Sign</h1>
+<p class="font-label-xs text-label-xs text-on-primary-container uppercase tracking-widest opacity-80">Legal Authority</p>
+</div>
+</div>
+<!-- Content Area -->
+<div class="relative z-10 max-w-md">
+<h2 class="font-headline-3xl text-headline-3xl text-on-primary leading-tight mb-6">
+                    Sign documents securely, track every step.
+                </h2>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<div class="mt-1 w-8 h-8 rounded-full bg-primary-hover flex items-center justify-center border border-on-primary-container/20">
+<span class="material-symbols-outlined text-accent-light text-body-base">verified</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-primary">Legally Binding</h3>
+<p class="font-body-sm text-body-sm text-on-primary-container">All signatures are compliant with global e-signature laws and fully encrypted.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="mt-1 w-8 h-8 rounded-full bg-primary-hover flex items-center justify-center border border-on-primary-container/20">
+<span class="material-symbols-outlined text-accent-light text-body-base">timeline</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-primary">Audit Trail</h3>
+<p class="font-body-sm text-body-sm text-on-primary-container">Complete history of every action taken on your sensitive documents.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Illustration Component -->
+<div class="relative z-10 h-64 w-full">
+<div class="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 flex items-center justify-center group overflow-hidden">
+<div class="w-full h-full bg-cover bg-center opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="A sophisticated 3D digital illustration of a glowing blue holographic document floating in a dark minimalist space, with elegant nodes and lines representing a secure blockchain ledger. The lighting is dramatic, high-contrast, featuring deep navy and teal accents to match a professional legal SaaS aesthetic. The overall mood is high-tech, trustworthy, and secure." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAkirjE3vgEPlfwCNv5Cna85VxBa1MI-AbHvsMCGqQGYbXXYtpuFD9lRFNfs1ydvYz4D2WwOLJMO088j-T5uL2_l5z1uC_D8AvHtfu-y9mPUPxc8chsLu8GKDOCqqVGpyk2iZ38GynrnIjZoagucw979YaefZUa9EWFz3J03JnG5H1K-ufcvMVy_KEYnSZgaHqf5C5Qkk7h_SL6rjhHVZIp2-Aib9CLryMBFyTglwmcc5pmhz4gN_ufFWgwaWVrWTBvbEqiPFZLqH3O')"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-24 h-32 bg-on-primary rounded shadow-2xl relative animate-pulse">
+<div class="absolute top-4 left-4 right-4 h-1 bg-primary-light rounded"></div>
+<div class="absolute top-8 left-4 right-8 h-1 bg-primary-light rounded"></div>
+<div class="absolute top-12 left-4 right-6 h-1 bg-primary-light rounded"></div>
+<div class="absolute bottom-4 right-4 w-8 h-8 rounded-full border-2 border-dashed border-status-your-turn flex items-center justify-center">
+<span class="material-symbols-outlined text-status-your-turn text-label-sm">gesture</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex gap-4 text-on-primary-container text-caption-xs font-caption-xs">
+<span>© 2024 Legal Authority Inc.</span>
+<span>•</span>
+<a class="hover:text-on-primary transition-colors" href="#">Privacy Policy</a>
+</div>
+</section>
+<!-- Right Panel: Login Form -->
+<section class="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 md:p-16 relative">
+<div class="max-w-md w-full login-card">
+<!-- Mobile Logo -->
+<div class="lg:hidden flex items-center gap-3 mb-12">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Incel E-Sign</h1>
+</div>
+<div class="mb-10">
+<h2 class="font-headline-2xl text-headline-2xl text-primary mb-2">Welcome Back</h2>
+<p class="font-body-base text-body-base text-muted">Please enter your credentials to access your dashboard.</p>
+</div>
+<form class="space-y-6" onsubmit="return false">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block" for="email">Email Address</label>
+<div class="relative input-focus-effect border border-outline-variant rounded-xl transition-all overflow-hidden">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-muted">mail</span>
+<input class="w-full pl-12 pr-4 py-3.5 bg-transparent border-none focus:ring-0 font-body-base text-body-base placeholder:text-muted/60" id="email" placeholder="alex@example.com" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="font-label-sm text-label-sm text-on-surface-variant block" for="password">Password</label>
+<a class="font-label-sm text-label-sm text-secondary hover:text-accent-hover transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative input-focus-effect border border-outline-variant rounded-xl transition-all overflow-hidden">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-muted">lock</span>
+<input class="w-full pl-12 pr-12 py-3.5 bg-transparent border-none focus:ring-0 font-body-base text-body-base" id="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center">
+<input class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary/20" id="remember" type="checkbox"/>
+<label class="ml-2 font-body-sm text-body-sm text-on-surface-variant cursor-pointer select-none" for="remember">Remember me for 30 days</label>
+</div>
+<!-- Sign In Button -->
+<button class="w-full py-4 bg-primary text-on-primary font-label-sm text-label-sm rounded-xl hover:bg-primary-hover active:scale-[0.98] transition-all shadow-lg shadow-primary/10 flex items-center justify-center gap-2 group">
+                        Sign In
+                        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</form>
+<!-- Divider -->
+<div class="relative my-8">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant"></div>
+</div>
+<div class="relative flex justify-center text-caption-xs font-caption-xs uppercase tracking-widest">
+<span class="bg-white px-4 text-muted">or continue with</span>
+</div>
+</div>
+<!-- OAuth Options -->
+<div class="grid grid-cols-1 gap-4">
+<button class="w-full py-3.5 bg-white border border-outline-variant rounded-xl font-label-sm text-label-sm text-primary hover:bg-surface-container-low transition-all flex items-center justify-center gap-3">
+<svg class="w-5 h-5" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+                        Continue with Google
+                    </button>
+</div>
+<!-- Footer -->
+<div class="mt-12 text-center">
+<p class="font-body-base text-body-base text-muted">
+                        Don't have an account? 
+                        <a class="text-secondary font-bold hover:underline" href="#">Register</a>
+</p>
+</div>
+</div>
+<!-- Absolute positioned help trigger -->
+<button class="absolute bottom-8 right-8 w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-muted hover:text-primary hover:shadow-md transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</section>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('ring-2', 'ring-secondary/20', 'border-secondary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('ring-2', 'ring-secondary/20', 'border-secondary');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notifications - Incel E-Sign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#4f5e81",
+                    "on-secondary": "#ffffff",
+                    "muted": "#64748B",
+                    "surface": "#F1F5F9",
+                    "background": "#fbf8fc",
+                    "warning-light": "#FEF3C7",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "inverse-on-surface": "#f2f0f3",
+                    "on-surface": "#1b1b1e",
+                    "surface-container-highest": "#e4e2e5",
+                    "primary-container": "#1b2a4a",
+                    "accent-hover": "#0F766E",
+                    "on-secondary-fixed-variant": "#005049",
+                    "status-your-turn": "#0D9488",
+                    "error-light": "#FEE2E2",
+                    "tertiary-fixed": "#ffddb0",
+                    "outline-variant": "#c5c6cf",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "status-completed": "#059669",
+                    "surface-variant": "#e4e2e5",
+                    "on-secondary-container": "#006f66",
+                    "primary-fixed": "#d9e2ff",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "error": "#DC2626",
+                    "surface-container-low": "#f5f3f6",
+                    "success": "#059669",
+                    "status-pending": "#F59E0B",
+                    "primary-light": "#EEF1F7",
+                    "inverse-primary": "#b7c6ee",
+                    "on-primary-fixed": "#0a1a3a",
+                    "on-surface-variant": "#45464e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#ae8c5b",
+                    "secondary-fixed": "#89f5e7",
+                    "tertiary": "#211300",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#3c2600",
+                    "on-tertiary-fixed": "#281800",
+                    "bg": "#F8FAFC",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "border": "#E2E8F0",
+                    "on-secondary-fixed": "#00201d",
+                    "surface-container-high": "#eae7eb",
+                    "primary": "#041534",
+                    "inverse-surface": "#303033",
+                    "success-light": "#D1FAE5",
+                    "status-rejected": "#DC2626",
+                    "on-primary-container": "#8392b7",
+                    "info": "#2563EB",
+                    "outline": "#75777f",
+                    "surface-container": "#efedf0",
+                    "on-error": "#ffffff",
+                    "on-background": "#1b1b1e",
+                    "accent-light": "#CCFBF1",
+                    "surface-dim": "#dbd9dc",
+                    "primary-hover": "#243656",
+                    "status-draft": "#94A3B8",
+                    "secondary-container": "#86f2e4",
+                    "info-light": "#DBEAFE",
+                    "secondary": "#006a61",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "on-primary-fixed-variant": "#384668",
+                    "warning": "#D97706",
+                    "surface-bright": "#fbf8fc",
+                    "body": "#1E293B"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "1": "4px",
+                    "4": "16px",
+                    "6": "24px",
+                    "max-content-width": "1280px",
+                    "topbar-height": "64px",
+                    "3": "12px",
+                    "8": "32px",
+                    "12": "48px",
+                    "sidebar-width": "240px",
+                    "2": "8px",
+                    "16": "64px"
+            },
+            "fontFamily": {
+                    "headline-2xl": ["Inter"],
+                    "label-xs": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "body-base": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "caption-xs": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-filter {
+            background-color: #006a61;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-surface">
+<!-- Sidebar Shell -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary dark:bg-primary-container shadow-md flex flex-col py-6">
+<div class="px-6 mb-12">
+<h1 class="text-headline-lg font-headline-lg text-on-primary">Incel E-Sign</h1>
+<p class="text-label-xs text-on-primary-container opacity-70">Professional Edition</p>
+</div>
+<nav class="flex-grow">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined mr-3">description</span>
+                        Documents
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined mr-3">mail</span>
+                        Envelopes
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined mr-3">contacts</span>
+                        Contacts
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined mr-3">stylus</span>
+                        My Signatures
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-6 py-3 text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full py-4 bg-secondary text-on-secondary font-label-sm text-label-sm rounded-xl hover:bg-accent-hover transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                + New
+            </button>
+</div>
+</aside>
+<!-- Top Navigation -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-topbar-height bg-surface-container-lowest dark:bg-inverse-surface border-b border-border shadow-sm flex items-center justify-between px-8 z-10">
+<div class="flex items-center bg-surface-container-low rounded-full px-4 py-2 w-96">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm w-full" placeholder="Search documents..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-secondary font-bold border-b-2 border-secondary pb-1">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate user in their 30s with short hair, wearing a navy blue blazer, set against a soft, out-of-focus modern office background with warm lighting. The style is clean, sharp, and reflects the premium Incel E-Sign corporate aesthetic with a high-key light mode feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0k0gQEy2NElZdRqh4UxdqWrLB8PSyegaZ3TM8qaVWt_XndZaXoSKKqd4r-WDitL-rR5iJQhhHEsJQyJmUdYcxOU1gV37P2KADgx8uugQZiKwo8EDKG-zaBQ-Hvozi1CA7ePyZ_w8YfoO3Bm8WOF8bmwgwZ0b0ewTpaGP3gH4xm7jis7qQ8fTVeh08u0ifsAwzRhu9EGuOaZc7fYejZHLBZjKV7_vfkqcmfD3V51fg2jKVureUwxALtK3cXb9CtRJQfJcNC7AaiL87"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[240px] mt-[64px] p-8 max-w-max-content-width">
+<!-- Header & Filters -->
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div>
+<h2 class="text-headline-3xl font-headline-3xl text-primary mb-1">Notifications</h2>
+<p class="text-body-sm font-body-sm text-muted">Stay updated on your document status and pending actions.</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-low p-1 rounded-xl">
+<button class="px-6 py-2 rounded-lg text-label-sm font-label-sm active-filter transition-all shadow-sm">All</button>
+<button class="px-6 py-2 rounded-lg text-label-sm font-label-sm text-on-surface-variant hover:bg-surface-variant transition-all">Unread</button>
+</div>
+</div>
+<!-- Notification Feed -->
+<div class="space-y-12">
+<!-- Group: Today -->
+<section>
+<div class="flex items-center gap-4 mb-4">
+<span class="text-label-sm font-label-sm text-primary font-bold uppercase tracking-wider">Today</span>
+<div class="h-px flex-grow bg-outline-variant opacity-30"></div>
+</div>
+<div class="space-y-3">
+<!-- Notification Item 1: Your Turn (Teal Accent) -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-status-your-turn flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer group">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 rounded-full bg-accent-light flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment_late</span>
+</div>
+<div>
+<p class="text-body-base font-bold text-primary group-hover:text-secondary transition-colors">Action Required: Sign Employment Contract</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">HR Department has requested your signature on the updated 2024 policy annex.</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-caption-xs font-caption-xs text-muted block mb-2">2 hours ago</span>
+<span class="px-3 py-1 bg-accent-light text-secondary rounded-full text-label-xs font-label-sm">Your Turn</span>
+</div>
+</div>
+<!-- Notification Item 2: Alert/Declined -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-error flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer group">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 rounded-full bg-error-light flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+<div>
+<p class="text-body-base font-bold text-primary group-hover:text-error transition-colors">Alice declined to sign: Service Agreement</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Reason: "Need revisions to Section 4.2 regarding indemnity clauses."</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-caption-xs font-caption-xs text-muted block mb-2">5 hours ago</span>
+<span class="px-3 py-1 bg-error-light text-error rounded-full text-label-xs font-label-sm">Rejected</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Group: Yesterday -->
+<section>
+<div class="flex items-center gap-4 mb-4">
+<span class="text-label-sm font-label-sm text-primary font-bold uppercase tracking-wider">Yesterday</span>
+<div class="h-px flex-grow bg-outline-variant opacity-30"></div>
+</div>
+<div class="space-y-3">
+<!-- Notification Item 3: Completed -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-status-completed flex items-center justify-between opacity-80 hover:opacity-100 hover:shadow-md transition-all cursor-pointer group">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 rounded-full bg-success-light flex items-center justify-center text-status-completed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="text-body-base font-bold text-primary group-hover:text-status-completed transition-colors">Completed: Q3 Vendor Terms</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">All 4 parties have successfully signed. The audit trail is now available for download.</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-caption-xs font-caption-xs text-muted block mb-2">Yesterday, 2:14 PM</span>
+<span class="px-3 py-1 bg-success-light text-status-completed rounded-full text-label-xs font-label-sm">Finalized</span>
+</div>
+</div>
+<!-- Notification Item 4: Pending -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-status-pending flex items-center justify-between opacity-80 hover:opacity-100 hover:shadow-md transition-all cursor-pointer group">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 rounded-full bg-warning-light flex items-center justify-center text-warning">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pending</span>
+</div>
+<div>
+<p class="text-body-base font-bold text-primary group-hover:text-warning transition-colors">Document Viewed: Real Estate Disclosure</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Mark Thompson has viewed the document but hasn't signed yet.</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-caption-xs font-caption-xs text-muted block mb-2">Yesterday, 10:05 AM</span>
+<span class="px-3 py-1 bg-warning-light text-warning rounded-full text-label-xs font-label-sm">Pending</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Group: Earlier -->
+<section>
+<div class="flex items-center gap-4 mb-4">
+<span class="text-label-sm font-label-sm text-primary font-bold uppercase tracking-wider">Earlier this week</span>
+<div class="h-px flex-grow bg-outline-variant opacity-30"></div>
+</div>
+<div class="space-y-3">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-muted flex items-center justify-between opacity-60 hover:opacity-100 transition-all cursor-pointer">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-muted">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div>
+<p class="text-body-base font-bold text-primary">System Update: Platform Maintenance</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Incel E-Sign has been updated with new security features. Click to see the changelog.</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-caption-xs font-caption-xs text-muted block mb-2">Oct 24, 2023</span>
+<span class="px-3 py-1 bg-surface-container text-muted rounded-full text-label-xs font-label-sm">Info</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- FAB for new actions - suppressed per relevance check on this page -->
+<!-- Footer / Empty State placeholder logic -->
+<div class="mt-16 text-center py-12 border-t border-outline-variant border-dashed">
+<p class="text-body-sm font-body-sm text-muted">You've reached the end of your notifications.</p>
+<button class="mt-4 text-secondary font-label-sm text-label-sm hover:underline">Mark all as read</button>
+</div>
+</main>
+<!-- Micro-interaction script for filters -->
+<script>
+        const filterBtns = document.querySelectorAll('.active-filter, .text-on-surface-variant');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('active-filter', 'text-white');
+                    b.classList.add('text-on-surface-variant');
+                });
+                btn.classList.add('active-filter');
+                btn.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

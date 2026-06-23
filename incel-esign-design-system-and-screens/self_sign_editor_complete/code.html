@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignFlow | Self-Sign Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Dancing+Script:wght@500&amp;family=Great+Vibes&amp;family=Playball&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1b1b1e",
+                        "error-light": "#FEE2E2",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "secondary": "#006a61",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "inverse-primary": "#b7c6ee",
+                        "background": "#fbf8fc",
+                        "warning": "#D97706",
+                        "tertiary-container": "#3c2600",
+                        "muted": "#64748B",
+                        "success": "#059669",
+                        "inverse-on-surface": "#f2f0f3",
+                        "surface-container-highest": "#e4e2e5",
+                        "error-container": "#ffdad6",
+                        "body": "#1E293B",
+                        "surface-tint": "#4f5e81",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-variant": "#e4e2e5",
+                        "info": "#2563EB",
+                        "surface-container-low": "#f5f3f6",
+                        "on-error": "#ffffff",
+                        "border": "#E2E8F0",
+                        "bg": "#F8FAFC",
+                        "on-background": "#1b1b1e",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#303033",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffddb0",
+                        "primary-container": "#1b2a4a",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-primary-fixed": "#0a1a3a",
+                        "primary-light": "#EEF1F7",
+                        "error": "#DC2626",
+                        "accent-light": "#CCFBF1",
+                        "on-secondary-container": "#006f66",
+                        "success-light": "#D1FAE5",
+                        "on-secondary-fixed": "#00201d",
+                        "outline": "#75777f",
+                        "info-light": "#DBEAFE",
+                        "surface-dim": "#dbd9dc",
+                        "status-pending": "#F59E0B",
+                        "status-completed": "#059669",
+                        "on-surface-variant": "#45464e",
+                        "surface-bright": "#fbf8fc",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "on-primary-container": "#8392b7",
+                        "primary-fixed": "#d9e2ff",
+                        "status-rejected": "#DC2626",
+                        "status-draft": "#94A3B8",
+                        "on-tertiary-fixed": "#281800",
+                        "on-primary-fixed-variant": "#384668",
+                        "accent-hover": "#0F766E",
+                        "surface-container": "#efedf0",
+                        "primary-hover": "#243656",
+                        "surface-container-high": "#eae7eb",
+                        "on-secondary-fixed-variant": "#005049",
+                        "outline-variant": "#c5c6cf",
+                        "tertiary": "#211300",
+                        "on-tertiary-container": "#ae8c5b",
+                        "on-primary": "#ffffff",
+                        "surface": "#F1F5F9",
+                        "status-your-turn": "#0D9488",
+                        "warning-light": "#FEF3C7",
+                        "primary": "#041534",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "4": "16px",
+                        "2": "8px",
+                        "6": "24px",
+                        "sidebar-width": "240px",
+                        "max-content-width": "1280px",
+                        "topbar-height": "64px",
+                        "8": "32px",
+                        "1": "4px",
+                        "3": "12px",
+                        "16": "64px",
+                        "12": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-2xl": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-base": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .signature-font-1 { font-family: 'Dancing Script', cursive; }
+        .signature-font-2 { font-family: 'Great Vibes', cursive; }
+        .signature-font-3 { font-family: 'Playball', cursive; }
+        
+        .pdf-canvas {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            background-color: white;
+            aspect-ratio: 1 / 1.414;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .tool-button:hover {
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-success { animation: fadeInScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    </style>
+</head>
+<body class="bg-surface font-body-base text-on-surface h-screen flex flex-col overflow-hidden">
+<!-- TopBar (Component mapping) -->
+<header class="bg-surface-container-lowest flex justify-between items-center h-[64px] px-8 w-full border-b border-border z-30">
+<div class="flex items-center gap-6">
+<div class="font-headline-xl text-headline-xl font-bold text-primary">SignFlow</div>
+<div class="h-6 w-[1px] bg-border"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-muted">description</span>
+<span class="font-label-sm text-label-sm text-on-surface">Service_Agreement_v2.pdf</span>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-surface-container rounded-full px-4 py-1.5">
+<button class="p-1 hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-on-surface-variant">remove</span></button>
+<span class="font-label-sm text-label-sm min-w-[40px] text-center">100%</span>
+<button class="p-1 hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-on-surface-variant">add</span></button>
+<div class="w-[1px] h-4 bg-outline-variant mx-1"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Page 1 of 1</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-muted hover:text-primary font-label-sm transition-colors cursor-pointer">Help</button>
+<button class="px-4 py-2 border border-border rounded-lg text-on-surface-variant font-label-sm hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">logout</span> Exit
+            </button>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<!-- Sidebar Navigation (SideNavBar Anchor) -->
+<aside class="w-[240px] bg-primary text-on-primary flex flex-col gap-2 p-4 pt-4 shadow-md z-20">
+<div class="mb-4">
+<div class="text-on-primary/60 font-caption-xs uppercase tracking-wider mb-2">Editor Status</div>
+<div class="flex items-center gap-2 bg-primary-container p-3 rounded-lg border border-primary-fixed/20">
+<span class="material-symbols-outlined text-secondary-fixed">edit_square</span>
+<div>
+<div class="font-label-sm text-white">Self-Signing</div>
+<div class="text-[10px] text-on-primary-container">Live Session Active</div>
+</div>
+</div>
+</div>
+<nav class="space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 bg-secondary text-on-secondary rounded-lg">
+<span class="material-symbols-outlined">upload_file</span>
+<span class="font-label-sm">Upload</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-hover transition-all cursor-pointer">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label-sm">Prepare</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-hover transition-all cursor-pointer">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-sm">Sign</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-hover transition-all cursor-pointer">
+<span class="material-symbols-outlined">task_alt</span>
+<span class="font-label-sm">Complete</span>
+</div>
+</nav>
+<div class="mt-auto pt-6 border-t border-primary-fixed/20">
+<div class="bg-primary-hover p-4 rounded-xl">
+<p class="text-xs text-on-primary/70 mb-3 leading-relaxed">Need others to sign this document instead?</p>
+<button class="w-full py-2 bg-secondary-fixed text-on-secondary-fixed font-label-sm rounded-lg hover:bg-secondary-fixed-dim transition-colors">
+                        Send for Signature
+                    </button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex bg-surface-container-low overflow-auto p-8 justify-center relative">
+<div class="pdf-canvas relative flex flex-col p-12 overflow-hidden border border-outline-variant select-none">
+<!-- Watermark Background -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center rotate-[-45deg] scale-150">
+<div class="text-[80px] font-black uppercase">Preview Only Preview Only</div>
+</div>
+<!-- Document Content Simulation -->
+<div class="relative z-10 flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div class="h-10 w-32 bg-primary/10 rounded"></div>
+<div class="text-right">
+<h2 class="font-headline-lg text-primary">Service Agreement</h2>
+<p class="text-xs text-muted">ID: #SF-99283-2024</p>
+</div>
+</div>
+<div class="space-y-4 mt-8">
+<div class="h-4 bg-surface-container w-full rounded"></div>
+<div class="h-4 bg-surface-container w-[95%] rounded"></div>
+<div class="h-4 bg-surface-container w-[98%] rounded"></div>
+<div class="h-4 bg-surface-container w-[80%] rounded"></div>
+</div>
+<div class="grid grid-cols-2 gap-8 mt-12">
+<div class="space-y-4">
+<div class="h-3 bg-surface-container-highest w-24 rounded"></div>
+<div class="h-10 bg-surface-container-low w-full rounded border border-dashed border-outline-variant"></div>
+</div>
+<div class="space-y-4">
+<div class="h-3 bg-surface-container-highest w-24 rounded"></div>
+<div class="h-10 bg-surface-container-low w-full rounded border border-dashed border-outline-variant"></div>
+</div>
+</div>
+<div class="mt-auto pt-24">
+<div class="border-t border-outline-variant pt-8 flex justify-between items-end">
+<div class="space-y-8">
+<div class="relative group cursor-pointer" onclick="toggleSignatureModal()">
+<div class="text-[10px] uppercase text-primary font-bold mb-2 tracking-widest">Client Signature</div>
+<div class="h-16 w-64 border-2 border-dashed border-status-your-turn/40 rounded flex items-center justify-center group-hover:bg-status-your-turn/5 transition-colors" id="placed-signature">
+<span class="text-status-your-turn font-label-sm flex items-center gap-2">
+<span class="material-symbols-outlined">draw</span> Click to Sign
+                                        </span>
+</div>
+<div class="absolute -top-3 -right-3 bg-status-your-turn text-white p-1 rounded-full shadow-lg">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</div>
+</div>
+<div class="relative">
+<div class="text-[10px] uppercase text-primary font-bold mb-2 tracking-widest">Date</div>
+<div class="h-8 w-32 border-b border-primary/20 flex items-center font-label-sm text-primary">
+                                        Oct 24, 2024
+                                    </div>
+</div>
+</div>
+<div class="text-right text-[10px] text-muted italic">
+                                Page 1 of 1 <br/>
+                                Securely processed by SignFlow
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Tools Sidebar -->
+<aside class="w-[300px] bg-surface-container-lowest border-l border-border flex flex-col z-20">
+<div class="p-6 border-b border-border">
+<h3 class="font-headline-lg text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">handyman</span>
+                    Your Tools
+                </h3>
+<p class="text-body-sm text-muted mt-1">Drag tools or click to apply</p>
+</div>
+<div class="flex-1 p-4 space-y-3 overflow-y-auto">
+<!-- Tool Items -->
+<button class="tool-button w-full flex items-center justify-between p-4 bg-white border border-border rounded-xl shadow-sm hover:border-secondary transition-all group" onclick="toggleSignatureModal()">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">edit_square</span>
+</div>
+<div class="text-left">
+<div class="font-label-sm text-on-surface">Signature</div>
+<div class="text-[11px] text-muted">Personal signature</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-muted group-hover:text-secondary">add_circle</span>
+</button>
+<button class="tool-button w-full flex items-center justify-between p-4 bg-white border border-border rounded-xl shadow-sm hover:border-secondary transition-all group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">vitals</span>
+</div>
+<div class="text-left">
+<div class="font-label-sm text-on-surface">Initials</div>
+<div class="text-[11px] text-muted">Mark each page</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-muted group-hover:text-secondary">add_circle</span>
+</button>
+<button class="tool-button w-full flex items-center justify-between p-4 bg-white border border-border rounded-xl shadow-sm hover:border-secondary transition-all group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<div class="text-left">
+<div class="font-label-sm text-on-surface">Date</div>
+<div class="text-[11px] text-muted">Auto-filled date</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-muted group-hover:text-secondary">add_circle</span>
+</button>
+<div class="pt-6 pb-2 px-2">
+<div class="text-[11px] uppercase text-muted font-bold tracking-widest mb-4">Text &amp; Fields</div>
+</div>
+<button class="tool-button w-full flex items-center justify-between p-4 bg-white border border-border rounded-xl shadow-sm hover:border-secondary transition-all group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">text_fields</span>
+</div>
+<div class="text-left">
+<div class="font-label-sm text-on-surface">Text Input</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-muted group-hover:text-secondary">add_circle</span>
+</button>
+</div>
+<div class="p-6 bg-surface-container-low border-t border-border">
+<div class="flex flex-col gap-3">
+<button class="w-full bg-status-your-turn text-white font-label-sm py-4 rounded-xl shadow-lg shadow-status-your-turn/20 hover:bg-accent-hover active:scale-[0.98] transition-all flex items-center justify-center gap-2" id="sign-complete-btn" onclick="showSuccessOverlay()">
+                        Sign &amp; Complete <span class="material-symbols-outlined text-[20px]">check_circle</span>
+</button>
+<a class="text-center font-label-sm text-muted hover:text-primary transition-colors py-2" href="#">Send for Signature Instead</a>
+</div>
+</div>
+</aside>
+</div>
+<!-- Signature Creator Modal -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-primary/40 backdrop-blur-sm" id="signature-modal">
+<div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden animate-success">
+<div class="p-6 border-b border-border flex justify-between items-center">
+<h3 class="font-headline-xl text-primary">Create Your Signature</h3>
+<button class="text-muted hover:text-on-surface" onclick="toggleSignatureModal()"><span class="material-symbols-outlined">close</span></button>
+</div>
+<!-- Tabs -->
+<div class="flex border-b border-border">
+<button class="flex-1 py-4 text-center font-label-sm border-b-2 border-secondary text-secondary" id="tab-type" onclick="switchTab('type')">Type</button>
+<button class="flex-1 py-4 text-center font-label-sm border-b-2 border-transparent text-muted hover:text-on-surface" id="tab-draw" onclick="switchTab('draw')">Draw</button>
+<button class="flex-1 py-4 text-center font-label-sm border-b-2 border-transparent text-muted hover:text-on-surface" id="tab-upload" onclick="switchTab('upload')">Upload</button>
+</div>
+<div class="p-8">
+<div class="space-y-6" id="content-type">
+<div>
+<label class="font-label-xs text-muted uppercase tracking-widest block mb-2">Type your name</label>
+<input class="w-full text-headline-xl p-4 border border-border rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all" placeholder="John Doe" type="text"/>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<label class="font-label-xs text-muted uppercase tracking-widest block">Choose style</label>
+<div class="grid grid-cols-2 gap-4">
+<button class="p-6 border-2 border-secondary bg-secondary/5 rounded-xl text-center group transition-all" onclick="selectSignature('font-1')">
+<span class="signature-font-1 text-3xl text-on-surface">John Doe</span>
+</button>
+<button class="p-6 border-2 border-transparent bg-surface-container-low rounded-xl text-center hover:border-border transition-all" onclick="selectSignature('font-2')">
+<span class="signature-font-2 text-3xl text-on-surface">John Doe</span>
+</button>
+<button class="p-6 border-2 border-transparent bg-surface-container-low rounded-xl text-center hover:border-border transition-all" onclick="selectSignature('font-3')">
+<span class="signature-font-3 text-3xl text-on-surface">John Doe</span>
+</button>
+<div class="p-6 border-2 border-dashed border-border rounded-xl flex items-center justify-center">
+<span class="text-muted text-xs">More styles...</span>
+</div>
+</div>
+</div>
+</div>
+<div class="hidden" id="content-draw">
+<div class="w-full h-48 bg-surface-container rounded-xl border border-dashed border-outline flex items-center justify-center relative cursor-crosshair">
+<span class="text-muted font-label-sm">Draw signature here</span>
+<div class="absolute bottom-4 right-4 flex gap-2">
+<button class="bg-white px-3 py-1 text-xs border border-border rounded-lg shadow-sm">Clear</button>
+</div>
+</div>
+</div>
+<div class="hidden" id="content-upload">
+<div class="w-full h-48 bg-surface-container-low rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-4xl text-muted">cloud_upload</span>
+<div class="text-center">
+<p class="font-label-sm text-on-surface">Click to upload or drag &amp; drop</p>
+<p class="text-[11px] text-muted mt-1">PNG, JPG or PDF (Max 5MB)</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low flex justify-end gap-4">
+<button class="px-6 py-2 font-label-sm text-muted" onclick="toggleSignatureModal()">Cancel</button>
+<button class="px-8 py-2 bg-primary text-on-primary font-label-sm rounded-lg hover:bg-primary-hover transition-colors" onclick="applySignature()">Apply Signature</button>
+</div>
+</div>
+</div>
+<!-- Success Overlay -->
+<div class="hidden fixed inset-0 z-[200] flex items-center justify-center p-6 bg-white/95 backdrop-blur-md" id="success-overlay">
+<div class="max-w-md w-full text-center space-y-8 animate-success">
+<div class="relative inline-block">
+<div class="w-24 h-24 bg-status-completed rounded-full flex items-center justify-center text-white text-5xl mx-auto shadow-2xl shadow-status-completed/30">
+<span class="material-symbols-outlined text-[48px]">check_circle</span>
+</div>
+<!-- Mini confetti simulation (simplified) -->
+<div class="absolute -top-4 -right-4 w-4 h-4 bg-secondary rounded-full animate-bounce"></div>
+<div class="absolute bottom-2 -left-6 w-3 h-3 bg-warning rounded-full animate-pulse"></div>
+</div>
+<div>
+<h2 class="font-headline-3xl text-primary">Document Signed Successfully!</h2>
+<p class="text-body-base text-muted mt-4">Your document has been cryptographically sealed and stored in your vault.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-2xl border border-border space-y-4">
+<div class="flex justify-between items-center text-left">
+<div>
+<div class="font-label-xs text-muted uppercase tracking-widest">Document Vault Access</div>
+<div class="font-headline-lg text-primary mt-1">Your secure password:</div>
+</div>
+<div class="bg-white px-4 py-2 rounded-lg border border-border font-mono text-lg font-bold tracking-widest text-secondary shadow-sm">
+                        SF-7X29
+                    </div>
+</div>
+<p class="text-[11px] text-muted text-left">Use this password to access the encrypted audit trail for this document.</p>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full py-4 bg-primary text-on-primary font-label-sm rounded-xl hover:bg-primary-hover transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">download</span> Download Document
+                </button>
+<button class="w-full py-4 bg-transparent text-primary font-label-sm rounded-xl hover:bg-surface-container transition-all" onclick="location.reload()">
+                    Done
+                </button>
+</div>
+</div>
+</div>
+<script>
+        function toggleSignatureModal() {
+            const modal = document.getElementById('signature-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function switchTab(tab) {
+            // Reset buttons
+            ['type', 'draw', 'upload'].forEach(t => {
+                const btn = document.getElementById('tab-' + t);
+                const content = document.getElementById('content-' + t);
+                btn.classList.remove('border-secondary', 'text-secondary');
+                btn.classList.add('border-transparent', 'text-muted');
+                content.classList.add('hidden');
+            });
+            
+            // Activate selected
+            const activeBtn = document.getElementById('tab-' + tab);
+            const activeContent = document.getElementById('content-' + tab);
+            activeBtn.classList.add('border-secondary', 'text-secondary');
+            activeBtn.classList.remove('border-transparent', 'text-muted');
+            activeContent.classList.remove('hidden');
+        }
+
+        function applySignature() {
+            const signatureArea = document.getElementById('placed-signature');
+            signatureArea.innerHTML = `
+                <div class="signature-font-1 text-4xl text-primary animate-success">John Doe</div>
+            `;
+            signatureArea.classList.remove('border-dashed');
+            signatureArea.classList.add('border-transparent');
+            toggleSignatureModal();
+            
+            // Pulse the complete button to guide user
+            const btn = document.getElementById('sign-complete-btn');
+            btn.classList.add('ring-4', 'ring-status-your-turn/30');
+        }
+
+        function showSuccessOverlay() {
+            document.getElementById('success-overlay').classList.remove('hidden');
+        }
+
+        function selectSignature(fontClass) {
+            // Visual feedback for selection
+            const buttons = document.querySelectorAll('#content-type button');
+            buttons.forEach(b => {
+                b.classList.remove('border-secondary', 'bg-secondary/5');
+                b.classList.add('border-transparent', 'bg-surface-container-low');
+            });
+            event.currentTarget.classList.add('border-secondary', 'bg-secondary/5');
+            event.currentTarget.classList.remove('border-transparent', 'bg-surface-container-low');
+        }
+    </script>
+</body></html>

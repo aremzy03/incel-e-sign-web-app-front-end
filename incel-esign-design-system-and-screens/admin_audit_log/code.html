@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Audit Logs | Incel E-Sign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "status-completed": "#059669",
+                    "status-rejected": "#DC2626",
+                    "on-secondary-fixed-variant": "#005049",
+                    "bg": "#F8FAFC",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "surface-dim": "#dbd9dc",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "info-light": "#DBEAFE",
+                    "accent-light": "#CCFBF1",
+                    "secondary-container": "#86f2e4",
+                    "on-primary-fixed": "#0a1a3a",
+                    "surface-container-high": "#eae7eb",
+                    "error-container": "#ffdad6",
+                    "background": "#fbf8fc",
+                    "on-primary-fixed-variant": "#384668",
+                    "inverse-on-surface": "#f2f0f3",
+                    "status-draft": "#94A3B8",
+                    "success": "#059669",
+                    "on-secondary-fixed": "#00201d",
+                    "warning-light": "#FEF3C7",
+                    "success-light": "#D1FAE5",
+                    "surface-container-low": "#f5f3f6",
+                    "surface-container": "#efedf0",
+                    "tertiary-fixed": "#ffddb0",
+                    "on-tertiary-fixed": "#281800",
+                    "outline-variant": "#c5c6cf",
+                    "on-error-container": "#93000a",
+                    "primary": "#041534",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "primary-container": "#1b2a4a",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#b7c6ee",
+                    "surface-tint": "#4f5e81",
+                    "error": "#DC2626",
+                    "body": "#1E293B",
+                    "on-tertiary-container": "#ae8c5b",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#303033",
+                    "error-light": "#FEE2E2",
+                    "secondary": "#006a61",
+                    "on-background": "#1b1b1e",
+                    "status-pending": "#F59E0B",
+                    "on-primary-container": "#8392b7",
+                    "tertiary-container": "#3c2600",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "muted": "#64748B",
+                    "surface-bright": "#fbf8fc",
+                    "status-your-turn": "#0D9488",
+                    "on-error": "#ffffff",
+                    "tertiary": "#211300",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#45464e",
+                    "primary-hover": "#243656",
+                    "primary-fixed": "#d9e2ff",
+                    "surface-container-highest": "#e4e2e5",
+                    "border": "#E2E8F0",
+                    "warning": "#D97706",
+                    "primary-light": "#EEF1F7",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#F1F5F9",
+                    "surface-variant": "#e4e2e5",
+                    "info": "#2563EB",
+                    "secondary-fixed": "#89f5e7",
+                    "on-secondary-container": "#006f66",
+                    "accent-hover": "#0F766E",
+                    "on-surface": "#1b1b1e",
+                    "outline": "#75777f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "max-content-width": "1280px",
+                    "8": "32px",
+                    "16": "64px",
+                    "6": "24px",
+                    "1": "4px",
+                    "sidebar-width": "240px",
+                    "3": "12px",
+                    "4": "16px",
+                    "topbar-height": "64px",
+                    "2": "8px",
+                    "12": "48px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "body-base": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "label-xs": ["Inter"],
+                    "caption-xs": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F8FAFC;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      /* Custom scrollbar for dense tables */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #E2E8F0;
+        border-radius: 10px;
+      }
+    </style>
+</head>
+<body class="text-body antialiased">
+<!-- Sidebar (Shared Components Mapping) -->
+<aside class="fixed h-screen w-sidebar-width left-0 top-0 bg-primary text-on-primary shadow-md flex flex-col py-6 px-4 z-50">
+<div class="flex items-center gap-3 mb-12">
+<div class="w-10 h-10 rounded bg-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary">draw</span>
+</div>
+<div>
+<h1 class="text-headline-lg font-headline-lg text-on-primary leading-tight">Incel E-Sign</h1>
+<p class="text-label-xs opacity-60">Legal Authority</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 p-2 rounded text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 p-2 rounded text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">description</span>
+                Documents
+            </a>
+<a class="flex items-center gap-3 p-2 rounded text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">assignment_add</span>
+                Templates
+            </a>
+<a class="flex items-center gap-3 p-2 rounded text-secondary-fixed-dim font-bold border-l-4 border-secondary-fixed-dim pl-2 font-label-sm text-label-sm bg-primary-container/30" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+                Audit Logs
+            </a>
+<a class="flex items-center gap-3 p-2 rounded text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="mt-auto pt-6 border-t border-primary-container">
+<button class="w-full bg-secondary hover:bg-accent-hover text-on-secondary font-label-sm text-label-sm py-2 px-4 rounded transition-all active:scale-95 mb-6">
+                New Document
+            </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 p-2 rounded text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">help</span>
+                    Help Center
+                </a>
+<a class="flex items-center gap-3 p-2 rounded text-on-primary-container opacity-80 hover:opacity-100 hover:bg-primary-hover transition-colors font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">logout</span>
+                    Sign Out
+                </a>
+</div>
+</div>
+</aside>
+<!-- Topbar (Shared Components Mapping) -->
+<header class="fixed top-0 right-0 h-topbar-height w-[calc(100%-240px)] ml-sidebar-width bg-surface-container-lowest border-b border-border flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-lg text-body-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary" placeholder="Search audit trails..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-primary font-label-sm text-label-sm font-semibold hover:text-primary-hover transition-all">
+                Upgrade
+            </button>
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-muted hover:text-primary transition-all">notifications</button>
+<button class="material-symbols-outlined text-muted hover:text-primary transition-all">apps</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female executive in her 40s, wearing a dark blazer and white shirt, with a neutral and confident expression. The background is a clean, slightly blurred office environment with soft morning light filtering through windows. High resolution, professional corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDaa5UGQGy27QEN18tVpsgavJtBG1Bv6eAmS9cjL6UPr4xDw_OsL6RUtALmJF9AhFOROaK1E5nzcKJ3whMJEGzUU5xlJSuiYUW5JbCWbrLWawKNmftA-Q8RZCNO6rx7Qk3f3vqWse_heHs5n7QiyLfuoPgXhlXW2_GmAWzkPOAjFB1SRwekN0xW_jI0s9rqJ4hA5V3B22hRRnBf3DLpchwEAVwWp3KIuxnm1oZD3y7DkbjJWpr4OMoDm0PZiLX67kj2Kj_ihhd48c1"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-sidebar-width pt-topbar-height min-h-screen">
+<div class="max-w-max-content-width mx-auto p-8">
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-3">
+<h2 class="text-headline-2xl font-headline-2xl text-primary">Audit Logs</h2>
+<span class="px-2 py-0.5 bg-primary-light text-primary text-[10px] font-bold uppercase rounded border border-primary/10 tracking-wider">Admin</span>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border rounded text-body-sm font-medium hover:bg-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">download</span>
+                    Export CSV
+                </button>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-lowest rounded-xl border border-border p-4 mb-6 shadow-sm">
+<div class="flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[300px] relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-border rounded text-body-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" placeholder="Search by message or actor..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<select class="bg-surface-container-low border border-border rounded px-3 py-2 text-body-sm min-w-[140px] focus:ring-2 focus:ring-secondary/20">
+<option>All Actions</option>
+<option>Uploads</option>
+<option>Signatures</option>
+<option>Declines</option>
+</select>
+<select class="bg-surface-container-low border border-border rounded px-3 py-2 text-body-sm min-w-[140px] focus:ring-2 focus:ring-secondary/20">
+<option>Date Range</option>
+<option>Last 24 Hours</option>
+<option>Last 7 Days</option>
+<option>Last 30 Days</option>
+</select>
+<select class="bg-surface-container-low border border-border rounded px-3 py-2 text-body-sm min-w-[140px] focus:ring-2 focus:ring-secondary/20">
+<option>All Actors</option>
+<option>Internal Users</option>
+<option>External Signers</option>
+</select>
+<button class="text-muted text-body-sm hover:text-primary transition-colors px-2">Clear Filters</button>
+</div>
+</div>
+</div>
+<!-- Audit Log Table -->
+<div class="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface text-muted text-label-xs font-semibold uppercase tracking-wider border-b border-border">
+<th class="px-6 py-4">Timestamp</th>
+<th class="px-6 py-4">Actor</th>
+<th class="px-6 py-4">Action</th>
+<th class="px-6 py-4">Target</th>
+<th class="px-6 py-4">Message</th>
+<th class="px-6 py-4">IP Address</th>
+<th class="px-6 py-4 w-10"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border">
+<!-- Row 1: Expanded -->
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap text-caption-xs text-body">
+                                    Oct 24, 2024 <span class="text-muted mx-1">•</span> 02:14 PM
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-[10px]">AV</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Alice Vance</span>
+<span class="text-[11px] text-muted">alice.v@company.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-success-light text-status-completed uppercase tracking-wide">
+                                        Sign
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-muted text-lg">description</span>
+<div class="flex flex-col">
+<span class="text-body-sm truncate max-w-[150px]">Master_Service_Agreement.pdf</span>
+<span class="text-[10px] text-muted italic">Envelope</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 max-w-xs">
+<p class="text-body-sm truncate">Document signed by alice.v@company.com</p>
+</td>
+<td class="px-6 py-4 text-caption-xs text-muted font-mono">192.168.1.45</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-muted group-hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+<!-- Expansion Details for Row 1 -->
+<tr class="bg-primary-light/10">
+<td class="px-6 py-4 border-l-4 border-secondary" colspan="7">
+<div class="grid grid-cols-2 gap-8 py-2">
+<div>
+<h4 class="text-label-xs font-bold text-muted uppercase mb-2">Full Details</h4>
+<div class="space-y-2">
+<div class="flex gap-2">
+<span class="text-caption-xs font-semibold w-24">User Agent:</span>
+<span class="text-caption-xs text-body italic break-all">Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36</span>
+</div>
+<div class="flex gap-2">
+<span class="text-caption-xs font-semibold w-24">Location:</span>
+<span class="text-caption-xs text-body">London, UK</span>
+</div>
+</div>
+</div>
+<div>
+<h4 class="text-label-xs font-bold text-muted uppercase mb-2">Verification</h4>
+<div class="space-y-1">
+<div class="flex items-center gap-2 text-status-completed">
+<span class="material-symbols-outlined text-sm">verified</span>
+<span class="text-caption-xs">Digital signature verified with CA certificate</span>
+</div>
+<div class="flex items-center gap-2 text-muted">
+<span class="material-symbols-outlined text-sm">fingerprint</span>
+<span class="text-caption-xs font-mono">Hash: 8f2b...d91e</span>
+</div>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap text-caption-xs text-body">
+                                    Oct 24, 2024 <span class="text-muted mx-1">•</span> 01:45 PM
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary flex items-center justify-center font-bold text-[10px]">ML</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Marcus Low</span>
+<span class="text-[11px] text-muted">m.low@legal.corp</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-primary-light text-primary uppercase tracking-wide">
+                                        Create Envelope
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-muted text-lg">folder_zip</span>
+<div class="flex flex-col">
+<span class="text-body-sm truncate max-w-[150px]">Onboarding_Package_Q4</span>
+<span class="text-[10px] text-muted italic">Bulk Envelope</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 max-w-xs">
+<p class="text-body-sm truncate">New envelope created for 12 recipients</p>
+</td>
+<td class="px-6 py-4 text-caption-xs text-muted font-mono">10.0.12.201</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-muted group-hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap text-caption-xs text-body">
+                                    Oct 24, 2024 <span class="text-muted mx-1">•</span> 11:20 AM
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[10px]">RK</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Robert King</span>
+<span class="text-[11px] text-muted">king@partner.io</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-error-light text-status-rejected uppercase tracking-wide">
+                                        Decline
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-muted text-lg">description</span>
+<div class="flex flex-col">
+<span class="text-body-sm truncate max-w-[150px]">Lease_Agreement_V2.pdf</span>
+<span class="text-[10px] text-muted italic">Envelope</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 max-w-xs">
+<p class="text-body-sm truncate">Reason: "Inaccurate pricing in Clause 4"</p>
+</td>
+<td class="px-6 py-4 text-caption-xs text-muted font-mono">45.22.103.11</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-muted group-hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary-light/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap text-caption-xs text-body">
+                                    Oct 24, 2024 <span class="text-muted mx-1">•</span> 09:05 AM
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary flex items-center justify-center font-bold text-[10px]">SYS</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">System Admin</span>
+<span class="text-[11px] text-muted">system@incel-esign.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-info-light text-info uppercase tracking-wide">
+                                        Upload
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-muted text-lg">draft</span>
+<div class="flex flex-col">
+<span class="text-body-sm truncate max-w-[150px]">Compliance_Report.docx</span>
+<span class="text-[10px] text-muted italic">Asset</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 max-w-xs">
+<p class="text-body-sm truncate">Document uploaded to secure cloud storage</p>
+</td>
+<td class="px-6 py-4 text-caption-xs text-muted font-mono">Internal_Job</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-muted group-hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-primary-light/30 transition-colors group border-b-0">
+<td class="px-6 py-4 whitespace-nowrap text-caption-xs text-body">
+                                    Oct 24, 2024 <span class="text-muted mx-1">•</span> 08:30 AM
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar placeholder of a smiling young professional male with dark hair and glasses, wearing a light blue oxford shirt. High-end LinkedIn profile style photo, bright and professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRFDr5yfS0veNEIcWx_r1H1qdAQhBZegbrE9SOTtdVrLfvqhEUFryvT6-cbWB2Jzqx6PF0tMs4y07OMVWO8KbNHLdOxB-Zr1jw_zuDMCQ76rUSg8HQSxPyJPeur0t8ivGfuGMzcTKErhxNsiZ_lIp_LllwUWEaE-fnJRqYJe1YnwOR5GDEnBJo3UQAAhGcw0ooKre88jgUA3N3YQcv8gGN0abX-fZOfslGDyVCeGCJXUj9Om00Do0tWq9iIzzKP2nnU-yPQQ4Ej9IG"/>
+</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Daniel Chen</span>
+<span class="text-[11px] text-muted">d.chen@enterprise.co</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-warning-light text-warning uppercase tracking-wide">
+                                        Send
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-muted text-lg">mail</span>
+<div class="flex flex-col">
+<span class="text-body-sm truncate max-w-[150px]">Contract_Final_v3.pdf</span>
+<span class="text-[10px] text-muted italic">Notification</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 max-w-xs">
+<p class="text-body-sm truncate">Notification sent to 3 external parties</p>
+</td>
+<td class="px-6 py-4 text-caption-xs text-muted font-mono">203.45.1.88</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-muted group-hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 bg-surface border-t border-border flex items-center justify-between">
+<span class="text-caption-xs text-muted">Showing 1 to 5 of 1,248 entries</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border bg-white text-muted hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-secondary bg-secondary text-on-secondary text-caption-xs font-bold">
+                            1
+                        </button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border bg-white text-body-sm hover:bg-surface transition-colors">
+                            2
+                        </button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border bg-white text-body-sm hover:bg-surface transition-colors">
+                            3
+                        </button>
+<span class="px-2 text-muted">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border bg-white text-body-sm hover:bg-surface transition-colors">
+                            25
+                        </button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border bg-white text-muted hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Stats Card (Compliance Focused) -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-primary p-6 rounded-xl text-on-primary shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-label-xs opacity-60 uppercase tracking-widest mb-1">Total Logs (30d)</p>
+<h3 class="text-headline-3xl">42,891</h3>
+<p class="text-caption-xs mt-2 flex items-center gap-1 text-secondary-fixed-dim">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                            12.4% increase from last month
+                        </p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">history</span>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl border border-border shadow-sm flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-status-completed/10 text-status-completed flex items-center justify-center">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+<div>
+<p class="text-label-xs text-muted uppercase tracking-wider mb-1">Verification Rate</p>
+<h3 class="text-headline-xl text-primary">99.98%</h3>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl border border-border shadow-sm flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-info-light text-info flex items-center justify-center">
+<span class="material-symbols-outlined">security</span>
+</div>
+<div>
+<p class="text-label-xs text-muted uppercase tracking-wider mb-1">Last Security Audit</p>
+<h3 class="text-headline-xl text-primary">2h ago</h3>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Visual Polish: Soft Glow background elements -->
+<div class="fixed top-0 right-0 -z-10 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="fixed bottom-0 left-64 -z-10 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[80px] pointer-events-none"></div>
+<script>
+        // Simple micro-interactions for the table rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Ignore if clicked on a button
+                if (e.target.closest('button')) return;
+                
+                // Logic to toggle expansion could be added here
+                // For this static demo, only the first row is expanded as requested
+            });
+        });
+
+        // Hover animation for the export button
+        const exportBtn = document.querySelector('button:contains("Export")');
+        if(exportBtn) {
+            exportBtn.addEventListener('mousedown', () => exportBtn.classList.add('scale-95'));
+            exportBtn.addEventListener('mouseup', () => exportBtn.classList.remove('scale-95'));
+        }
+    </script>
+</body></html>

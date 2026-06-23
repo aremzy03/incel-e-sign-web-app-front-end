@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Waiting for Others | Incel E-Sign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-teal {
+            box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(13, 148, 136, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#ae8c5b",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#303033",
+                        "surface-bright": "#fbf8fc",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "surface-dim": "#dbd9dc",
+                        "muted": "#64748B",
+                        "status-completed": "#059669",
+                        "error-light": "#FEE2E2",
+                        "primary-light": "#EEF1F7",
+                        "info-light": "#DBEAFE",
+                        "on-primary-fixed": "#0a1a3a",
+                        "background": "#fbf8fc",
+                        "primary": "#041534",
+                        "on-primary-fixed-variant": "#384668",
+                        "on-primary": "#ffffff",
+                        "success": "#059669",
+                        "on-tertiary": "#ffffff",
+                        "bg": "#F8FAFC",
+                        "outline-variant": "#c5c6cf",
+                        "tertiary": "#211300",
+                        "info": "#2563EB",
+                        "secondary-container": "#86f2e4",
+                        "tertiary-fixed-dim": "#e7c08b",
+                        "on-background": "#1b1b1e",
+                        "surface-container-low": "#f5f3f6",
+                        "status-your-turn": "#0D9488",
+                        "outline": "#75777f",
+                        "primary-hover": "#243656",
+                        "on-secondary-container": "#006f66",
+                        "accent-hover": "#0F766E",
+                        "warning-light": "#FEF3C7",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-variant": "#e4e2e5",
+                        "inverse-on-surface": "#f2f0f3",
+                        "surface-tint": "#4f5e81",
+                        "primary-fixed-dim": "#b7c6ee",
+                        "error": "#DC2626",
+                        "warning": "#D97706",
+                        "on-surface-variant": "#45464e",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#006a61",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#281800",
+                        "success-light": "#D1FAE5",
+                        "surface-container-high": "#eae7eb",
+                        "on-secondary-fixed": "#00201d",
+                        "border": "#E2E8F0",
+                        "surface": "#F1F5F9",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-surface": "#1b1b1e",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#ffddb0",
+                        "accent-light": "#CCFBF1",
+                        "status-rejected": "#DC2626",
+                        "on-tertiary-fixed-variant": "#5c4218",
+                        "on-primary-container": "#8392b7",
+                        "status-draft": "#94A3B8",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e4e2e5",
+                        "body": "#1E293B",
+                        "tertiary-container": "#3c2600",
+                        "inverse-primary": "#b7c6ee",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-container": "#1b2a4a",
+                        "surface-container": "#efedf0",
+                        "status-pending": "#F59E0B"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "4": "16px",
+                        "16": "64px",
+                        "8": "32px",
+                        "1": "4px",
+                        "6": "24px",
+                        "topbar-height": "64px",
+                        "max-content-width": "1280px",
+                        "3": "12px",
+                        "sidebar-width": "240px",
+                        "12": "48px",
+                        "2": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-2xl": ["Inter"],
+                        "body-base": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-3xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "caption-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-base overflow-hidden">
+<!-- Top Navigation Bar - Suppression check: This is a sub-page with a "Close" intent, but keeping shell identity as requested -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-topbar-height bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-4">
+<span class="text-headline-lg font-headline-lg text-primary">Incel E-Sign</span>
+<div class="h-6 w-[1px] bg-outline-variant mx-2"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Residential Lease Agreement #2024-081</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low p-2 rounded-full transition-colors">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low p-2 rounded-full transition-colors">help_outline</span>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-label-sm text-label-sm hover:bg-primary-hover active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                Close
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-topbar-height h-screen w-full flex items-center justify-center relative bg-surface-container-low/30">
+<!-- Subtle Animated Background Element -->
+<div class="absolute inset-0 z-0 overflow-hidden opacity-40 pointer-events-none">
+
+</div>
+<!-- Central Content Card -->
+<div class="relative z-10 w-full max-w-2xl px-6">
+<div class="glass-card p-12 rounded-full shadow-xl flex flex-col items-center text-center">
+<!-- Status Icon -->
+<div class="w-20 h-20 bg-primary-container/10 rounded-full flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-[40px] text-primary" style="font-variation-settings: 'wght' 300;">schedule</span>
+</div>
+<h1 class="font-headline-2xl text-headline-2xl text-primary mb-3">Waiting for others to sign</h1>
+<p class="font-body-base text-body-base text-on-surface-variant max-w-md mb-12">
+                    This document requires a specific signing order. You'll receive an email as soon as it's your turn to sign.
+                </p>
+<!-- Vertical Signer Timeline -->
+<div class="w-full max-w-sm text-left">
+<div class="space-y-0 relative">
+<!-- Step 1: Completed -->
+<div class="relative flex gap-6 pb-12">
+<!-- Connector Line -->
+<div class="absolute left-[15px] top-8 bottom-0 w-0.5 bg-success/30"></div>
+<div class="z-10 w-8 h-8 rounded-full bg-success-light flex items-center justify-center border-2 border-success">
+<span class="material-symbols-outlined text-[18px] text-success font-bold">check</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-success">Signer 1</span>
+<span class="font-headline-lg text-headline-lg text-primary opacity-60">Robert Harrison</span>
+<span class="font-caption-xs text-caption-xs text-on-surface-variant">Completed on Oct 24, 10:42 AM</span>
+</div>
+</div>
+<!-- Step 2: Current (Your Turn) -->
+<div class="relative flex gap-6 pb-12">
+<!-- Connector Line -->
+<div class="absolute left-[15px] top-8 bottom-0 w-0.5 bg-outline-variant"></div>
+<div class="z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center border-2 border-status-your-turn pulse-teal">
+<div class="w-2.5 h-2.5 rounded-full bg-status-your-turn"></div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-status-your-turn">Signer 2 (Current)</span>
+<span class="font-headline-lg text-headline-lg text-primary">Sarah Miller</span>
+<span class="font-caption-xs text-caption-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">mail</span>
+                                    Envelope opened 4 minutes ago
+                                </span>
+</div>
+</div>
+<!-- Step 3: Upcoming (You) -->
+<div class="relative flex gap-6">
+<div class="z-10 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border-2 border-outline">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">person</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">You (Signer 3)</span>
+<span class="px-2 py-0.5 bg-primary-container text-on-primary-container text-[10px] uppercase tracking-wider font-bold rounded">Upcoming</span>
+</div>
+<span class="font-headline-lg text-headline-lg text-on-surface-variant">Alex Thompson</span>
+<span class="font-caption-xs text-caption-xs text-muted">Awaiting previous signers</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="mt-12 flex flex-col items-center gap-4">
+<button class="px-8 py-3 bg-primary text-on-primary rounded-xl font-label-sm text-label-sm shadow-md hover:bg-primary-hover transition-all active:scale-95 flex items-center gap-2" onclick="window.history.back()">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                        Back to Dashboard
+                    </button>
+<p class="font-caption-xs text-caption-xs text-muted">
+                        Need help? <a class="text-primary hover:underline" href="#">Contact Support</a>
+</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Side Navigation Bar (Hidden on this focused screen as per 'Relevance Check' rule, but present for shell continuity if needed) -->
+<!-- We suppress it here to prioritize the 'Not Your Turn' focused message canvas -->
+<script>
+        // Simple interaction for the close button
+        document.querySelector('button')?.addEventListener('click', function(e) {
+            if (this.innerText.includes('Close')) {
+                console.log('Closing signer interface...');
+                // Logic to exit or redirect
+            }
+        });
+    </script>
+</body></html>

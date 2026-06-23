@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Documents Library - Incel E-Sign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e4e2e5",
+                    "on-primary-fixed-variant": "#384668",
+                    "background": "#fbf8fc",
+                    "primary-container": "#1b2a4a",
+                    "secondary-container": "#86f2e4",
+                    "surface-tint": "#4f5e81",
+                    "inverse-primary": "#b7c6ee",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#281800",
+                    "secondary": "#006a61",
+                    "inverse-on-surface": "#f2f0f3",
+                    "surface-container": "#efedf0",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#1b1b1e",
+                    "surface-dim": "#dbd9dc",
+                    "error-light": "#FEE2E2",
+                    "primary-fixed": "#d9e2ff",
+                    "status-completed": "#059669",
+                    "surface": "#F1F5F9",
+                    "tertiary": "#211300",
+                    "on-primary": "#ffffff",
+                    "bg": "#F8FAFC",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#fbf8fc",
+                    "inverse-surface": "#303033",
+                    "info": "#2563EB",
+                    "surface-container-high": "#eae7eb",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "muted": "#64748B",
+                    "on-surface-variant": "#45464e",
+                    "status-draft": "#94A3B8",
+                    "on-secondary-fixed-variant": "#005049",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "warning": "#D97706",
+                    "border": "#E2E8F0",
+                    "status-pending": "#F59E0B",
+                    "tertiary-container": "#3c2600",
+                    "on-primary-container": "#8392b7",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "surface-container-low": "#f5f3f6",
+                    "primary": "#041534",
+                    "body": "#1E293B",
+                    "primary-light": "#EEF1F7",
+                    "on-secondary-container": "#006f66",
+                    "on-primary-fixed": "#0a1a3a",
+                    "status-rejected": "#DC2626",
+                    "secondary-fixed": "#89f5e7",
+                    "success": "#059669",
+                    "on-secondary-fixed": "#00201d",
+                    "primary-hover": "#243656",
+                    "tertiary-fixed": "#ffddb0",
+                    "on-surface": "#1b1b1e",
+                    "outline-variant": "#c5c6cf",
+                    "on-error": "#ffffff",
+                    "info-light": "#DBEAFE",
+                    "accent-light": "#CCFBF1",
+                    "accent-hover": "#0F766E",
+                    "surface-container-highest": "#e4e2e5",
+                    "on-tertiary-container": "#ae8c5b",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "success-light": "#D1FAE5",
+                    "outline": "#75777f",
+                    "warning-light": "#FEF3C7",
+                    "status-your-turn": "#0D9488",
+                    "error": "#DC2626"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "3": "12px",
+                    "2": "8px",
+                    "1": "4px",
+                    "max-content-width": "1280px",
+                    "6": "24px",
+                    "4": "16px",
+                    "topbar-height": "64px",
+                    "8": "32px",
+                    "16": "64px",
+                    "12": "48px",
+                    "sidebar-width": "240px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "caption-xs": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-3xl": ["Inter"],
+                    "body-base": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-xs": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-primary dark:bg-primary-container shadow-md flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-headline-lg font-headline-lg text-on-primary dark:text-primary-fixed">Incel E-Sign</h1>
+<p class="text-label-xs text-on-primary-container opacity-70">Professional Edition</p>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full bg-secondary text-on-secondary py-3 rounded-xl font-label-sm flex items-center justify-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base">add</span>
+                + New
+            </button>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed font-bold border-l-4 border-secondary bg-primary-hover transition-colors font-label-sm" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+                Documents
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+                Envelopes
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm" href="#">
+<span class="material-symbols-outlined" data-icon="contacts">contacts</span>
+                Contacts
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm" href="#">
+<span class="material-symbols-outlined" data-icon="stylus">stylus</span>
+                My Signatures
+            </a>
+</nav>
+<div class="mt-auto px-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container dark:text-on-primary-fixed-variant hover:bg-primary-hover transition-colors font-label-sm" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[240px] pt-topbar-height min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-topbar-height bg-surface-container-lowest border-b border-border shadow-sm flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-sm">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-sm focus:ring-2 focus:ring-secondary transition-shadow outline-none" placeholder="Search documents..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-surface-container-lowest"></span>
+</button>
+<div class="flex items-center gap-3 pl-6 border-l border-border">
+<div class="text-right">
+<p class="text-label-sm font-bold text-on-surface leading-tight">Alex Rivera</p>
+<p class="text-caption-xs text-on-surface-variant">Admin Account</p>
+</div>
+<img class="w-10 h-10 rounded-full object-cover ring-2 ring-secondary-container" data-alt="A professional headshot of a middle-aged male executive with a warm smile, wearing a dark navy suit and light blue shirt. The lighting is bright and crisp, typical of a high-end corporate office setting. The background is softly blurred to emphasize the subject, maintaining a clean and professional aesthetic with a light gray palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY6K71Gd-EEYz8ZgIo3ohLg-E_S4GUWtftz2TWKeFArAanVIZN533vcp6Xms2PQY5zppB54uymFlZdhw3AikkMooby2frQouCesx_7h4o3r9uLx2LWSifytMqSg4-ViDGarIQ_gFHZJdKmkdRhtwIGKN0BqJTyB12ftYZIMufLXpoU3lYSQOXyyx3Pk_Tr4eWGqtZX47FGL115lvuUAxonPvT4sb-dWWjVO9nIYzxfjSZPvOclngCdJX1BOkoEEIvMCCuMu_4Ehct-"/>
+</div>
+</div>
+</header>
+<!-- Page Header Content -->
+<section class="max-w-max-content-width mx-auto px-8 py-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+<div>
+<h2 class="text-headline-3xl font-headline-3xl text-primary mb-1">Documents</h2>
+<p class="text-body-sm text-on-surface-variant">Manage and track your electronic signatures and legal documents.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-2.5 border border-border bg-surface text-on-surface-variant font-label-sm rounded-lg cursor-not-allowed opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">merge</span>
+                        Merge Selected
+                    </button>
+<button class="px-6 py-2.5 bg-secondary text-on-secondary font-label-sm rounded-lg hover:shadow-lg transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">upload</span>
+                        Upload
+                    </button>
+</div>
+</div>
+<!-- View Controls & Filter Bar -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-border mb-6">
+<div class="flex flex-wrap items-center justify-between p-4 gap-4 border-b border-border">
+<div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg">
+<button class="px-5 py-2 text-label-sm font-bold rounded-md bg-surface-container-lowest shadow-sm text-secondary">All</button>
+<button class="px-5 py-2 text-label-sm text-on-surface-variant hover:text-primary transition-colors">Draft</button>
+<button class="px-5 py-2 text-label-sm text-on-surface-variant hover:text-primary transition-colors">Sent</button>
+<button class="px-5 py-2 text-label-sm text-on-surface-variant hover:text-primary transition-colors">Completed</button>
+<button class="px-5 py-2 text-label-sm text-on-surface-variant hover:text-primary transition-colors">Rejected</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center border border-border rounded-lg overflow-hidden">
+<button class="p-2 bg-surface text-secondary border-r border-border" title="Table View">
+<span class="material-symbols-outlined block">table_rows</span>
+</button>
+<button class="p-2 bg-surface-container-lowest text-on-surface-variant hover:bg-surface transition-colors" title="Grid View">
+<span class="material-symbols-outlined block">grid_view</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Document Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface text-on-surface-variant border-b border-border">
+<th class="py-4 px-6 w-12"><input class="rounded text-secondary focus:ring-secondary cursor-pointer border-outline-variant" type="checkbox"/></th>
+<th class="py-4 px-4 font-label-sm uppercase tracking-wider text-caption-xs">Type</th>
+<th class="py-4 px-4 font-label-sm uppercase tracking-wider text-caption-xs">Filename</th>
+<th class="py-4 px-4 font-label-sm uppercase tracking-wider text-caption-xs">Size</th>
+<th class="py-4 px-4 font-label-sm uppercase tracking-wider text-caption-xs">Status</th>
+<th class="py-4 px-4 font-label-sm uppercase tracking-wider text-caption-xs">Owner</th>
+<th class="py-4 px-4 font-label-sm uppercase tracking-wider text-caption-xs">Created Date</th>
+<th class="py-4 px-4 w-12"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-6"><input class="rounded text-secondary focus:ring-secondary cursor-pointer border-outline-variant" type="checkbox"/></td>
+<td class="py-4 px-4">
+<div class="w-10 h-10 rounded bg-error-light flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="text-body-sm font-medium text-primary cursor-pointer hover:underline">Service Agreement v2.pdf</span>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">1.2 MB</td>
+<td class="py-4 px-4">
+<span class="px-3 py-1 rounded-full bg-success-light text-status-completed text-caption-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-completed"></span>
+                                        Completed
+                                    </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full border border-border" data-alt="Close-up professional portrait of a tech professional in a bright, modern studio. The subject has short dark hair and a confident expression. The lighting is soft and flattering, with a clean white and cool blue palette in the background to emphasize trust and reliability in a corporate software environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJx64CXOG2woua9LZi8P-Kd_uHUHJ8cn-PcMn-fbzFHpguGrBqWWf3cIZ0sR_t4OCo3UgS1qXfrJ87xY8QssdkiWmTYXyL2v9w406wnebbF8jKGRSS4zZb3XeupJDKWqVPk1Fug_fNq_yWi1g5QlmwLyURFX3w5YB1ntz4QpL8GOay5VDGXtEZRfkRlimUZ5kqeadRA4vvZ9ZO_OMzWgMlLwmez8g6eM0WNbW5WtnKEwxlYXMrAuHS9xqt8eTJ2PdoEdeC4wjokUNe"/>
+<span class="text-body-sm">Alex Rivera</span>
+</div>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">Oct 12, 2024</td>
+<td class="py-4 px-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined block">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-6"><input class="rounded text-secondary focus:ring-secondary cursor-pointer border-outline-variant" type="checkbox"/></td>
+<td class="py-4 px-4">
+<div class="w-10 h-10 rounded bg-info-light flex items-center justify-center text-info">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="text-body-sm font-medium text-primary cursor-pointer hover:underline">Employment_Offer_Template.docx</span>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">450 KB</td>
+<td class="py-4 px-4">
+<span class="px-3 py-1 rounded-full bg-surface-variant text-on-surface-variant text-caption-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                                        Draft
+                                    </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full border border-border" data-alt="Alex Rivera profile picture, same as previous description to maintain consistency in the document list. Corporate headshot, high key lighting, professional studio environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8xcgMzCU12YDGyWqhDEelvm3jGO0aIizyrYH012Ibes5Y72Ikrw9qoA8Ky5E0ZsEp4oRQoJYSXwcYNCaHEfwMwEJ-lurkTfcbR0Q0iUrG4L_vFwA34uhxxKSQlX-MCMajPUHA6JcK-dpXZeUX0rCopKUA_4IeNeY34GYSL8yToxGIsmUxZ_Wn32LVG2Bg5vQYMAELrnxB2dGCdDuihOoqqCRa-SO-wCIDHoLSOpXOE7gl_mRle8OL-4KxBAzHWk2aQfse5rY5n5NZ"/>
+<span class="text-body-sm">Alex Rivera</span>
+</div>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">Oct 14, 2024</td>
+<td class="py-4 px-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined block">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-6"><input class="rounded text-secondary focus:ring-secondary cursor-pointer border-outline-variant" type="checkbox"/></td>
+<td class="py-4 px-4">
+<div class="w-10 h-10 rounded bg-error-light flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="text-body-sm font-medium text-primary cursor-pointer hover:underline">NDA_Vendor_Final.pdf</span>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">890 KB</td>
+<td class="py-4 px-4">
+<span class="px-3 py-1 rounded-full bg-warning-light text-warning text-caption-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                                        Sent
+                                    </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full border border-border" data-alt="A professional headshot of a female legal expert, Sarah Smith, wearing a modern teal blazer and a white silk blouse. She has shoulder-length blonde hair and a confident, approachable demeanor. The background is a sleek, minimalist law firm office with soft morning sunlight streaming through large windows. The overall aesthetic is trustworthy and sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr_2aRpbivnOGc88W6LyYF4xeFbRe_W84zbCggV9lROfEPkQQGIoYg-oGbz68hp_LclijIe4GgTSXKeJATTtxxQaYCg-K9X663eVt2iH-kmfEcSAn-pOYk-CyR0c88BkqWP8s3j90PB6R11mSTtda8XbRQkwm2jO7GXSeTkRyvqhd_BlhnNIaDV8rUoBt-mZHGBIgvFjLFk5YAKeGkRulZc8vO4Y1AsBOMUqhpUbwRU96fHgGp0et61-5DrZ4-e7mwyQiExcWi7TIQ"/>
+<span class="text-body-sm">Sarah Smith</span>
+</div>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">Oct 15, 2024</td>
+<td class="py-4 px-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined block">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 Placeholder (for visual balance) -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-6"><input class="rounded text-secondary focus:ring-secondary cursor-pointer border-outline-variant" type="checkbox"/></td>
+<td class="py-4 px-4">
+<div class="w-10 h-10 rounded bg-error-light flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="text-body-sm font-medium text-primary cursor-pointer hover:underline">Consulting_Terms_Update_2024.pdf</span>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">2.1 MB</td>
+<td class="py-4 px-4">
+<span class="px-3 py-1 rounded-full bg-success-light text-status-completed text-caption-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-completed"></span>
+                                        Completed
+                                    </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full border border-border" data-alt="Alex Rivera profile picture, maintaining consistent persona in the application interface. High quality corporate portraiture style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWlaGk_quwb2fQ9XvP1fBKnc2GSY2LjTkQe0Tpy8Hh-CMpceE5kvxC1KduHj1_nv2w_jhda0HyD4SWBgEzYC1nqtM4ig0ZoTQOnDtxc3fsqpRUCv1bgdGKAmfuAyayHk7aKBixGuSlMXXg-T7pqEl-kzIHun0PEfIrc7XAqFNGWXpsZo5CVtGpCEZj-yl7DHExE0Ts38GDmnmNfsYqr9HY7_rHEvC5fmhE-1oxR1rfui6IhnrRke32ff0ZVwX1jThE393qKVwdvxn1"/>
+<span class="text-body-sm">Alex Rivera</span>
+</div>
+</td>
+<td class="py-4 px-4 text-body-sm text-on-surface-variant">Oct 08, 2024</td>
+<td class="py-4 px-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined block">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="flex items-center justify-between p-6 border-t border-border">
+<p class="text-body-sm text-on-surface-variant">Showing <span class="font-bold text-on-surface">1-10</span> of <span class="font-bold text-on-surface">42</span> documents</p>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg border border-border bg-surface-container-lowest text-on-surface-variant hover:bg-surface transition-colors disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined block">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-secondary text-on-secondary font-bold text-body-sm">1</button>
+<button class="w-10 h-10 rounded-lg hover:bg-surface transition-colors text-body-sm">2</button>
+<button class="w-10 h-10 rounded-lg hover:bg-surface transition-colors text-body-sm">3</button>
+<span class="px-2">...</span>
+<button class="w-10 h-10 rounded-lg hover:bg-surface transition-colors text-body-sm">5</button>
+<button class="p-2 rounded-lg border border-border bg-surface-container-lowest text-on-surface-variant hover:bg-surface transition-colors">
+<span class="material-symbols-outlined block">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Dashboard Insights (Decorative / Extra Context) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-6 bg-surface-container-lowest border border-border rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-caption-xs font-bold text-on-surface-variant uppercase tracking-wider">Completion Rate</span>
+<span class="material-symbols-outlined text-success">analytics</span>
+</div>
+<p class="text-headline-xl font-headline-xl text-primary">94.2%</p>
+<p class="text-caption-xs text-success font-medium mt-1">+2.4% from last month</p>
+</div>
+<div class="p-6 bg-surface-container-lowest border border-border rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-caption-xs font-bold text-on-surface-variant uppercase tracking-wider">Pending Signatures</span>
+<span class="material-symbols-outlined text-warning">pending_actions</span>
+</div>
+<p class="text-headline-xl font-headline-xl text-primary">12</p>
+<p class="text-caption-xs text-on-surface-variant mt-1">Average wait: 4.2 hours</p>
+</div>
+<div class="p-6 bg-surface-container-lowest border border-border rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-caption-xs font-bold text-on-surface-variant uppercase tracking-wider">Storage Usage</span>
+<span class="material-symbols-outlined text-info">cloud_queue</span>
+</div>
+<div class="w-full bg-surface-container-low h-2 rounded-full mt-4 mb-2">
+<div class="bg-info h-full rounded-full" style="width: 65%;"></div>
+</div>
+<p class="text-caption-xs text-on-surface-variant font-medium">6.5 GB of 10 GB used</p>
+</div>
+</div>
+</section>
+</main>
+<script>
+        // Simple Micro-interactions
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if(e.target.type !== 'checkbox' && !e.target.closest('button')) {
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    updateMergeButton();
+                }
+            });
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(check => {
+            check.addEventListener('change', updateMergeButton);
+        });
+
+        function updateMergeButton() {
+            const checkedCount = document.querySelectorAll('tbody input[type="checkbox"]:checked').length;
+            const mergeBtn = document.querySelector('button:contains("Merge Selected")') || document.querySelectorAll('button')[2]; 
+            
+            if (checkedCount >= 2) {
+                mergeBtn.classList.remove('cursor-not-allowed', 'opacity-50', 'bg-surface');
+                mergeBtn.classList.add('bg-primary', 'text-on-primary', 'hover:bg-primary-hover');
+            } else {
+                mergeBtn.classList.add('cursor-not-allowed', 'opacity-50', 'bg-surface');
+                mergeBtn.classList.remove('bg-primary', 'text-on-primary', 'hover:bg-primary-hover');
+            }
+        }
+    </script>
+</body></html>

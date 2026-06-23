@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LegalSign | Review &amp; Sign Document</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#1b1b1e",
+                    "secondary-container": "#86f2e4",
+                    "inverse-primary": "#b7c6ee",
+                    "error-light": "#FEE2E2",
+                    "surface-dim": "#dbd9dc",
+                    "secondary": "#006a61",
+                    "outline": "#75777f",
+                    "info": "#2563EB",
+                    "status-completed": "#059669",
+                    "on-tertiary-container": "#ae8c5b",
+                    "tertiary": "#211300",
+                    "success-light": "#D1FAE5",
+                    "on-primary-fixed": "#0a1a3a",
+                    "status-draft": "#94A3B8",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "surface-container": "#efedf0",
+                    "info-light": "#DBEAFE",
+                    "muted": "#64748B",
+                    "success": "#059669",
+                    "accent-hover": "#0F766E",
+                    "surface-variant": "#e4e2e5",
+                    "on-primary-container": "#8392b7",
+                    "on-primary": "#ffffff",
+                    "background": "#fbf8fc",
+                    "primary-light": "#EEF1F7",
+                    "inverse-surface": "#303033",
+                    "primary-fixed-dim": "#b7c6ee",
+                    "on-tertiary-fixed-variant": "#5c4218",
+                    "status-your-turn": "#0D9488",
+                    "warning": "#D97706",
+                    "inverse-on-surface": "#f2f0f3",
+                    "error": "#DC2626",
+                    "secondary-fixed": "#89f5e7",
+                    "on-secondary-fixed-variant": "#005049",
+                    "tertiary-fixed": "#ffddb0",
+                    "primary-fixed": "#d9e2ff",
+                    "on-surface-variant": "#45464e",
+                    "surface-tint": "#4f5e81",
+                    "on-surface": "#1b1b1e",
+                    "primary-container": "#1b2a4a",
+                    "bg": "#F8FAFC",
+                    "accent-light": "#CCFBF1",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#eae7eb",
+                    "primary": "#041534",
+                    "on-tertiary-fixed": "#281800",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c5c6cf",
+                    "surface-container-low": "#f5f3f6",
+                    "primary-hover": "#243656",
+                    "warning-light": "#FEF3C7",
+                    "surface-bright": "#fbf8fc",
+                    "status-rejected": "#DC2626",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#00201d",
+                    "on-secondary-container": "#006f66",
+                    "tertiary-fixed-dim": "#e7c08b",
+                    "on-error-container": "#93000a",
+                    "status-pending": "#F59E0B",
+                    "body": "#1E293B",
+                    "border": "#E2E8F0",
+                    "tertiary-container": "#3c2600",
+                    "surface": "#F1F5F9",
+                    "surface-container-highest": "#e4e2e5",
+                    "on-primary-fixed-variant": "#384668",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "max-content-width": "1280px",
+                    "16": "64px",
+                    "1": "4px",
+                    "4": "16px",
+                    "8": "32px",
+                    "sidebar-width": "240px",
+                    "3": "12px",
+                    "12": "48px",
+                    "6": "24px",
+                    "topbar-height": "64px",
+                    "2": "8px"
+            },
+            "fontFamily": {
+                    "label-xs": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "caption-xs": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-base": ["Inter"],
+                    "headline-2xl": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-3xl": ["Inter"]
+            },
+            "fontSize": {
+                    "label-xs": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "caption-xs": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-2xl": ["30px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-xl": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-3xl": ["36px", {"lineHeight": "44px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(.33); opacity: 0; }
+            80%, 100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pulse-dot {
+            0% { transform: scale(.8); }
+            50% { transform: scale(1); }
+            100% { transform: scale(.8); }
+        }
+        .pulse-active {
+            position: relative;
+        }
+        .pulse-active::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #0D9488;
+            border-radius: 50%;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            z-index: -1;
+        }
+        .pulse-dot {
+            animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-base min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 w-full h-topbar-height z-50 flex items-center justify-between px-8 bg-surface-container-lowest border-b border-outline-variant shadow-sm max-w-full">
+<div class="flex items-center gap-3">
+<span class="font-headline-xl text-headline-xl font-bold text-primary">LegalSign</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface">Signer: Alex Rivera</span>
+<span class="font-caption-xs text-caption-xs text-muted">alex.rivera@example.com</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center text-primary font-bold ml-2">
+                    AR
+                </div>
+</div>
+</div>
+</header>
+<main class="flex-grow pt-24 pb-32 md:pb-12 px-4 md:px-8 max-w-max-content-width mx-auto w-full flex flex-col items-center">
+<!-- Main Content Card -->
+<div class="w-full max-w-4xl bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant overflow-hidden">
+<div class="grid grid-cols-1 md:grid-cols-12">
+<!-- Left: Branding/Hero Image -->
+<div class="md:col-span-5 relative min-h-[240px] md:min-h-full">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="A clean and professional digital office scene with high-end furniture, soft morning lighting through large windows, and a subtle sense of corporate security and legal authority. The color palette features deep navy and teal accents to match a modern SaaS aesthetic, emphasizing a trustworthy and calm atmosphere for signing important documents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL5mCvaxxhA9UxACU95Jiy_oyuY8kFP3ejvL7RNdqpAQHZL_A_QyLmUcD21g8y50Z8lQNdaSjKG2GdiGJtOmKaNdrkEtGO_LoZo6pPocesFZZxPiMDorhSwOa1U4hizO5AAo9YSmrIsoATQ47fkPSFwoBAk4Zc6UTglSn5vo11LzApJLmnmGn6TzXIp6HLzHckUXhBD-aP2KfRacOGSGEJwDPF9lpPLeTzwiBitQJjNSWLx03q2oEdTaKa_3-wzZqQFQcdPn_Zsbve"/>
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-[2px]"></div>
+</div>
+<div class="relative z-10 p-8 h-full flex flex-col justify-end text-on-primary">
+<div class="bg-primary/60 backdrop-blur-md p-4 rounded-lg border border-white/10">
+<span class="font-label-sm text-label-sm opacity-80 uppercase tracking-widest">Action Required</span>
+<h2 class="font-headline-lg text-headline-lg mt-1">Review your commercial lease agreement</h2>
+</div>
+</div>
+</div>
+<!-- Right: Content & Action -->
+<div class="md:col-span-7 p-8 md:p-12 flex flex-col">
+<div class="mb-8">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div>
+<h1 class="font-headline-xl text-headline-xl text-primary">Julian Vane has requested your signature</h1>
+<p class="font-body-base text-body-base text-on-surface-variant mt-1">Q4 Commercial Lease Agreement</p>
+</div>
+</div>
+<div class="bg-surface-container p-4 rounded-lg flex items-center justify-between border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label-sm text-label-sm text-on-surface">Secure &amp; Legally Binding</span>
+</div>
+<span class="font-caption-xs text-caption-xs text-muted">ID: LGL-2024-8832</span>
+</div>
+</div>
+<!-- Timeline -->
+<div class="space-y-6 mb-12">
+<h3 class="font-label-sm text-label-sm text-muted uppercase tracking-wider">Signing Order</h3>
+<div class="relative space-y-8 pl-8">
+<!-- Timeline Vertical Line -->
+<div class="absolute left-3 top-2 bottom-2 w-0.5 bg-outline-variant"></div>
+<!-- Item 1: Completed -->
+<div class="relative flex items-center">
+<div class="absolute -left-[26px] w-5 h-5 rounded-full bg-status-completed flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-status-completed">Julian Vane</p>
+<p class="font-caption-xs text-caption-xs text-muted">Signed Oct 12, 2024 • 10:14 AM</p>
+</div>
+</div>
+<!-- Item 2: YOU -->
+<div class="relative flex items-center">
+<div class="absolute -left-[30px] w-7 h-7 flex items-center justify-center z-10">
+<div class="pulse-active w-full h-full flex items-center justify-center">
+<div class="w-3 h-3 bg-status-your-turn rounded-full pulse-dot"></div>
+</div>
+</div>
+<div class="bg-accent-light px-4 py-3 rounded-lg border border-status-your-turn/30 w-full">
+<div class="flex justify-between items-center">
+<div>
+<p class="font-label-sm text-label-sm text-status-your-turn font-bold">Alex Rivera (YOU)</p>
+<p class="font-caption-xs text-caption-xs text-status-your-turn">Your turn to sign</p>
+</div>
+<span class="bg-status-your-turn text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Active</span>
+</div>
+</div>
+</div>
+<!-- Item 3: Waiting -->
+<div class="relative flex items-center">
+<div class="absolute -left-[26px] w-5 h-5 rounded-full bg-surface-container border-2 border-outline-variant z-10"></div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Sarah Jenkins</p>
+<p class="font-caption-xs text-caption-xs text-muted">Waiting for your action</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="space-y-4 md:mt-auto">
+<button class="hidden md:flex w-full h-12 bg-status-your-turn text-white font-bold rounded-lg items-center justify-center gap-2 hover:bg-accent-hover transition-all shadow-md transform active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+                            Review &amp; Sign Document
+                        </button>
+<div class="flex items-center justify-center gap-4">
+<button class="flex items-center gap-2 text-error font-label-sm text-label-sm hover:underline py-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="warning">warning</span>
+                                Decline to Sign
+                            </button>
+<span class="text-outline-variant">|</span>
+<button class="text-on-surface-variant font-label-sm text-label-sm hover:underline py-2">
+                                View Details
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trust Badges -->
+<div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="flex items-center gap-2 justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-tighter">eIDAS Certified</span>
+</div>
+<div class="flex items-center gap-2 justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="gavel">gavel</span>
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-tighter">Legal Binding</span>
+</div>
+<div class="flex items-center gap-2 justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="security">security</span>
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-tighter">SOC2 Type II</span>
+</div>
+<div class="flex items-center gap-2 justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="cloud_done">cloud_done</span>
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-tighter">AES-256 Encryption</span>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center border-t border-outline-variant bg-surface-container-lowest mt-auto">
+<p class="font-caption-xs text-caption-xs text-muted mb-4 md:mb-0">
+            © 2024 LegalSign E-Signature Solutions. Secure &amp; Legally Binding.
+        </p>
+<div class="flex gap-6">
+<a class="font-caption-xs text-caption-xs text-muted hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-caption-xs text-caption-xs text-muted hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-caption-xs text-caption-xs text-muted hover:text-primary transition-colors" href="#">Security Architecture</a>
+</div>
+</footer>
+<!-- Mobile Sticky CTA -->
+<div class="md:hidden fixed bottom-0 left-0 w-full p-4 bg-surface-container-lowest border-t border-outline-variant z-50 flex flex-col gap-2 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+<button class="w-full h-14 bg-status-your-turn text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+            Review &amp; Sign
+        </button>
+<p class="text-center font-caption-xs text-caption-xs text-muted">
+            Viewing as <span class="font-bold">Alex Rivera</span>
+</p>
+</div>
+<script>
+        // Micro-interactions for button press
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+    </script>
+</body></html>

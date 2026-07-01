@@ -38,6 +38,11 @@ jest.mock('@/lib/api/envelopes', () => ({
   getEnvelopeDocuments: jest.fn().mockResolvedValue([{ id: 'doc-1', document_file_url: '/doc.pdf' }]),
 }))
 
+jest.mock('@/components/signing/sign-flow-page', () => ({
+  __esModule: true,
+  default: () => <div data-testid="sign-flow">Sign flow</div>,
+}))
+
 describe('Signatures integration', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => {
     const client = new QueryClient({
@@ -68,12 +73,14 @@ describe('Signatures integration', () => {
 
     render(<SignaturesPage />, { wrapper })
 
+    await userEvent.click(screen.getByRole('button', { name: /add signature/i }))
+
     const file = new File([new Uint8Array([1, 2, 3])], 'my-sign.png', { type: 'image/png' })
-    const input = await screen.findByLabelText(/choose file/i)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
     await userEvent.upload(input, file)
 
-    const uploadButton = screen.getByRole('button', { name: /upload signature/i })
-    await userEvent.click(uploadButton)
+    const saveButton = screen.getByRole('button', { name: /save signature/i })
+    await userEvent.click(saveButton)
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/signatures/user', expect.objectContaining({ method: 'POST' }))
@@ -82,26 +89,14 @@ describe('Signatures integration', () => {
     expect(await screen.findByText('my-sign')).toBeInTheDocument()
   })
 
-  test('Sign page renders signature actions', async () => {
+  test('Sign page renders sign flow', async () => {
     require('next-auth/react').useSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
     })
 
-    const axios = require('axios')
-    const mockApi = (axios.create as jest.Mock).mock.results[0]?.value || (axios.create as jest.Mock)()
-    mockApi.get.mockResolvedValueOnce({
-      data: { id: '123', status: 'pending', name: 'Test Envelope', signing_order: [] },
-    })
-
-    global.fetch = jest.fn(async () => ({
-      ok: true,
-      json: async () => [{ id: 2, name: 'saved', image_url: '/x.png', uploaded_at: new Date().toISOString() }],
-    })) as any
-
     render(<EnvelopeSignPage />, { wrapper })
 
-    expect(await screen.findByText('Select Your Signature')).toBeInTheDocument()
-    expect(await screen.findByText('Decline to Sign')).toBeInTheDocument()
+    expect(await screen.findByTestId('sign-flow')).toBeInTheDocument()
   })
 })

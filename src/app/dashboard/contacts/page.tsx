@@ -1,26 +1,48 @@
-
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+import { MaterialIcon } from '@/components/ui/material-icon'
+import {
+  PageHeader,
+  SearchField,
+  DataTable,
+  StatusBadge,
+  EmptyState,
+  AddContactModal,
+} from '@/components/library'
+import type { DataTableColumn } from '@/components/library'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAddContact, useContacts, useDeleteContact, useSearchContact } from '@/hooks/useContacts'
-import { Button as UIButton } from '@/components/ui/button'
-import { RecipientSearch } from '@/components/contacts/RecipientSearch'
+import type { Contact } from '@/lib/api/contacts'
+
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 export default function ContactsPage() {
   const { data: contacts, isLoading } = useContacts()
-  const { mutateAsync: addAsync, isPending } = useAddContact()
+  const { mutateAsync: addAsync, isPending: isAdding } = useAddContact()
   const { mutateAsync: searchAsync } = useSearchContact()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteContact()
 
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
   const [resolvedUserIds, setResolvedUserIds] = useState<Record<string, string>>({})
+  const [searchTerm, setSearchTerm] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
   const requested = useRef<Set<string>>(new Set())
-  
-  // Real-time search will handle adding contacts directly on select
 
   useEffect(() => {
     if (!contacts || contacts.length === 0) return
@@ -33,122 +55,175 @@ export default function ContactsPage() {
         requested.current.add(key)
         try {
           const res = await searchAsync(key)
-          if (res?.found && res && (res as any).user) {
-            const user = (res as any).user
+          if (res?.found && (res as { user?: { full_name?: string; id?: string } }).user) {
+            const user = (res as { user: { full_name?: string; id?: string } }).user
             if (user.full_name) {
-              setResolvedNames((prev) => ({ ...prev, [key]: user.full_name }))
+              setResolvedNames((prev) => ({ ...prev, [key]: user.full_name! }))
             }
             if (user.id) {
-              setResolvedUserIds((prev) => ({ ...prev, [key]: user.id }))
+              setResolvedUserIds((prev) => ({ ...prev, [key]: user.id! }))
             }
           }
-        } catch (error) {
-          // ignore failures
+        } catch {
+          // ignore
         }
       }
     })()
   }, [contacts, resolvedNames, searchAsync])
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-        <p className="text-gray-600 mt-1">Manage your saved recipients</p>
-      </div>
+  const filteredContacts = (contacts ?? []).filter((c) => {
+    if (!searchTerm.trim()) return true
+    const q = searchTerm.toLowerCase()
+    const name = resolvedNames[c.email.toLowerCase()] || c.name || ''
+    return c.email.toLowerCase().includes(q) || name.toLowerCase().includes(q)
+  })
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Contact</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label>Search users by name or email</Label>
-            <RecipientSearch
-              onSelect={async (r) => {
-                try {
-                  await addAsync({ email: r.email, name: r.name })
-                } catch {
-                  // handled by hook toasts
-                }
-              }}
-            />
-            {isPending && (
-              <p className="text-xs text-gray-500">Adding contact...</p>
+  const columns: DataTableColumn<Contact>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (c) => {
+        const userId = c.user_id || resolvedUserIds[c.email.toLowerCase()]
+        const contactName = resolvedNames[c.email.toLowerCase()] || c.name || '—'
+        const isClickable = userId && c.status === 'registered'
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className="bg-primary text-xs text-on-primary">
+                {getInitials(contactName !== '—' ? contactName : c.email)}
+              </AvatarFallback>
+            </Avatar>
+            {isClickable ? (
+              <Link
+                href={`/dashboard/users/${userId}`}
+                className="font-medium text-secondary hover:underline"
+              >
+                {contactName}
+              </Link>
+            ) : (
+              <span className="font-medium text-on-surface">{contactName}</span>
             )}
           </div>
-        </CardContent>
-      </Card>
+        )
+      },
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      hideOnMobile: true,
+      render: (c) => <span className="text-muted">{c.email}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (c) => (
+        <StatusBadge
+          status={c.status === 'registered' ? 'On Incel E-Sign' : 'Invited'}
+        />
+      ),
+    },
+    {
+      key: 'lastUsed',
+      header: 'Last Used',
+      hideOnMobile: true,
+      render: () => <span className="text-muted">—</span>,
+    },
+  ]
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Saved Contacts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
-          ) : !contacts || contacts.length === 0 ? (
-            <p className="text-sm text-gray-600">You don’t have any saved contacts yet.</p>
-          ) : (
-            <div className="divide-y rounded-md border">
-              <div className="grid grid-cols-3 text-xs font-medium text-gray-500 px-4 py-2 bg-gray-50">
-                <span>Name</span>
-                <span>Email</span>
-                  <span className="flex items-center justify-between">
-                    <span>Status</span>
-                    <span className="sr-only">Actions</span>
-                  </span>
+  return (
+    <div className="mx-auto max-w-max-content-width space-y-6">
+      <PageHeader
+        title="Contacts"
+        subtitle="Manage your saved recipients"
+        badge={
+          contacts ? (
+            <span className="rounded-full bg-surface-container-low px-3 py-1 text-label-sm font-medium text-muted">
+              {contacts.length} Total Contacts
+            </span>
+          ) : undefined
+        }
+        actions={
+          <>
+            <Button variant="outline" disabled title="Coming soon">
+              <MaterialIcon name="file_download" size={18} className="mr-2" />
+              Export
+            </Button>
+            <Button onClick={() => setModalOpen(true)} className="bg-secondary hover:bg-accent-hover">
+              <MaterialIcon name="person_add" size={18} className="mr-2" />
+              Add Contact
+            </Button>
+          </>
+        }
+      />
+
+      <div className="rounded-xl border border-border bg-surface-container-lowest p-4 shadow-card sm:p-6">
+        <div className="mb-4">
+          <SearchField
+            placeholder="Search contacts…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-12 text-muted">Loading contacts…</div>
+        ) : filteredContacts.length === 0 ? (
+          <EmptyState
+            icon="group"
+            title="No contacts yet"
+            description="Add recipients to quickly use them in envelopes."
+            action={
+              <Button onClick={() => setModalOpen(true)}>Add Contact</Button>
+            }
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filteredContacts}
+            keyExtractor={(c) => c.id}
+            rowActions={(c) => (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden text-secondary sm:inline-flex"
+                  asChild
+                >
+                  <Link href="/dashboard/envelopes/create">Use in Envelope</Link>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MaterialIcon name="more_vert" size={18} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/envelopes/create">Use in Envelope</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-error"
+                      onClick={() => deleteAsync(c.id)}
+                      disabled={deleting}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              {contacts.map((c) => {
-                const userId = c.user_id || resolvedUserIds[c.email.toLowerCase()]
-                const contactName = resolvedNames[c.email.toLowerCase()] || c.name || '-'
-                const isClickable = userId && c.status === 'registered'
-                
-                return (
-                  <div key={c.id} className={"grid grid-cols-3 px-4 py-3 text-sm items-center"}>
-                    <div>
-                      {isClickable ? (
-                        <Link 
-                          href={`/dashboard/users/${userId}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                        >
-                          {contactName}
-                        </Link>
-                      ) : (
-                        <span>{contactName}</span>
-                      )}
-                    </div>
-                    <div>
-                      {isClickable ? (
-                        <Link 
-                          href={`/dashboard/users/${userId}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          {c.email}
-                        </Link>
-                      ) : (
-                        <span>{c.email}</span>
-                      )}
-                    </div>
-                    <span className="capitalize flex items-center justify-between">
-                      {c.status}
-                      <UIButton
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteAsync(c.id)}
-                        disabled={deleting}
-                      >
-                        Delete
-                      </UIButton>
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          />
+        )}
+      </div>
+
+      <AddContactModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        isAdding={isAdding}
+        onAdd={async (email, name) => {
+          await addAsync({ email, name })
+        }}
+      />
     </div>
   )
 }
-
-

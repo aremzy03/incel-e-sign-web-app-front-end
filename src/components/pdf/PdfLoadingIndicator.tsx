@@ -20,7 +20,7 @@ export function PdfLoadingIndicator({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-2 text-gray-600',
+        'flex items-center justify-center gap-2 text-muted',
         size === 'md' && 'py-8',
         size === 'sm' && 'py-2',
         className,

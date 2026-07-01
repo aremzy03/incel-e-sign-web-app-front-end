@@ -218,7 +218,7 @@ export const formVariants = {
     initial: { opacity: 0.7 },
     focus: { 
       opacity: 1,
-      color: tokens.semantic.interactive.focus,
+      color: tokens.a11y.focusRing.color,
       transition: transitions.fast
     },
     blur: { 
@@ -260,11 +260,11 @@ export const statusVariants = {
     transition: transitions.authoritySpring,
   },
   pending: {
-    backgroundColor: tokens.semantic.signature.pending,
+    backgroundColor: tokens.signature.pending,
     transition: transitions.smooth,
   },
   signed: {
-    backgroundColor: tokens.semantic.signature.signed,
+    backgroundColor: tokens.signature.signed,
     scale: [1, 1.1, 1],
     transition: {
       backgroundColor: transitions.smooth,
@@ -275,7 +275,7 @@ export const statusVariants = {
     },
   },
   declined: {
-    backgroundColor: tokens.semantic.signature.declined,
+    backgroundColor: tokens.signature.declined,
     transition: transitions.smooth,
   },
 };

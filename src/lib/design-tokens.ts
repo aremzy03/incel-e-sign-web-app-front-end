@@ -1,375 +1,316 @@
 /**
- * Complete Design Token System
- * Award-winning e-signature design system inspired by DocuSign
- * Core Philosophy: Authority and confidence through legal safety assurance
+ * Incel E-Sign Design Token System
+ * Source: incel-esign-design-system-and-screens/incel_e_sign/DESIGN.md
  */
 
-// ===== PRIMITIVE TOKENS =====
-export const primitives = {
-  // Color Palette
-  colors: {
-    navy: {
-      50: '#F0F4F8',
-      100: '#D9E2EC',
-      200: '#BCCCDC',
-      300: '#9FB3C8',
-      400: '#829AB1',
-      500: '#627D98',
-      600: '#486581',
-      700: '#334E68',
-      800: '#243B53',
-      900: '#0B1F3A', // Primary Deep Navy - authority, seriousness
-      950: '#05121C'
-    },
-    blue: {
-      50: '#EBF2FF',
-      100: '#D6E4FF',
-      200: '#B5CDFF',
-      300: '#85AAFF',
-      400: '#5E87FF',
-      500: '#1E5EFF', // Primary Royal Blue - trust, clarity
-      600: '#1B52E6',
-      700: '#1843CC',
-      800: '#1537A3',
-      900: '#122B7A',
-      950: '#0D1E51'
-    },
-    gray: {
-      50: '#F8F9FA',
-      100: '#F1F3F4',
-      200: '#E8EAED',
-      300: '#DADCE0',
-      400: '#C9CED6', // Primary Cool Gray - neutrality
-      500: '#9AA0A6',
-      600: '#80868B',
-      700: '#5F6368',
-      800: '#3C4043',
-      900: '#202124',
-      950: '#171717'
-    },
-    white: '#FFFFFF', // Primary White - simplicity, space
-    
-    // Semantic Status Colors
-    success: {
-      50: '#F0FDF4',
-      500: '#10B981',
-      600: '#059669',
-      900: '#064E3B'
-    },
-    warning: {
-      50: '#FFFBEB',
-      500: '#F59E0B',
-      600: '#D97706',
-      900: '#78350F'
-    },
-    error: {
-      50: '#FEF2F2',
-      500: '#EF4444',
-      600: '#DC2626',
-      900: '#7F1D1D'
-    }
-  },
+// ===== COLOR TOKENS =====
+export const colors = {
+  // Primary brand
+  primary: '#041534',
+  onPrimary: '#ffffff',
+  primaryContainer: '#1b2a4a',
+  onPrimaryContainer: '#8392b7',
+  primaryHover: '#243656',
+  primaryLight: '#EEF1F7',
+  primaryFixed: '#d9e2ff',
+  primaryFixedDim: '#b7c6ee',
+  onPrimaryFixed: '#0a1a3a',
+  onPrimaryFixedVariant: '#384668',
+  inversePrimary: '#b7c6ee',
 
-  // Typography Scale (8px base)
-  fontSize: {
-    xs: '12px',      // 12px
-    sm: '14px',      // 14px
-    base: '16px',    // 16px - Body text
-    lg: '18px',      // 18px
-    xl: '20px',      // 20px
-    '2xl': '24px',   // 24px - H2
-    '3xl': '30px',   // 30px
-    '4xl': '36px',   // 36px - H1 (updated from 32px for better hierarchy)
-    '5xl': '48px',   // 48px
-    '6xl': '60px',   // 60px
-    '7xl': '72px',   // 72px
-    '8xl': '96px',   // 96px
-    '9xl': '128px'   // 128px
-  },
+  // Secondary / CTA teal
+  secondary: '#006a61',
+  onSecondary: '#ffffff',
+  secondaryContainer: '#86f2e4',
+  onSecondaryContainer: '#006f66',
+  secondaryFixed: '#89f5e7',
+  secondaryFixedDim: '#6bd8cb',
+  onSecondaryFixed: '#00201d',
+  onSecondaryFixedVariant: '#005049',
 
-  // Font Weights
-  fontWeight: {
-    thin: '100',
-    extralight: '200',
-    light: '300',
-    normal: '400',    // Inter Regular - Body text
-    medium: '500',
-    semibold: '600',
-    bold: '700',      // IBM Plex Sans Bold - Headings
-    extrabold: '800',
-    black: '900'
-  },
+  // Accent / focus teal
+  accent: '#0D9488',
+  accentHover: '#0F766E',
+  accentLight: '#CCFBF1',
 
-  // Line Heights (based on font sizes)
-  lineHeight: {
-    none: '1',
-    tight: '1.25',
-    snug: '1.375',
-    normal: '1.5',    // Default for body text
-    relaxed: '1.625',
-    loose: '2'
-  },
+  // Tertiary
+  tertiary: '#211300',
+  onTertiary: '#ffffff',
+  tertiaryContainer: '#3c2600',
+  onTertiaryContainer: '#ae8c5b',
+  tertiaryFixed: '#ffddb0',
+  tertiaryFixedDim: '#e7c08b',
+  onTertiaryFixed: '#281800',
+  onTertiaryFixedVariant: '#5c4218',
 
-  // Letter Spacing
-  letterSpacing: {
-    tighter: '-0.05em',
-    tight: '-0.025em',
-    normal: '0em',
-    wide: '0.025em',
-    wider: '0.05em',
-    widest: '0.1em'
-  },
+  // Semantic
+  success: '#059669',
+  successLight: '#D1FAE5',
+  warning: '#D97706',
+  warningLight: '#FEF3C7',
+  error: '#DC2626',
+  errorLight: '#FEE2E2',
+  onError: '#ffffff',
+  errorContainer: '#ffdad6',
+  onErrorContainer: '#93000a',
+  info: '#2563EB',
+  infoLight: '#DBEAFE',
 
-  // Spacing Scale (8px modular scale)
-  spacing: {
-    0: '0px',
-    1: '4px',      // 0.5 × 8px
-    2: '8px',      // 1 × 8px
-    3: '12px',     // 1.5 × 8px
-    4: '16px',     // 2 × 8px
-    5: '20px',     // 2.5 × 8px
-    6: '24px',     // 3 × 8px - Grid gutters
-    7: '28px',     // 3.5 × 8px
-    8: '32px',     // 4 × 8px
-    9: '36px',     // 4.5 × 8px
-    10: '40px',    // 5 × 8px
-    11: '44px',    // 5.5 × 8px
-    12: '48px',    // 6 × 8px
-    14: '56px',    // 7 × 8px
-    16: '64px',    // 8 × 8px
-    20: '80px',    // 10 × 8px
-    24: '96px',    // 12 × 8px
-    28: '112px',   // 14 × 8px
-    32: '128px',   // 16 × 8px
-    36: '144px',   // 18 × 8px
-    40: '160px',   // 20 × 8px
-    44: '176px',   // 22 × 8px
-    48: '192px',   // 24 × 8px
-    52: '208px',   // 26 × 8px
-    56: '224px',   // 28 × 8px
-    60: '240px',   // 30 × 8px
-    64: '256px',   // 32 × 8px
-    72: '288px',   // 36 × 8px
-    80: '320px',   // 40 × 8px
-    96: '384px'    // 48 × 8px
-  },
+  // Neutrals
+  bg: '#F8FAFC',
+  background: '#fbf8fc',
+  onBackground: '#1b1b1e',
+  body: '#1E293B',
+  muted: '#64748B',
+  border: '#E2E8F0',
+  white: '#FFFFFF',
 
-  // Border Radius
-  borderRadius: {
-    none: '0px',
-    sm: '2px',
-    base: '4px',
-    md: '6px',
-    lg: '8px',
-    xl: '12px',
-    '2xl': '16px',
-    '3xl': '24px',
-    full: '9999px'
-  },
+  // M3 surfaces
+  surface: '#F1F5F9',
+  surfaceDim: '#dbd9dc',
+  surfaceBright: '#fbf8fc',
+  surfaceContainerLowest: '#ffffff',
+  surfaceContainerLow: '#f5f3f6',
+  surfaceContainer: '#efedf0',
+  surfaceContainerHigh: '#eae7eb',
+  surfaceContainerHighest: '#e4e2e5',
+  onSurface: '#1b1b1e',
+  onSurfaceVariant: '#45464e',
+  surfaceVariant: '#e4e2e5',
+  surfaceTint: '#4f5e81',
+  inverseSurface: '#303033',
+  inverseOnSurface: '#f2f0f3',
+  outline: '#75777f',
+  outlineVariant: '#c5c6cf',
 
-  // Box Shadows
-  boxShadow: {
-    xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    sm: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-    base: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-    xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-    '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
-    inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-    // Authority shadows for legal elements
-    authority: '0 8px 32px -8px rgba(11, 31, 58, 0.24), 0 2px 8px -2px rgba(11, 31, 58, 0.12)',
-    seal: '0 4px 16px -4px rgba(30, 94, 255, 0.32), 0 1px 4px -1px rgba(30, 94, 255, 0.16)'
-  },
+  // Document status
+  statusDraft: '#94A3B8',
+  statusPending: '#F59E0B',
+  statusCompleted: '#059669',
+  statusRejected: '#DC2626',
+  statusYourTurn: '#0D9488',
+} as const
 
-  // Z-Index Scale
-  zIndex: {
-    auto: 'auto',
-    0: '0',
-    10: '10',
-    20: '20',
-    30: '30',
-    40: '40',
-    50: '50',
-    modal: '1000',
-    popover: '1010',
-    overlay: '1020',
-    max: '9999'
-  }
-} as const;
+/** M3 dark palette — inverse surfaces for Phase 2 dark mode */
+export const colorsDark = {
+  ...colors,
+  bg: '#121214',
+  background: '#121214',
+  onBackground: '#e4e2e5',
+  body: '#e4e2e5',
+  muted: '#9a9aa3',
+  border: '#45464e',
+  white: '#1b1b1e',
 
-// ===== SEMANTIC TOKENS =====
-export const semantic = {
-  // Brand Colors
-  brand: {
-    primary: primitives.colors.navy[900],      // Deep Navy
-    secondary: primitives.colors.blue[500],    // Royal Blue
-    tertiary: primitives.colors.gray[400],     // Cool Gray
-    neutral: primitives.colors.white,          // White
-  },
+  surface: '#303033',
+  surfaceDim: '#121214',
+  surfaceBright: '#38383c',
+  surfaceContainerLowest: '#0d0d0f',
+  surfaceContainerLow: '#1b1b1e',
+  surfaceContainer: '#212124',
+  surfaceContainerHigh: '#2b2b2f',
+  surfaceContainerHighest: '#36363a',
+  onSurface: '#e4e2e5',
+  onSurfaceVariant: '#c5c6cf',
+  surfaceVariant: '#45464e',
+  inverseSurface: '#e4e2e5',
+  inverseOnSurface: '#303033',
+  outline: '#8f9099',
+  outlineVariant: '#45464e',
 
-  // Interactive States
-  interactive: {
-    default: primitives.colors.blue[500],
-    hover: primitives.colors.blue[600],
-    active: primitives.colors.blue[700],
-    disabled: primitives.colors.gray[300],
-    focus: primitives.colors.blue[500]
-  },
+  primaryLight: '#1b2a4a',
+  successLight: '#064e3b',
+  warningLight: '#78350f',
+  errorLight: '#7f1d1d',
+  infoLight: '#1e3a8a',
+  accentLight: '#134e4a',
+} as const
 
-  // Surface Colors
-  surface: {
-    primary: primitives.colors.white,
-    secondary: primitives.colors.gray[50],
-    tertiary: primitives.colors.gray[100],
-    elevated: primitives.colors.white,
-    overlay: 'rgba(11, 31, 58, 0.8)' // Navy overlay
-  },
+export type ThemeMode = 'light' | 'dark'
 
-  // Text Colors
-  text: {
-    primary: primitives.colors.navy[900],      // Dark navy for headers
-    secondary: primitives.colors.gray[800],    // Dark gray for body
-    tertiary: primitives.colors.gray[600],     // Medium gray for captions
-    inverse: primitives.colors.white,          // White text on dark backgrounds
-    link: primitives.colors.blue[500],         // Blue for links
-    linkHover: primitives.colors.blue[600]
-  },
+export function getThemeColors(mode: ThemeMode) {
+  return mode === 'dark' ? colorsDark : colors
+}
 
-  // Border Colors
-  border: {
-    subtle: primitives.colors.gray[200],
-    default: primitives.colors.gray[300],
-    strong: primitives.colors.gray[400],
-    interactive: primitives.colors.blue[500],
-    error: primitives.colors.error[500]
-  },
+// ===== TYPOGRAPHY =====
+export const typography = {
+  headline3xl: { fontSize: '36px', lineHeight: '44px', fontWeight: '700' },
+  headline2xl: { fontSize: '30px', lineHeight: '36px', fontWeight: '700' },
+  headlineXl: { fontSize: '24px', lineHeight: '32px', fontWeight: '600' },
+  headlineLg: { fontSize: '20px', lineHeight: '28px', fontWeight: '600' },
+  bodyBase: { fontSize: '16px', lineHeight: '24px', fontWeight: '400' },
+  bodySm: { fontSize: '14px', lineHeight: '20px', fontWeight: '400' },
+  labelSm: { fontSize: '14px', lineHeight: '20px', fontWeight: '500' },
+  labelXs: { fontSize: '12px', lineHeight: '16px', fontWeight: '500' },
+  captionXs: { fontSize: '12px', lineHeight: '16px', fontWeight: '400' },
+} as const
 
-  // Status Colors
-  status: {
-    success: primitives.colors.success[500],
-    warning: primitives.colors.warning[500],
-    error: primitives.colors.error[500],
-    info: primitives.colors.blue[500]
-  },
+// ===== SPACING =====
+export const spacing = {
+  0: '0px',
+  1: '4px',
+  2: '8px',
+  3: '12px',
+  4: '16px',
+  5: '20px',
+  6: '24px',
+  7: '28px',
+  8: '32px',
+  9: '36px',
+  10: '40px',
+  11: '44px',
+  12: '48px',
+  14: '56px',
+  16: '64px',
+  20: '80px',
+  24: '96px',
+  sidebarWidth: '240px',
+  topbarHeight: '64px',
+  maxContentWidth: '1280px',
+} as const
 
-  // Signature-specific Colors
-  signature: {
-    pending: primitives.colors.warning[500],
-    signed: primitives.colors.success[500],
-    declined: primitives.colors.error[500],
-    sealBase: primitives.colors.blue[500],
-    sealAccent: primitives.colors.navy[900]
-  }
-} as const;
+// ===== BORDER RADIUS =====
+export const radii = {
+  sm: '4px',
+  md: '6px',
+  lg: '8px',
+  xl: '12px',
+  full: '9999px',
+} as const
 
-// ===== MOTION TOKENS =====
+// ===== SHADOWS =====
+export const shadows = {
+  card: '0 1px 3px rgba(0, 0, 0, 0.08)',
+  raised: '0 4px 12px rgba(0, 0, 0, 0.10)',
+  modal: '0 8px 32px rgba(0, 0, 0, 0.14)',
+  focus: '0 0 0 2px #0D9488',
+  authority: '0 8px 32px -8px rgba(4, 21, 52, 0.24), 0 2px 8px -2px rgba(4, 21, 52, 0.12)',
+  seal: '0 4px 16px -4px rgba(0, 106, 97, 0.32), 0 1px 4px -1px rgba(0, 106, 97, 0.16)',
+} as const
+
+// ===== MOTION =====
 export const motion = {
-  // Easing Functions - Slow-in, fast-out for authority
   easing: {
     linear: 'linear',
     easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
     easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
     easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-    // Custom authority easings
-    authorityEase: 'cubic-bezier(0.32, 0, 0.12, 1)', // Slow-in, fast-out
-    sealBounce: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)', // Signature bounce
-    modalSlide: 'cubic-bezier(0.16, 1, 0.3, 1)' // Modal slide with weight
+    authorityEase: 'cubic-bezier(0.32, 0, 0.12, 1)',
+    sealBounce: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)',
+    modalSlide: 'cubic-bezier(0.16, 1, 0.3, 1)',
   },
-
-  // Duration Scale
   duration: {
     instant: '0ms',
     fast: '150ms',
     normal: '250ms',
     slow: '400ms',
     slower: '600ms',
-    // Signature-specific durations
-    sealStamp: '800ms',    // Seal stamp animation
-    modalSlide: '350ms',   // Modal slide with bounce
-    pageTransition: '300ms'
+    sealStamp: '800ms',
+    modalSlide: '350ms',
+    pageTransition: '300ms',
   },
-
-  // Animation Delays
   delay: {
     none: '0ms',
     short: '100ms',
     medium: '200ms',
-    long: '300ms'
-  }
-} as const;
+    long: '300ms',
+  },
+} as const
 
-// ===== GRID AND LAYOUT TOKENS =====
+// ===== LAYOUT =====
 export const layout = {
-  // 12-Column Grid System
   grid: {
     columns: 12,
-    gutter: primitives.spacing[6], // 24px gutters for corporate feel
-    maxWidth: '1280px',
+    gutter: spacing[6],
+    maxWidth: spacing.maxContentWidth,
     breakpoints: {
       xs: '320px',
       sm: '640px',
       md: '768px',
       lg: '1024px',
       xl: '1280px',
-      '2xl': '1536px'
-    }
+      '2xl': '1536px',
+    },
   },
-
-  // Container Sizes
   container: {
     xs: '100%',
     sm: '640px',
     md: '768px',
     lg: '1024px',
     xl: '1280px',
-    '2xl': '1280px' // Max width for readability
+    '2xl': '1280px',
   },
-
-  // Component Sizing
   component: {
-    input: {
-      height: primitives.spacing[10], // 40px
-      padding: primitives.spacing[3]  // 12px
-    },
-    button: {
-      small: primitives.spacing[8],   // 32px
-      medium: primitives.spacing[10], // 40px  
-      large: primitives.spacing[12]   // 48px
-    }
-  }
-} as const;
+    input: { height: spacing[10], padding: spacing[3] },
+    button: { small: spacing[8], medium: spacing[10], large: spacing[12] },
+  },
+} as const
 
-// ===== ACCESSIBILITY TOKENS =====
+// ===== ACCESSIBILITY =====
 export const a11y = {
-  // Focus Ring
   focusRing: {
     width: '2px',
-    color: primitives.colors.blue[500],
+    color: colors.statusYourTurn,
     offset: '2px',
-    style: 'solid'
+    style: 'solid',
   },
+  touchTarget: { minimum: '44px' },
+  contrast: { normal: 4.5, large: 3, enhanced: 7 },
+} as const
 
-  // Minimum Touch Targets (WCAG AA)
-  touchTarget: {
-    minimum: '44px'
-  },
+// ===== SIGNATURE SEMANTIC =====
+export const signature = {
+  pending: colors.statusPending,
+  signed: colors.statusCompleted,
+  declined: colors.statusRejected,
+  sealBase: colors.secondary,
+  sealAccent: colors.primary,
+} as const
 
-  // Color Contrast Ratios (WCAG AA)
-  contrast: {
-    normal: 4.5,
-    large: 3,
-    enhanced: 7
+// ===== HELPERS =====
+/** Convert hex to HSL channels string for shadcn CSS vars (e.g. "214 31% 14%") */
+export function toHslChannels(hex: string): string {
+  const normalized = hex.replace('#', '')
+  const r = parseInt(normalized.slice(0, 2), 16) / 255
+  const g = parseInt(normalized.slice(2, 4), 16) / 255
+  const b = parseInt(normalized.slice(4, 6), 16) / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        h = ((b - r) / d + 2) / 6
+        break
+      case b:
+        h = ((r - g) / d + 4) / 6
+        break
+    }
   }
-} as const;
 
-// Export all token categories
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`
+}
+
 export const tokens = {
-  primitives,
-  semantic,
+  colors,
+  colorsDark,
+  typography,
+  spacing,
+  radii,
+  shadows,
   motion,
   layout,
-  a11y
-} as const;
+  a11y,
+  signature,
+} as const
 
-export default tokens;
+export default tokens

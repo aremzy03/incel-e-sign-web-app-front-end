@@ -281,8 +281,8 @@ export default function CreateEnvelopePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Create Envelope</h1>
-        <p className="text-gray-600 mt-1">Set up a new document envelope for digital signing</p>
+        <h1 className="text-3xl font-bold text-on-surface">Create Envelope</h1>
+        <p className="text-muted mt-1">Set up a new document envelope for digital signing</p>
       </div>
 
       {success && (
@@ -305,15 +305,15 @@ export default function CreateEnvelopePage() {
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="flex gap-2 text-sm">
-            <span className={`px-2 py-1 rounded ${step === 1 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Select Document</span>
-            <span className={`px-2 py-1 rounded ${step === 2 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Add Recipients</span>
-            <span className={`px-2 py-1 rounded ${step === 3 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Position Signatures</span>
-            <span className={`px-2 py-1 rounded ${step === 4 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}>Review & Create</span>
+            <span className={`px-2 py-1 rounded ${step === 1 ? 'bg-gray-900 text-white' : 'bg-surface-container-low text-body'}`}>Select Document</span>
+            <span className={`px-2 py-1 rounded ${step === 2 ? 'bg-gray-900 text-white' : 'bg-surface-container-low text-body'}`}>Add Recipients</span>
+            <span className={`px-2 py-1 rounded ${step === 3 ? 'bg-gray-900 text-white' : 'bg-surface-container-low text-body'}`}>Position Signatures</span>
+            <span className={`px-2 py-1 rounded ${step === 4 ? 'bg-gray-900 text-white' : 'bg-surface-container-low text-body'}`}>Review & Create</span>
           </div>
 
           {step === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Step 1: Select Document(s) and Name Envelope</h3>
+              <h3 className="text-lg font-semibold text-on-surface">Step 1: Select Document(s) and Name Envelope</h3>
               <div className="space-y-2">
                 <Label htmlFor="envelope-name">Envelope Name (Optional)</Label>
                 <Input
@@ -342,7 +342,7 @@ export default function CreateEnvelopePage() {
                               setSelectedDocumentIds((prev) => prev.filter((id) => id !== doc.id))
                             }
                           }}
-                          className="form-checkbox h-4 w-4 text-gray-900 rounded"
+                          className="form-checkbox h-4 w-4 text-on-surface rounded"
                         />
                         <Label htmlFor={`doc-${doc.id}`}>{`${doc.file_name} (${doc.status})`}</Label>
                       </div>
@@ -357,7 +357,7 @@ export default function CreateEnvelopePage() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Step 2: Add Recipients</h3>
+              <h3 className="text-lg font-semibold text-on-surface">Step 2: Add Recipients</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label>Search or invite recipient by email</Label>
@@ -405,12 +405,12 @@ export default function CreateEnvelopePage() {
 
               {sortedRecipients.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">Recipients:</h4>
+                  <h4 className="text-sm font-medium text-body">Recipients:</h4>
                   {sortedRecipients.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={r.id} className="flex items-center justify-between p-3 bg-surface rounded-lg">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-600">Order {r.order}</span>
-                        <span className="text-sm text-gray-900">{r.name} ({r.email})</span>
+                        <span className="text-sm font-medium text-muted">Order {r.order}</span>
+                        <span className="text-sm text-on-surface">{r.name} ({r.email})</span>
                       </div>
                       <div className="space-x-2">
                         <Button size="sm" variant="outline" onClick={() => moveRecipient(r.id, 'up')}>Up</Button>
@@ -426,10 +426,10 @@ export default function CreateEnvelopePage() {
 
           {step === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Step 3: Position Signatures</h3>
+              <h3 className="text-lg font-semibold text-on-surface">Step 3: Position Signatures</h3>
               <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="text-sm text-blue-800">
+                <div className="bg-info-light border border-info-light rounded-lg p-4">
+                  <div className="text-sm text-secondary">
                     <strong>Position signature fields:</strong>
                     <ul className="mt-2 space-y-1 list-disc list-inside">
                       <li>Select a signer from the dropdown below</li>
@@ -513,12 +513,12 @@ export default function CreateEnvelopePage() {
                 })()}
 
                 {/* Position Summary */}
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-surface rounded-lg p-4">
                   <h4 className="text-sm font-semibold mb-2">Signature Positions:</h4>
                   <div className="space-y-2">
                    {selectedDocumentIds.map(docId => (
                      <div key={docId} className="space-y-2 mb-4">
-                       <h5 className="text-sm font-semibold text-gray-800">
+                       <h5 className="text-sm font-semibold text-body">
                          Document: {documents?.find(d => d.id === docId)?.file_name || `Document ${docId}`}
                        </h5>
                        {sortedRecipients.map((recipient) => {
@@ -528,7 +528,7 @@ export default function CreateEnvelopePage() {
                            <div key={`${docId}-${recipient.id}`} className="flex items-center justify-between text-sm ml-2">
                              <div className="flex-1">
                                <span className="font-medium">{recipient.name}</span>
-                               <span className="text-gray-500 ml-1">({recipient.email})</span>
+                               <span className="text-muted ml-1">({recipient.email})</span>
                              </div>
                              <div className="flex items-center gap-2">
                                <span className={position ? 'text-green-600' : 'text-red-600'}>
@@ -570,50 +570,50 @@ export default function CreateEnvelopePage() {
 
           {step === 4 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Step 4: Review & Create</h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h3 className="text-lg font-semibold text-on-surface">Step 4: Review & Create</h3>
+              <div className="bg-surface rounded-lg p-4 space-y-3">
                 {envelopeName && (
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-700">Envelope Name:</span>
-                    <span className="text-sm text-gray-900">{envelopeName}</span>
+                    <span className="text-sm font-medium text-body">Envelope Name:</span>
+                    <span className="text-sm text-on-surface">{envelopeName}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-700">Selected Document:</span>
-                  <span className="text-sm text-gray-900">
+                  <span className="text-sm font-medium text-body">Selected Document:</span>
+                  <span className="text-sm text-on-surface">
                     {selectedDocumentIds.length > 0 ? selectedDocumentIds.map(id => documents?.find(d => d.id === id)?.file_name).join(', ') : 'None selected'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-700">Total Recipients:</span>
-                  <span className="text-sm text-gray-900">{sortedRecipients.length}</span>
+                  <span className="text-sm font-medium text-body">Total Recipients:</span>
+                  <span className="text-sm text-on-surface">{sortedRecipients.length}</span>
                 </div>
                 {sortedRecipients.length > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-700">Signing Order:</span>
-                    <span className="text-sm text-gray-900">{sortedRecipients.map((r) => r.email).join(' → ')}</span>
+                    <span className="text-sm font-medium text-body">Signing Order:</span>
+                    <span className="text-sm text-on-surface">{sortedRecipients.map((r) => r.email).join(' → ')}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-700">Signature Positions:</span>
-                  <span className="text-sm text-gray-900">
+                  <span className="text-sm font-medium text-body">Signature Positions:</span>
+                  <span className="text-sm text-on-surface">
                     {calculateTotalPositions} of {selectedDocumentIds.length * sortedRecipients.length} positioned
                   </span>
                 </div>
                 {sortedRecipients.length > 0 && (
                   <div className="mt-2">
-                    <div className="text-sm font-medium text-gray-700 mb-1">Position Details:</div>
+                    <div className="text-sm font-medium text-body mb-1">Position Details:</div>
                     <div className="space-y-1">
                      {selectedDocumentIds.map(docId => (
-                       <div key={docId} className="space-y-2 mb-2 p-2 border rounded bg-gray-100">
-                         <h5 className="text-sm font-semibold text-gray-800">
+                       <div key={docId} className="space-y-2 mb-2 p-2 border rounded bg-surface-container-low">
+                         <h5 className="text-sm font-semibold text-body">
                            Document: {documents?.find(d => d.id === docId)?.file_name || `Document ${docId}`}
                          </h5>
                          {sortedRecipients.map((recipient) => {
                            const positionsForDoc = signaturePositions[docId] || {};
                            const position = positionsForDoc[`recipient-${recipient.id}`];
                            return (
-                             <div key={`${docId}-${recipient.id}`} className="text-xs text-gray-600 flex justify-between ml-2">
+                             <div key={`${docId}-${recipient.id}`} className="text-xs text-muted flex justify-between ml-2">
                                <span>{recipient.name} ({recipient.email})</span>
                                <span className={position ? 'text-green-600' : 'text-red-600'}>
                                  {position ? `✓ Page ${position.page} (${Math.round(position.x)}, ${Math.round(position.y)})` : '✗ Not positioned'}

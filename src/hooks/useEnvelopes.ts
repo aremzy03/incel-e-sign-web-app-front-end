@@ -1,19 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
+import { useMemo } from 'react'
 import { 
   getEnvelopes, 
   getEnvelope, 
+  getEnvelopeDocuments,
+  normalizeEnvelopeDocumentEntries,
   createEnvelope, 
   sendEnvelope, 
   rejectEnvelope, 
   deleteEnvelope,
   CreateEnvelopeRequest,
   EditEnvelopeRequest,
-  Envelope
+  Envelope,
+  type EnvelopeDocumentResponse,
 } from '@/lib/api/envelopes'
 import { editEnvelope } from '@/lib/api/envelopes'
 import { selfSignEnvelope, type SelfSignRequest } from '@/lib/api/signatures'
+import { FrozenEnvelopeError } from '@/lib/api/signing-errors'
 
 function normalizeEnvelopeSearch(search?: string) {
   const trimmed = search?.trim()
@@ -52,6 +57,33 @@ export const useEnvelope = (id: string) => {
     staleTime: 5 * 60 * 1000,
     retry: shouldRetryAuthQuery,
   })
+}
+
+// Hook to get documents for an envelope (waits for auth; falls back to inline envelope docs)
+export const useEnvelopeDocuments = (
+  envelopeId: string,
+  inlineDocuments?: Envelope['documents'],
+) => {
+  const { isReady } = useAuthReady()
+
+  const inline = useMemo(
+    () => normalizeEnvelopeDocumentEntries(inlineDocuments ?? []),
+    [inlineDocuments],
+  )
+
+  const query = useQuery<EnvelopeDocumentResponse[]>({
+    queryKey: ['envelopeDocuments', envelopeId],
+    queryFn: () => getEnvelopeDocuments(envelopeId),
+    enabled: isReady && !!envelopeId,
+    staleTime: 5 * 60 * 1000,
+    retry: shouldRetryAuthQuery,
+  })
+
+  return {
+    ...query,
+    data: query.data ?? (inline.length > 0 ? inline : undefined),
+    isLoading: query.isLoading && inline.length === 0,
+  }
 }
 
 // Hook to create an envelope
@@ -172,12 +204,18 @@ export const useSelfSignEnvelope = () => {
 
   return useMutation({
     mutationFn: (data: SelfSignRequest) => selfSignEnvelope(data),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
-      toast.success('Document signed successfully!')
+      if (result.kind === 'already_signed') {
+        toast.success('Document signed successfully!')
+      }
     },
     onError: (error: any) => {
       console.error('Self-sign error:', error)
+      if (error instanceof FrozenEnvelopeError) {
+        toast.error(error.message)
+        return
+      }
       let errorMessage = 'Failed to self-sign document'
 
       if (error.response?.status === 400) {

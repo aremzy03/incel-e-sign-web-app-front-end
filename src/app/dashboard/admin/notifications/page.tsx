@@ -186,7 +186,7 @@ export default function NotificationsCenter() {
     return (
       <Badge 
         variant={status === 'unread' ? 'default' : 'secondary'}
-        className={status === 'unread' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' : ''}
+        className={status === 'unread' ? 'bg-info-light text-secondary hover:bg-info-light' : ''}
       >
         {status === 'unread' ? 'Unread' : 'Read'}
       </Badge>
@@ -214,7 +214,7 @@ export default function NotificationsCenter() {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">Checking access permissions...</p>
+              <p className="text-muted">Checking access permissions...</p>
             </div>
           </CardContent>
         </Card>
@@ -229,8 +229,8 @@ export default function NotificationsCenter() {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
+              <p className="text-muted mb-4">
                 You don&apos;t have permission to view notifications center. Admin access required.
               </p>
               <button
@@ -262,11 +262,11 @@ export default function NotificationsCenter() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Bell className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-on-surface mb-2 flex items-center gap-2">
+              <Bell className="h-8 w-8 text-secondary" />
               Notifications Center
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-muted text-lg">
               Manage and monitor all system notifications.
             </p>
           </div>
@@ -295,7 +295,7 @@ export default function NotificationsCenter() {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-4">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted">
                   {unreadCount} unread notifications
                 </div>
                 <Button
@@ -377,8 +377,8 @@ export default function NotificationsCenter() {
                       transition={{ duration: 0.2, delay: index * 0.05 }}
                       className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
                         notification.status === 'unread' 
-                          ? 'bg-blue-50 border-blue-200' 
-                          : 'bg-white border-gray-200'
+                          ? 'bg-info-light border-info-light' 
+                          : 'bg-white border-border'
                       }`}
                       onClick={() => toggleNotificationStatus(notification.id)}
                     >
@@ -387,23 +387,23 @@ export default function NotificationsCenter() {
                           <div className="flex items-center gap-3 mb-2">
                             <div className="flex items-center gap-2">
                               {notification.status === 'unread' ? (
-                                <Circle className="h-4 w-4 text-blue-600" />
+                                <Circle className="h-4 w-4 text-secondary" />
                               ) : (
-                                <CheckCircle className="h-4 w-4 text-gray-400" />
+                                <CheckCircle className="h-4 w-4 text-muted" />
                               )}
-                              <User className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium text-gray-900">
+                              <User className="h-4 w-4 text-muted" />
+                              <span className="font-medium text-on-surface">
                                 {notification.user}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-500">
+                              <Clock className="h-4 w-4 text-muted" />
+                              <span className="text-sm text-muted">
                                 {formatTimestamp(notification.timestamp)}
                               </span>
                             </div>
                           </div>
-                          <p className="text-gray-700 mb-3">
+                          <p className="text-body mb-3">
                             {notification.message}
                           </p>
                         </div>
@@ -417,9 +417,9 @@ export default function NotificationsCenter() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications found</h3>
-                <p className="text-gray-500">
+                <Bell className="h-12 w-12 text-muted mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-on-surface mb-2">No notifications found</h3>
+                <p className="text-muted">
                   {searchTerm || statusFilter !== 'ALL' 
                     ? 'Try adjusting your search criteria or filters.'
                     : 'No notifications are available at this time.'

@@ -8,7 +8,8 @@
 import * as React from 'react';
 import * as LabelPrimitive from '@radix-ui/react-label';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { cn } from '@/lib/utils';
 import { formVariants } from '@/lib/motion';
 
@@ -104,7 +105,7 @@ export const FormLabel = React.forwardRef<
         ref={ref}
         className={cn(
           'font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-          'text-navy-900 font-heading',
+          'text-primary font-heading',
           sizeConfig[size],
           className
         )}
@@ -120,10 +121,10 @@ export const FormLabel = React.forwardRef<
       
       {tooltip && (
         <div className="group relative">
-          <Info className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
-          <div className="absolute right-0 top-6 hidden group-hover:block bg-navy-900 text-white text-xs rounded p-2 whitespace-nowrap z-10">
+          <Info className="w-4 h-4 text-muted hover:text-muted cursor-help" />
+          <div className="absolute right-0 top-6 hidden group-hover:block bg-primary text-white text-xs rounded p-2 whitespace-nowrap z-10">
             {tooltip}
-            <div className="absolute -top-1 right-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-navy-900" />
+            <div className="absolute -top-1 right-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-primary" />
           </div>
         </div>
       )}
@@ -139,6 +140,8 @@ interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement
   iconRight?: React.ReactNode;
   size?: FormFieldSize;
   variant?: FormFieldVariant;
+  hidePasswordToggle?: boolean;
+  wrapperClassName?: string;
 }
 
 const inputSizeConfig = {
@@ -149,17 +152,17 @@ const inputSizeConfig = {
 
 const inputVariantConfig = {
   default: {
-    base: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+    base: 'border-outline-variant focus:border-status-your-turn focus:ring-status-your-turn',
     valid: 'border-success-500 focus:border-success-600 focus:ring-success-500',
     invalid: 'border-error-500 focus:border-error-600 focus:ring-error-500',
   },
   authority: {
-    base: 'border-navy-200 focus:border-navy-500 focus:ring-navy-500',
+    base: 'border-primary-light focus:border-primary focus:ring-status-your-turn',
     valid: 'border-success-500 focus:border-success-600 focus:ring-success-500',
     invalid: 'border-error-500 focus:border-error-600 focus:ring-error-500',
   },
   minimal: {
-    base: 'border-gray-200 focus:border-gray-400 focus:ring-gray-400',
+    base: 'border-border focus:border-outline focus:ring-gray-400',
     valid: 'border-success-400 focus:border-success-500 focus:ring-success-400',
     invalid: 'border-error-400 focus:border-error-500 focus:ring-error-400',
   },
@@ -175,6 +178,10 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
     size: propSize,
     variant: propVariant,
     disabled: propDisabled,
+    hidePasswordToggle = false,
+    wrapperClassName,
+    onFocus,
+    onBlur,
     ...props 
   }, ref) => {
     const { size: contextSize, variant: contextVariant, disabled: contextDisabled } = useFormContext();
@@ -183,7 +190,6 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
     const disabled = propDisabled || contextDisabled;
     
     const [showPassword, setShowPassword] = React.useState(false);
-    const [isFocused, setIsFocused] = React.useState(false);
     
     const isPassword = type === 'password';
     const inputType = isPassword && showPassword ? 'text' : type;
@@ -194,10 +200,10 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
       : variantStyles.base;
     
     return (
-      <div className="relative">
+      <div className={cn('relative w-full', wrapperClassName)}>
         {/* Left Icon */}
         {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+          <div className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted pointer-events-none">
             {icon}
           </div>
         )}
@@ -207,41 +213,41 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
           ref={ref}
           type={inputType}
           className={cn(
-            'flex w-full rounded-lg border bg-white shadow-sm transition-all duration-normal ease-authority-ease',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50',
-            'placeholder:text-gray-500 font-body',
+            'flex w-full rounded-xl border bg-white shadow-sm transition-all duration-normal ease-authority-ease',
+            'focus:outline-none focus:ring-2 focus:ring-status-your-turn/20 focus:border-status-your-turn',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface',
+            'placeholder:text-muted font-body',
             inputSizeConfig[size],
             validationClass,
             icon && 'pl-10',
-            (iconRight || isPassword) && 'pr-10',
+            (iconRight || (isPassword && !hidePasswordToggle)) && 'pr-10',
             className
           )}
           disabled={disabled}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={(e) => onFocus?.(e)}
+          onBlur={(e) => onBlur?.(e)}
           {...props}
         />
         
         {/* Right Icon or Password Toggle */}
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-          {isPassword && (
+        <div className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1">
+          {isPassword && !hidePasswordToggle && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors"
+              className="text-muted hover:text-on-surface focus:outline-none transition-colors"
               tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
+              <MaterialIcon
+                name={showPassword ? 'visibility_off' : 'visibility'}
+                size={20}
+              />
             </button>
           )}
           
           {iconRight && !isPassword && (
-            <div className="text-gray-400">
+            <div className="text-muted">
               {iconRight}
             </div>
           )}
@@ -249,29 +255,18 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
           {/* Validation Icon */}
           <AnimatePresence>
             {validation === 'valid' && (
-              <div
-              >
+              <div>
                 <CheckCircle2 className="w-4 h-4 text-success-500" />
               </div>
             )}
             
             {validation === 'invalid' && (
-              <div
-              >
+              <div>
                 <AlertCircle className="w-4 h-4 text-error-500" />
               </div>
             )}
           </AnimatePresence>
         </div>
-        
-        {/* Focus Ring Animation */}
-        <AnimatePresence>
-          {isFocused && (
-            <div
-              className="absolute inset-0 rounded-lg border-2 border-blue-500 pointer-events-none"
-            />
-          )}
-        </AnimatePresence>
       </div>
     );
   }
@@ -315,8 +310,8 @@ export const FormTextarea = React.forwardRef<HTMLTextAreaElement, FormTextareaPr
           className={cn(
             'flex min-h-[80px] w-full rounded-lg border bg-white px-4 py-3 text-sm shadow-sm transition-all duration-normal ease-authority-ease',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50',
-            'placeholder:text-gray-500 font-body',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface',
+            'placeholder:text-muted font-body',
             !resize && 'resize-none',
             validationClass,
             className
@@ -359,7 +354,7 @@ interface FormMessageProps extends React.HTMLAttributes<HTMLParagraphElement> {
 
 const messageVariantConfig = {
   default: {
-    className: 'text-gray-600',
+    className: 'text-muted',
     icon: <Info className="w-4 h-4" />,
   },
   error: {
@@ -367,11 +362,11 @@ const messageVariantConfig = {
     icon: <AlertCircle className="w-4 h-4" />,
   },
   success: {
-    className: 'text-success-600',
+    className: 'text-success',
     icon: <CheckCircle2 className="w-4 h-4" />,
   },
   warning: {
-    className: 'text-warning-600',
+    className: 'text-warning',
     icon: <AlertCircle className="w-4 h-4" />,
   },
 } as const;
@@ -409,7 +404,7 @@ export const FormDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-gray-600 font-body', className)}
+    className={cn('text-sm text-muted font-body', className)}
     {...props}
   />
 ));
@@ -431,12 +426,12 @@ export function FormSection({ title, description, children, className }: FormSec
       {(title || description) && (
         <div className="space-y-1">
           {title && (
-            <h3 className="text-lg font-semibold text-navy-900 font-heading">
+            <h3 className="text-lg font-semibold text-primary font-heading">
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-sm text-gray-600 font-body">
+            <p className="text-sm text-muted font-body">
               {description}
             </p>
           )}
@@ -469,8 +464,8 @@ export function SignatureField({
         className={cn(
           'relative flex items-center justify-center min-h-[120px] border-2 border-dashed rounded-lg transition-all duration-normal ease-authority-ease cursor-pointer',
           signatureData 
-            ? 'border-success-300 bg-success-50 hover:bg-success-100' 
-            : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400',
+            ? 'border-success-300 bg-success-50 hover:bg-success-light' 
+            : 'border-outline-variant bg-surface hover:bg-surface-container-low hover:border-outline',
           className
         )}
         onClick={onSignatureClick}
@@ -481,19 +476,19 @@ export function SignatureField({
             <p className="text-sm font-medium text-success-700">
               Signed by {signerName || 'User'}
             </p>
-            <p className="text-xs text-success-600 mt-1">
+            <p className="text-xs text-success mt-1">
               Click to view or modify signature
             </p>
           </div>
         ) : (
           <div className="text-center p-4">
-            <div className="w-8 h-8 border-2 border-gray-400 rounded mx-auto mb-2 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">✒️</span>
+            <div className="w-8 h-8 border-2 border-outline rounded mx-auto mb-2 flex items-center justify-center">
+              <span className="text-muted text-lg">✒️</span>
             </div>
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-medium text-body">
               Click to sign document
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted mt-1">
               Your signature will appear here
             </p>
           </div>

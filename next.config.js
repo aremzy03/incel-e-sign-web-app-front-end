@@ -84,6 +84,20 @@ const nextConfig = {
 
     return config
   },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard/sign/:envelopeId',
+        destination: '/dashboard/envelopes/:envelopeId/sign',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/sign/review/:envelopeId',
+        destination: '/dashboard/envelopes/:envelopeId/sign?step=sign',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     // Derive the backend origin (for CSP connect-src) from NEXT_PUBLIC_API_URL, ignoring any path.
     let apiOrigin = ''

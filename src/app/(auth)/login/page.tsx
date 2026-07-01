@@ -1,271 +1,182 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { signIn, getSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'react-hot-toast';
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
-
-// NOTE: Use relative imports instead of "@/..." so builds work reliably in all environments (including Render)
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
-import { AuthorityButton, Button } from '../../../components/ui/button';
-import { Alert, AlertDescription } from '../../../components/ui/alert';
+import React, { useState, Suspense } from 'react'
+import Link from 'next/link'
+import { signIn, getSession } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'react-hot-toast'
+import { AuthorityButton } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Form as AuthorityForm,
   FormField,
   FormLabel,
   FormInput,
   FormMessage,
-} from '../../../components/ui/authority-form';
-import { createEntrance, pageVariants } from '../../../lib/motion';
-import { getApiBaseUrl } from '../../../lib/env';
-import { loginSchema, type LoginFormData } from '@/lib/validations';
-import { getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect';
-import { IncelLogo } from '../../../components/ui/incel-logo';
+} from '@/components/ui/authority-form'
+import { MaterialIcon } from '@/components/ui/material-icon'
+import {
+  AuthSplitLayout,
+  AuthBrandHeader,
+  AuthHelpFab,
+} from '@/components/auth/auth-layouts'
+import { GoogleOAuthButtonConnected } from '@/components/auth/google-oauth-button'
+import { loginSchema, type LoginFormData } from '@/lib/validations'
+import { getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redirect'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
 function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  useEffect(() => {
-    const message = searchParams?.get('message');
+  React.useEffect(() => {
+    const message = searchParams?.get('message')
     if (message) {
       switch (message) {
         case 'session_expired':
-          toast.error('Your session has expired. Please log in again.');
-          onSetError('Your session has expired. Please log in again.');
-          break;
+          toast.error('Your session has expired. Please log in again.')
+          onSetError('Your session has expired. Please log in again.')
+          break
         case 'auth_failed':
-          toast.error('Authentication failed. Please log in again.');
-          onSetError('Authentication failed. Please log in again.');
-          break;
+          toast.error('Authentication failed. Please log in again.')
+          onSetError('Authentication failed. Please log in again.')
+          break
         case 'confirm_email':
-          toast.success('Registration successful. Confirm your email, then sign in.');
-          onSetError('Confirm your email before signing in.');
-          break;
+          toast.success('Registration successful. Confirm your email, then sign in.')
+          onSetError('Confirm your email before signing in.')
+          break
         default:
-          break;
+          break
       }
     }
 
     const checkSession = async () => {
-      const session = await getSession();
+      const session = await getSession()
       if (session?.accessToken && !session?.error) {
         try {
-          const payload = JSON.parse(atob(session.accessToken.split('.')[1]));
-          const currentTime = Math.floor(Date.now() / 1000);
+          const payload = JSON.parse(atob(session.accessToken.split('.')[1]))
+          const currentTime = Math.floor(Date.now() / 1000)
           if (payload.exp > currentTime) {
-            const next = searchParams?.get('next');
-            router.push(getSafePostLoginPath(next, POST_LOGIN_FALLBACK));
+            const next = searchParams?.get('next')
+            router.push(getSafePostLoginPath(next, POST_LOGIN_FALLBACK))
           }
         } catch (error) {
-          console.error('Error checking token validity:', error);
+          console.error('Error checking token validity:', error)
         }
       }
-    };
-    checkSession();
-  }, [router, searchParams, onSetError]);
+    }
+    checkSession()
+  }, [router, searchParams, onSetError])
 
-  return null;
-}
-
-function GoogleButton() {
-  const searchParams = useSearchParams();
-  const apiBaseUrl = getApiBaseUrl();
-  const nextParam = getSafePostLoginPath(searchParams?.get('next'), POST_LOGIN_FALLBACK);
-  const googleLoginUrl = `${apiBaseUrl}/auth/google/login/?next=${encodeURIComponent(nextParam)}`;
-  
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="lg"
-      fullWidth
-      onClick={() => {
-        // Full redirect to backend OAuth login endpoint
-        window.location.href = googleLoginUrl;
-      }}
-      className="flex items-center justify-center"
-    >
-      <span className="inline-flex items-center justify-center gap-2">
-        <svg
-          className="!h-5 !w-5 shrink-0"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-        <span className="leading-none">Continue with Google</span>
-      </span>
-    </Button>
-  );
+  return null
 }
 
 export default function LoginPage() {
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  // Message + redirect handled via Suspense-wrapped child
+    defaultValues: { email: '', password: '' },
+  })
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    setError('');
+    setIsLoading(true)
+    setError('')
 
     try {
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        setError('Invalid credentials');
-        toast.error('Invalid credentials');
+        setError('Invalid credentials')
+        toast.error('Invalid credentials')
       } else {
-        // Check if session was created successfully
-        const session = await getSession();
+        const session = await getSession()
         if (session) {
-          toast.success('Welcome back!');
+          toast.success('Welcome back!')
           const next =
             typeof window !== 'undefined'
               ? new URLSearchParams(window.location.search).get('next')
-              : null;
-          router.push(getSafePostLoginPath(next, POST_LOGIN_FALLBACK));
+              : null
+          router.push(getSafePostLoginPath(next, POST_LOGIN_FALLBACK))
         } else {
-          setError('Login failed - no session created');
-          toast.error('Login failed - no session created');
+          setError('Login failed - no session created')
+          toast.error('Login failed - no session created')
         }
       }
-    } catch (error) {
-      setError('An error occurred during login');
-      toast.error('An unexpected error occurred. Please try again.');
+    } catch {
+      setError('An error occurred during login')
+      toast.error('An unexpected error occurred. Please try again.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <Suspense fallback={null}>
-      <LoginParamHandler onSetError={setError} />
-    <motion.div 
-      className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-    >
-      <motion.div 
-        className="max-w-md w-full space-y-8"
-        variants={createEntrance('up')}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <motion.div
-            className="flex items-center justify-center mx-auto"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-          >
-            <IncelLogo variant="full" size={180} />
-          </motion.div>
-          
-          <div className="space-y-2">
-            <h1 className="text-h1">INCEL E-Sign</h1>
-            <p className="text-body text-gray-600">
-              Sign in to your legal authority platform
-            </p>
-            <p className="text-sm text-gray-500">
-              Secure • Compliant • Trusted by enterprises
-            </p>
+    <>
+      <Suspense fallback={null}>
+        <LoginParamHandler onSetError={setError} />
+      </Suspense>
+      <AuthSplitLayout>
+        <div className="flex flex-1 flex-col justify-center p-8 md:p-16">
+          {/* Mobile logo */}
+          <div className="mb-12 lg:hidden">
+            <AuthBrandHeader />
           </div>
-        </div>
 
-        {/* Login Card */}
-        <Card className="authority-container shadow-xl">
-          <CardHeader className="text-center pb-6">
-            <CardTitle className="text-h2">Welcome Back</CardTitle>
-            <CardDescription>
-              Access your digital signature dashboard
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
+          <div className="mx-auto w-full max-w-md">
+            <div className="mb-8">
+              <h2 className="text-headline-2xl font-bold text-on-surface">Welcome Back</h2>
+              <p className="mt-2 text-body-sm text-muted">Sign in to your legal authority platform</p>
+            </div>
+
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Alert variant="destructive" className="border-error-200 bg-error-50">
-                  <AlertDescription className="text-error-700">
-                    {error}
-                  </AlertDescription>
-                </Alert>
-              </motion.div>
+              <Alert variant="destructive" className="mb-6 border-error-light bg-error-light">
+                <AlertDescription className="text-error">{error}</AlertDescription>
+              </Alert>
             )}
 
-            <AuthorityForm onSubmit={form.handleSubmit(onSubmit)}>
+            <AuthorityForm onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField>
                 <FormLabel required>Email Address</FormLabel>
                 <FormInput
                   type="email"
                   placeholder="your@company.com"
-                  icon={<Mail className="w-4 h-4" />}
+                  size="lg"
+                  icon={<MaterialIcon name="mail" size={20} className="text-muted" />}
                   validation={form.formState.errors.email ? 'invalid' : 'idle'}
                   {...form.register('email')}
                 />
                 {form.formState.errors.email && (
-                  <FormMessage variant="error">
-                    {form.formState.errors.email.message}
-                  </FormMessage>
+                  <FormMessage variant="error">{form.formState.errors.email.message}</FormMessage>
                 )}
               </FormField>
 
               <FormField>
-                <FormLabel required>Password</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel required>Password</FormLabel>
+                  <Link href="/login" className="text-label-sm text-secondary hover:text-accent-hover">
+                    Forgot password?
+                  </Link>
+                </div>
                 <FormInput
                   type="password"
                   placeholder="Enter your password"
-                  icon={<Lock className="w-4 h-4" />}
+                  size="lg"
+                  icon={<MaterialIcon name="lock" size={20} className="text-muted" />}
                   validation={form.formState.errors.password ? 'invalid' : 'idle'}
                   {...form.register('password')}
                 />
                 {form.formState.errors.password && (
-                  <FormMessage variant="error">
-                    {form.formState.errors.password.message}
-                  </FormMessage>
+                  <FormMessage variant="error">{form.formState.errors.password.message}</FormMessage>
                 )}
               </FormField>
 
@@ -276,55 +187,36 @@ export default function LoginPage() {
                 state={isLoading ? 'loading' : 'idle'}
                 loadingText="Signing you in..."
                 disabled={isLoading}
+                className="rounded-xl"
               >
-                <span className="inline-flex items-center justify-center gap-2">
-                  <span className="leading-none">Sign in</span>
-                  <ArrowRight className="!h-4 !w-4 shrink-0" />
+                <span className="inline-flex items-center gap-2">
+                  Sign In
+                  <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
                 </span>
               </AuthorityButton>
 
-            {/* Google OAuth */}
-            <div className="space-y-3">
-              <div className="relative">
+              <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
+                  <div className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                  <span className="bg-white px-2 text-muted">Or continue with</span>
                 </div>
               </div>
 
-              <Suspense fallback={<div className="w-full h-12" />}>
-                <GoogleButton />
-              </Suspense>
-            </div>
+              <GoogleOAuthButtonConnected />
             </AuthorityForm>
 
-            {/* Footer */}
-            <div className="text-center space-y-4">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">New to INCEL E-Sign?</span>
-                </div>
-              </div>
-
-              <Button variant="outline" size="lg" fullWidth asChild>
-                <Link href="/register">
-                  Create Your Account
-                </Link>
-              </Button>
-              
-              <p className="text-xs text-gray-500">
-                Protected by enterprise-grade security and SOC 2 compliance
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
-    </Suspense>
-  );
+            <p className="mt-8 text-center text-body-sm text-muted">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="font-medium text-secondary hover:text-accent-hover">
+                Create account
+              </Link>
+            </p>
+          </div>
+        </div>
+      </AuthSplitLayout>
+      <AuthHelpFab />
+    </>
+  )
 }

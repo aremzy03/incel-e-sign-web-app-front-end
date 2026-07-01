@@ -1,40 +1,60 @@
 'use client'
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react'
+import React, { Suspense, useState, useCallback, useMemo, useEffect } from 'react'
 import { DndContext, DragOverlay } from '@dnd-kit/core'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Switch } from '@/components/ui/switch'
-import { CheckCircle, AlertCircle, Keyboard, Lock, PenLine } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
-import { SelfSignSidebar } from '@/components/envelope/SelfSignSidebar'
-import { useSidebar } from '@/app/dashboard/dashboard-client-layout'
+import { SelfSignEditorHeader } from '@/components/signing/self-sign-editor-header'
+import { SelfSignNavSidebar } from '@/components/signing/self-sign-nav-sidebar'
+import { SelfSignToolsSidebar } from '@/components/signing/self-sign-tools-sidebar'
+import { SigningShell } from '@/components/signing/signing-shell'
+import { SelfSignStart } from '@/components/signing/self-sign-start'
+import {
+  SIGNING_ZOOM_DEFAULT,
+  SIGNING_ZOOM_MAX,
+  SIGNING_ZOOM_MIN,
+  SIGNING_ZOOM_STEP,
+} from '@/components/signing/signing-toolbar'
+import { useProfile } from '@/hooks/useProfile'
 import { useSelfSignEnvelope } from '@/hooks/useEnvelopes'
-import { Document, mergeDocuments } from '@/lib/api/documents'
+import { Document, getDocument, mergeDocuments, normalizeDocument } from '@/lib/api/documents'
 import { listUserSignatures } from '@/lib/api/signatures'
 import type { SelfSignRequest } from '@/lib/api/signatures'
+import { FrozenEnvelopeError } from '@/lib/api/signing-errors'
+import { saveSigningJob } from '@/lib/signing/signing-job-storage'
+import { SigningFrozenEnvelopeAlert } from '@/components/signing/signing-frozen-envelope-alert'
+import {
+  CREATE_EDITOR_VIEWPORT_SCALE,
+  fieldPositionToBackendPdfPoints,
+  WIZARD_SIGNATURE_HEIGHT,
+  WIZARD_SIGNATURE_WIDTH,
+} from '@/lib/utils/field-geometry'
+import type { DocumentPageInfo } from '@/components/envelope/VerticalPDFViewer'
 import { FieldPosition, FieldPositions, RecipientInput, RECIPIENT_COLORS } from '@/types/envelope'
 
 const SELF_RECIPIENT_ID = 1
 
-export default function SelfSignPage() {
+function SelfSignPageInner() {
   const VerticalPDFViewer = useMemo(
     () => dynamic(() => import('@/components/envelope/VerticalPDFViewer').then((m) => m.VerticalPDFViewer), { ssr: false }),
     []
   )
-  const { isCollapsed } = useSidebar()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const step = searchParams?.get('step')
+  const documentIdParam = searchParams?.get('documentId')
   const { data: session } = useSession()
+  const { data: profile } = useProfile()
   const { mutateAsync: selfSignAsync, isPending: signing } = useSelfSignEnvelope()
+
+  const isSigningInFlight = signing
 
   const selfRecipient: RecipientInput = useMemo(
     () => ({
@@ -58,6 +78,7 @@ export default function SelfSignPage() {
   const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [frozenEnvelopeMessage, setFrozenEnvelopeMessage] = useState<string | null>(null)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
   const [pageMetrics, setPageMetrics] = useState<
@@ -65,10 +86,40 @@ export default function SelfSignPage() {
   >({})
   const [isMerging, setIsMerging] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [zoom, setZoom] = useState(SIGNING_ZOOM_DEFAULT)
+  const [documentPages, setDocumentPages] = useState<DocumentPageInfo[]>([])
+  const [activePageKey, setActivePageKey] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!documentIdParam || uploadedDocuments.some((d) => d.id === documentIdParam)) return
+    getDocument(documentIdParam)
+      .then((doc) => {
+        setUploadedDocuments([doc])
+        router.replace('/dashboard/envelopes/self-sign?step=editor')
+      })
+      .catch(() => toast.error('Failed to load document'))
+  }, [documentIdParam, router, uploadedDocuments])
+
+  const showEditor = step === 'editor' || uploadedDocuments.length > 0
+
+  const shellUser = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.full_name || 'User',
+        email: session.user.email || '',
+        profilePhotoUrl: profile?.profile_photo_url,
+        initials: (session.user.full_name || 'U')
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase(),
+      }
+    : undefined
 
   const { data: signatures = [], isLoading: loadingSignatures } = useQuery({
     queryKey: ['signatures', 'user'],
@@ -83,7 +134,15 @@ export default function SelfSignPage() {
   }, [signatures, selectedSignatureId])
 
   const addDocument = useCallback((document: Document) => {
-    setUploadedDocuments((prev) => [...prev, document])
+    const normalized = normalizeDocument(document)
+    if (!normalized.id) {
+      toast.error('Could not load document: missing document ID')
+      return
+    }
+    setUploadedDocuments((prev) => {
+      if (prev.some((d) => d.id === normalized.id)) return prev
+      return [...prev, normalized]
+    })
   }, [])
 
   const removeDocument = useCallback((documentId: string) => {
@@ -96,8 +155,6 @@ export default function SelfSignPage() {
     toast.success('Document removed')
   }, [])
 
-  const selectDocument = useCallback((_document: Document) => {}, [])
-
   const handleFieldDrop = useCallback((fieldType: string, documentId: string, page: number, x: number, y: number) => {
     const fieldId = `field-${nextFieldId}`
     const newField: FieldPosition = {
@@ -106,8 +163,8 @@ export default function SelfSignPage() {
       page,
       x,
       y,
-      width: 116.8,
-      height: 36.8,
+      width: fieldType === 'signature' ? WIZARD_SIGNATURE_WIDTH : 160,
+      height: fieldType === 'signature' ? WIZARD_SIGNATURE_HEIGHT : 36,
       assignedTo: String(SELF_RECIPIENT_ID),
       documentId,
       ...(fieldType !== 'signature'
@@ -134,6 +191,53 @@ export default function SelfSignPage() {
     setActiveFieldId(fieldId)
     toast.success(`${fieldType} field added`)
   }, [nextFieldId])
+
+  const handleAddFieldClick = useCallback(
+    (fieldType: string) => {
+      if (uploadedDocuments.length === 0) {
+        toast.error('Upload a document first')
+        return
+      }
+      const doc = uploadedDocuments[0]
+      const pageKey = `${doc.id}-1`
+      const metrics = pageMetrics[pageKey]
+      const fieldWidth = fieldType === 'signature' ? WIZARD_SIGNATURE_WIDTH : 160
+      const fieldHeight = fieldType === 'signature' ? WIZARD_SIGNATURE_HEIGHT : 36
+      let x = 120
+      let y = 320
+      if (metrics) {
+        const pageWidth = metrics.baseWidthPxAtScale1 * metrics.scale
+        const pageHeight = metrics.baseHeightPxAtScale1 * metrics.scale
+        x = Math.max(0, pageWidth / 2 - fieldWidth / 2)
+        y = Math.max(0, pageHeight * 0.65 - fieldHeight / 2)
+      }
+      handleFieldDrop(fieldType, doc.id, 1, x, y)
+    },
+    [uploadedDocuments, pageMetrics, handleFieldDrop],
+  )
+
+  const pageIndicator = useMemo(() => {
+    if (documentPages.length === 0) return 'Page 1 of 1'
+    const active = activePageKey
+      ? documentPages.find((p) => `${p.documentId}-${p.pageNumber}` === activePageKey)
+      : documentPages[0]
+    if (!active) return 'Page 1 of 1'
+    return `Page ${active.pageNumber} of ${active.totalPages}`
+  }, [documentPages, activePageKey])
+
+  const documentDisplayTitle = useMemo(() => {
+    if (uploadedDocuments.length === 0) return 'No document loaded'
+    return uploadedDocuments[0].file_name || 'Document'
+  }, [uploadedDocuments])
+
+  const selfSignActiveStep = useMemo(() => {
+    if (success) return 'complete' as const
+    const hasSignature = Object.values(fieldPositions).some((docFields) =>
+      Object.values(docFields).some((f) => f.type === 'signature'),
+    )
+    if (hasSignature) return 'sign' as const
+    return 'upload' as const
+  }, [success, fieldPositions])
 
   const handleDragStart = useCallback((event: any) => {
     const data = event.active?.data?.current
@@ -274,22 +378,16 @@ export default function SelfSignPage() {
     return errors
   }, [uploadedDocuments, fieldPositions])
 
+  const validationSummary =
+    validationErrors.length > 0 ? validationErrors.join(' · ') : null
+
   const buildPayload = useCallback((): SelfSignRequest | null => {
     setError(null)
-    const cssPxToPoints = (px: number) => (px * 72) / 96
     const convertFieldGeometry = (docId: string, field: FieldPosition) => {
       const pageKey = `${docId}-${field.page}`
       const metrics = pageMetrics[pageKey]
-      if (!metrics) {
-        return { x: field.x, y: field.y, width: field.width, height: field.height }
-      }
-      const scale = metrics.scale || 1
-      return {
-        x: cssPxToPoints(field.x / scale),
-        y: cssPxToPoints(field.y / scale),
-        width: cssPxToPoints(field.width / scale),
-        height: cssPxToPoints(field.height / scale),
-      }
+      const renderScale = metrics?.scale ?? CREATE_EDITOR_VIEWPORT_SCALE
+      return fieldPositionToBackendPdfPoints(field, renderScale)
     }
 
     const documents_with_positions = Object.entries(fieldPositions)
@@ -370,18 +468,24 @@ export default function SelfSignPage() {
       return
     }
     try {
+      setError(null)
+      setFrozenEnvelopeMessage(null)
       const payload = buildPayload()
       if (!payload) return
       const result = await selfSignAsync(payload)
-      setSuccess('Document signed successfully!')
-      const query = result.pdf_lock_password
-        ? `?pdf_password=${encodeURIComponent(result.pdf_lock_password)}`
-        : ''
-      router.push(`/dashboard/envelopes/${result.id}${query}`)
-    } catch (err: any) {
+      if (result.kind === 'queued') {
+        saveSigningJob(result.data.envelope_id, result.data.job_id)
+        router.push(`/dashboard/envelopes/${result.data.envelope_id}`)
+      }
+    } catch (err: unknown) {
+      if (err instanceof FrozenEnvelopeError) {
+        setFrozenEnvelopeMessage(err.message)
+        return
+      }
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
+        e?.response?.data?.message ||
+        e?.message ||
         'Failed to self-sign document. Please check console for details.'
       setError(msg)
     }
@@ -411,276 +515,133 @@ export default function SelfSignPage() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [activeFieldId, handleFieldDelete, handleSignComplete])
 
-  return (
-    <div className="flex flex-col h-full bg-gray-100">
-      <div className="bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-3 pt-2 pb-1.5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h1 className="text-[15px] font-semibold text-slate-900 tracking-tight">Sign a document</h1>
-              <p className="text-[11px] text-slate-600">
-                Upload, place your signature and fields, then complete in one step.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 h-8 shadow-sm">
-                <Switch
-                  checked={pdfPasswordProtectionEnabled}
-                  onCheckedChange={setPdfPasswordProtectionEnabled}
-                  aria-label="Enable PDF password protection on completion"
-                />
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 whitespace-nowrap">
-                  <Lock className="h-3.5 w-3.5 text-slate-600" />
-                  Lock PDF
-                </span>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleSignComplete}
-                disabled={signing || validationErrors.length > 0}
-                className="flex items-center gap-1.5 h-8 px-3 text-xs"
-              >
-                <PenLine className="h-3.5 w-3.5" />
-                <span>{signing ? 'Signing…' : 'Sign & complete'}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setShowKeyboardShortcuts(true)}
-                title="Keyboard shortcuts"
-              >
-                <Keyboard className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+  if (!showEditor) {
+    return (
+      <SigningShell
+        documentTitle="Self-sign"
+        user={shellUser}
+        onClose={() => router.push('/dashboard/envelopes')}
+        closeLabel="Exit"
+      >
+        <SelfSignStart
+          hasDocuments={uploadedDocuments.length > 0}
+          onDocumentSelected={addDocument}
+          onContinue={() => router.push('/dashboard/envelopes/self-sign?step=editor')}
+        />
+      </SigningShell>
+    )
+  }
 
-      {success && (
-        <Alert className="border-green-200 bg-green-50 mx-3 mt-3">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">{success}</AlertDescription>
-        </Alert>
-      )}
-      {error && (
-        <Alert variant="destructive" className="mx-3 mt-3">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {validationErrors.length > 0 && (
-        <Alert variant="destructive" className="mx-3 mt-3">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <div className="space-y-1">
-              {validationErrors.map((item, index) => (
-                <div key={index}>• {item}</div>
-              ))}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
+  return (
+    <div className="flex h-screen flex-col overflow-hidden bg-surface text-on-surface">
+      <SelfSignEditorHeader
+        documentTitle={documentDisplayTitle}
+        zoom={zoom}
+        onZoomIn={() => setZoom((z) => Math.min(SIGNING_ZOOM_MAX, z + SIGNING_ZOOM_STEP))}
+        onZoomOut={() => setZoom((z) => Math.max(SIGNING_ZOOM_MIN, z - SIGNING_ZOOM_STEP))}
+        pageIndicator={pageIndicator}
+        onExit={() => router.push('/dashboard/envelopes')}
+      />
 
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-        <div className="flex-1 flex min-h-0 bg-gray-100">
-          <div
-            className={`${isCollapsed ? 'max-w-[96rem] px-2' : 'max-w-7xl px-3'} mx-auto flex flex-1 gap-3 py-3 overflow-hidden`}
-          >
-            <div className={`${isCollapsed ? 'w-[320px]' : 'w-[280px]'} flex-shrink-0 hidden md:flex`}>
-              {mounted ? (
-                <SelfSignSidebar
-                  uploadedDocuments={uploadedDocuments}
-                  fieldPositions={fieldPositions}
-                  onDocumentAdd={addDocument}
-                  onDocumentRemove={removeDocument}
-                  onDocumentSelect={selectDocument}
-                  onMergeDocuments={handleMergeDocuments}
-                  isMerging={isMerging}
-                  envelopeName={envelopeName}
-                  onEnvelopeNameChange={setEnvelopeName}
-                  description={description}
-                  onDescriptionChange={setDescription}
-                  signatures={signatures}
-                  selectedSignatureId={selectedSignatureId}
-                  onSignatureSelect={setSelectedSignatureId}
-                  loadingSignatures={loadingSignatures}
-                  onSignComplete={handleSignComplete}
-                  signing={signing}
-                  hasValidationErrors={validationErrors.length > 0}
-                  pdfPasswordProtectionEnabled={pdfPasswordProtectionEnabled}
-                  onPdfPasswordProtectionChange={setPdfPasswordProtectionEnabled}
-                />
-              ) : (
-                <div className="w-full" />
-              )}
-            </div>
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="hidden md:flex">
+            <SelfSignNavSidebar
+              activeStep={selfSignActiveStep}
+              onUploadClick={() => router.push('/dashboard/envelopes/self-sign')}
+            />
+          </div>
 
-            <div className="flex-1 flex justify-center overflow-hidden min-w-0">
-              <div className="flex-1 max-w-5xl flex min-w-0">
-                <VerticalPDFViewer
-                  documents={uploadedDocuments}
-                  fieldPositions={fieldPositions}
-                  recipients={recipients}
-                  activeFieldId={activeFieldId}
-                  onFieldSelect={setActiveFieldId}
-                  onFieldPositionChange={handleFieldPositionChange}
-                  onFieldDelete={handleFieldDelete}
-                  onFieldDrop={handleFieldDrop}
-                />
-              </div>
-            </div>
+          <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface-container-low">
+            {error ? (
+              <Alert variant="destructive" className="absolute left-4 right-4 top-4 z-10 md:left-8 md:right-8">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            {mounted ? (
+              <VerticalPDFViewer
+                documents={uploadedDocuments}
+                fieldPositions={fieldPositions}
+                recipients={recipients}
+                activeFieldId={activeFieldId}
+                onFieldSelect={setActiveFieldId}
+                onFieldPositionChange={handleFieldPositionChange}
+                onFieldDelete={handleFieldDelete}
+                onFieldDrop={handleFieldDrop}
+                onPageMetricsChange={(pageKey, metrics) =>
+                  setPageMetrics((prev) => ({ ...prev, [pageKey]: metrics }))
+                }
+                editorLayout
+                viewerScale={zoom / 100}
+                onPagesChange={setDocumentPages}
+                activePageKey={activePageKey}
+                onActivePageKeyChange={setActivePageKey}
+              />
+            ) : null}
+          </main>
 
-            {activeField && activeField.type !== 'signature' && (
-              <div className="w-[300px] flex-shrink-0 hidden lg:block">
-                <div className="h-full bg-white border rounded-lg shadow-sm flex flex-col">
-                  <div className="p-4 border-b flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-800">Field settings</div>
-                      <div className="text-xs text-gray-500 mt-0.5 capitalize">{activeField.type}</div>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setActiveFieldId(null)}>
-                      ✕
-                    </Button>
-                  </div>
-                  <div className="p-4 space-y-3 overflow-y-auto">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Required</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          variant={activeField.required ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleFieldPositionChange(activeField.id, { required: true })}
-                        >
-                          Yes
-                        </Button>
-                        <Button
-                          variant={!activeField.required ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleFieldPositionChange(activeField.id, { required: false })}
-                        >
-                          No
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-xs">Font family</Label>
-                        <Select
-                          value={activeField.font_family || ''}
-                          onValueChange={(v) => handleFieldPositionChange(activeField.id, { font_family: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select font" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Helvetica">Helvetica</SelectItem>
-                            <SelectItem value="Arial">Arial</SelectItem>
-                            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Font size</Label>
-                        <Input
-                          type="number"
-                          value={activeField.font_size ?? ''}
-                          onChange={(e) =>
-                            handleFieldPositionChange(activeField.id, {
-                              font_size: Number(e.target.value) || undefined,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Value</Label>
-                      <Input
-                        value={activeField.prefill_value ?? ''}
-                        onChange={(e) =>
-                          handleFieldPositionChange(activeField.id, { prefill_value: e.target.value })
-                        }
-                      />
-                    </div>
-                    {activeField.type === 'date' && (
-                      <div>
-                        <Label className="text-xs">Date format</Label>
-                        <Select
-                          value={activeField.date_format || ''}
-                          onValueChange={(v) => handleFieldPositionChange(activeField.id, { date_format: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select format" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                            <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    {activeField.type === 'text' && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label className="text-xs">Placeholder</Label>
-                          <Input
-                            value={activeField.placeholder || ''}
-                            onChange={(e) =>
-                              handleFieldPositionChange(activeField.id, { placeholder: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Max length</Label>
-                          <Input
-                            type="number"
-                            value={activeField.max_length ?? ''}
-                            onChange={(e) =>
-                              handleFieldPositionChange(activeField.id, {
-                                max_length: Number(e.target.value) || undefined,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="hidden md:flex">
+            <SelfSignToolsSidebar
+              hasDocuments={uploadedDocuments.length > 0}
+              signing={isSigningInFlight}
+              hasValidationErrors={validationErrors.length > 0}
+              validationMessage={validationSummary}
+              onSignComplete={handleSignComplete}
+              onAddField={handleAddFieldClick}
+              activeField={activeField}
+              onFieldSettingsChange={handleFieldPositionChange}
+              onClearActiveField={() => setActiveFieldId(null)}
+            />
           </div>
         </div>
+
         <DragOverlay dropAnimation={null}>
-          {activeDragFieldType && (
-            <div className="pointer-events-none rounded-md border bg-white px-3 py-2 text-xs shadow-lg z-[9999]">
+          {activeDragFieldType ? (
+            <div className="pointer-events-none z-[9999] rounded-md border bg-white px-3 py-2 text-xs shadow-lg">
               {activeDragFieldType}
             </div>
-          )}
+          ) : null}
         </DragOverlay>
       </DndContext>
 
-      {showKeyboardShortcuts && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Keyboard shortcuts</h3>
+      {showKeyboardShortcuts ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-on-surface">Keyboard shortcuts</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowKeyboardShortcuts(false)}>
                 ✕
               </Button>
             </div>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Delete selected field</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Delete</kbd>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-body">Delete selected field</span>
+                <kbd className="rounded bg-surface-container-low px-2 py-1 text-xs">Delete</kbd>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Sign and complete</span>
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Ctrl+Enter</kbd>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-body">Sign and complete</span>
+                <kbd className="rounded bg-surface-container-low px-2 py-1 text-xs">Ctrl+Enter</kbd>
               </div>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
+
+      {frozenEnvelopeMessage ? (
+        <SigningFrozenEnvelopeAlert
+          message={frozenEnvelopeMessage}
+          onDismiss={() => setFrozenEnvelopeMessage(null)}
+        />
+      ) : null}
     </div>
+  )
+}
+
+export default function SelfSignPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-muted">Loading…</div>}>
+      <SelfSignPageInner />
+    </Suspense>
   )
 }

@@ -1,54 +1,81 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { getUserById } from '@/lib/api/users'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Skeleton } from '@/components/ui/skeleton'
+import { MaterialIcon } from '@/components/ui/material-icon'
 import { ListPaginationControls } from '@/components/list-pagination-controls'
-import { useEnvelopes, useRejectEnvelope, useDeleteEnvelope } from '@/hooks/useEnvelopes'
+import {
+  PageHeader,
+  FilterPills,
+  SearchField,
+  EnvelopeCard,
+  EmptyState,
+} from '@/components/library'
+import { useEnvelopes, useDeleteEnvelope } from '@/hooks/useEnvelopes'
 import { useSession } from 'next-auth/react'
-import { UserAvatar } from '@/components/UserAvatar'
-import { useSidebar } from '../dashboard-client-layout'
-import { Eye, Trash2, XCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import type { Envelope } from '@/lib/api/envelopes'
+import { isSelfSignEnvelope } from '@/lib/api/envelopes'
+import {
+  formatRelativeTime,
+  getEnvelopeSubtitle,
+  getEnvelopeVariant,
+  getEnvelopeCreatorId,
+  getEnvelopeSignerCount,
+  getEnvelopeSignedCount,
+  buildEnvelopeSignerStack,
+} from './envelope-card-utils'
 
 const PAGE_SIZE = 10
 
-type EnvelopeTypeFilter = 'all' | 'multi_party' | 'self_sign'
+type QuickFilter =
+  | 'all'
+  | 'waiting_me'
+  | 'waiting_others'
+  | 'draft'
+  | 'completed'
+  | 'rejected'
+  | 'self_signed'
 
-const getStatusBadge = (status: string) => {
-  const map: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-800',
-    pending: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
+function matchesQuickFilter(
+  env: Envelope,
+  filter: QuickFilter,
+  currentUserId?: string,
+): boolean {
+  const status = env.status?.toLowerCase() ?? ''
+  switch (filter) {
+    case 'all':
+      return true
+    case 'draft':
+      return status.includes('draft')
+    case 'completed':
+      return status.includes('complete') && !isSelfSignEnvelope(env)
+    case 'rejected':
+      return status.includes('reject')
+    case 'self_signed':
+      return isSelfSignEnvelope(env)
+    case 'waiting_me': {
+      const variant = getEnvelopeVariant(env, currentUserId)
+      return variant === 'your-turn'
+    }
+    case 'waiting_others': {
+      const isCreator = getEnvelopeCreatorId(env) === currentUserId
+      const isCurrentSigner = env.current_signer?.id === currentUserId
+      return isCreator && status.includes('pending') && !isSelfSignEnvelope(env) && !isCurrentSigner
+    }
+    default:
+      return true
   }
-  return map[status] || 'bg-gray-100 text-gray-800'
 }
 
 export default function EnvelopesPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const currentUserId = session?.user?.id
-  const { isCollapsed } = useSidebar()
 
   const [page, setPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [envelopeTypeFilter, setEnvelopeTypeFilter] = useState<EnvelopeTypeFilter>('all')
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
@@ -60,341 +87,180 @@ export default function EnvelopesPage() {
     return () => window.clearTimeout(timer)
   }, [searchTerm])
 
-  const listStatus = statusFilter === 'all' ? undefined : statusFilter
-  const isSelfSign =
-    envelopeTypeFilter === 'self_sign' ? true : envelopeTypeFilter === 'multi_party' ? false : undefined
+  const apiStatus =
+    quickFilter === 'draft'
+      ? 'draft'
+      : quickFilter === 'completed'
+        ? 'completed'
+        : quickFilter === 'rejected'
+          ? 'rejected'
+          : undefined
+
+  const isSelfSign = quickFilter === 'self_signed' ? true : undefined
 
   const { data, isLoading, error, isFetching } = useEnvelopes(
     page,
     PAGE_SIZE,
-    listStatus,
+    apiStatus,
     debouncedSearch || undefined,
     isSelfSign,
   )
-  const { mutateAsync: rejectAsync, isPending: rejecting } = useRejectEnvelope()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteEnvelope()
 
-  const envelopes = data?.results ?? []
+  const rawEnvelopes = data?.results ?? []
+  const envelopes = useMemo(
+    () =>
+      rawEnvelopes.filter((env) =>
+        matchesQuickFilter(env, quickFilter, currentUserId),
+      ),
+    [rawEnvelopes, quickFilter, currentUserId],
+  )
+
   const totalCount = data?.count ?? 0
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
+  const quickFilterOptions = [
+    { value: 'all' as QuickFilter, label: 'All' },
+    { value: 'waiting_me' as QuickFilter, label: 'Waiting for Me' },
+    { value: 'waiting_others' as QuickFilter, label: 'Waiting for Others' },
+    { value: 'draft' as QuickFilter, label: 'Drafts' },
+    { value: 'completed' as QuickFilter, label: 'Completed' },
+    { value: 'rejected' as QuickFilter, label: 'Rejected' },
+    { value: 'self_signed' as QuickFilter, label: 'Self-Signed' },
+  ]
+
   return (
-    <div className={cn('mx-auto space-y-6', isCollapsed ? 'max-w-[95%]' : 'max-w-6xl')}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Envelopes</h1>
-          <p className="text-gray-600 mt-1">Manage your document envelopes and track their status</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/envelopes/self-sign">Sign yourself</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/envelopes/create">Create New Envelope</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="mx-auto max-w-max-content-width space-y-6">
+      <PageHeader
+        title="Envelopes"
+        subtitle="Manage your document envelopes and track their status"
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/envelopes/self-sign">Sign yourself</Link>
+            </Button>
+            <Button asChild className="bg-secondary hover:bg-accent-hover">
+              <Link href="/dashboard/envelopes/create">
+                <MaterialIcon name="add" size={18} className="mr-2" />
+                Create Envelope
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
-      <Card className="bg-white shadow-sm">
-        <CardHeader className="space-y-4">
-          <div>
-            <CardTitle>Your Envelopes</CardTitle>
-            <CardDescription>
-              {isLoading && !data
-                ? 'Loading...'
-                : `${totalCount} envelope${totalCount === 1 ? '' : 's'}`}
-            </CardDescription>
-          </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div
-                className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5"
-                role="group"
-                aria-label="Envelope type"
-              >
-                {(
-                  [
-                    { value: 'all', label: 'All' },
-                    { value: 'multi_party', label: 'Multi-party' },
-                    { value: 'self_sign', label: 'Signed by me' },
-                  ] as const
-                ).map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => {
-                      setEnvelopeTypeFilter(value)
-                      setPage(1)
-                    }}
-                    className={cn(
-                      'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                      envelopeTypeFilter === value
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => {
-                  setStatusFilter(value)
-                  setPage(1)
-                }}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="md:w-64 space-y-1">
-              <Input
-                type="search"
-                placeholder="Search by name, description, or creator"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading && !data && (
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-1/3" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          )}
-          {!!error && !data && (
-            <p className="text-red-600">Failed to load envelopes. Please try again.</p>
-          )}
-          {!isLoading && !error && envelopes.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No envelopes found.</p>
-            </div>
-          )}
-          {envelopes.length > 0 && (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px] max-w-[200px]">Document</TableHead>
-                    <TableHead>Creator</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Recipients</TableHead>
-                    <TableHead className="text-right w-[120px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {envelopes.map((env) => {
-                    const isCreator = env.creator?.id === currentUserId
-                    return (
-                      <TableRow key={env.id}>
-                        <TableCell
-                          className="font-medium w-[200px] max-w-[200px] truncate"
-                          title={env.name || env.documents?.[0]?.file_name || '—'}
-                        >
-                          {env.name || env.documents?.[0]?.file_name || '—'}
-                        </TableCell>
-                        <TableCell>
-                          <CreatorCell creator={env.creator} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(env.status)}`}
-                            >
-                              {env.status}
-                            </span>
-                            {env.is_self_sign && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-800">
-                                Self-signed
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <RecipientAvatars recipients={env.recipients || []} />
-                        </TableCell>
-                        <TableCell className="text-right w-[120px]">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              title="View envelope"
-                              aria-label="View envelope"
-                              className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
-                              onClick={() => router.push(`/dashboard/envelopes/${env.id}`)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {isCreator && env.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                title="Reject envelope"
-                                aria-label="Reject envelope"
-                                disabled={rejecting}
-                                className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
-                                onClick={async () => {
-                                  if (window.confirm('Are you sure you want to reject this envelope?')) {
-                                    await rejectAsync(env.id)
-                                  }
-                                }}
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {isCreator && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                title="Delete envelope"
-                                aria-label="Delete envelope"
-                                disabled={deleting}
-                                className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0"
-                                onClick={async () => {
-                                  if (window.confirm('Are you sure you want to delete this envelope?')) {
-                                    await deleteAsync(env.id)
-                                  }
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-
-              <ListPaginationControls
-                page={page}
-                totalPages={totalPages}
-                hasPrevious={Boolean(data?.previous) || page > 1}
-                hasNext={Boolean(data?.next) || page < totalPages}
-                onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-                onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-                totalCount={totalCount}
-              />
-            </>
-          )}
-          {isFetching && data && (
-            <p className="text-xs text-gray-500 mt-2">Updating...</p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function CreatorCell({ creator }: { creator: any }) {
-  const creatorId = creator?.id
-  const { data: user } = useQuery({
-    queryKey: ['user', creatorId],
-    queryFn: () => getUserById(creatorId),
-    enabled: Boolean(creatorId),
-    staleTime: 5 * 60 * 1000,
-  })
-  const label = user?.full_name || creator?.full_name || creator?.email || '—'
-  if (!creatorId) return <span>{label}</span>
-  return (
-    <div className="flex items-center">
-      <Link
-        href={`/dashboard/users/${creatorId}`}
-        className="hover:opacity-80 transition-opacity"
-        title={label}
-        aria-label={label}
-      >
-        <UserAvatar
-          userId={creatorId}
-          userName={user?.full_name || creator?.full_name}
-          userEmail={user?.email || creator?.email}
-          profilePhotoUrl={user?.profile_photo_url || creator?.profile_photo_url}
-          className="h-8 w-8"
+      <div className="space-y-4">
+        <FilterPills
+          options={quickFilterOptions}
+          value={quickFilter}
+          onChange={(v) => {
+            setQuickFilter(v as QuickFilter)
+            setPage(1)
+          }}
+          aria-label="Envelope quick filters"
         />
-      </Link>
+
+        <SearchField
+          placeholder="Search envelopes, signers, or documents…"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {isLoading && !data ? (
+        <div className="flex items-center justify-center py-16 text-muted">
+          <MaterialIcon name="progress_activity" size={24} className="animate-spin" />
+          <span className="ml-2">Loading envelopes…</span>
+        </div>
+      ) : error && !data ? (
+        <EmptyState icon="error" title="Failed to load envelopes" description="Please try again." />
+      ) : envelopes.length === 0 ? (
+        <EmptyState
+          icon="mail"
+          title="No envelopes found"
+          description="Create a new envelope to get started."
+          action={
+            <Button asChild>
+              <Link href="/dashboard/envelopes/create">Create Envelope</Link>
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <div className="space-y-4">
+            {envelopes.map((env) => (
+              <EnvelopeCardRow
+                key={env.id}
+                env={env}
+                currentUserId={currentUserId}
+                onView={() => router.push(`/dashboard/envelopes/${env.id}`)}
+                onSign={() => router.push(`/dashboard/envelopes/${env.id}/sign`)}
+                onDelete={async () => {
+                  if (window.confirm('Delete this envelope?')) await deleteAsync(env.id)
+                }}
+                deleting={deleting}
+              />
+            ))}
+          </div>
+          <ListPaginationControls
+            page={page}
+            totalPages={totalPages}
+            hasPrevious={Boolean(data?.previous) || page > 1}
+            hasNext={Boolean(data?.next) || page < totalPages}
+            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+            totalCount={totalCount}
+          />
+        </>
+      )}
+
+      {isFetching && data && (
+        <p className="text-caption-xs text-muted">Updating…</p>
+      )}
     </div>
   )
 }
 
-function RecipientAvatars({ recipients }: { recipients: any[] }) {
-  if (!recipients || recipients.length === 0) {
-    return <span className="text-gray-500">No recipients</span>
-  }
-
-  const displayRecipients = recipients.slice(0, 5)
-  const remainingCount = recipients.length - 5
-
-  return (
-    <div className="flex items-center">
-      <div className="flex items-center">
-        {displayRecipients.map((recipient, index) => (
-          <RecipientAvatar key={recipient.id || index} recipient={recipient} index={index} />
-        ))}
-      </div>
-      {remainingCount > 0 && <span className="ml-2 text-sm text-gray-600">+{remainingCount}</span>}
-    </div>
-  )
-}
-
-function RecipientAvatar({ recipient, index }: { recipient: any; index: number }) {
-  const recipientId = recipient?.id
-  const { data: user } = useQuery({
-    queryKey: ['user', recipientId],
-    queryFn: () => getUserById(recipientId),
-    enabled: !!recipientId,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const profilePhotoUrl = user?.profile_photo_url || recipient?.profile_photo_url
-  const name = user?.full_name || recipient?.name || recipient?.email || '?'
-
-  if (!recipientId) {
-    return (
-      <div className={index > 0 ? '-ml-4' : ''}>
-        <div className="h-[40px] w-[40px] rounded-full border-4 border-white" title={name} aria-label={name}>
-          <UserAvatar
-            userId={recipientId}
-            userName={name}
-            userEmail={recipient?.email}
-            profilePhotoUrl={profilePhotoUrl}
-            className="h-full w-full"
-          />
-        </div>
-      </div>
-    )
-  }
+function EnvelopeCardRow({
+  env,
+  currentUserId,
+  onView,
+  onSign,
+  onDelete,
+  deleting,
+}: {
+  env: Envelope
+  currentUserId?: string
+  onView: () => void
+  onSign: () => void
+  onDelete: () => void
+  deleting: boolean
+}) {
+  const variant = getEnvelopeVariant(env, currentUserId)
+  const isCreator = getEnvelopeCreatorId(env) === currentUserId
+  const signerCount = getEnvelopeSignerCount(env)
+  const signedCount = getEnvelopeSignedCount(env)
 
   return (
-    <div className={index > 0 ? '-ml-4' : ''}>
-      <Link
-        href={`/dashboard/users/${recipientId}`}
-        className="hover:opacity-80 transition-opacity block"
-        title={name}
-        aria-label={name}
-      >
-        <div className="h-[40px] w-[40px] rounded-full border-4 border-white">
-          <UserAvatar
-            userId={recipientId}
-            userName={name}
-            userEmail={recipient?.email}
-            profilePhotoUrl={profilePhotoUrl}
-            className="h-full w-full"
-          />
-        </div>
-      </Link>
-    </div>
+    <EnvelopeCard
+      id={env.id}
+      name={env.name || 'Untitled envelope'}
+      status={env.status}
+      variant={variant}
+      subtitle={getEnvelopeSubtitle(env, variant, currentUserId)}
+      creatorName={
+        isCreator ? undefined : env.creator_name || env.creator?.full_name || env.creator?.email
+      }
+      isCreator={isCreator}
+      documentCount={env.documents?.length}
+      signerCount={signerCount}
+      signedCount={signedCount}
+      updatedAt={env.updated_at ? formatRelativeTime(env.updated_at) : undefined}
+      signers={buildEnvelopeSignerStack(env, variant, currentUserId)}
+      onSign={variant === 'your-turn' ? onSign : undefined}
+      onView={onView}
+      onDelete={isCreator && variant === 'draft' && !deleting ? onDelete : undefined}
+      onRemind={variant === 'pending' && isCreator ? () => {} : undefined}
+    />
   )
 }

@@ -1,5 +1,106 @@
 import apiClient from '@/lib/axios'
-import type { Position } from '@/lib/api/envelopes'
+import type { DocumentWithPositions, EnvelopeSignature, Position } from '@/lib/api/envelopes'
+import {
+  FrozenEnvelopeError,
+} from '@/lib/api/signing-errors'
+import {
+  ensurePdfPointsPosition,
+  normalizeDocumentsWithPositionsForApi,
+} from '@/lib/utils/field-geometry'
+import type { AxiosError } from 'axios'
+
+export type SigningJobStatus = 'queued' | 'processing' | 'succeeded' | 'failed'
+
+export interface SignJobQueuedData {
+  job_id: string
+  status: SigningJobStatus
+  envelope_id: string
+}
+
+export interface SigningJobDetail {
+  id: string
+  status: SigningJobStatus
+  envelope_id: string
+  signer_id: string
+  error_message: string
+  attempt_count: number
+  created_at: string
+  completed_at: string | null
+  envelope_status: string
+  signature: EnvelopeSignature | null
+}
+
+export type SignEnvelopePayload = {
+  signature_image?: string
+  signature_id?: string
+  page?: number
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+}
+
+export type SignEnvelopeResult =
+  | { kind: 'queued'; data: SignJobQueuedData }
+  | { kind: 'already_signed'; signature: EnvelopeSignature }
+
+function unwrapApiData<T>(payload: unknown): T {
+  const body = payload as { data?: T }
+  return (body?.data ?? payload) as T
+}
+
+export async function signEnvelope(
+  envelopeId: string | number,
+  payload: SignEnvelopePayload = {},
+): Promise<SignEnvelopeResult> {
+  try {
+    const response = await apiClient.post(`/signatures/${envelopeId}/sign/`, payload)
+
+    if (response.status === 409) {
+      const message =
+        (response.data as { message?: string })?.message ||
+        'Envelope frozen for system upgrade. Ask the creator to resend.'
+      throw new FrozenEnvelopeError(message)
+    }
+
+    if (response.status === 200) {
+      const signature = unwrapApiData<EnvelopeSignature>(response.data)
+      return { kind: 'already_signed', signature }
+    }
+
+    if (response.status !== 202) {
+      throw new Error(`Unexpected sign response status: ${response.status}`)
+    }
+
+    const data = unwrapApiData<SignJobQueuedData>(response.data)
+    return { kind: 'queued', data }
+  } catch (error) {
+    if (error instanceof FrozenEnvelopeError) {
+      throw error
+    }
+    const axiosError = error as AxiosError<{ message?: string }>
+    if (axiosError?.response?.status === 409) {
+      throw new FrozenEnvelopeError(
+        axiosError.response?.data?.message ||
+          'Envelope frozen for system upgrade. Ask the creator to resend.',
+      )
+    }
+    throw error
+  }
+}
+
+export async function getSigningJob(jobId: string): Promise<SigningJobDetail> {
+  const response = await apiClient.get(`/signatures/jobs/${jobId}/`)
+  return unwrapApiData<SigningJobDetail>(response.data)
+}
+
+export async function retrySigningJob(jobId: string): Promise<SignJobQueuedData> {
+  const response = await apiClient.post(`/signatures/jobs/${jobId}/retry/`)
+  if (response.status !== 202) {
+    throw new Error(`Unexpected retry response status: ${response.status}`)
+  }
+  return unwrapApiData<SignJobQueuedData>(response.data)
+}
 
 export interface ReusableSignature {
   id: string
@@ -120,11 +221,11 @@ export async function deleteUserSignature(id: string): Promise<void> {
 export interface SignaturePlacementPayload {
   signature_image?: string
   signature_id?: string
-  page: number
-  x: number
-  y: number
-  width: number
-  height: number
+  page?: number
+  x?: number
+  y?: number
+  width?: number
+  height?: number
 }
 
 export async function signEnvelopeWithReusableSignature(
@@ -134,9 +235,9 @@ export async function signEnvelopeWithReusableSignature(
   x: number,
   y: number,
   width: number,
-  height: number
+  height: number,
 ) {
-  const response = await apiClient.post(`/signatures/${envelopeId}/sign/`, {
+  return signEnvelope(envelopeId, {
     signature_id: signatureId,
     page,
     x,
@@ -144,7 +245,6 @@ export async function signEnvelopeWithReusableSignature(
     width,
     height,
   })
-  return response.data
 }
 
 export async function signEnvelopeWithInline(
@@ -154,9 +254,9 @@ export async function signEnvelopeWithInline(
   x: number,
   y: number,
   width: number,
-  height: number
+  height: number,
 ) {
-  const response = await apiClient.post(`/signatures/${envelopeId}/sign/`, {
+  return signEnvelope(envelopeId, {
     signature_image: dataUrlPng,
     page,
     x,
@@ -164,7 +264,6 @@ export async function signEnvelopeWithInline(
     width,
     height,
   })
-  return response.data
 }
 
 export async function declineEnvelope(envelopeId: string | number, declineMessage: string) {
@@ -178,7 +277,7 @@ export interface SelfSignRequest {
   description?: string | null
   documents_with_positions?: Array<{
     document_id: string
-    signer_document_positions: Array<{ position: Position }>
+    signer_document_positions: Array<{ position: Position; signer_id?: string }>
   }>
   fields?: Array<Record<string, unknown>>
   signature_id?: string
@@ -194,10 +293,66 @@ export interface SelfSignResponse {
   name?: string
 }
 
-export async function selfSignEnvelope(data: SelfSignRequest): Promise<SelfSignResponse> {
-  const response = await apiClient.post('/signatures/self-sign/', data)
-  const payload = response.data
-  return (payload?.data ?? payload) as SelfSignResponse
+export type SelfSignResult =
+  | { kind: 'queued'; data: SignJobQueuedData }
+  | { kind: 'already_signed'; signature: EnvelopeSignature }
+
+export async function selfSignEnvelope(data: SelfSignRequest): Promise<SelfSignResult> {
+  const payload: SelfSignRequest = {
+    ...data,
+    documents_with_positions: normalizeDocumentsWithPositionsForApi(
+      data.documents_with_positions as DocumentWithPositions[] | undefined,
+    ) as SelfSignRequest['documents_with_positions'],
+    fields: data.fields?.map((field) => {
+      const x = Number(field.x)
+      const y = Number(field.y)
+      const width = Number(field.width)
+      const height = Number(field.height)
+      const page = Number(field.page)
+      if (![x, y, width, height, page].every(Number.isFinite)) {
+        return field
+      }
+      const pdf = ensurePdfPointsPosition({ page, x, y, width, height })
+      return {
+        ...field,
+        page: pdf.page,
+        x: pdf.x,
+        y: pdf.y,
+        width: pdf.width,
+        height: pdf.height,
+      }
+    }),
+  }
+
+  try {
+    const response = await apiClient.post('/signatures/self-sign/', payload)
+
+    if (response.status === 409) {
+      throw new FrozenEnvelopeError(
+        (response.data as { message?: string })?.message ||
+          'Envelope frozen for system upgrade. Ask the creator to resend.',
+      )
+    }
+
+    if (response.status !== 202) {
+      throw new Error(`Unexpected self-sign response status: ${response.status}`)
+    }
+
+    const queued = unwrapApiData<SignJobQueuedData>(response.data)
+    return { kind: 'queued', data: queued }
+  } catch (error) {
+    if (error instanceof FrozenEnvelopeError) {
+      throw error
+    }
+    const axiosError = error as AxiosError<{ message?: string }>
+    if (axiosError?.response?.status === 409) {
+      throw new FrozenEnvelopeError(
+        axiosError.response?.data?.message ||
+          'Envelope frozen for system upgrade. Ask the creator to resend.',
+      )
+    }
+    throw error
+  }
 }
 
 

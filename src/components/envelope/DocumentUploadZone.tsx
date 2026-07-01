@@ -163,7 +163,7 @@ export function DocumentUploadZone({
   return (
     <div className="space-y-4 w-full min-w-0">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
+        <h3 className="text-sm font-semibold text-on-surface">Documents</h3>
         <Badge variant="secondary">{uploadedDocuments.length}</Badge>
       </div>
 
@@ -174,26 +174,26 @@ export function DocumentUploadZone({
           border-2 border-dashed rounded-lg p-6 text-center transition-colors w-full min-w-0
           ${isBusy ? 'pointer-events-none opacity-60 cursor-not-allowed' : 'cursor-pointer'}
           ${dropzoneActive || isDragActive
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
+            ? 'border-status-your-turn bg-info-light'
+            : 'border-outline-variant hover:border-outline'
           }
         `}
       >
         <input {...getInputProps()} />
-        <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-        <p className="text-sm text-gray-600 mb-1">
+        <Upload className="mx-auto h-8 w-8 text-muted mb-2" />
+        <p className="text-sm text-muted mb-1">
           {isUploading
             ? 'Upload in progress…'
             : dropzoneActive
               ? 'Drop PDF or Word files here'
               : 'Drag & drop PDF or Word files here'}
         </p>
-        <p className="text-xs text-gray-500">or click to browse</p>
+        <p className="text-xs text-muted">or click to browse</p>
       </div>
 
       {uploadState && (
         <div className="space-y-1">
-          <div className="flex justify-between text-xs text-gray-600 gap-2">
+          <div className="flex justify-between text-xs text-muted gap-2">
             <span className="truncate">
               Uploading {uploadState.fileName}
               {uploadState.total > 1 ? ` (${uploadState.index}/${uploadState.total})` : ''}
@@ -254,9 +254,9 @@ export function DocumentUploadZone({
       {/* Existing Documents Browser */}
       {showExistingDocuments && (
         <div className="space-y-2 w-full">
-          <h4 className="text-xs font-medium text-gray-700">Existing Documents:</h4>
+          <h4 className="text-xs font-medium text-body">Existing Documents:</h4>
           {loadingExisting ? (
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-500 py-4">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted py-4">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span>Loading documents…</span>
             </div>
@@ -266,14 +266,14 @@ export function DocumentUploadZone({
                 const isAlreadyAdded = uploadedDocuments.some(addedDoc => addedDoc.id === doc.id)
                 const isAdding = addingDocumentId === doc.id
                 return (
-                  <div key={doc.id} className={`p-2 border rounded w-full ${isAlreadyAdded ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
+                  <div key={doc.id} className={`p-2 border rounded w-full ${isAlreadyAdded ? 'bg-green-50 border-green-200' : 'bg-white border-border'}`}>
                     <div className="flex items-center gap-2 w-full">
-                      <FileText className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                      <FileText className="h-3 w-3 text-muted flex-shrink-0" />
                       <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="text-xs font-medium text-gray-900 truncate">
+                        <p className="text-xs font-medium text-on-surface truncate">
                           {doc.file_name}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-xs text-muted truncate">
                           {(doc.file_size / 1024).toFixed(1)} KB
                         </p>
                       </div>
@@ -284,12 +284,12 @@ export function DocumentUploadZone({
                             <span className="text-xs">Added</span>
                           </div>
                         ) : isAdding ? (
-                          <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+                          <Loader2 className="h-3 w-3 animate-spin text-secondary" />
                         ) : (
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 w-5 p-0 text-blue-500 hover:text-blue-700 flex-shrink-0"
+                            className="h-5 w-5 p-0 text-secondary hover:text-secondary flex-shrink-0"
                             disabled={isBusy}
                             onClick={() => handleExistingDocumentSelect(doc)}
                           >
@@ -303,7 +303,7 @@ export function DocumentUploadZone({
               })}
             </div>
           ) : (
-            <div className="text-xs text-gray-500 text-center py-4">
+            <div className="text-xs text-muted text-center py-4">
               No eligible documents found (draft or rejected only)
             </div>
           )}
@@ -313,18 +313,18 @@ export function DocumentUploadZone({
       {/* Selected Documents List */}
       {uploadedDocuments.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-gray-700">Selected Documents:</h4>
+          <h4 className="text-xs font-medium text-body">Selected Documents:</h4>
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {uploadedDocuments.map((doc) => (
               <Card key={doc.id} className="p-2">
                 <CardContent className="p-0">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    <FileText className="h-4 w-4 text-muted flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 truncate">
+                      <p className="text-xs font-medium text-on-surface truncate">
                         {doc.file_name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted">
                         {(doc.file_size / 1024).toFixed(1)} KB
                       </p>
                     </div>

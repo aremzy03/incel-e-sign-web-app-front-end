@@ -1,7 +1,10 @@
 import apiClient from '@/lib/axios'
 import { logger } from '@/lib/logger'
 import { getCurrentFileUrl } from '@/lib/url'
-import { normalizeSignerPositionEntries } from '@/lib/utils/field-geometry'
+import {
+  normalizeDocumentsWithPositionsForApi,
+  normalizeSignerPositionEntries,
+} from '@/lib/utils/field-geometry'
 
 export interface EnvelopeDetail {
   id: number | string
@@ -28,12 +31,26 @@ export interface EnvelopeSignature {
   signer: string
   signer_email: string
   signer_name: string
-  status: 'pending' | 'signed' | 'rejected'
+  status: 'pending' | 'processing' | 'signed' | 'rejected'
   signing_order: number
   signed_at?: string
   signature_image?: string
   created_at: string
   updated_at: string
+}
+
+export interface EnvelopeSigningOrderEntry {
+  signer_id: string
+  order: number
+  signer_name?: string
+  name?: string
+  email?: string
+}
+
+export interface EnvelopeCurrentSigner {
+  id: string
+  name: string
+  email: string
 }
 
 export interface Envelope {
@@ -46,6 +63,11 @@ export interface Envelope {
     email: string
     full_name: string
   }
+  /** Present on list responses from GET /envelopes/ */
+  creator_name?: string
+  signer_count?: number
+  current_signer?: EnvelopeCurrentSigner | null
+  signing_order?: EnvelopeSigningOrderEntry[]
   recipients: EnvelopeRecipient[]
   signatures?: EnvelopeSignature[]
   documents_with_positions?: DocumentWithPositions[]
@@ -56,8 +78,16 @@ export interface Envelope {
     file_url?: string
     signer_document_positions?: Array<{ signer_id: string; position: Position }>
   }>
-  status: 'draft' | 'pending' | 'completed' | 'rejected'
+  status: 'draft' | 'pending' | 'completed' | 'rejected' | 'self-sign'
   is_self_sign?: boolean
+  decline_message?: string
+  fields?: Array<{
+    id?: string
+    document_id?: string
+    assigned_signer?: string
+    type?: string
+    [key: string]: unknown
+  }>
   created_at: string
   updated_at: string
   sent_at?: string
@@ -116,7 +146,8 @@ export function normalizeEnvelopeRecipients(raw: {
             '',
         ),
         name: String(
-          s.name ??
+          s.signer_name ??
+            s.name ??
             s.full_name ??
             nestedSigner?.full_name ??
             nestedSigner?.name ??
@@ -137,6 +168,135 @@ export function normalizeEnvelopeRecipients(raw: {
     return fromList(raw.signing_order)
   }
   return []
+}
+
+/** Whether an envelope is a self-sign flow (by flag or status). */
+export function isSelfSignEnvelope(
+  env: Pick<Envelope, 'status' | 'is_self_sign'>,
+): boolean {
+  const status = env.status?.toLowerCase().replace(/_/g, '-') ?? ''
+  return Boolean(env.is_self_sign) || status === 'self-sign' || status.includes('self-sign')
+}
+
+/** Normalize a list-item from GET /envelopes/ into the shared Envelope shape. */
+export function normalizeEnvelopeListItem(raw: Record<string, unknown>): Envelope {
+  const creatorId =
+    typeof raw.creator === 'object' && raw.creator !== null
+      ? String((raw.creator as { id?: string }).id ?? '')
+      : String(raw.creator ?? '')
+
+  const creatorName = String(
+    raw.creator_name ??
+      (typeof raw.creator === 'object' && raw.creator !== null
+        ? (raw.creator as { full_name?: string }).full_name
+        : '') ??
+      '',
+  )
+
+  const creatorEmail =
+    typeof raw.creator === 'object' && raw.creator !== null
+      ? String((raw.creator as { email?: string }).email ?? '')
+      : String(raw.creator_email ?? '')
+
+  const signingOrder: EnvelopeSigningOrderEntry[] = Array.isArray(raw.signing_order)
+    ? raw.signing_order.map((entry, idx) => {
+        const item = entry as Record<string, unknown>
+        const nestedSigner =
+          item.signer && typeof item.signer === 'object'
+            ? (item.signer as Record<string, unknown>)
+            : null
+        return {
+          signer_id: String(item.signer_id ?? item.id ?? nestedSigner?.id ?? idx),
+          order: Number(item.order ?? idx + 1),
+          signer_name: String(item.signer_name ?? '') || undefined,
+          name: String(
+            item.signer_name ??
+              item.name ??
+              item.full_name ??
+              nestedSigner?.name ??
+              nestedSigner?.full_name ??
+              '',
+          ) || undefined,
+          email: String(
+            item.email ?? nestedSigner?.email ?? '',
+          ) || undefined,
+        }
+      })
+    : []
+
+  const signatures = Array.isArray(raw.signatures)
+    ? (raw.signatures as EnvelopeSignature[])
+    : []
+
+  const currentSignerRaw = raw.current_signer
+  const currentSigner: EnvelopeCurrentSigner | null =
+    currentSignerRaw && typeof currentSignerRaw === 'object'
+      ? {
+          id: String((currentSignerRaw as { id?: string }).id ?? ''),
+          name: String((currentSignerRaw as { name?: string }).name ?? ''),
+          email: String((currentSignerRaw as { email?: string }).email ?? ''),
+        }
+      : null
+
+  const enrichedSigningOrder = signingOrder.map((entry) => {
+    const sig = signatures.find((s) => String(s.signer) === String(entry.signer_id))
+    let next = { ...entry }
+
+    if (currentSigner && String(entry.signer_id) === String(currentSigner.id)) {
+      next = {
+        ...next,
+        name: next.name || currentSigner.name || undefined,
+        email: next.email || currentSigner.email || undefined,
+      }
+    }
+
+    if (sig) {
+      next = {
+        ...next,
+        signer_name: next.signer_name || sig.signer_name || undefined,
+        name: next.name || sig.signer_name || undefined,
+        email: next.email || sig.signer_email || undefined,
+      }
+    }
+
+    return next
+  })
+
+  const recipients = normalizeEnvelopeRecipients({ ...raw, signatures })
+
+  return {
+    id: String(raw.id ?? ''),
+    name: raw.name as string | undefined,
+    description: (raw.description as string | null | undefined) ?? null,
+    pdf_lock_password:
+      (raw.pdf_lock_password as string | null | undefined) ??
+      (raw.pdf_lock_code as string | null | undefined) ??
+      null,
+    creator: {
+      id: creatorId,
+      email: creatorEmail,
+      full_name: creatorName,
+    },
+    creator_name: creatorName,
+    signer_count:
+      typeof raw.signer_count === 'number'
+        ? raw.signer_count
+        : enrichedSigningOrder.length || recipients.length,
+    current_signer: currentSigner,
+    signing_order: enrichedSigningOrder,
+    recipients,
+    signatures,
+    fields: Array.isArray(raw.fields) ? (raw.fields as Envelope['fields']) : undefined,
+    decline_message: typeof raw.decline_message === 'string' ? raw.decline_message : undefined,
+    documents: raw.documents as Envelope['documents'],
+    status: (raw.status as Envelope['status']) || 'draft',
+    is_self_sign: Boolean(raw.is_self_sign),
+    created_at: String(raw.created_at ?? ''),
+    updated_at: String(raw.updated_at ?? ''),
+    sent_at: raw.sent_at as string | undefined,
+    completed_at: raw.completed_at as string | undefined,
+    rejected_at: raw.rejected_at as string | undefined,
+  }
 }
 
 export interface CreateEnvelopeRequest {
@@ -185,11 +345,34 @@ export interface CreateEnvelopeResponse {
   description?: string | null
 }
 
-export interface EnvelopeMetrics {
+export interface EnvelopeDashboardMetrics {
   documents_signed: number
   pending_signatures: number
   active_envelopes: number
   completion_rate: number
+}
+
+export interface EnvelopeDashboardCounts {
+  pending_my_signature: number
+  pending_sent: number
+  completed: number
+  draft: number
+}
+
+export interface EnvelopeDashboardActivity {
+  id: string
+  action: string
+  envelope_id: string | null
+  envelope_name: string | null
+  message: string
+  created_at: string
+}
+
+export interface EnvelopeDashboard {
+  metrics: EnvelopeDashboardMetrics
+  counts: EnvelopeDashboardCounts
+  action_required: Envelope[]
+  recent_activity: EnvelopeDashboardActivity[]
 }
 
 export interface EnvelopesListResponse {
@@ -204,15 +387,21 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
   logger.debug('Creating envelope', { documentIds: data.document_ids?.length, signingOrder: data.signing_order?.length })
   
   try {
-    logger.api('POST', '/envelopes/create/', data)
+    const payload: CreateEnvelopeRequest = {
+      ...data,
+      documents_with_positions:
+        normalizeDocumentsWithPositionsForApi(data.documents_with_positions) ??
+        data.documents_with_positions,
+    }
+    logger.api('POST', '/envelopes/create/', payload)
     
     // Direct to backend API
-    const response = await apiClient.post('/envelopes/create/', data)
+    const response = await apiClient.post('/envelopes/create/', payload)
     logger.debug('Create envelope response received')
     
     // Normalize possible response wrappers
-    const payload = response.data
-    const unwrapped = payload?.data?.envelope || payload?.data || payload
+    const responseData = response.data
+    const unwrapped = responseData?.data?.envelope || responseData?.data || responseData
     if (!unwrapped?.id) {
       logger.warn('Create envelope: unexpected response shape, missing id')
     }
@@ -279,33 +468,9 @@ export const getEnvelopes = async (
     }
 
     // Normalize result items to Envelope shape consumed by UI
-    const normalizedResults: Envelope[] = results.map((r: any) => {
-      const creator = r.creator && typeof r.creator === 'object'
-        ? r.creator
-        : {
-            id: r.creator,
-            email: r.creator_email || r.creator?.email || '',
-            full_name: r.creator_full_name || r.creator?.full_name || (r.creator_email || ''),
-          }
-
-      const recipients = normalizeEnvelopeRecipients(r)
-
-      return {
-        id: r.id,
-        name: r.name,
-        description: r.description ?? null,
-        pdf_lock_password: r.pdf_lock_password ?? r.pdf_lock_code ?? null,
-        creator,
-        recipients,
-        status: r.status || 'draft',
-        is_self_sign: Boolean(r.is_self_sign),
-        created_at: r.created_at || '',
-        updated_at: r.updated_at || '',
-        sent_at: r.sent_at,
-        completed_at: r.completed_at,
-        rejected_at: r.rejected_at,
-      }
-    })
+    const normalizedResults: Envelope[] = results.map((r: Record<string, unknown>) =>
+      normalizeEnvelopeListItem(r),
+    )
 
     return { count, next, previous, results: normalizedResults }
   } catch (error: any) {
@@ -317,56 +482,52 @@ export const getEnvelopes = async (
 // Get a specific envelope by ID
 export const getEnvelope = async (id: string): Promise<Envelope> => {
   logger.debug('Fetching envelope', { id })
-  
+
   try {
     const response = await apiClient.get(`/envelopes/${id}/`)
     const payload = response.data
-    const r: any = (payload && (payload.data?.envelope || payload.data)) || payload
-
-    const creator = r.creator && typeof r.creator === 'object'
-      ? r.creator
-      : {
-          id: r.creator,
-          email: r.creator_email || r.creator?.email || '',
-          full_name: r.creator_full_name || r.creator?.full_name || (r.creator_email || ''),
-        }
-
-    const recipients = normalizeEnvelopeRecipients(r)
-
-    return {
-      id: r.id,
-      name: r.name,
-      description: r.description ?? null,
-      pdf_lock_password: r.pdf_lock_password ?? null,
-      creator,
-      recipients,
-      signatures: r.signatures || [],
-      documents_with_positions: Array.isArray(r.documents_with_positions)
-        ? r.documents_with_positions
-        : [],
-      status: r.status || 'draft',
-      is_self_sign: Boolean(r.is_self_sign),
-      created_at: r.created_at || '',
-      updated_at: r.updated_at || '',
-      sent_at: r.sent_at,
-      completed_at: r.completed_at,
-      rejected_at: r.rejected_at,
-    }
+    const raw = (payload && (payload.data?.envelope || payload.data)) || payload
+    return normalizeEnvelopeListItem(raw as Record<string, unknown>)
   } catch (error: any) {
     logger.errorSafe(error, 'Get envelope failed')
     throw error
   }
 }
 
-export const getEnvelopeMetrics = async (): Promise<EnvelopeMetrics> => {
-  const response = await apiClient.get('/envelopes/metrics/')
+export const getEnvelopeDashboard = async (): Promise<EnvelopeDashboard> => {
+  const response = await apiClient.get('/envelopes/dashboard/')
   const payload = response.data
   const data = payload?.data ?? payload
+
+  const metrics = data?.metrics ?? {}
+  const counts = data?.counts ?? {}
+  const actionRequired = Array.isArray(data?.action_required) ? data.action_required : []
+  const recentActivity = Array.isArray(data?.recent_activity) ? data.recent_activity : []
+
   return {
-    documents_signed: data?.documents_signed ?? 0,
-    pending_signatures: data?.pending_signatures ?? 0,
-    active_envelopes: data?.active_envelopes ?? 0,
-    completion_rate: data?.completion_rate ?? 0,
+    metrics: {
+      documents_signed: metrics.documents_signed ?? 0,
+      pending_signatures: metrics.pending_signatures ?? 0,
+      active_envelopes: metrics.active_envelopes ?? 0,
+      completion_rate: metrics.completion_rate ?? 0,
+    },
+    counts: {
+      pending_my_signature: counts.pending_my_signature ?? 0,
+      pending_sent: counts.pending_sent ?? 0,
+      completed: counts.completed ?? 0,
+      draft: counts.draft ?? 0,
+    },
+    action_required: actionRequired.map((item: Record<string, unknown>) =>
+      normalizeEnvelopeListItem(item),
+    ),
+    recent_activity: recentActivity.map((item: Record<string, unknown>) => ({
+      id: String(item.id ?? ''),
+      action: String(item.action ?? ''),
+      envelope_id: item.envelope_id != null ? String(item.envelope_id) : null,
+      envelope_name: item.envelope_name != null ? String(item.envelope_name) : null,
+      message: String(item.message ?? ''),
+      created_at: String(item.created_at ?? ''),
+    })),
   }
 }
 
@@ -404,6 +565,42 @@ export interface EnvelopeDocumentResponse {
   }>;
 }
 
+export function normalizeEnvelopeDocumentEntry(doc: Record<string, unknown>): EnvelopeDocumentResponse {
+  const documentId = String(doc.document ?? doc.id ?? '')
+  return {
+    ...doc,
+    id: documentId,
+    document: documentId,
+    file_name: String(doc.document_file_name ?? doc.file_name ?? `Document ${documentId}`),
+    document_file_name: String(doc.document_file_name ?? doc.file_name ?? `Document ${documentId}`),
+    document_file_url: String(
+      doc.document_file_url ?? getCurrentFileUrl(doc) ?? doc.file_url ?? '',
+    ),
+    signed_file_url:
+      (doc.document_signed_file_url as string | undefined) ??
+      (doc.signed_file_url as string | undefined) ??
+      undefined,
+    document_signed_file_url:
+      (doc.document_signed_file_url as string | undefined) ??
+      (doc.signed_file_url as string | undefined) ??
+      undefined,
+    signer_document_positions: normalizeSignerPositionEntries(
+      (doc.signer_document_positions ?? doc.signer_positions ?? doc.positions ?? []) as Parameters<
+        typeof normalizeSignerPositionEntries
+      >[0],
+    ),
+  } as EnvelopeDocumentResponse
+}
+
+export function normalizeEnvelopeDocumentEntries(
+  documents: unknown,
+): EnvelopeDocumentResponse[] {
+  if (!Array.isArray(documents)) return []
+  return documents.map((doc) =>
+    normalizeEnvelopeDocumentEntry(doc as Record<string, unknown>),
+  )
+}
+
 // Get documents associated with an envelope
 export const getEnvelopeDocuments = async (envelopeId: string): Promise<EnvelopeDocumentResponse[]> => {
   try {
@@ -416,32 +613,7 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
       return [];
     }
     logger.debug('Fetched documents for envelope', { envelopeId, count: documents.length });
-    // Map the documents to ensure correct IDs and file names are used
-    return documents.map(doc => {
-      const documentId = doc.document || doc.id
-      return {
-        ...doc,
-        id: documentId,
-        document: documentId,
-        file_name: doc.document_file_name || doc.file_name || `Document ${documentId}`,
-        document_file_url:
-          doc.document_file_url ||
-          getCurrentFileUrl(doc) ||
-          doc.file_url ||
-          '',
-        signed_file_url:
-          doc.document_signed_file_url ||
-          doc.signed_file_url ||
-          undefined,
-        document_signed_file_url: doc.document_signed_file_url || doc.signed_file_url || undefined,
-        signer_document_positions: normalizeSignerPositionEntries(
-          doc.signer_document_positions ??
-            doc.signer_positions ??
-            doc.positions ??
-            [],
-        ),
-      }
-    }) as EnvelopeDocumentResponse[];
+    return normalizeEnvelopeDocumentEntries(documents);
   } catch (error: any) {
     logger.errorSafe(error, `Error fetching documents for envelope ${envelopeId}`)
     throw error
@@ -456,8 +628,14 @@ export const editEnvelope = async (
   logger.debug('Editing envelope', { id })
   
   try {
-    logger.api('PATCH', `/envelopes/${id}/edit/`, data)
-    const response = await apiClient.patch(`/envelopes/${id}/edit/`, data)
+    const payload: EditEnvelopeRequest = {
+      ...data,
+      documents_with_positions: normalizeDocumentsWithPositionsForApi(
+        data.documents_with_positions,
+      ),
+    }
+    logger.api('PATCH', `/envelopes/${id}/edit/`, payload)
+    const response = await apiClient.patch(`/envelopes/${id}/edit/`, payload)
     logger.debug('Envelope edited successfully')
     return response.data
   } catch (error: any) {

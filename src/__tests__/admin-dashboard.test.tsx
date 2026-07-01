@@ -6,7 +6,16 @@ import { useRouter } from 'next/navigation'
 import AdminDashboard from '../app/dashboard/admin/page'
 import UserManagementPage from '../app/dashboard/admin/users/page'
 import SystemSettingsPage from '../app/dashboard/admin/settings/page'
-import AuditLogViewer from '../app/dashboard/admin/audit/page'
+jest.mock('@/lib/api/audit', () => ({
+  listAuditLogs: jest.fn().mockResolvedValue({
+    count: 0,
+    next: null,
+    previous: null,
+    results: [],
+  }),
+}))
+
+import AuditPage from '../app/dashboard/audit/page'
 import NotificationsCenter from '../app/dashboard/admin/notifications/page'
 
 jest.mock('next/navigation', () => ({
@@ -57,8 +66,8 @@ describe('Admin Dashboard Pages', () => {
     expect(screen.getByText('System Settings')).toBeInTheDocument()
   })
 
-  it('renders Audit Logs heading', () => {
-    render(<AuditLogViewer />, { wrapper })
+  it('renders Audit Logs heading', async () => {
+    render(<AuditPage />, { wrapper })
     expect(screen.getByText('Audit Logs')).toBeInTheDocument()
   })
 

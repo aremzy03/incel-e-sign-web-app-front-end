@@ -34,6 +34,11 @@ jest.mock('@/hooks/useProfile', () => ({
   useProfile: jest.fn(),
 }))
 
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: jest.fn(() => ({ isReady: true })),
+  shouldRetryAuthQuery: jest.fn(() => false),
+}))
+
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
 const mockRedirect = redirect as jest.MockedFunction<typeof redirect>
 
@@ -212,6 +217,7 @@ describe('DashboardClientLayout', () => {
 
     expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0)
     expect(screen.getByText('Documents')).toBeInTheDocument()
+    expect(screen.getByText('My Signatures')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
-import { useSession } from 'next-auth/react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 
 import {
   Dialog,
@@ -11,129 +11,152 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import dynamic from 'next/dynamic'
-const PdfViewer = dynamic(() => import('@/components/PdfViewer'), { ssr: false })
+import { Badge } from '@/components/ui/badge'
+import { MaterialIcon } from '@/components/ui/material-icon'
+import { Loader2 } from 'lucide-react'
 
 import { Document as ApiDocument } from '@/lib/api/documents'
-import { getApiBaseUrl } from '@/lib/env'
+import { useDownloadDocument } from '@/hooks/useDocuments'
+
+const VerticalPDFViewer = dynamic(
+  () => import('@/components/envelope/VerticalPDFViewer').then((m) => m.VerticalPDFViewer),
+  { ssr: false },
+)
 
 interface DocumentPreviewModalProps {
   document: ApiDocument | null
   isOpen: boolean
   onClose: () => void
-  /**
-   * Optional password for opening password-protected PDFs when previewing.
-   */
   pdfPassword?: string
 }
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Draft':
-      return 'bg-gray-100 text-gray-800'
-    case 'Sent':
-      return 'bg-blue-100 text-blue-800'
-    case 'Signed':
+  switch (status.toLowerCase()) {
+    case 'draft':
+      return 'bg-surface-container-low text-body'
+    case 'pending':
+    case 'sent':
+      return 'bg-info-light text-secondary'
+    case 'completed':
+    case 'signed':
       return 'bg-green-100 text-green-800'
+    case 'rejected':
+      return 'bg-red-100 text-red-800'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-surface-container-low text-body'
   }
 }
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
+
 export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }: DocumentPreviewModalProps) {
-  const { data: session } = useSession()
-  const accessToken = session?.accessToken as string | undefined
+  const [mounted, setMounted] = useState(false)
+  const downloadDocumentMutation = useDownloadDocument()
 
-  const previewUrl = useMemo(() => {
-    if (!document || !isOpen) return null
-    const base = getApiBaseUrl().replace(/\/$/, '')
-    return `${base}/documents/${document.id}/preview/`
-  }, [document, isOpen])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  const httpHeaders = useMemo(() => {
-    if (!accessToken) return undefined
-    return { Authorization: `Bearer ${accessToken}` }
-  }, [accessToken])
+  const noop = useCallback(() => {}, [])
+
+  const viewerDocuments = useMemo(
+    () => (document && isOpen ? [document] : []),
+    [document, isOpen],
+  )
+
+  const handleDownload = useCallback(() => {
+    if (document) {
+      downloadDocumentMutation.mutate({ id: document.id, fileName: document.file_name })
+    }
+  }, [document, downloadDocumentMutation])
 
   if (!document) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-gray-900">
-            {document.file_name}
-          </DialogTitle>
-          <DialogDescription>
-            Document preview and details
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* PDF Preview Area */}
-          <div className="border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
-              <h3 className="text-sm font-medium text-gray-700">PDF Preview</h3>
+      <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-border bg-surface-container-lowest px-6 py-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-light">
+              <MaterialIcon name="picture_as_pdf" size={22} className="text-primary" />
             </div>
-            <div className="min-h-96 max-h-[65vh] overflow-auto bg-gray-100">
-              {previewUrl ? (
-                <div className="w-full p-4 flex justify-center">
-                  <PdfViewer
-                    url={previewUrl}
-                    pdfPassword={pdfPassword}
-                    httpHeaders={httpHeaders}
-                  />
-                </div>
-              ) : (
-                <div className="text-center text-gray-600">No preview available</div>
-              )}
+            <div className="min-w-0">
+              <DialogTitle className="truncate font-headline-lg text-headline-lg text-primary">
+                {document.file_name}
+              </DialogTitle>
+              <DialogDescription className="font-body-sm text-body-sm text-muted">
+                Document preview
+              </DialogDescription>
             </div>
           </div>
+        </DialogHeader>
 
-          {/* Document Metadata */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">Status</h4>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                  document.status
-                )}`}
-              >
-                {document.status}
-              </span>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-low" style={{ height: 'min(60vh, 640px)' }}>
+          {mounted ? (
+            <VerticalPDFViewer
+              documents={viewerDocuments}
+              fieldPositions={{}}
+              recipients={[]}
+              activeFieldId={null}
+              onFieldSelect={noop}
+              onFieldPositionChange={noop}
+              onFieldDelete={noop}
+              onFieldDrop={noop}
+              pdfPassword={pdfPassword}
+              editorLayout
+              readOnly
+            />
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted" />
             </div>
-            
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">Created At</h4>
-              <p className="text-sm text-gray-600">
+          )}
+        </div>
+
+        <div className="shrink-0 border-t border-border bg-surface-container-lowest px-6 py-4">
+          <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Status</div>
+              <Badge className={getStatusColor(document.status)}>{document.status}</Badge>
+            </div>
+            <div>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Size</div>
+              <p className="font-body-sm text-body-sm text-on-surface">
+                {document.file_size ? formatFileSize(document.file_size) : 'Unknown'}
+              </p>
+            </div>
+            <div>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Type</div>
+              <p className="font-body-sm text-body-sm text-on-surface">PDF</p>
+            </div>
+            <div>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Created</div>
+              <p className="font-body-sm text-body-sm text-on-surface">
                 {document.created_at ? new Date(document.created_at).toLocaleDateString() : 'Unknown'}
               </p>
             </div>
-            
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">File Size</h4>
-              <p className="text-sm text-gray-600">
-                {document.file_size ? `${(document.file_size / (1024 * 1024)).toFixed(2)} MB` : 'Unknown'}
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">File Type</h4>
-              <p className="text-sm text-gray-600">PDF Document</p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">Owner</h4>
-              <p className="text-sm text-gray-600">You</p>
-            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
-            <Button>
+            <Button
+              onClick={handleDownload}
+              disabled={downloadDocumentMutation.isPending}
+              className="gap-2"
+            >
+              {downloadDocumentMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MaterialIcon name="download" size={18} />
+              )}
               Download
             </Button>
           </div>

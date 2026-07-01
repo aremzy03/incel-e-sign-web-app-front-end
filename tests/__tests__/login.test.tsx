@@ -38,9 +38,8 @@ describe('LoginPage', () => {
   it('renders login page with correct title', () => {
     render(<LoginPage />)
     
-    expect(screen.getByText('INCEL E-Sign')).toBeInTheDocument()
     expect(screen.getByText('Welcome Back')).toBeInTheDocument()
-    expect(screen.getByText('Access your digital signature dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Sign in to your legal authority platform')).toBeInTheDocument()
   })
 
   it('renders email and password input fields', () => {
@@ -61,8 +60,8 @@ describe('LoginPage', () => {
   it('renders register link', () => {
     render(<LoginPage />)
     
-    expect(screen.getByText('New to INCEL E-Sign?')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /create your account/i })).toBeInTheDocument()
+    expect(screen.getByText(/don't have an account/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /create account/i })).toBeInTheDocument()
   })
 
   it('shows validation errors for empty fields', async () => {

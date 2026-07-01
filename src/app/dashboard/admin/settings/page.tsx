@@ -131,7 +131,7 @@ export default function SystemSettingsPage() {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">Checking access permissions...</p>
+              <p className="text-muted">Checking access permissions...</p>
             </div>
           </CardContent>
         </Card>
@@ -146,8 +146,8 @@ export default function SystemSettingsPage() {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
+              <p className="text-muted mb-4">
                 You don&apos;t have permission to view system settings. Admin access required.
               </p>
               <button
@@ -179,11 +179,11 @@ export default function SystemSettingsPage() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Settings className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-on-surface mb-2 flex items-center gap-2">
+              <Settings className="h-8 w-8 text-secondary" />
               System Settings
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-muted text-lg">
               Configure global application settings and preferences.
             </p>
           </div>
@@ -228,7 +228,7 @@ export default function SystemSettingsPage() {
               {errors.maxUploadSize && (
                 <p className="text-sm text-red-500">{errors.maxUploadSize}</p>
               )}
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 Maximum file size allowed for uploads (1-50 MB)
               </p>
             </div>
@@ -246,8 +246,8 @@ export default function SystemSettingsPage() {
                     variant={settings.allowedFileTypes.includes(fileType.value) ? 'default' : 'outline'}
                     className={`cursor-pointer transition-colors ${
                       settings.allowedFileTypes.includes(fileType.value)
-                        ? 'bg-blue-600 hover:bg-blue-700'
-                        : 'hover:bg-gray-100'
+                        ? 'bg-secondary hover:bg-accent-hover'
+                        : 'hover:bg-surface-container-low'
                     }`}
                     onClick={() => toggleFileType(fileType.value)}
                   >
@@ -258,7 +258,7 @@ export default function SystemSettingsPage() {
               {errors.allowedFileTypes && (
                 <p className="text-sm text-red-500">{errors.allowedFileTypes}</p>
               )}
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 Click on file types to enable/disable them
               </p>
             </div>
@@ -280,7 +280,7 @@ export default function SystemSettingsPage() {
               {errors.brandingName && (
                 <p className="text-sm text-red-500">{errors.brandingName}</p>
               )}
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 The name displayed throughout the application
               </p>
             </div>
@@ -301,7 +301,7 @@ export default function SystemSettingsPage() {
                   {settings.enableNotifications ? 'Enabled' : 'Disabled'}
                 </Label>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 Allow users to receive email and in-app notifications
               </p>
             </div>
@@ -336,7 +336,7 @@ export default function SystemSettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Card className="bg-gray-50">
+        <Card className="bg-surface">
           <CardHeader>
             <CardTitle className="text-lg">Current Settings</CardTitle>
             <CardDescription>
@@ -346,19 +346,19 @@ export default function SystemSettingsPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-700">Max Upload Size</p>
+                <p className="text-sm font-medium text-body">Max Upload Size</p>
                 <p className="text-lg font-semibold">{settings.maxUploadSize} MB</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Allowed File Types</p>
+                <p className="text-sm font-medium text-body">Allowed File Types</p>
                 <p className="text-lg font-semibold">{settings.allowedFileTypes.length} types</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Branding Name</p>
+                <p className="text-sm font-medium text-body">Branding Name</p>
                 <p className="text-lg font-semibold">{settings.brandingName}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Notifications</p>
+                <p className="text-sm font-medium text-body">Notifications</p>
                 <p className="text-lg font-semibold">
                   {settings.enableNotifications ? 'Enabled' : 'Disabled'}
                 </p>

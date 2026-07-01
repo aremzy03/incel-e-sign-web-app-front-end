@@ -1,182 +1,129 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import FinalSignOffPage from '../app/dashboard/sign/review/[envelopeId]/page'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import SignFlowPage from '@/components/signing/sign-flow-page'
 
-// Mock Next.js navigation
 jest.mock('next/navigation', () => ({
-  useParams: () => ({ envelopeId: '1' }),
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-  })),
+  useParams: () => ({ id: 'env-1' }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   useSearchParams: jest.fn(() => ({
-    get: jest.fn(() => null),
-    has: jest.fn(() => false),
+    get: jest.fn((key: string) => (key === 'step' ? 'sign' : null)),
   })),
 }))
 
-// Mock Next.js Link component
-jest.mock('next/link', () => {
-  return function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
-    return <a href={href}>{children}</a>
-  }
-})
+jest.mock('next-auth/react', () => ({
+  useSession: () => ({
+    data: {
+      user: { id: 'user-1', email: 'signer@example.com', full_name: 'Test Signer' },
+      accessToken: 'token',
+    },
+    status: 'authenticated',
+  }),
+}))
 
-describe('Final Sign-Off Page', () => {
-  it('renders sign-off page with dummy data', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if the page title is rendered
-    expect(screen.getByText('Review & Sign')).toBeInTheDocument()
-    expect(screen.getByText('Please review the document and confirm your signature')).toBeInTheDocument()
-  })
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: () => ({ isReady: true }),
+  shouldRetryAuthQuery: false,
+}))
 
-  it('shows document section with preview link', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if document name is shown
-    expect(screen.getByText('contract.pdf')).toBeInTheDocument()
-    
-    // Check if PDF icon is rendered
-    expect(screen.getByText('PDF')).toBeInTheDocument()
-    
-    // Check if view preview button is rendered
-    expect(screen.getByText('View Preview')).toBeInTheDocument()
-  })
+jest.mock('@/hooks/useProfile', () => ({
+  useProfile: () => ({ data: null }),
+}))
 
-  it('displays envelope information', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if envelope details are shown (text is split across elements)
-    expect(screen.getByText(/NDA Agreement/)).toBeInTheDocument()
-    expect(screen.getByText('Created:')).toBeInTheDocument()
-    expect(screen.getByText('2025-09-16')).toBeInTheDocument()
-  })
+jest.mock('@/hooks/useSigningView', () => ({
+  useSigningView: () => ({
+    view: { kind: 'step', step: 'sign' },
+    goToSign: jest.fn(),
+    goToStatus: jest.fn(),
+    navigateToView: jest.fn(),
+    buildUrl: jest.fn(),
+  }),
+}))
 
-  it('shows signing order with current user highlighted', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if signing order section is rendered
-    expect(screen.getByText('Signing Order')).toBeInTheDocument()
-    
-    // Check if signers are displayed
-    expect(screen.getByText('signer1@example.com')).toBeInTheDocument()
-    expect(screen.getByText('signer2@example.com')).toBeInTheDocument()
-    
-    // Check if current user is highlighted
-    expect(screen.getByText('You')).toBeInTheDocument()
-    
-    // Check if signing order numbers are shown (they have periods in the actual render)
-    expect(screen.getByText('1.')).toBeInTheDocument()
-    expect(screen.getByText('2.')).toBeInTheDocument()
-  })
+jest.mock('@/hooks/signing', () => ({
+  useSigningCoordinates: () => ({
+    pageDims: {},
+    setPageContainerRef: () => () => {},
+    measurePageCanvas: jest.fn(),
+    setPageDimensions: jest.fn(),
+    setDocumentNumPages: jest.fn(),
+  }),
+  useSigningEnvelope: () => ({
+    envelope: {
+      id: 'env-1',
+      name: 'Test Contract',
+      status: 'pending',
+      signing_order: [{ signer_id: 'user-1', order: 1 }],
+      fields: [],
+    },
+    loadingEnv: false,
+    envelopeDocuments: [
+      {
+        id: 'doc-1',
+        document: 'doc-1',
+        file_name: 'contract.pdf',
+        document_file_url: '/doc.pdf',
+        signer_document_positions: [],
+      },
+    ],
+    loadingDocs: false,
+    docsError: null,
+    pdfFileByDocumentId: { 'doc-1': { url: '/doc.pdf' } },
+    pdfLoadedByDocId: {},
+    setPdfLoadedByDocId: jest.fn(),
+  }),
+  useUserSignatures: () => ({
+    signatures: [{ id: 'sig-1', image_url: '/sig.png', is_default: true }],
+    isLoading: false,
+  }),
+  useSignActions: () => ({
+    approveAndSign: jest.fn(),
+    signMutation: { isPending: false },
+    saveValuesMutation: { isPending: false },
+    declineMutation: { isPending: false, mutate: jest.fn() },
+    declineMessage: '',
+    setDeclineMessage: jest.fn(),
+    validateRequiredFields: () => [],
+    frozenEnvelopeMessage: null,
+    clearFrozenEnvelopeMessage: jest.fn(),
+  }),
+  useSigningFieldValues: () => ({
+    fieldValues: {},
+    setFieldValues: jest.fn(),
+    setFieldValue: jest.fn(),
+    activeFieldPreview: null,
+    setActiveFieldPreview: jest.fn(),
+    toggleFieldPreview: jest.fn(),
+  }),
+  resolveSignatureId: () => 'sig-1',
+  resolveSignatureImage: () => '/sig.png',
+}))
 
-  it('displays confirmation message with legal text', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if confirmation message is shown
-    expect(screen.getByText('Confirmation Message:')).toBeInTheDocument()
-    expect(screen.getByText(/By confirming, you agree to sign this document electronically/)).toBeInTheDocument()
-  })
+jest.mock('@/components/signing/signing-job-background-watcher', () => ({
+  SigningJobBackgroundWatcher: () => null,
+}))
 
-  it('shows action buttons', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if action buttons are rendered
-    expect(screen.getByText('Confirm & Sign')).toBeInTheDocument()
-    expect(screen.getByText('Decline')).toBeInTheDocument()
-    
-    // Check if action section description is shown
-    expect(screen.getByText('Ready to Sign?')).toBeInTheDocument()
-    expect(screen.getByText('Review the document and confirm your signature')).toBeInTheDocument()
-  })
+jest.mock('@/components/pdf/usePdfPasswordDialog', () => ({
+  usePdfPasswordDialog: () => ({
+    dialog: null,
+    onPassword: jest.fn(),
+    cancelled: false,
+  }),
+}))
 
-  it('handles confirm & sign button click with success alert', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-    
-    render(<FinalSignOffPage />)
-    
-    const confirmButton = screen.getByText('Confirm & Sign')
-    fireEvent.click(confirmButton)
-    
-    // Check console log
-    expect(consoleSpy).toHaveBeenCalledWith('Signer confirmed signing')
-    
-    // Check if success alert appears
-    await waitFor(() => {
-      expect(screen.getByText('You have signed this document')).toBeInTheDocument()
-    })
-    
-    consoleSpy.mockRestore()
-  })
+jest.mock('@/components/signing/signing-document-viewer', () => ({
+  SigningDocumentViewer: () => <div data-testid="signing-document-viewer">PDF Viewer</div>,
+}))
 
-  it('handles decline button click with decline alert', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-    
-    render(<FinalSignOffPage />)
-    
-    const declineButton = screen.getByText('Decline')
-    fireEvent.click(declineButton)
-    
-    // Check console log
-    expect(consoleSpy).toHaveBeenCalledWith('Signer declined')
-    
-    // Check if decline alert appears
-    await waitFor(() => {
-      expect(screen.getByText('You declined to sign')).toBeInTheDocument()
-    })
-    
-    consoleSpy.mockRestore()
-  })
+describe('Sign flow page (dashboard)', () => {
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
+  )
 
-  // Note: Error state test removed due to mock complexity
-  // The error handling functionality is tested in the integration tests
-
-  it('displays proper status badges for signers', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if status badges are shown
-    expect(screen.getAllByText('Pending')).toHaveLength(2)
-  })
-
-  it('shows proper button styling', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if buttons have correct text and are clickable
-    const confirmButton = screen.getByText('Confirm & Sign')
-    const declineButton = screen.getByText('Decline')
-    
-    expect(confirmButton).toBeInTheDocument()
-    expect(declineButton).toBeInTheDocument()
-  })
-
-  it('renders legal compliance messaging correctly', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if legal text is properly formatted (using regex for flexible matching)
-    expect(screen.getByText(/By confirming, you agree to sign this document electronically/)).toBeInTheDocument()
-    expect(screen.getByText(/Your electronic signature will have the same legal effect as a handwritten signature/)).toBeInTheDocument()
-  })
-
-  it('displays document metadata correctly', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if document information is shown
-    expect(screen.getByText('contract.pdf')).toBeInTheDocument()
-    expect(screen.getByText('PDF Document')).toBeInTheDocument()
-  })
-
-  it('shows envelope creation date', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if creation date is displayed
-    expect(screen.getByText('Created:')).toBeInTheDocument()
-    expect(screen.getByText('2025-09-16')).toBeInTheDocument()
-  })
-
-  it('highlights current user in signing order', () => {
-    render(<FinalSignOffPage />)
-    
-    // Check if current user badge is shown
-    expect(screen.getByText('You')).toBeInTheDocument()
+  it('renders signing shell with complete action', async () => {
+    render(<SignFlowPage isDashboard />, { wrapper })
+    expect(await screen.findByText('Incel E-Sign')).toBeInTheDocument()
+    expect(await screen.findByText('Complete Signing')).toBeInTheDocument()
+    expect(screen.getByTestId('signing-document-viewer')).toBeInTheDocument()
   })
 })

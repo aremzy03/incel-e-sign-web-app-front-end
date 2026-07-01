@@ -17,20 +17,30 @@ const useEnvelopes = jest.fn()
 const useEnvelope = jest.fn()
 const useCreateEnvelope = jest.fn()
 const useSendEnvelope = jest.fn()
+const useEditEnvelope = jest.fn()
 const useDocuments = jest.fn()
 const useRejectEnvelope = jest.fn()
 const useUploadDocument = jest.fn()
 const useDeleteEnvelope = jest.fn()
 const useSelfSignEnvelope = jest.fn()
 
+const useEnvelopeDocuments = jest.fn()
+
 jest.mock('@/hooks/useEnvelopes', () => ({
   useEnvelopes: (...args: any[]) => useEnvelopes(...args),
   useEnvelope: (...args: any[]) => useEnvelope(...args),
+  useEnvelopeDocuments: (...args: any[]) => useEnvelopeDocuments(...args),
   useCreateEnvelope: (...args: any[]) => useCreateEnvelope(...args),
   useSendEnvelope: (...args: any[]) => useSendEnvelope(...args),
+  useEditEnvelope: (...args: any[]) => useEditEnvelope(...args),
   useRejectEnvelope: (...args: any[]) => useRejectEnvelope(...args),
   useDeleteEnvelope: (...args: any[]) => useDeleteEnvelope(...args),
   useSelfSignEnvelope: (...args: any[]) => useSelfSignEnvelope(...args),
+}))
+
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: () => ({ isReady: true, accessToken: 'token' }),
+  shouldRetryAuthQuery: () => false,
 }))
 
 jest.mock('@/hooks/useDocuments', () => ({
@@ -56,6 +66,9 @@ jest.mock('next-auth/react', () => ({
 
 jest.mock('@/lib/api/envelopes', () => ({
   getEnvelopeDocuments: jest.fn().mockResolvedValue([]),
+  isSelfSignEnvelope: (env: { status?: string; is_self_sign?: boolean }) =>
+    Boolean(env.is_self_sign) ||
+    String(env.status ?? '').toLowerCase().replace(/_/g, '-').includes('self-sign'),
 }))
 
 describe('Envelopes Pages', () => {
@@ -79,9 +92,15 @@ describe('Envelopes Pages', () => {
           id: 'env-1',
           name: 'Test Envelope',
           status: 'draft',
+          creator: { id: 'u1', email: 'a@test.com', full_name: 'A' },
+          creator_name: 'A',
+          signing_order: [],
+          signer_count: 0,
+          current_signer: null,
           recipients: [],
           documents: [],
-          creator: { id: 'u1', email: 'a@test.com', full_name: 'A' },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }],
       },
       isLoading: false,
@@ -103,9 +122,14 @@ describe('Envelopes Pages', () => {
     })
     useCreateEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useSendEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
+    useEditEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useRejectEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useDeleteEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useSelfSignEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
+    useEnvelopeDocuments.mockReturnValue({
+      data: [{ id: 'doc-1', document: 'doc-1', file_name: 'doc.pdf' }],
+      isLoading: false,
+    })
     useDocuments.mockReturnValue({ data: { count: 0, next: null, previous: null, results: [] }, isLoading: false, error: null })
     useUploadDocument.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
   })
@@ -120,26 +144,32 @@ describe('Envelopes Pages', () => {
     )
   })
 
-  it('calls useEnvelopes with isSelfSign=true for Signed by me tab', () => {
+  it('calls useEnvelopes with isSelfSign=true for Self-Signed filter', () => {
     render(<EnvelopesPage />, { wrapper })
-    fireEvent.click(screen.getByRole('button', { name: 'Signed by me' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Self-Signed' }))
     expect(useEnvelopes).toHaveBeenCalledWith(1, 10, undefined, undefined, true)
   })
 
-  it('calls useEnvelopes with isSelfSign=false for Multi-party tab', () => {
+  it('calls useEnvelopes with isSelfSign=false for Drafts filter uses status only', () => {
     render(<EnvelopesPage />, { wrapper })
-    fireEvent.click(screen.getByRole('button', { name: 'Multi-party' }))
-    expect(useEnvelopes).toHaveBeenCalledWith(1, 10, undefined, undefined, false)
+    fireEvent.click(screen.getByRole('button', { name: 'Drafts' }))
+    expect(useEnvelopes).toHaveBeenCalledWith(1, 10, 'draft', undefined, undefined)
   })
 
   it('renders create envelope page header', () => {
+    useDocuments.mockReturnValue({
+      data: { count: 0, next: null, previous: null, results: [] },
+      isLoading: false,
+      error: null,
+    })
     render(<CreateEnvelopePage />, { wrapper })
-    expect(screen.getByText('Prepare envelope')).toBeInTheDocument()
+    expect(screen.getByText('Create Envelope')).toBeInTheDocument()
+    expect(screen.getByText('Select from Library')).toBeInTheDocument()
   })
 
   it('renders envelope detail page header', () => {
     render(<EnvelopeDetailPage />, { wrapper })
-    expect(screen.getByText(/Envelope:/)).toBeInTheDocument()
+    expect(screen.getByText('Test Envelope')).toBeInTheDocument()
   })
 
   it('hides Send and Edit actions for self-signed envelopes', () => {
@@ -147,7 +177,7 @@ describe('Envelopes Pages', () => {
       data: {
         id: 'env-self',
         name: 'Self Signed Doc',
-        status: 'completed',
+        status: 'self-sign',
         is_self_sign: true,
         recipients: [{ id: 'u1', order: 1, status: 'completed' }],
         documents: [{ id: 'doc-1', file_name: 'doc.pdf' }],

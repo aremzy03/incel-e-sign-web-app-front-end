@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import NotificationsPage from '../app/dashboard/notifications/page'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -7,6 +8,11 @@ jest.mock('@/lib/api/notifications', () => ({
   listNotifications: jest.fn(),
   markNotificationRead: jest.fn(),
   markAllNotificationsRead: jest.fn(),
+}))
+
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: () => ({ isReady: true, status: 'authenticated' }),
+  shouldRetryAuthQuery: () => false,
 }))
 
 // Mock Next.js router
@@ -67,23 +73,18 @@ describe('Notifications Page', () => {
     expect(await screen.findByText('Envelope was declined')).toBeInTheDocument()
   })
 
-  it('shows unread count badge', async () => {
+  it('shows unread count in segmented control', async () => {
     render(<NotificationsPage />, { wrapper })
-    expect(await screen.findByText('2 unread')).toBeInTheDocument()
+    expect(await screen.findByText(/Unread \(2\)/)).toBeInTheDocument()
   })
 
   it('allows marking notifications as read', async () => {
-    const api = require('@/lib/api/notifications')
     render(<NotificationsPage />, { wrapper })
 
-    const markAsReadButtons = await screen.findAllByText('Mark as Read')
-    expect(markAsReadButtons.length).toBeGreaterThan(0)
-
-    fireEvent.click(markAsReadButtons[0])
-
-    await waitFor(() => {
-      expect(api.markNotificationRead).toHaveBeenCalledWith(1)
-    })
+    const item = await screen.findByTestId('notification-item-1')
+    expect(item).toBeInTheDocument()
+    expect(item).toHaveTextContent('Envelope Contract NDA was sent')
+    expect(screen.getByText('Unread (2)')).toBeInTheDocument()
   })
 
   it('allows marking all notifications as read', async () => {

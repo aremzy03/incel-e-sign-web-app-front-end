@@ -38,6 +38,7 @@ const mockDocuments = [
   {
     id: '1',
     file_name: 'test-document.pdf',
+    file_url: 'https://example.com/1.pdf',
     file_size: 1024000,
     file_type: 'application/pdf',
     status: 'draft',
@@ -53,9 +54,10 @@ const mockDocuments = [
   {
     id: '2',
     file_name: 'another-document.pdf',
+    file_url: 'https://example.com/2.pdf',
     file_size: 2048000,
     file_type: 'application/pdf',
-    status: 'pending',
+    status: 'sent',
     owner: {
       id: '2',
       email: 'other@example.com',
@@ -104,9 +106,13 @@ describe('Documents Integration Tests', () => {
   })
 
   describe('Documents List Page', () => {
-    it('displays documents correctly', async () => {
+    const mockListResponse = (docs: typeof mockDocuments) => {
       const mockApi = getMockApi()
-      mockApi.get.mockResolvedValueOnce({ data: mockDocuments })
+      mockApi.get.mockResolvedValue({ data: docs })
+    }
+
+    it('displays documents correctly', async () => {
+      mockListResponse(mockDocuments)
 
       render(
         <TestWrapper>
@@ -116,14 +122,13 @@ describe('Documents Integration Tests', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Documents')).toBeInTheDocument()
-        expect(screen.getByText('test-document.pdf')).toBeInTheDocument()
-        expect(screen.getByText('another-document.pdf')).toBeInTheDocument()
+        expect(screen.getAllByText('test-document.pdf').length).toBeGreaterThan(0)
+        expect(screen.getAllByText('another-document.pdf').length).toBeGreaterThan(0)
       })
     })
 
     it('shows empty state when no documents', async () => {
-      const mockApi = getMockApi()
-      mockApi.get.mockResolvedValueOnce({ data: [] })
+      mockListResponse([])
 
       render(
         <TestWrapper>
@@ -141,7 +146,7 @@ describe('Documents Integration Tests', () => {
       const user = userEvent.setup()
       const mockApi = getMockApi()
       const mockDelete = mockApi.delete as jest.Mock
-      mockApi.get.mockResolvedValueOnce({ data: [mockDocuments[0]] })
+      mockApi.get.mockResolvedValue({ data: [mockDocuments[0]] })
       mockDelete.mockResolvedValueOnce({ data: {} })
 
       render(
@@ -151,13 +156,14 @@ describe('Documents Integration Tests', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('test-document.pdf')).toBeInTheDocument()
+        expect(screen.getAllByText('test-document.pdf').length).toBeGreaterThan(0)
       })
 
-      // Confirm browser dialog and click delete button
       jest.spyOn(window, 'confirm').mockReturnValue(true)
-      const deleteButton = screen.getByRole('button', { name: /delete document/i })
-      await user.click(deleteButton)
+      const rowActionButtons = screen.getAllByRole('button', { name: 'Row actions' })
+      await user.click(rowActionButtons[0])
+      const deleteItem = await screen.findByText('Delete')
+      await user.click(deleteItem)
 
       await waitFor(() => {
         expect(mockDelete).toHaveBeenCalledWith('/documents/1/delete/')
@@ -211,13 +217,17 @@ describe('Documents Integration Tests', () => {
       const mockPost = mockApi.post as jest.Mock
       mockPost.mockResolvedValue({
         data: {
-          id: '1',
-          file_name: 'test.pdf',
-          file_size: 1024000,
-          file_type: 'application/pdf',
-          status: 'draft',
-          created_at: '2025-01-01T00:00:00Z',
-          download_url: 'https://example.com/download/1',
+          status: 'success',
+          message: 'ok',
+          data: {
+            id: '1',
+            file_name: 'test.pdf',
+            file_size: 1024000,
+            file_url: '/test.pdf',
+            status: 'draft',
+            created_at: '2025-01-01T00:00:00Z',
+            updated_at: '2025-01-01T00:00:00Z',
+          },
         },
       })
 
@@ -227,21 +237,17 @@ describe('Documents Integration Tests', () => {
         </TestWrapper>
       )
 
-      // Create a valid PDF file
       const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' })
-      
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
       await user.upload(input, file)
-
-      // Click upload button
-      const uploadButton = screen.getByRole('button', { name: /upload document/i })
-      await user.click(uploadButton)
 
       await waitFor(() => {
         expect(mockPost).toHaveBeenCalled()
         const callUrl = mockPost.mock.calls[0][0]
         expect(callUrl).toMatch(/\/documents\/upload\/?$/)
       })
+
+      expect(await screen.findByText(/ready to sign/i)).toBeInTheDocument()
     })
   })
 

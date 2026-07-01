@@ -17,10 +17,10 @@ export function Navigation() {
         <IncelLogo variant="icon" size={40} />
       </motion.div>
       <div className="flex flex-col">
-        <span className="text-xl font-bold font-heading text-navy-900 group-hover:text-blue-600 transition-colors">
+        <span className="text-xl font-bold font-heading text-primary group-hover:text-secondary transition-colors">
           INCEL E-Sign
         </span>
-        <span className="text-xs text-gray-500 font-medium">
+        <span className="text-xs text-muted font-medium">
           Legal Authority
         </span>
       </div>
@@ -29,7 +29,7 @@ export function Navigation() {
 
   return (
     <motion.nav 
-      className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50"
+      className="bg-white shadow-sm border-b border-border sticky top-0 z-50"
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}

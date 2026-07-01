@@ -67,11 +67,11 @@ export function SelfSignSidebar({
   }, 0)
 
   return (
-    <div className="w-full bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden">
+    <div className="w-full bg-white border-r border-border flex flex-col h-full overflow-hidden">
       <div className="flex-1 overflow-y-auto space-y-3 p-2.5 w-full min-w-0">
-        <Card className="w-full min-w-0 shadow-none border border-gray-200">
+        <Card className="w-full min-w-0 shadow-none border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-gray-900">Document details</CardTitle>
+            <CardTitle className="text-xs font-semibold text-on-surface">Document details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1">
@@ -102,9 +102,9 @@ export function SelfSignSidebar({
           </CardContent>
         </Card>
 
-        <Card className="w-full min-w-0 shadow-none border border-gray-200">
+        <Card className="w-full min-w-0 shadow-none border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-gray-900 flex items-center gap-2">
+            <CardTitle className="text-xs font-semibold text-on-surface flex items-center gap-2">
               <DocumentUploadZone
                 uploadedDocuments={uploadedDocuments}
                 onDocumentAdd={onDocumentAdd}
@@ -117,20 +117,20 @@ export function SelfSignSidebar({
           </CardHeader>
         </Card>
 
-        <Card className="w-full min-w-0 shadow-none border border-gray-200">
+        <Card className="w-full min-w-0 shadow-none border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-gray-900 flex items-center gap-2">
+            <CardTitle className="text-xs font-semibold text-on-surface flex items-center gap-2">
               <PenTool className="h-4 w-4" />
               Your signature
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {loadingSignatures ? (
-              <p className="text-xs text-gray-500">Loading signatures…</p>
+              <p className="text-xs text-muted">Loading signatures…</p>
             ) : signatures.length === 0 ? (
               <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2 space-y-1">
                 <p>No saved signatures. The server will use your default signature if set.</p>
-                <Link href="/dashboard/signatures" className="text-blue-600 hover:underline">
+                <Link href="/dashboard/signatures" className="text-secondary hover:underline">
                   Manage signatures
                 </Link>
               </div>
@@ -144,8 +144,8 @@ export function SelfSignSidebar({
                       type="button"
                       onClick={() => onSignatureSelect(sig.id)}
                       className={cn(
-                        'border rounded-md p-2 bg-white hover:border-blue-400 transition-colors',
-                        isSelected && 'border-blue-600 ring-1 ring-blue-600'
+                        'border rounded-md p-2 bg-white hover:border-secondary/50 transition-colors',
+                        isSelected && 'border-secondary ring-1 ring-secondary'
                       )}
                     >
                       <img
@@ -153,7 +153,7 @@ export function SelfSignSidebar({
                         alt={sig.name || 'Signature'}
                         className="w-full h-12 object-contain"
                       />
-                      <p className="text-[10px] text-gray-600 mt-1 truncate">
+                      <p className="text-[10px] text-muted mt-1 truncate">
                         {sig.name || 'Signature'}
                         {sig.is_default ? ' (default)' : ''}
                       </p>
@@ -165,9 +165,9 @@ export function SelfSignSidebar({
           </CardContent>
         </Card>
 
-        <Card className="w-full min-w-0 shadow-none border border-gray-200">
+        <Card className="w-full min-w-0 shadow-none border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-gray-900 flex items-center gap-2">
+            <CardTitle className="text-xs font-semibold text-on-surface flex items-center gap-2">
               <Palette className="h-4 w-4" />
               Field types
               {signatureFieldCount > 0 && (
@@ -179,7 +179,7 @@ export function SelfSignSidebar({
           </CardHeader>
           <CardContent className="pt-2">
             <div className="space-y-2">
-              <p className="text-[11px] text-gray-600 mb-2">
+              <p className="text-[11px] text-muted mb-2">
                 Drag fields onto your document. Fields are assigned to you automatically.
               </p>
               {FIELD_TYPES.map((fieldType) => (
@@ -190,8 +190,8 @@ export function SelfSignSidebar({
                 />
               ))}
             </div>
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-800">
+            <div className="mt-4 p-3 bg-info-light rounded-lg">
+              <p className="text-xs text-secondary">
                 Place at least one signature field, fill required field values, then sign and complete.
               </p>
             </div>
@@ -199,7 +199,7 @@ export function SelfSignSidebar({
         </Card>
       </div>
 
-      <div className="p-2.5 border-t border-gray-200 space-y-2 bg-white">
+      <div className="p-2.5 border-t border-border space-y-2 bg-white">
         <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
           <Switch
             checked={pdfPasswordProtectionEnabled}

@@ -9,44 +9,78 @@ jest.mock('next-auth/react', () => ({
 }))
 
 const mockSession = {
-  user: { id: 'user-1', email: 'test@example.com', name: 'Test User' },
+  user: { id: 'user-1', email: 'test@example.com', full_name: 'Test User' },
   accessToken: 'mock-access-token',
 }
 
 jest.mock('next/navigation', () => ({
   useParams: () => ({ id: '123' }),
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   useSearchParams: jest.fn(() => ({
-    get: jest.fn(() => null),
-    has: jest.fn(() => false),
+    get: jest.fn((key: string) => (key === 'step' ? 'sign' : null)),
   })),
 }))
 
-jest.mock('react-pdf', () => ({
-  Document: ({ children }: any) => <div data-testid="pdf-document">{children}</div>,
-  Page: ({ onLoadSuccess }: any) => {
-    setTimeout(() => onLoadSuccess?.({ view: [0, 0, 612, 792] }), 0)
-    return <div data-testid="pdf-page" style={{ width: 612, height: 792 }} />
-  },
-  pdfjs: { version: '5.3.93', GlobalWorkerOptions: { workerSrc: '' } },
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: () => ({ isReady: true }),
+  shouldRetryAuthQuery: false,
 }))
 
-jest.mock('@/lib/api/envelopes', () => ({
-  getEnvelopeDetail: jest.fn().mockResolvedValue({ id: '123', status: 'pending', name: 'Test Envelope', signing_order: [], documents: [{ id: 'doc-1', document_file_url: '/doc.pdf', signer_document_positions: [] }] }),
-  getEnvelopePdfUrl: jest.fn().mockResolvedValue('/doc.pdf'),
-  getEnvelopeDocuments: jest.fn().mockResolvedValue([{ id: 'doc-1', document_file_url: '/doc.pdf' }]),
+jest.mock('@/hooks/useProfile', () => ({
+  useProfile: () => ({ data: null }),
 }))
 
-jest.mock('@/lib/api/signatures', () => ({
-  listUserSignatures: jest.fn().mockResolvedValue([
-    { id: 1, name: 'Default', image_url: '/sig.png', uploaded_at: new Date().toISOString() },
-  ]),
-  signEnvelopeWithReusableSignature: jest.fn().mockResolvedValue({ ok: true }),
-  signEnvelopeWithInline: jest.fn().mockResolvedValue({ ok: true }),
-  declineEnvelope: jest.fn().mockResolvedValue({ ok: true }),
+jest.mock('@/hooks/useSigningView', () => ({
+  useSigningView: () => ({
+    view: { kind: 'step', step: 'sign' },
+    goToSign: jest.fn(),
+    goToStatus: jest.fn(),
+  }),
 }))
 
-describe('Sign Page', () => {
+jest.mock('@/hooks/signing/useSigningEnvelope', () => ({
+  useSigningEnvelope: () => ({
+    envelope: {
+      id: '123',
+      status: 'pending',
+      name: 'Test Envelope',
+      signing_order: [{ signer_id: 'user-1', order: 1 }],
+      fields: [],
+    },
+    loadingEnv: false,
+    envelopeDocuments: [
+      {
+        id: 'doc-1',
+        document: 'doc-1',
+        file_name: 'test.pdf',
+        signer_document_positions: [],
+      },
+    ],
+    loadingDocs: false,
+    docsError: null,
+    pdfFileByDocumentId: { 'doc-1': { url: '/doc.pdf' } },
+    pdfLoadedByDocId: {},
+    setPdfLoadedByDocId: jest.fn(),
+  }),
+}))
+
+jest.mock('@/hooks/signing/useUserSignatures', () => ({
+  useUserSignatures: () => ({
+    signatures: [{ id: '1', image_url: '/sig.png', is_default: true }],
+    isLoading: false,
+  }),
+  resolveSignatureId: () => '1',
+  resolveSignatureImage: () => '/sig.png',
+}))
+
+jest.mock('@/components/signing/sign-flow-page', () => ({
+  __esModule: true,
+  default: ({ isDashboard }: { isDashboard: boolean }) => (
+    <div data-testid="sign-flow">{isDashboard ? 'dashboard-sign' : 'public-sign'}</div>
+  ),
+}))
+
+describe('Sign Page route', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => {
     const client = new QueryClient({
       defaultOptions: {
@@ -64,15 +98,8 @@ describe('Sign Page', () => {
     })
   })
 
-  it('renders signature actions', async () => {
-    const axios = require('axios')
-    const mockApi = (axios.create as jest.Mock).mock.results[0]?.value || (axios.create as jest.Mock)()
-    mockApi.get.mockResolvedValueOnce({
-      data: { id: '123', status: 'pending', name: 'Test Envelope', signing_order: [] },
-    })
-
+  it('renders dashboard sign flow', () => {
     render(<EnvelopeSignPage />, { wrapper })
-    expect(await screen.findByText('Select Your Signature')).toBeInTheDocument()
-    expect(await screen.findByText('Decline to Sign')).toBeInTheDocument()
+    expect(screen.getByTestId('sign-flow')).toHaveTextContent('dashboard-sign')
   })
 })

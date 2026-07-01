@@ -50,6 +50,23 @@ export interface GetDocumentsParams {
   search?: string
 }
 
+export function normalizeDocument(raw: unknown): Document {
+  const payload = raw as Record<string, unknown> | null | undefined
+  const doc = (payload?.data as Record<string, unknown> | undefined) ?? payload ?? {}
+  const id = String(doc.id ?? doc.document_id ?? '')
+  return {
+    id,
+    file_name: String(doc.file_name ?? doc.name ?? 'Document'),
+    file_url: String(doc.file_url ?? doc.current_file_url ?? ''),
+    current_file_url: typeof doc.current_file_url === 'string' ? doc.current_file_url : undefined,
+    signed_file_url: typeof doc.signed_file_url === 'string' ? doc.signed_file_url : undefined,
+    file_size: typeof doc.file_size === 'number' ? doc.file_size : 0,
+    status: (doc.status as Document['status']) || 'draft',
+    created_at: String(doc.created_at ?? ''),
+    updated_at: String(doc.updated_at ?? ''),
+  }
+}
+
 function normalizeDocumentsList(payload: unknown): DocumentsListResponse {
   const unwrapped: any = (payload as any)?.data ?? payload
 
@@ -168,17 +185,7 @@ export const getDocument = async (id: string): Promise<Document> => {
     const payload = response.data;
     const doc: any = (payload && payload.data) || payload;
     console.log('Document fetched successfully:', doc);
-    return {
-      id: doc.id,
-      file_name: doc.file_name,
-      file_url: doc.file_url || '',
-      current_file_url: doc.current_file_url || undefined,
-      signed_file_url: doc.signed_file_url || undefined,
-      file_size: doc.file_size ?? 0,
-      status: doc.status || 'draft',
-      created_at: doc.created_at || '',
-      updated_at: doc.updated_at || '',
-    };
+    return normalizeDocument(doc);
   } catch (error: any) {
     console.error('Error fetching document:', id, {
       status: error.response?.status,

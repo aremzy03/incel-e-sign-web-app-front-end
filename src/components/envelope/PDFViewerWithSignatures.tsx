@@ -255,7 +255,7 @@ export function PDFViewerWithSignatures({
   return (
     <div className="w-full space-y-4">
       {/* Controls */}
-      <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+      <div className="flex items-center justify-between bg-surface p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleZoomOut}>
             <ZoomOut className="h-4 w-4" />
@@ -295,8 +295,8 @@ export function PDFViewerWithSignatures({
       </div>
 
       {/* Instructions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="text-sm text-blue-800">
+      <div className="bg-info-light border border-info-light rounded-lg p-4">
+        <div className="text-sm text-secondary">
           <strong>Instructions:</strong> Select a signer from the dropdown above, then click anywhere on the document to place their signature field. 
           You can drag and resize signature fields after placing them.
         </div>
@@ -305,10 +305,10 @@ export function PDFViewerWithSignatures({
       {/* PDF Viewer */}
       <Card className="w-full">
         <CardContent className="p-0">
-          <div className="relative overflow-auto bg-gray-100" style={{ maxHeight: '80vh' }}>
+          <div className="relative overflow-auto bg-surface-container-low" style={{ maxHeight: '80vh' }}>
             {isLoading && (
               <div className="flex items-center justify-center h-96">
-                <div className="text-gray-500">Loading PDF...</div>
+                <div className="text-muted">Loading PDF...</div>
               </div>
             )}
             

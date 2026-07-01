@@ -233,6 +233,25 @@ jest.mock('@radix-ui/react-select', () => {
   }
 })
 
+// Mock useAuthReady to align with session state in tests
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: jest.fn(() => {
+    const { useSession } = require('next-auth/react')
+    const { data: session, status } = useSession()
+    const isReady =
+      status === 'authenticated' &&
+      !!session?.accessToken &&
+      session.error !== 'RefreshAccessTokenError'
+    return {
+      isReady,
+      status,
+      accessToken: session?.accessToken,
+      session,
+    }
+  }),
+  shouldRetryAuthQuery: jest.fn((failureCount: number) => failureCount < 1),
+}))
+
 // Mock environment variables
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000/api'
 process.env.NEXTAUTH_SECRET = 'test-secret'

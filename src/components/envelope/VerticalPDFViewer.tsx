@@ -1,32 +1,29 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { Document as PDFDocument, Page, pdfjs } from 'react-pdf'
+import { Document as PDFDocument, Page } from 'react-pdf'
+import '@/lib/pdf-worker'
 import { useDroppable } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getApiBaseUrl } from '@/lib/env'
 import { cn } from '@/lib/utils'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
 import { Document as DocumentType } from '@/lib/api/documents'
+import { getCachedAccessToken } from '@/lib/auth-session-cache'
 import { useSession } from 'next-auth/react'
 import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
 import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 import { MaterialIcon } from '@/components/ui/material-icon'
-
-// Configure PDF.js worker
-if (typeof window !== 'undefined') {
-  const origin = window.location.origin
-  try {
-    pdfjs.GlobalWorkerOptions.workerSrc = `${origin}/pdf.worker.min.mjs`
-  } catch {
-    pdfjs.GlobalWorkerOptions.workerSrc = `${origin}/pdf.worker.min.js`
-  }
-} else {
-  pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
-}
+import {
+  documentUrlNeedsAuth,
+  getDirectDocumentFileUrl,
+  getDocumentFileUrlForViewer,
+  getDocumentViewerRevisionKey,
+  getPdfJsDocumentOptions,
+  shouldFallbackToPreviewApi,
+} from '@/lib/url'
 
 interface VerticalPDFViewerProps {
   documents: DocumentType[]
@@ -88,39 +85,74 @@ export function VerticalPDFViewer({
 }: VerticalPDFViewerProps) {
   const { data: session } = useSession()
   const password = usePdfPasswordDialog()
+  const resetPasswordDialog = password.reset
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [documentPages, setDocumentPages] = useState<Record<string, number>>({})
   const [pageDimensions, setPageDimensions] = useState<Record<string, { width: number; height: number }>>({})
   const [actualPDFDimensions, setActualPDFDimensions] = useState<Record<string, { width: number; height: number }>>({})
+  const [previewFallbackDocIds, setPreviewFallbackDocIds] = useState<Set<string>>(() => new Set())
   const containerRef = useRef<HTMLDivElement>(null)
   const scale = (editorLayout ? 1.2 : 1) * viewerScale
 
-  const accessToken = session?.accessToken as string | undefined
-
-  const pdfOptions = useMemo(() => {
-    const opts: { password?: string; httpHeaders?: Record<string, string> } = {}
-    if (pdfPassword) opts.password = pdfPassword
-    if (accessToken) opts.httpHeaders = { Authorization: `Bearer ${accessToken}` }
-    return Object.keys(opts).length > 0 ? opts : undefined
-  }, [pdfPassword, accessToken])
-
-  useEffect(() => {
-    // If the caller supplies a password (e.g. completed envelope lock), we should not show prompts.
-    // When documents change, reset any previous cancel state.
-    password.reset()
-  }, [documents.length])
+  const accessToken =
+    (session?.accessToken as string | undefined) ?? getCachedAccessToken() ?? undefined
 
   const validDocuments = useMemo(
     () => documents.filter((doc) => Boolean(doc?.id)),
     [documents],
   )
 
+  const documentRevision = useMemo(
+    () => validDocuments.map((doc) => getDocumentViewerRevisionKey(doc)).join('|'),
+    [validDocuments],
+  )
+
+  const pdfOptionsCacheRef = useRef(
+    new Map<string, { signature: string; value: ReturnType<typeof getPdfJsDocumentOptions> }>(),
+  )
+
+  const pdfOptionsByDocumentId = useMemo(() => {
+    const options = new Map<string, ReturnType<typeof getPdfJsDocumentOptions>>()
+    validDocuments.forEach((doc) => {
+      const usesPreviewFallback = previewFallbackDocIds.has(doc.id)
+      const documentUrl = getDocumentFileUrlForViewer(doc, {
+        usePreviewApi: usesPreviewFallback,
+      })
+      const optionArgs = { password: pdfPassword, accessToken }
+      const cacheKey = `${doc.id}:${usesPreviewFallback ? 'preview' : 'direct'}`
+      const value = getPdfJsDocumentOptions(documentUrl, optionArgs)
+
+      const signature = JSON.stringify(value ?? null)
+      const cached = pdfOptionsCacheRef.current.get(cacheKey)
+      if (cached?.signature === signature) {
+        options.set(cacheKey, cached.value)
+      } else {
+        pdfOptionsCacheRef.current.set(cacheKey, { signature, value })
+        options.set(cacheKey, value)
+      }
+    })
+    return options
+  }, [validDocuments, previewFallbackDocIds, pdfPassword, accessToken])
+
+  useEffect(() => {
+    // If the caller supplies a password (e.g. completed envelope lock), we should not show prompts.
+    // When documents change, reset any previous cancel state and PDF render cache.
+    resetPasswordDialog()
+    setIsLoading(true)
+    setError(null)
+    setDocumentPages({})
+    setPageDimensions({})
+    setActualPDFDimensions({})
+    setPreviewFallbackDocIds(new Set())
+  }, [documentRevision, resetPasswordDialog])
+
   // Calculate all pages to render
   const allPages: DocumentPageInfo[] = useMemo(
     () =>
       validDocuments.flatMap((doc) => {
-        const totalPages = documentPages[doc.id] || 1
+        const totalPages = documentPages[doc.id]
+        if (!totalPages) return []
         return Array.from({ length: totalPages }, (_, i) => ({
           documentId: doc.id,
           pageNumber: i + 1,
@@ -207,7 +239,8 @@ export function VerticalPDFViewer({
       // Small delay to ensure new documents are rendered
       const timer = setTimeout(() => {
         documents.forEach(doc => {
-          const totalPages = documentPages[doc.id] || 1
+          const totalPages = documentPages[doc.id]
+          if (!totalPages) return
           for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
             getActualPDFDimensions(doc.id, pageNumber)
           }
@@ -223,7 +256,8 @@ export function VerticalPDFViewer({
     if (documents.length > 0) {
       const timer = setTimeout(() => {
         documents.forEach(doc => {
-          const totalPages = documentPages[doc.id] || 1
+          const totalPages = documentPages[doc.id]
+          if (!totalPages) return
           for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
             getActualPDFDimensions(doc.id, pageNumber)
           }
@@ -323,141 +357,186 @@ export function VerticalPDFViewer({
           </div>
         )}
         <div className="flex flex-col items-center gap-6">
-        {allPages.map((pageInfo) => {
-          const document = validDocuments.find((d) => d.id === pageInfo.documentId)
-          if (!document || !pageInfo.documentId) return null
+        {validDocuments.map((document) => {
+          const usesPreviewFallback = previewFallbackDocIds.has(document.id)
+          const directUrl = getDirectDocumentFileUrl(document)
+          const documentUrl = getDocumentFileUrlForViewer(document, {
+            usePreviewApi: usesPreviewFallback,
+          })
+          const pdfOptionsKey = usesPreviewFallback ? 'preview' : 'direct'
+          const pagePdfOptions = pdfOptionsByDocumentId.get(`${document.id}:${pdfOptionsKey}`)
+          const needsAuth = documentUrlNeedsAuth(documentUrl)
+          const canLoadPdf = Boolean(documentUrl) && (!needsAuth || accessToken)
+          const numPages = documentPages[document.id]
+          const docLoadKey = `${document.id}:${pdfOptionsKey}:${document.updated_at ?? ''}`
 
-          // Always go through authenticated backend preview endpoint so we avoid direct S3 CORS issues
-          const apiBase = getApiBaseUrl().replace(/\/$/, '')
-          const documentUrl = `${apiBase}/documents/${pageInfo.documentId}/preview/`
-          const pageKey = `${pageInfo.documentId}-${pageInfo.pageNumber}`
-          const currentPageDimensions = pageDimensions[pageKey]
-          const pageWidth = actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 595 * scale
-          const pageHeight = actualPDFDimensions[pageKey]?.height || currentPageDimensions?.height || 842 * scale
-          const fieldsForPage = Object.values(fieldPositions[pageInfo.documentId] || {})
-            .filter(field => Number(field.page) === pageInfo.pageNumber)
+          const handleDocumentLoadError = (loadError: Error) => {
+            if (shouldFallbackToPreviewApi(directUrl, usesPreviewFallback, document.id)) {
+              setPreviewFallbackDocIds((prev) => new Set(prev).add(document.id))
+              setError(null)
+              setIsLoading(true)
+              return
+            }
+            console.error('PDF load error:', loadError)
+            setError(`Failed to load PDF: ${loadError.message}`)
+            setIsLoading(false)
+          }
+
+          if (!canLoadPdf) {
+            if (needsAuth && !accessToken) {
+              return (
+                <div key={docLoadKey} className="flex w-full flex-col items-center gap-6 py-12">
+                  <PdfLoadingIndicator label="Preparing secure preview…" />
+                </div>
+              )
+            }
+            return null
+          }
 
           return (
-            <div
-              key={pageKey}
-              data-scroll-page-key={pageKey}
-              className={cn(
-                'relative w-full scroll-mt-4',
-                editorLayout ? 'max-w-[850px]' : 'max-w-4xl',
-              )}
+            <PDFDocument
+              key={docLoadKey}
+              file={documentUrl}
+              onLoadSuccess={(pdf) => onDocumentLoadSuccess(document.id, pdf.numPages)}
+              onLoadError={handleDocumentLoadError}
+              onPassword={password.onPassword as any}
+              loading=""
+              {...(pagePdfOptions ? { options: pagePdfOptions } : {})}
+              className="flex w-full flex-col items-center gap-6"
             >
-              {/* Document Header */}
-              {pageInfo.pageNumber === 1 && !editorLayout && (
-                <Card className="mb-3 shadow-none border border-border bg-white/90">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-on-surface">
-                      {pageInfo.documentName}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              )}
+              {numPages != null &&
+                Array.from({ length: numPages }, (_, index) => {
+                  const pageNumber = index + 1
+                  const pageInfo: DocumentPageInfo = {
+                    documentId: document.id,
+                    pageNumber,
+                    totalPages: numPages,
+                    documentName: document.file_name,
+                  }
+                const pageKey = `${pageInfo.documentId}-${pageInfo.pageNumber}`
+                const currentPageDimensions = pageDimensions[pageKey]
+                const pageWidth =
+                  actualPDFDimensions[pageKey]?.width ||
+                  currentPageDimensions?.width ||
+                  595 * scale
+                const pageHeight =
+                  actualPDFDimensions[pageKey]?.height ||
+                  currentPageDimensions?.height ||
+                  842 * scale
+                const fieldsForPage = Object.values(fieldPositions[pageInfo.documentId] || {}).filter(
+                  (field) => Number(field.page) === pageInfo.pageNumber,
+                )
 
-              {/* Page Container */}
-              <div className="relative inline-flex w-full justify-center z-0">
-                <div
-                  className={cn(
-                    editorLayout && readOnly && 'pdf-page-frame-readonly',
-                    editorLayout && !readOnly && 'pdf-page-frame',
-                    !editorLayout && 'relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-lg border border-border bg-white shadow',
-                  )}
-                >
-                  {readOnly && editorLayout && (
-                    <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center overflow-hidden opacity-[0.03]">
-                      <div className="rotate-[-45deg] scale-150 whitespace-nowrap text-[64px] font-black uppercase text-primary">
-                        Preview Only
-                      </div>
-                    </div>
-                  )}
-                  <PageShell
-                    readOnly={readOnly}
-                    documentId={pageInfo.documentId}
-                    pageNumber={pageInfo.pageNumber}
-                    onFieldDrop={onFieldDrop}
-                    width={pageWidth}
-                    height={pageHeight}
+                return (
+                  <div
+                    key={pageKey}
+                    data-scroll-page-key={pageKey}
+                    className={cn(
+                      'relative w-full scroll-mt-4',
+                      editorLayout ? 'max-w-[850px]' : 'max-w-4xl',
+                    )}
                   >
-                    <div
-                      className="relative"
-                      style={{ width: pageWidth, height: pageHeight }}
-                    >
-                      {/* PDF Content (fills wrapper) */}
-                      <div className="absolute inset-0">
-                        {!error && !password.cancelled && (
-                          <PDFDocument
-                            file={documentUrl}
-                            onLoadSuccess={(pdf) => onDocumentLoadSuccess(pageInfo.documentId, pdf.numPages)}
-                            onLoadError={(error) => {
-                              console.error('PDF load error:', error)
-                              setError(`Failed to load PDF: ${error.message}`)
-                            }}
-                            onPassword={password.onPassword as any}
-                            loading=""
-                            options={pdfOptions}
-                          >
-                            <Page
-                              pageNumber={pageInfo.pageNumber}
-                              scale={scale}
-                              renderTextLayer={false}
-                              renderAnnotationLayer={false}
-                              onLoadSuccess={(page) => onPageLoadSuccess(pageInfo.documentId, pageInfo.pageNumber, page)}
-                              className="block"
-                              data-page-key={`${pageInfo.documentId}-${pageInfo.pageNumber}`}
-                            />
-                          </PDFDocument>
+                    {pageInfo.pageNumber === 1 && !editorLayout && (
+                      <Card className="mb-3 shadow-none border border-border bg-white/90">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-on-surface">
+                            {pageInfo.documentName}
+                          </CardTitle>
+                        </CardHeader>
+                      </Card>
+                    )}
+
+                    <div className="relative inline-flex w-full justify-center z-0">
+                      <div
+                        className={cn(
+                          editorLayout && readOnly && 'pdf-page-frame-readonly',
+                          editorLayout && !readOnly && 'pdf-page-frame',
+                          !editorLayout &&
+                            'relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-lg border border-border bg-white shadow',
                         )}
-                        {password.cancelled && (
-                          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted bg-white/70">
-                            PDF preview cancelled.
+                      >
+                        {readOnly && editorLayout && (
+                          <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center overflow-hidden opacity-[0.03]">
+                            <div className="rotate-[-45deg] scale-150 whitespace-nowrap text-[64px] font-black uppercase text-primary">
+                              Preview Only
+                            </div>
                           </div>
                         )}
+                        <PageShell
+                          readOnly={readOnly}
+                          documentId={pageInfo.documentId}
+                          pageNumber={pageInfo.pageNumber}
+                          onFieldDrop={onFieldDrop}
+                          width={pageWidth}
+                          height={pageHeight}
+                        >
+                          <div
+                            className="relative"
+                            style={{ width: pageWidth, height: pageHeight }}
+                          >
+                            <div className="absolute inset-0">
+                              {!error && !password.cancelled ? (
+                                <Page
+                                  pageNumber={pageInfo.pageNumber}
+                                  scale={scale}
+                                  renderTextLayer={false}
+                                  renderAnnotationLayer={false}
+                                  onLoadSuccess={(page) =>
+                                    onPageLoadSuccess(pageInfo.documentId, pageInfo.pageNumber, page)
+                                  }
+                                  className="block"
+                                  data-page-key={`${pageInfo.documentId}-${pageInfo.pageNumber}`}
+                                />
+                              ) : null}
+                              {password.cancelled && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-sm text-muted">
+                                  PDF preview cancelled.
+                                </div>
+                              )}
+                            </div>
+
+                            {!readOnly && (
+                              <div className="absolute inset-0 pointer-events-none z-[999]">
+                                {fieldsForPage.map((field) => (
+                                  <FieldBox
+                                    key={field.id}
+                                    field={field}
+                                    recipients={recipients}
+                                    isActive={activeFieldId === field.id}
+                                    onPositionChange={onFieldPositionChange}
+                                    onSelect={onFieldSelect}
+                                    onDelete={onFieldDelete}
+                                    maxWidth={pageWidth}
+                                    maxHeight={pageHeight}
+                                    variant={editorLayout ? 'editor' : 'default'}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </PageShell>
                       </div>
-
-                      {/* Field Overlays - fills the same wrapper */}
-                      {!readOnly && (
-                        <div className="absolute inset-0 pointer-events-none z-[999]">
-                          {fieldsForPage.map(field => (
-                            <FieldBox
-                              key={field.id}
-                              field={field}
-                              recipients={recipients}
-                              isActive={activeFieldId === field.id}
-                              onPositionChange={onFieldPositionChange}
-                              onSelect={onFieldSelect}
-                              onDelete={onFieldDelete}
-                              maxWidth={pageWidth}
-                              maxHeight={pageHeight}
-                              variant={editorLayout ? 'editor' : 'default'}
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
-                  </PageShell>
-                </div>
-              </div>
 
-              {/* Page Footer */}
-              <div className={editorLayout ? 'pdf-page-footer' : 'mt-2 text-center'}>
-                <span
-                  className={cn(
-                    editorLayout
-                      ? 'font-caption-xs text-caption-xs italic text-muted'
-                      : 'text-xs text-muted',
-                  )}
-                >
-                  {editorLayout
-                    ? pageInfo.pageNumber === pageInfo.totalPages
-                      ? `End of page ${pageInfo.pageNumber}`
-                      : `Page ${pageInfo.pageNumber} of ${pageInfo.totalPages}`
-                    : `Page ${pageInfo.pageNumber} of ${pageInfo.totalPages}`}
-                </span>
-              </div>
-            </div>
+                    <div className={editorLayout ? 'pdf-page-footer' : 'mt-2 text-center'}>
+                      <span
+                        className={cn(
+                          editorLayout
+                            ? 'font-caption-xs text-caption-xs italic text-muted'
+                            : 'text-xs text-muted',
+                        )}
+                      >
+                        {editorLayout
+                          ? pageInfo.pageNumber === pageInfo.totalPages
+                            ? `End of page ${pageInfo.pageNumber}`
+                            : `Page ${pageInfo.pageNumber} of ${pageInfo.totalPages}`
+                          : `Page ${pageInfo.pageNumber} of ${pageInfo.totalPages}`}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </PDFDocument>
           )
         })}
         </div>

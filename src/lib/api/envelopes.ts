@@ -1,6 +1,6 @@
 import apiClient from '@/lib/axios'
 import { logger } from '@/lib/logger'
-import { getCurrentFileUrl } from '@/lib/url'
+import { getCurrentFileUrl, getEnvelopeDocumentFileUrl } from '@/lib/url'
 import {
   normalizeDocumentsWithPositionsForApi,
   normalizeSignerPositionEntries,
@@ -574,7 +574,7 @@ export function normalizeEnvelopeDocumentEntry(doc: Record<string, unknown>): En
     file_name: String(doc.document_file_name ?? doc.file_name ?? `Document ${documentId}`),
     document_file_name: String(doc.document_file_name ?? doc.file_name ?? `Document ${documentId}`),
     document_file_url: String(
-      doc.document_file_url ?? getCurrentFileUrl(doc) ?? doc.file_url ?? '',
+      getEnvelopeDocumentFileUrl(doc) || doc.document_file_url || doc.file_url || '',
     ),
     signed_file_url:
       (doc.document_signed_file_url as string | undefined) ??

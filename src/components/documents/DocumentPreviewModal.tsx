@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useQuery } from '@tanstack/react-query'
 
 import {
   Dialog,
@@ -15,8 +16,9 @@ import { Badge } from '@/components/ui/badge'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Loader2 } from 'lucide-react'
 
-import { Document as ApiDocument } from '@/lib/api/documents'
+import { Document as ApiDocument, getDocument } from '@/lib/api/documents'
 import { useDownloadDocument } from '@/hooks/useDocuments'
+import { shouldRetryAuthQuery } from '@/hooks/useAuthReady'
 
 const VerticalPDFViewer = dynamic(
   () => import('@/components/envelope/VerticalPDFViewer').then((m) => m.VerticalPDFViewer),
@@ -59,6 +61,20 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
   const [mounted, setMounted] = useState(false)
   const downloadDocumentMutation = useDownloadDocument()
 
+  const hasPreviewUrl = Boolean(
+    document?.current_file_url || document?.signed_file_url || document?.file_url,
+  )
+
+  const { data: freshDocument } = useQuery({
+    queryKey: ['document', document?.id, 'preview-modal'],
+    queryFn: () => getDocument(document!.id),
+    enabled: isOpen && Boolean(document?.id) && !hasPreviewUrl,
+    retry: shouldRetryAuthQuery,
+    staleTime: 60_000,
+  })
+
+  const previewDocument = freshDocument ?? document
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -66,15 +82,18 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
   const noop = useCallback(() => {}, [])
 
   const viewerDocuments = useMemo(
-    () => (document && isOpen ? [document] : []),
-    [document, isOpen],
+    () => (previewDocument && isOpen ? [previewDocument] : []),
+    [previewDocument, isOpen],
   )
 
   const handleDownload = useCallback(() => {
-    if (document) {
-      downloadDocumentMutation.mutate({ id: document.id, fileName: document.file_name })
+    if (previewDocument) {
+      downloadDocumentMutation.mutate({
+        id: previewDocument.id,
+        fileName: previewDocument.file_name,
+      })
     }
-  }, [document, downloadDocumentMutation])
+  }, [previewDocument, downloadDocumentMutation])
 
   if (!document) return null
 
@@ -88,7 +107,7 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
             </div>
             <div className="min-w-0">
               <DialogTitle className="truncate font-headline-lg text-headline-lg text-primary">
-                {document.file_name}
+                {previewDocument?.file_name ?? document.file_name}
               </DialogTitle>
               <DialogDescription className="font-body-sm text-body-sm text-muted">
                 Document preview
@@ -123,12 +142,16 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
           <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div>
               <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Status</div>
-              <Badge className={getStatusColor(document.status)}>{document.status}</Badge>
+              <Badge className={getStatusColor(previewDocument?.status ?? document.status)}>
+                {previewDocument?.status ?? document.status}
+              </Badge>
             </div>
             <div>
               <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Size</div>
               <p className="font-body-sm text-body-sm text-on-surface">
-                {document.file_size ? formatFileSize(document.file_size) : 'Unknown'}
+                {(previewDocument?.file_size ?? document.file_size)
+                  ? formatFileSize(previewDocument?.file_size ?? document.file_size)
+                  : 'Unknown'}
               </p>
             </div>
             <div>
@@ -138,7 +161,9 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
             <div>
               <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Created</div>
               <p className="font-body-sm text-body-sm text-on-surface">
-                {document.created_at ? new Date(document.created_at).toLocaleDateString() : 'Unknown'}
+                {(previewDocument?.created_at ?? document.created_at)
+                  ? new Date(previewDocument?.created_at ?? document.created_at).toLocaleDateString()
+                  : 'Unknown'}
               </p>
             </div>
           </div>

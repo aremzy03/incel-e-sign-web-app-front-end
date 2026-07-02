@@ -67,10 +67,10 @@ export default function SignaturesPage() {
   const hasSignatures = (signatures?.length ?? 0) > 0
 
   return (
-    <div className="mx-auto max-w-max-content-width space-y-6">
+    <div className="mx-auto max-w-max-content-width space-y-8 px-6 py-8 lg:px-8">
       <PageHeader
         title="My Signatures"
-        subtitle="Manage your reusable signatures for signing documents"
+        subtitle="Manage your personal and professional signatures for quick document processing."
         actions={
           <Button onClick={() => setModalOpen(true)} className="bg-secondary hover:bg-accent-hover">
             <MaterialIcon name="add" size={18} className="mr-2" />
@@ -91,40 +91,93 @@ export default function SignaturesPage() {
       ) : !hasSignatures ? (
         <EmptyState
           icon="gesture"
-          title="No signatures yet"
-          description="Draw or upload a signature to use when signing documents."
+          title="Create a signature to speed up signing"
+          description="Your saved signatures are encrypted and ready to use across all your enterprise legal agreements."
           action={
             <div className="flex flex-wrap justify-center gap-3">
               <Button variant="outline" onClick={() => setModalOpen(true)}>
                 <MaterialIcon name="draw" size={18} className="mr-2" />
-                Draw
+                Draw Signature
               </Button>
               <Button onClick={() => setModalOpen(true)}>
                 <MaterialIcon name="upload_file" size={18} className="mr-2" />
-                Upload
+                Upload Signature
               </Button>
             </div>
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((sig) => (
-            <SignatureCard
-              key={sig.id}
-              signature={sig}
-              isDeleting={deleteMutation.isPending}
-              onSetDefault={
-                !sig.is_default
-                  ? () => {
-                      toast('Set default — coming soon', { icon: 'ℹ️' })
-                    }
-                  : undefined
-              }
-              onDelete={() => deleteMutation.mutate(sig.id)}
-            />
-          ))}
-          <AddSignatureCard onClick={() => setModalOpen(true)} />
-        </div>
+        <>
+          <section className="mb-12">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((sig) => (
+                <SignatureCard
+                  key={sig.id}
+                  signature={sig}
+                  isDeleting={deleteMutation.isPending}
+                  onSetDefault={
+                    !sig.is_default
+                      ? () => {
+                          toast('Set default — coming soon', { icon: 'ℹ️' })
+                        }
+                      : undefined
+                  }
+                  onDelete={() => deleteMutation.mutate(sig.id)}
+                />
+              ))}
+              <AddSignatureCard onClick={() => setModalOpen(true)} />
+            </div>
+          </section>
+
+          <section className="mb-12 rounded-xl border border-border bg-white p-6 shadow-sm">
+            <h3 className="mb-4 flex items-center gap-2 text-label-sm font-bold text-primary">
+              <MaterialIcon name="gesture" size={20} className="text-secondary" />
+              Active Signature Picker Preview
+            </h3>
+            <div className="flex items-center gap-4 overflow-x-auto pb-4">
+              {filtered.map((sig) => (
+                <button
+                  type="button"
+                  key={sig.id}
+                  className={`paper-texture flex h-28 w-48 flex-shrink-0 flex-col items-center justify-center rounded-lg border transition-all ${
+                    sig.is_default
+                      ? 'relative border-2 border-secondary'
+                      : 'border-border hover:border-secondary/50'
+                  }`}
+                  onClick={() =>
+                    toast('Inline picker selection is preview-only for now', { icon: 'ℹ️' })
+                  }
+                >
+                  {sig.is_default && (
+                    <span className="material-symbols-outlined absolute right-2 top-2 rounded-full bg-white text-secondary">
+                      check_circle
+                    </span>
+                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={sig.image_url} alt={sig.name} className="h-12 w-auto object-contain" />
+                  <span
+                    className={`mt-2 text-label-xs ${
+                      sig.is_default ? 'font-bold text-secondary' : 'text-muted'
+                    }`}
+                  >
+                    {sig.is_default ? 'Primary Signature' : sig.name}
+                  </span>
+                </button>
+              ))}
+              <button
+                type="button"
+                className="flex h-28 w-28 flex-shrink-0 flex-col items-center justify-center rounded-lg border-2 border-dashed border-outline-variant hover:bg-surface transition-colors"
+                onClick={() => setModalOpen(true)}
+              >
+                <MaterialIcon name="add" />
+                <span className="mt-1 text-label-xs text-muted">New</span>
+              </button>
+            </div>
+            <p className="mt-4 text-caption-xs text-muted">
+              This inline picker appears during the document signing flow for rapid selection.
+            </p>
+          </section>
+        </>
       )}
 
       <SignatureModal

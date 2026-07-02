@@ -33,3 +33,13 @@ export class AlreadySignedError extends Error {
     this.name = 'AlreadySignedError'
   }
 }
+
+export const SIGNING_IN_PROGRESS_DEFAULT_MESSAGE =
+  'Signing is currently in progress for this envelope. Please wait and try again.'
+
+/** Returns a user-facing message when edit/send is blocked because signing is in progress (HTTP 409). */
+export function resolveSigningInProgressMessage(error: unknown): string | null {
+  const err = error as { response?: { status?: number; data?: { message?: string } } }
+  if (err.response?.status !== 409) return null
+  return err.response.data?.message?.trim() || SIGNING_IN_PROGRESS_DEFAULT_MESSAGE
+}

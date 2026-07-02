@@ -71,6 +71,8 @@ export function useEnvelopeWizardHydration(envelopeId: string) {
           id: String(doc.id || doc.document),
           file_name: doc.file_name || doc.document_file_name || `Document ${doc.id || doc.document}`,
           file_url: doc.document_file_url || '',
+          current_file_url: doc.document_file_url || undefined,
+          signed_file_url: doc.document_signed_file_url || doc.signed_file_url || undefined,
           file_size: doc.file_size ?? 0,
           status: 'draft',
           created_at: doc.created_at || new Date().toISOString(),

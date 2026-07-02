@@ -17,6 +17,7 @@ import {
   type SigningEnvelopeResponse,
 } from '@/hooks/signing/types'
 import { cn } from '@/lib/utils'
+import { documentUrlNeedsAuth } from '@/lib/url'
 
 type ReactPdfModule = typeof import('react-pdf')
 type PdfComponents = Pick<ReactPdfModule, 'Document' | 'Page'> & { pdfjs: ReactPdfModule['pdfjs'] }
@@ -27,6 +28,7 @@ export interface SigningDocumentViewerProps {
   pdfFileByDocumentId: Record<string, { url: string; httpHeaders?: Record<string, string> }>
   pdfLoadedByDocId: Record<string, boolean>
   setPdfLoadedByDocId: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  markPreviewFallback?: (documentId: string) => void
   pageDims: PageDimsByDoc
   setPageContainerRef: (docId: string, pageNo: number) => (el: HTMLDivElement | null) => void
   measurePageCanvas: (docId: string, pageNo: number) => void
@@ -82,6 +84,7 @@ export function SigningDocumentViewer({
   pdfFileByDocumentId,
   pdfLoadedByDocId,
   setPdfLoadedByDocId,
+  markPreviewFallback,
   pageDims,
   setPageContainerRef,
   measurePageCanvas,
@@ -602,8 +605,20 @@ export function SigningDocumentViewer({
                 }}
                 onLoadError={(error: unknown) => {
                   console.error(`[SigningDocumentViewer] PDF load error for ${docItem.id}:`, error)
+                  const fileConfig = docItem.document
+                    ? pdfFileByDocumentId[docItem.document]
+                    : undefined
+                  const currentUrl =
+                    typeof fileConfig === 'string' ? fileConfig : fileConfig?.url
+                  if (docItem.document && currentUrl && documentUrlNeedsAuth(currentUrl)) {
+                    toast.error(`Failed to load PDF for ${docItem.file_name || docItem.id}`)
+                  } else if (docItem.document) {
+                    markPreviewFallback?.(docItem.document)
+                    return
+                  } else {
+                    toast.error(`Failed to load PDF for ${docItem.file_name || docItem.id}`)
+                  }
                   setPdfLoadedByDocId((prev) => ({ ...prev, [docItem.id]: false }))
-                  toast.error(`Failed to load PDF for ${docItem.file_name || docItem.id}`)
                 }}
                 onPassword={onPassword as never}
                 loading={<PdfLoadingIndicator label="Loading document…" />}

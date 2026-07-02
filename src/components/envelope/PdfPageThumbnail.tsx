@@ -1,10 +1,18 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Document as PDFDocument, Page, pdfjs } from 'react-pdf'
 import { useSession } from 'next-auth/react'
-import { getApiBaseUrl } from '@/lib/env'
+import { getCachedAccessToken } from '@/lib/auth-session-cache'
 import { cn } from '@/lib/utils'
+import type { DocumentUrlLike } from '@/lib/url'
+import {
+  getDirectDocumentFileUrl,
+  getDocumentFileUrlForViewer,
+  getDocumentViewerRevisionKey,
+  getPdfJsDocumentOptions,
+  shouldFallbackToPreviewApi,
+} from '@/lib/url'
 
 if (typeof window !== 'undefined') {
   const origin = window.location.origin
@@ -16,7 +24,7 @@ if (typeof window !== 'undefined') {
 }
 
 interface PdfPageThumbnailProps {
-  documentId: string
+  document?: DocumentUrlLike | null
   pageNumber: number
   isActive?: boolean
   onClick?: () => void
@@ -24,24 +32,40 @@ interface PdfPageThumbnailProps {
 }
 
 export function PdfPageThumbnail({
-  documentId,
+  document,
   pageNumber,
   isActive = false,
   onClick,
   label,
 }: PdfPageThumbnailProps) {
   const { data: session } = useSession()
-  const accessToken = session?.accessToken as string | undefined
+  const accessToken =
+    (session?.accessToken as string | undefined) ?? getCachedAccessToken() ?? undefined
+  const [usePreviewFallback, setUsePreviewFallback] = useState(false)
 
-  const documentUrl = useMemo(() => {
-    const apiBase = getApiBaseUrl().replace(/\/$/, '')
-    return `${apiBase}/documents/${documentId}/preview/`
-  }, [documentId])
+  const documentRevisionKey = getDocumentViewerRevisionKey(document)
 
-  const pdfOptions = useMemo(() => {
-    if (!accessToken) return undefined
-    return { httpHeaders: { Authorization: `Bearer ${accessToken}` } }
-  }, [accessToken])
+  useEffect(() => {
+    setUsePreviewFallback(false)
+  }, [documentRevisionKey])
+
+  const documentUrl = useMemo(
+    () => getDocumentFileUrlForViewer(document, { usePreviewApi: usePreviewFallback }),
+    [document, usePreviewFallback],
+  )
+
+  const pdfOptions = useMemo(
+    () => getPdfJsDocumentOptions(documentUrl, { accessToken }),
+    [accessToken, documentUrl],
+  )
+
+  if (!documentUrl) {
+    return (
+      <div className="flex aspect-[3/4] w-full items-center justify-center rounded-lg border border-border bg-surface-container text-caption-xs text-muted">
+        Preview unavailable
+      </div>
+    )
+  }
 
   return (
     <button
@@ -59,7 +83,14 @@ export function PdfPageThumbnail({
         )}
       >
         <PDFDocument
+          key={`${document?.id ?? 'doc'}-${pageNumber}-${usePreviewFallback ? 'preview' : 'direct'}`}
           file={documentUrl}
+          onLoadError={() => {
+            const directUrl = getDirectDocumentFileUrl(document)
+            if (shouldFallbackToPreviewApi(directUrl, usePreviewFallback, document?.id)) {
+              setUsePreviewFallback(true)
+            }
+          }}
           loading={
             <div className="flex h-full w-full items-center justify-center bg-surface-container text-caption-xs text-muted">
               …

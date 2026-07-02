@@ -25,6 +25,7 @@ import {
 } from '@/lib/envelope/envelope-wizard-types'
 import { useCreateEnvelope, useEditEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
+import { resolveSigningInProgressMessage } from '@/lib/api/signing-errors'
 import {
   FieldPosition,
   FieldPositions,
@@ -476,6 +477,11 @@ export function EnvelopeWizardProvider({
         router.replace(`/dashboard/envelopes/${created.id}/edit?step=${currentStep}`)
       }
     } catch (err: unknown) {
+      const signingInProgress = resolveSigningInProgressMessage(err)
+      if (signingInProgress) {
+        setError(signingInProgress)
+        return
+      }
       const error = err as {
         response?: { data?: { data?: { signing_order?: string[] }; message?: string } }
       }
@@ -528,6 +534,11 @@ export function EnvelopeWizardProvider({
       }
       router.push(`/dashboard/envelopes/${envelopeId}`)
     } catch (err: unknown) {
+      const signingInProgress = resolveSigningInProgressMessage(err)
+      if (signingInProgress) {
+        setError(signingInProgress)
+        return
+      }
       const error = err as {
         response?: { data?: { data?: { signing_order?: string[] }; message?: string } }
       }

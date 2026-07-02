@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
@@ -9,7 +9,12 @@ import {
   normalizeEnvelopeListItem,
   type EnvelopeDocumentResponse,
 } from '@/lib/api/envelopes'
-import { getApiBaseUrl } from '@/lib/env'
+import {
+  documentUrlNeedsAuth,
+  getDocumentFileUrlForViewer,
+  resolveBackendUrl,
+} from '@/lib/url'
+import { getCachedAccessToken } from '@/lib/auth-session-cache'
 import { shouldRetryAuthQuery } from '@/hooks/useAuthReady'
 import type { SigningEnvelopeResponse } from './types'
 
@@ -20,29 +25,23 @@ interface UseSigningEnvelopeOptions {
 }
 
 export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: UseSigningEnvelopeOptions) {
+  const effectiveAccessToken = accessToken ?? getCachedAccessToken() ?? undefined
   const [envelopeDocuments, setEnvelopeDocuments] = useState<EnvelopeDocumentResponse[]>([])
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
   const [pdfLoadedByDocId, setPdfLoadedByDocId] = useState<Record<string, boolean>>({})
+  const [previewFallbackDocIds, setPreviewFallbackDocIds] = useState<Set<string>>(() => new Set())
 
-  const resolveUrl = (url?: string | null) => {
-    if (!url || typeof url !== 'string') return ''
-    if (/^https?:\/\//i.test(url)) return url
-    const apiBase = getApiBaseUrl()
-    let backendOrigin = apiBase
-    try {
-      backendOrigin = new URL(apiBase).origin
-    } catch {
-      /* ignore */
-    }
-    const path = url.startsWith('/') ? url : `/${url}`
-    return `${backendOrigin}${path}`
-  }
+  const resolveUrl = (url?: string | null) => resolveBackendUrl(url)
 
-  const getPreviewUrl = (documentId?: string | null) => {
-    if (!documentId) return ''
-    return resolveUrl(`/api/documents/${documentId}/preview/`)
-  }
+  const getDocumentViewerUrl = (
+    doc: EnvelopeDocumentResponse,
+    usePreviewApi = false,
+  ) => getDocumentFileUrlForViewer(doc, { preferEnvelopeFields: true, usePreviewApi })
+
+  const markPreviewFallback = useCallback((documentId: string) => {
+    setPreviewFallbackDocIds((prev) => new Set(prev).add(documentId))
+  }, [])
 
   const pdfFileCacheRef = useRef<Record<string, { url: string; httpHeaders?: Record<string, string> }>>({})
 
@@ -63,7 +62,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
   })
 
   useEffect(() => {
-    if (!envelopeId || !enabled || !accessToken) return
+    if (!envelopeId || !enabled || !effectiveAccessToken) return
     let cancelled = false
 
     const fetchDocuments = async () => {
@@ -88,7 +87,11 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     return () => {
       cancelled = true
     }
-  }, [envelopeId, enabled, accessToken])
+  }, [envelopeId, enabled, effectiveAccessToken])
+
+  useEffect(() => {
+    setPreviewFallbackDocIds(new Set())
+  }, [envelopeDocuments])
 
   const pdfFileByDocumentId = useMemo(() => {
     const nextMap: Record<string, { url: string; httpHeaders?: Record<string, string> }> = {}
@@ -96,9 +99,12 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     for (const d of envelopeDocuments) {
       const docId = d.document
       if (!docId) continue
-      const url = getPreviewUrl(docId)
+      const url = getDocumentViewerUrl(d, previewFallbackDocIds.has(docId))
       if (!url) continue
-      const nextHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+      const nextHeaders =
+        effectiveAccessToken && documentUrlNeedsAuth(url)
+          ? { Authorization: `Bearer ${effectiveAccessToken}` }
+          : undefined
       const prev = prevMap[docId]
       if (prev && prev.url === url && prev.httpHeaders?.Authorization === nextHeaders?.Authorization) {
         nextMap[docId] = prev
@@ -108,7 +114,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     }
     pdfFileCacheRef.current = nextMap
     return nextMap
-  }, [accessToken, envelopeDocuments])
+  }, [effectiveAccessToken, envelopeDocuments, previewFallbackDocIds])
 
   useEffect(() => {
     setPdfLoadedByDocId({})
@@ -126,6 +132,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     pdfLoadedByDocId,
     setPdfLoadedByDocId,
     resolveUrl,
-    getPreviewUrl,
+    getDocumentViewerUrl,
+    markPreviewFallback,
   }
 }

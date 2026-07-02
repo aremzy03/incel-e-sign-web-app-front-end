@@ -18,7 +18,7 @@ import {
 } from '@/lib/api/envelopes'
 import { editEnvelope } from '@/lib/api/envelopes'
 import { selfSignEnvelope, type SelfSignRequest } from '@/lib/api/signatures'
-import { FrozenEnvelopeError } from '@/lib/api/signing-errors'
+import { FrozenEnvelopeError, resolveSigningInProgressMessage } from '@/lib/api/signing-errors'
 
 function normalizeEnvelopeSearch(search?: string) {
   const trimmed = search?.trim()
@@ -132,6 +132,16 @@ export const useCreateEnvelope = () => {
   })
 }
 
+function invalidateEnvelopeDocumentQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  envelopeId: string,
+) {
+  queryClient.invalidateQueries({ queryKey: ['envelope', envelopeId] })
+  queryClient.invalidateQueries({ queryKey: ['envelopeDocuments', envelopeId] })
+  queryClient.invalidateQueries({ queryKey: ['envelope-documents', envelopeId] })
+  queryClient.invalidateQueries({ queryKey: ['sign-envelope', envelopeId] })
+}
+
 // Hook to send an envelope
 export const useSendEnvelope = () => {
   const queryClient = useQueryClient()
@@ -139,13 +149,17 @@ export const useSendEnvelope = () => {
   return useMutation({
     mutationFn: sendEnvelope,
     onSuccess: (data, envelopeId) => {
-      // Invalidate and refetch envelopes list and specific envelope
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
-      queryClient.invalidateQueries({ queryKey: ['envelope', envelopeId] })
+      invalidateEnvelopeDocumentQueries(queryClient, envelopeId)
       toast.success('Envelope sent successfully!')
     },
     onError: (error: any) => {
       console.error('Send envelope error:', error)
+      const signingInProgress = resolveSigningInProgressMessage(error)
+      if (signingInProgress) {
+        toast.error(signingInProgress)
+        return
+      }
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           'Failed to send envelope'
@@ -164,12 +178,16 @@ export const useEditEnvelope = () => {
       return await editEnvelope(id, data)
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['envelope', variables.id] })
-      queryClient.invalidateQueries({ queryKey: ['envelope-documents', variables.id] })
+      invalidateEnvelopeDocumentQueries(queryClient, variables.id)
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
       toast.success('Envelope saved successfully!')
     },
     onError: (error: any) => {
+      const signingInProgress = resolveSigningInProgressMessage(error)
+      if (signingInProgress) {
+        toast.error(signingInProgress)
+        return
+      }
       const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Failed to save envelope'
       toast.error(errorMessage)
     },

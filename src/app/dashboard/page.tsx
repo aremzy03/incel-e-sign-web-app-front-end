@@ -99,14 +99,14 @@ function QuickActionCard({
   return (
     <Link
       href={href}
-      className="group flex items-start gap-4 rounded-xl border border-border bg-white p-8 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
+      className="group flex items-start gap-3 rounded-xl border border-border bg-white p-3 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
     >
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary transition-colors group-hover:bg-secondary group-hover:text-on-secondary">
-        <MaterialIcon name={icon} size={28} className="text-inherit" />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-secondary group-hover:text-on-secondary">
+        <MaterialIcon name={icon} size={18} className="text-inherit" />
       </div>
       <div>
-        <p className="text-lg font-semibold text-primary">{title}</p>
-        <p className="mt-1 text-body-sm text-muted">{description}</p>
+        <p className="text-sm font-semibold text-primary">{title}</p>
+        <p className="mt-1 text-xs leading-4 text-muted">{description}</p>
       </div>
     </Link>
   )
@@ -170,6 +170,31 @@ export default function DashboardPage() {
           iconBg="bg-surface text-status-draft"
           helper="Not yet sent"
         />
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="mb-6 text-headline-lg font-semibold text-primary">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <QuickActionCard
+            href="/dashboard/documents/upload"
+            icon="upload_file"
+            title="Upload Document"
+            description="Select a PDF or Word file from your computer."
+          />
+          <QuickActionCard
+            href="/dashboard/envelopes/create"
+            icon="mail_lock"
+            title="Send for Signature"
+            description="Prepare an envelope for others to sign securely."
+          />
+          <QuickActionCard
+            href="/dashboard/envelopes/self-sign"
+            icon="draw"
+            title="Sign Myself"
+            description="Add your digital signature to a document instantly."
+          />
+        </div>
       </div>
 
       {/* Action Required + Recent Activity */}
@@ -299,31 +324,6 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="mb-6 text-headline-lg font-semibold text-primary">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <QuickActionCard
-            href="/dashboard/documents/upload"
-            icon="upload_file"
-            title="Upload Document"
-            description="Select a PDF or Word file from your computer."
-          />
-          <QuickActionCard
-            href="/dashboard/envelopes/create"
-            icon="mail_lock"
-            title="Send for Signature"
-            description="Prepare an envelope for others to sign securely."
-          />
-          <QuickActionCard
-            href="/dashboard/envelopes/self-sign"
-            icon="draw"
-            title="Sign Myself"
-            description="Add your digital signature to a document instantly."
-          />
         </div>
       </div>
     </div>

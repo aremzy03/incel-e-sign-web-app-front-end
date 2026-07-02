@@ -35,7 +35,7 @@ export function PlaceFieldsRightPanel({
   activePageKey,
   onPageSelect,
 }: PlaceFieldsRightPanelProps) {
-  const { recipients, activeRecipientId, setActiveRecipientId } = useEnvelopeWizard()
+  const { recipients, activeRecipientId, setActiveRecipientId, uploadedDocuments } = useEnvelopeWizard()
 
   const sortedRecipients = [...recipients].sort((a, b) => a.order - b.order)
   const activeRecipient = sortedRecipients.find((r) => r.id === activeRecipientId)
@@ -94,7 +94,7 @@ export function PlaceFieldsRightPanel({
                     </p>
                   )}
                   <PdfPageThumbnail
-                    documentId={page.documentId}
+                    document={uploadedDocuments.find((doc) => doc.id === page.documentId)}
                     pageNumber={page.pageNumber}
                     isActive={activePageKey === pageKey}
                     onClick={() => onPageSelect(pageKey)}

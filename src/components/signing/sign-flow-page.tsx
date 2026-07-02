@@ -98,6 +98,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     pdfFileByDocumentId,
     pdfLoadedByDocId,
     setPdfLoadedByDocId,
+    markPreviewFallback,
   } = useSigningEnvelope({
     envelopeId,
     enabled: isDashboard ? isReady : !!envelopeId,
@@ -391,6 +392,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             pdfFileByDocumentId={pdfFileByDocumentId}
             pdfLoadedByDocId={pdfLoadedByDocId}
             setPdfLoadedByDocId={setPdfLoadedByDocId}
+            markPreviewFallback={markPreviewFallback}
             pageDims={coords.pageDims}
             setPageContainerRef={coords.setPageContainerRef}
             measurePageCanvas={coords.measurePageCanvas}

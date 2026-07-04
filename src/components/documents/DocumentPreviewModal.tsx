@@ -14,11 +14,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MaterialIcon } from '@/components/ui/material-icon'
+import { AsyncStatePanel } from '@/components/library'
 import { Loader2 } from 'lucide-react'
 
 import { Document as ApiDocument, getDocument } from '@/lib/api/documents'
 import { useDownloadDocument } from '@/hooks/useDocuments'
 import { shouldRetryAuthQuery } from '@/hooks/useAuthReady'
+import { classifyError } from '@/lib/errors'
 
 const VerticalPDFViewer = dynamic(
   () => import('@/components/envelope/VerticalPDFViewer').then((m) => m.VerticalPDFViewer),
@@ -65,7 +67,12 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
     document?.current_file_url || document?.signed_file_url || document?.file_url,
   )
 
-  const { data: freshDocument } = useQuery({
+  const {
+    data: freshDocument,
+    isLoading: isRefreshingPreviewDocument,
+    error: previewDocumentError,
+    refetch: refetchPreviewDocument,
+  } = useQuery({
     queryKey: ['document', document?.id, 'preview-modal'],
     queryFn: () => getDocument(document!.id),
     enabled: isOpen && Boolean(document?.id) && !hasPreviewUrl,
@@ -74,6 +81,9 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
   })
 
   const previewDocument = freshDocument ?? document
+  const previewDocumentErrorState = previewDocumentError
+    ? classifyError(previewDocumentError, 'Failed to prepare document preview')
+    : null
 
   useEffect(() => {
     setMounted(true)
@@ -117,7 +127,32 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-low" style={{ height: 'min(60vh, 640px)' }}>
-          {mounted ? (
+          {isRefreshingPreviewDocument && !freshDocument && !hasPreviewUrl ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted" />
+            </div>
+          ) : previewDocumentErrorState && !freshDocument && !hasPreviewUrl ? (
+            <div className="flex flex-1 items-center justify-center p-6">
+              <AsyncStatePanel
+                variant={previewDocumentErrorState.isNotFound ? 'notFound' : 'error'}
+                title={
+                  previewDocumentErrorState.isNotFound
+                    ? 'Preview not found'
+                    : 'Unable to prepare preview'
+                }
+                description={
+                  previewDocumentErrorState.isNotFound
+                    ? 'This document is no longer available for preview. It may have been removed or replaced.'
+                    : previewDocumentErrorState.message
+                }
+                primaryAction={
+                  <Button type="button" onClick={() => void refetchPreviewDocument()}>
+                    Retry Preview
+                  </Button>
+                }
+              />
+            </div>
+          ) : mounted ? (
             <VerticalPDFViewer
               documents={viewerDocuments}
               fieldPositions={{}}

@@ -10,12 +10,14 @@ import Link from 'next/link'
 import { AuthorityButton } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
-  Form as AuthorityForm,
+  Form as SharedForm,
   FormField,
+  FormItem,
   FormLabel,
-  FormInput,
+  FormControl,
   FormMessage,
-} from '@/components/ui/authority-form'
+} from '@/components/ui/form'
+import { InputWithIcon } from '@/components/ui/input-with-icon'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { AuthCenteredLayout } from '@/components/auth/auth-layouts'
 import { GoogleOAuthButtonConnected } from '@/components/auth/google-oauth-button'
@@ -27,7 +29,6 @@ export const dynamic = 'force-dynamic'
 export default function RegisterPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const router = useRouter()
 
   const form = useForm<RegisterFormData>({
@@ -38,6 +39,7 @@ export default function RegisterPage() {
       email: '',
       password: '',
       confirmPassword: '',
+      acceptedTerms: false,
     },
   })
 
@@ -50,11 +52,6 @@ export default function RegisterPage() {
   }, [router])
 
   const onSubmit = async (data: RegisterFormData) => {
-    if (!acceptedTerms) {
-      setError('Please accept the terms and conditions')
-      return
-    }
-
     setIsLoading(true)
     setError('')
 
@@ -98,121 +95,184 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <AuthorityForm onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField>
-            <FormLabel required>Full Name</FormLabel>
+        <SharedForm {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormInput
-                placeholder="First name"
-                icon={<MaterialIcon name="person" size={18} className="text-muted" />}
-                validation={form.formState.errors.firstName ? 'invalid' : 'idle'}
-                {...form.register('firstName')}
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel required>First Name</FormLabel>
+                    <FormControl>
+                      <InputWithIcon
+                        {...field}
+                        placeholder="First name"
+                        autoComplete="given-name"
+                        inputSize="lg"
+                        invalid={!!fieldState.error}
+                        icon={<MaterialIcon name="person" size={18} className="text-muted" />}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <FormInput
-                placeholder="Last name"
-                icon={<MaterialIcon name="person" size={18} className="text-muted" />}
-                validation={form.formState.errors.lastName ? 'invalid' : 'idle'}
-                {...form.register('lastName')}
+
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel required>Last Name</FormLabel>
+                    <FormControl>
+                      <InputWithIcon
+                        {...field}
+                        placeholder="Last name"
+                        autoComplete="family-name"
+                        inputSize="lg"
+                        invalid={!!fieldState.error}
+                        icon={<MaterialIcon name="person" size={18} className="text-muted" />}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            {(form.formState.errors.firstName || form.formState.errors.lastName) && (
-              <FormMessage variant="error">
-                {form.formState.errors.firstName?.message || form.formState.errors.lastName?.message}
-              </FormMessage>
-            )}
-          </FormField>
 
-          <FormField>
-            <FormLabel required>Email Address</FormLabel>
-            <FormInput
-              type="email"
-              placeholder="your@company.com"
-              icon={<MaterialIcon name="mail" size={18} className="text-muted" />}
-              validation={form.formState.errors.email ? 'invalid' : 'idle'}
-              {...form.register('email')}
-            />
-            {form.formState.errors.email && (
-              <FormMessage variant="error">{form.formState.errors.email.message}</FormMessage>
-            )}
-          </FormField>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField>
-              <FormLabel required>Password</FormLabel>
-              <FormInput
-                type="password"
-                placeholder="Create password"
-                icon={<MaterialIcon name="lock" size={18} className="text-muted" />}
-                validation={form.formState.errors.password ? 'invalid' : 'idle'}
-                {...form.register('password')}
-              />
-              {form.formState.errors.password && (
-                <FormMessage variant="error">{form.formState.errors.password.message}</FormMessage>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel required>Email Address</FormLabel>
+                  <FormControl>
+                    <InputWithIcon
+                      {...field}
+                      type="email"
+                      placeholder="your@company.com"
+                      autoComplete="email"
+                      inputSize="lg"
+                      invalid={!!fieldState.error}
+                      icon={<MaterialIcon name="mail" size={18} className="text-muted" />}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </FormField>
-
-            <FormField>
-              <FormLabel required>Confirm Password</FormLabel>
-              <FormInput
-                type="password"
-                placeholder="Confirm password"
-                icon={<MaterialIcon name="lock_reset" size={18} className="text-muted" />}
-                validation={form.formState.errors.confirmPassword ? 'invalid' : 'idle'}
-                {...form.register('confirmPassword')}
-              />
-              {form.formState.errors.confirmPassword && (
-                <FormMessage variant="error">{form.formState.errors.confirmPassword.message}</FormMessage>
-              )}
-            </FormField>
-          </div>
-
-          <label className="flex items-start gap-3 text-body-sm text-muted">
-            <input
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-1 rounded border-border text-secondary focus:ring-status-your-turn"
             />
-            <span>
-              I agree to the{' '}
-              <Link href="#" className="text-secondary hover:text-accent-hover">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="#" className="text-secondary hover:text-accent-hover">
-                Privacy Policy
-              </Link>
-            </span>
-          </label>
 
-          <AuthorityButton
-            type="submit"
-            size="lg"
-            fullWidth
-            state={isLoading ? 'loading' : 'idle'}
-            loadingText="Creating your account..."
-            disabled={isLoading}
-            className="rounded-xl"
-          >
-            <span className="inline-flex items-center gap-2">
-              Create Account
-              <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
-            </span>
-          </AuthorityButton>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel required>Password</FormLabel>
+                    <FormControl>
+                      <InputWithIcon
+                        {...field}
+                        type="password"
+                        placeholder="Create password"
+                        autoComplete="new-password"
+                        inputSize="lg"
+                        invalid={!!fieldState.error}
+                        icon={<MaterialIcon name="lock" size={18} className="text-muted" />}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel required>Confirm Password</FormLabel>
+                    <FormControl>
+                      <InputWithIcon
+                        {...field}
+                        type="password"
+                        placeholder="Confirm password"
+                        autoComplete="new-password"
+                        inputSize="lg"
+                        invalid={!!fieldState.error}
+                        icon={<MaterialIcon name="lock_reset" size={18} className="text-muted" />}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface-container-lowest px-2 text-muted">Or continue with</span>
-            </div>
-          </div>
 
-          <Suspense fallback={<div className="h-12 animate-pulse rounded-xl bg-surface" />}>
-            <GoogleOAuthButtonConnected />
-          </Suspense>
-        </AuthorityForm>
+            <FormField
+              control={form.control}
+              name="acceptedTerms"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <div className="flex items-start gap-3 rounded-xl border border-transparent p-1">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={(event) => field.onChange(event.target.checked)}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        className="mt-1 h-4 w-4 rounded border-border text-secondary focus:ring-status-your-turn"
+                      />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="cursor-pointer text-body-sm font-normal leading-6 text-muted">
+                        I agree to the{' '}
+                        <Link href="#" className="font-medium text-secondary hover:text-accent-hover">
+                          Terms of Service
+                        </Link>{' '}
+                        and{' '}
+                        <Link href="#" className="font-medium text-secondary hover:text-accent-hover">
+                          Privacy Policy
+                        </Link>
+                      </FormLabel>
+                      {fieldState.error ? <FormMessage /> : null}
+                    </div>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <AuthorityButton
+              type="submit"
+              size="lg"
+              fullWidth
+              state={isLoading ? 'loading' : 'idle'}
+              loadingText="Creating your account..."
+              disabled={isLoading}
+              className="rounded-xl"
+            >
+              <span className="inline-flex items-center gap-2">
+                Create Account
+                <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
+              </span>
+            </AuthorityButton>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-surface-container-lowest px-2 text-muted">Or continue with</span>
+              </div>
+            </div>
+
+            <Suspense fallback={<div className="h-12 animate-pulse rounded-xl bg-surface" />}>
+              <GoogleOAuthButtonConnected />
+            </Suspense>
+          </form>
+        </SharedForm>
 
         <p className="mt-6 text-center text-body-sm text-muted">
           Already have an account?{' '}

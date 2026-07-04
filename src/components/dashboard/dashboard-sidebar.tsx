@@ -36,7 +36,7 @@ export function DashboardSidebar({ navItems, className, onNavigate }: DashboardS
         />
         <div className="min-w-0 flex-col">
           <span className="block truncate text-sm font-bold text-on-primary">Incel E-Sign</span>
-          <span className="block truncate text-xs text-on-primary-container dark:text-on-primary-fixed-variant">
+          <span className="block truncate text-xs text-on-primary-container">
             Legal Authority
           </span>
         </div>
@@ -52,17 +52,21 @@ export function DashboardSidebar({ navItems, className, onNavigate }: DashboardS
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-l-4 border-status-your-turn bg-primary-hover pl-2 text-accent-light dark:text-secondary-fixed'
-                  : 'text-on-primary-container hover:bg-primary-hover hover:text-on-primary dark:text-on-primary-fixed-variant'
+                  ? 'border-l-4 border-status-your-turn bg-primary-hover pl-2 text-accent-light dark:bg-primary dark:text-on-primary'
+                  : 'text-on-primary-container hover:bg-primary-hover hover:text-on-primary dark:text-on-primary-container dark:hover:bg-primary-hover dark:hover:text-on-primary'
               )}
             >
               <MaterialIcon
                 name={item.icon}
                 fill={isActive}
                 size={20}
-                className={isActive ? 'text-accent-light' : 'text-on-primary-container'}
+                className={cn(
+                  isActive
+                    ? 'text-accent-light dark:text-on-primary'
+                    : 'text-on-primary-container group-hover:text-on-primary dark:text-on-primary-container dark:group-hover:text-on-primary'
+                )}
               />
               {item.name}
             </Link>

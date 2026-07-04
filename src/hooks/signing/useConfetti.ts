@@ -7,6 +7,9 @@ export function useConfetti(active: boolean) {
 
   useEffect(() => {
     if (!active) return
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
     const canvas = canvasRef.current
     if (!canvas) return
 

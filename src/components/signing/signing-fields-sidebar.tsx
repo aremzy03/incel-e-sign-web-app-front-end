@@ -14,6 +14,7 @@ interface SigningFieldsSidebarProps {
   signatures: unknown[]
   selectedSignature: unknown
   onSelectSignature: (sig: unknown) => void
+  onFieldSelect?: (item: SigningFieldChecklistItem) => void
   onUploadClick: () => void
   isUploading?: boolean
   manageHref?: string
@@ -28,6 +29,7 @@ export function SigningFieldsSidebar({
   signatures,
   selectedSignature,
   onSelectSignature,
+  onFieldSelect,
   onUploadClick,
   isUploading = false,
   manageHref,
@@ -67,15 +69,17 @@ export function SigningFieldsSidebar({
           {fieldItems.map((item) => {
             const isActive = item.id === activeFieldId && !item.completed
             return (
-              <div
+              <button
                 key={item.id}
+                type="button"
+                onClick={() => onFieldSelect?.(item)}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl border p-3',
+                  'flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-colors',
                   item.completed
                     ? 'border-success-light bg-success-light/20 opacity-70'
                     : isActive
                       ? 'border-status-your-turn bg-accent-light/40 ring-2 ring-status-your-turn/20'
-                      : 'border-outline-variant bg-surface-container-lowest',
+                      : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container',
                 )}
               >
                 <MaterialIcon
@@ -93,7 +97,7 @@ export function SigningFieldsSidebar({
                 >
                   {item.label}
                 </span>
-              </div>
+              </button>
             )
           })}
         </div>
@@ -132,7 +136,7 @@ export function SigningFieldsSidebar({
                 type="button"
                 onClick={() => onSelectSignature(sig)}
                 className={cn(
-                  'relative flex h-24 w-full items-center justify-center overflow-hidden rounded-xl border-2 p-4 shadow-inner transition-all',
+                  'relative flex h-24 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 p-4 shadow-inner transition-all',
                   isSelected
                     ? 'border-primary bg-primary-light'
                     : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container',
@@ -158,21 +162,9 @@ export function SigningFieldsSidebar({
 
           <button
             type="button"
-            disabled
-            className="signature-preview flex h-24 w-full cursor-not-allowed items-center justify-center rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest p-4 opacity-60"
-            title="Draw signature coming soon"
-          >
-            <div className="flex flex-col items-center gap-1 text-on-surface-variant">
-              <MaterialIcon name="draw" size={22} />
-              <span className="font-label-xs text-label-xs">Draw New</span>
-            </div>
-          </button>
-
-          <button
-            type="button"
             disabled={isUploading}
             onClick={onUploadClick}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-outline-variant text-on-surface transition-colors hover:bg-surface-container disabled:opacity-50"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-outline-variant text-on-surface transition-colors hover:bg-surface-container disabled:opacity-50"
           >
             <MaterialIcon name="upload_file" size={20} />
             <span className="font-label-sm text-label-sm">

@@ -10,12 +10,14 @@ import { toast } from 'react-hot-toast'
 import { AuthorityButton } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
-  Form as AuthorityForm,
+  Form as SharedForm,
   FormField,
+  FormItem,
   FormLabel,
-  FormInput,
+  FormControl,
   FormMessage,
-} from '@/components/ui/authority-form'
+} from '@/components/ui/form'
+import { InputWithIcon } from '@/components/ui/input-with-icon'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import {
   AuthSplitLayout,
@@ -144,68 +146,84 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            <AuthorityForm onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <FormField>
-                <FormLabel required>Email Address</FormLabel>
-                <FormInput
-                  type="email"
-                  placeholder="your@company.com"
-                  size="lg"
-                  icon={<MaterialIcon name="mail" size={20} className="text-muted" />}
-                  validation={form.formState.errors.email ? 'invalid' : 'idle'}
-                  {...form.register('email')}
+            <SharedForm {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel required>Email Address</FormLabel>
+                      <FormControl>
+                        <InputWithIcon
+                          {...field}
+                          type="email"
+                          placeholder="your@company.com"
+                          inputSize="lg"
+                          autoComplete="email"
+                          invalid={!!fieldState.error}
+                          icon={<MaterialIcon name="mail" size={20} className="text-muted" />}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {form.formState.errors.email && (
-                  <FormMessage variant="error">{form.formState.errors.email.message}</FormMessage>
-                )}
-              </FormField>
 
-              <FormField>
-                <div className="flex items-center justify-between">
-                  <FormLabel required>Password</FormLabel>
-                  <Link href="/login" className="text-label-sm text-secondary hover:text-accent-hover">
-                    Forgot password?
-                  </Link>
-                </div>
-                <FormInput
-                  type="password"
-                  placeholder="Enter your password"
-                  size="lg"
-                  icon={<MaterialIcon name="lock" size={20} className="text-muted" />}
-                  validation={form.formState.errors.password ? 'invalid' : 'idle'}
-                  {...form.register('password')}
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between gap-3">
+                        <FormLabel required>Password</FormLabel>
+                        <Link href="/login" className="text-label-sm text-secondary hover:text-accent-hover">
+                          Forgot password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <InputWithIcon
+                          {...field}
+                          type="password"
+                          placeholder="Enter your password"
+                          inputSize="lg"
+                          autoComplete="current-password"
+                          invalid={!!fieldState.error}
+                          icon={<MaterialIcon name="lock" size={20} className="text-muted" />}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {form.formState.errors.password && (
-                  <FormMessage variant="error">{form.formState.errors.password.message}</FormMessage>
-                )}
-              </FormField>
 
-              <AuthorityButton
-                type="submit"
-                size="lg"
-                fullWidth
-                state={isLoading ? 'loading' : 'idle'}
-                loadingText="Signing you in..."
-                disabled={isLoading}
-                className="rounded-xl"
-              >
-                <span className="inline-flex items-center gap-2">
-                  Sign In
-                  <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
-                </span>
-              </AuthorityButton>
+                <AuthorityButton
+                  type="submit"
+                  size="lg"
+                  fullWidth
+                  state={isLoading ? 'loading' : 'idle'}
+                  loadingText="Signing you in..."
+                  disabled={isLoading}
+                  className="rounded-xl"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    Sign In
+                    <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
+                  </span>
+                </AuthorityButton>
 
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted">Or continue with</span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted">Or continue with</span>
-                </div>
-              </div>
 
-              <GoogleOAuthButtonConnected />
-            </AuthorityForm>
+                <GoogleOAuthButtonConnected />
+              </form>
+            </SharedForm>
 
             <p className="mt-8 text-center text-body-sm text-muted">
               Don&apos;t have an account?{' '}

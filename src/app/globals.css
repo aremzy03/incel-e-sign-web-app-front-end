@@ -249,6 +249,18 @@
   --input: 240 3% 22%;
   --ring: 175 84% 32%;
 
+  /* Brand tokens are rebalanced for dark surfaces */
+  --color-primary: #b7c6ee;
+  --color-on-primary: #0a1a3a;
+  --color-primary-container: #1b2a4a;
+  --color-on-primary-container: #d9e2ff;
+  --color-primary-hover: #d9e2ff;
+  --color-secondary: #89f5e7;
+  --color-on-secondary: #00201d;
+  --color-secondary-container: #134e4a;
+  --color-on-secondary-container: #89f5e7;
+  --color-accent-hover: #6bd8cb;
+
   /* M3 dark surface tokens */
   --color-bg: #121214;
   --color-background: #121214;
@@ -256,7 +268,7 @@
   --color-body: #e4e2e5;
   --color-muted: #9a9aa3;
   --color-border: #45464e;
-  --color-white: #1b1b1e;
+  --color-white: #ffffff;
   --color-surface: #303033;
   --color-surface-dim: #121214;
   --color-surface-bright: #38383c;

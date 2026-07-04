@@ -10,6 +10,7 @@ import {
   DataTable,
   StatusBadge,
   EmptyState,
+  AsyncStatePanel,
   AddContactModal,
 } from '@/components/library'
 import type { DataTableColumn } from '@/components/library'
@@ -22,6 +23,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAddContact, useContacts, useDeleteContact, useSearchContact } from '@/hooks/useContacts'
 import type { Contact } from '@/lib/api/contacts'
+import { classifyError } from '@/lib/errors'
 
 function getInitials(name: string) {
   return name
@@ -33,10 +35,11 @@ function getInitials(name: string) {
 }
 
 export default function ContactsPage() {
-  const { data: contacts, isLoading } = useContacts()
+  const { data: contacts, isLoading, error, refetch } = useContacts()
   const { mutateAsync: addAsync, isPending: isAdding } = useAddContact()
   const { mutateAsync: searchAsync } = useSearchContact()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteContact()
+  const contactsError = error ? classifyError(error, 'Failed to load contacts') : null
 
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
   const [resolvedUserIds, setResolvedUserIds] = useState<Record<string, string>>({})
@@ -167,6 +170,17 @@ export default function ContactsPage() {
 
         {isLoading ? (
           <div className="flex justify-center py-12 text-muted">Loading contacts…</div>
+        ) : contactsError ? (
+          <AsyncStatePanel
+            variant="error"
+            title="Unable to load contacts"
+            description={contactsError.message}
+            primaryAction={
+              <Button type="button" onClick={() => void refetch()}>
+                Retry
+              </Button>
+            }
+          />
         ) : filteredContacts.length === 0 ? (
           <EmptyState
             icon="group"

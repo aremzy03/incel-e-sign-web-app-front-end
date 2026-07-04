@@ -4,8 +4,11 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
+import { Button } from '@/components/ui/button'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import type { MaterialIconName } from '@/components/ui/material-icon'
+import { AsyncStatePanel } from '@/components/library'
+import { classifyError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import {
   getEnvelopeDashboard,
@@ -34,7 +37,7 @@ function MetricCard({
   helper?: string
 }) {
   return (
-    <div className="rounded-xl border border-border bg-white p-6 shadow-card">
+    <div className="rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-label-sm text-muted">{label}</p>
@@ -99,7 +102,7 @@ function QuickActionCard({
   return (
     <Link
       href={href}
-      className="group flex items-start gap-3 rounded-xl border border-border bg-white p-3 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
+      className="group flex items-start gap-3 rounded-xl border border-border bg-surface-container-lowest p-3 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-secondary group-hover:text-on-secondary">
         <MaterialIcon name={icon} size={18} className="text-inherit" />
@@ -117,7 +120,7 @@ export default function DashboardPage() {
   const { isReady } = useAuthReady()
   const userName = session?.user?.full_name?.split(' ')[0] || 'User'
 
-  const { data: dashboard, isLoading } = useQuery({
+  const { data: dashboard, isLoading, error, refetch } = useQuery({
     queryKey: ['envelopes', 'dashboard'],
     queryFn: getEnvelopeDashboard,
     enabled: isReady,
@@ -125,6 +128,7 @@ export default function DashboardPage() {
     retry: shouldRetryAuthQuery,
   })
 
+  const dashboardError = error ? classifyError(error, 'Failed to load dashboard') : null
   const metrics = dashboard?.metrics
   const actionRequired: Envelope[] = dashboard?.action_required ?? []
   const recentActivity: EnvelopeDashboardActivity[] = dashboard?.recent_activity ?? []
@@ -197,10 +201,24 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {dashboardError && !dashboard ? (
+        <AsyncStatePanel
+          variant="error"
+          title="Unable to load your dashboard"
+          description={dashboardError.message}
+          primaryAction={
+            <Button type="button" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+
       {/* Action Required + Recent Activity */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
+      {!dashboardError || dashboard ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
         <div className="lg:col-span-6">
-          <div className="overflow-hidden rounded-xl border border-border bg-white shadow-card">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface-container-lowest shadow-card">
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
               <h2 className="text-headline-lg font-semibold text-primary">Action Required</h2>
               <span className="rounded-full bg-error-light px-2.5 py-1 text-label-xs font-bold text-error">
@@ -266,7 +284,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="lg:col-span-4">
-          <div className="rounded-xl border border-border bg-white shadow-card">
+          <div className="rounded-xl border border-border bg-surface-container-lowest shadow-card">
             <div className="border-b border-border px-6 py-4">
               <h2 className="text-headline-lg font-semibold text-on-surface">Recent Activity</h2>
             </div>
@@ -281,7 +299,7 @@ export default function DashboardPage() {
                     <>
                       <div
                         className={cn(
-                          'relative z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 border-border bg-white',
+                          'relative z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 border-border bg-surface-container-lowest',
                         )}
                       >
                         <MaterialIcon
@@ -325,7 +343,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      ) : null}
     </div>
   )
 }

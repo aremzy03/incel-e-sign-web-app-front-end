@@ -28,6 +28,27 @@ export function validateDocumentUploadFile(file: File): string | null {
   return null
 }
 
+function getUploadErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const axiosErr = err as {
+      response?: { data?: { detail?: string; message?: string } }
+      message?: string
+    }
+    return (
+      axiosErr.response?.data?.detail ||
+      axiosErr.response?.data?.message ||
+      axiosErr.message ||
+      'Upload failed'
+    )
+  }
+
+  if (err instanceof Error) {
+    return err.message
+  }
+
+  return 'Upload failed'
+}
+
 interface UseDocumentUploadQueueOptions {
   onSuccess?: (result: DocumentUploadResponse, file: File) => void | Promise<void>
   onError?: (message: string, file: File) => void
@@ -98,11 +119,16 @@ export function useDocumentUploadQueue(options: UseDocumentUploadQueueOptions = 
           ),
         )
 
-        await optionsRef.current.onSuccess?.(result, file)
+        try {
+          await optionsRef.current.onSuccess?.(result, file)
+        } catch (callbackErr) {
+          console.error('Upload succeeded but onSuccess callback failed:', callbackErr)
+        }
+
         return result
       } catch (err: unknown) {
         clearInterval(progressInterval)
-        const message = err instanceof Error ? err.message : 'Upload failed'
+        const message = getUploadErrorMessage(err)
         setError(message)
         setQueue((prev) =>
           prev.map((item) =>

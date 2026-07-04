@@ -266,7 +266,10 @@ export function DocumentUploadZone({
                 const isAlreadyAdded = uploadedDocuments.some(addedDoc => addedDoc.id === doc.id)
                 const isAdding = addingDocumentId === doc.id
                 return (
-                  <div key={doc.id} className={`p-2 border rounded w-full ${isAlreadyAdded ? 'bg-green-50 border-green-200' : 'bg-white border-border'}`}>
+                  <div
+                    key={doc.id}
+                    className={`w-full rounded border p-2 ${isAlreadyAdded ? 'border-success/30 bg-success-light/20' : 'border-border bg-surface-container-lowest'}`}
+                  >
                     <div className="flex items-center gap-2 w-full">
                       <FileText className="h-3 w-3 text-muted flex-shrink-0" />
                       <div className="flex-1 min-w-0 overflow-hidden">
@@ -279,7 +282,7 @@ export function DocumentUploadZone({
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {isAlreadyAdded ? (
-                          <div className="flex items-center gap-1 text-green-600">
+                          <div className="flex items-center gap-1 text-success">
                             <Check className="h-3 w-3" />
                             <span className="text-xs">Added</span>
                           </div>

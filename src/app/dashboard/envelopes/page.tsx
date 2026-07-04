@@ -8,14 +8,15 @@ import { MaterialIcon } from '@/components/ui/material-icon'
 import { ListPaginationControls } from '@/components/list-pagination-controls'
 import {
   PageHeader,
+  AsyncStatePanel,
   FilterPills,
   SearchField,
   EnvelopeCard,
-  EmptyState,
 } from '@/components/library'
 import { useEnvelopes, useDeleteEnvelope } from '@/hooks/useEnvelopes'
 import { useSession } from 'next-auth/react'
 import type { Envelope } from '@/lib/api/envelopes'
+import { classifyError } from '@/lib/errors'
 import { isSelfSignEnvelope } from '@/lib/api/envelopes'
 import {
   formatRelativeTime,
@@ -98,7 +99,7 @@ export default function EnvelopesPage() {
 
   const isSelfSign = quickFilter === 'self_signed' ? true : undefined
 
-  const { data, isLoading, error, isFetching } = useEnvelopes(
+  const { data, isLoading, error, isFetching, refetch } = useEnvelopes(
     page,
     PAGE_SIZE,
     apiStatus,
@@ -106,6 +107,7 @@ export default function EnvelopesPage() {
     isSelfSign,
   )
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteEnvelope()
+  const envelopeError = error ? classifyError(error, 'Failed to load envelopes') : null
 
   const rawEnvelopes = data?.results ?? []
   const envelopes = useMemo(
@@ -118,6 +120,7 @@ export default function EnvelopesPage() {
 
   const totalCount = data?.count ?? 0
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const hasClientSideFilterMismatch = rawEnvelopes.length > 0 && envelopes.length === 0
 
   const quickFilterOptions = [
     { value: 'all' as QuickFilter, label: 'All' },
@@ -168,21 +171,48 @@ export default function EnvelopesPage() {
       </div>
 
       {isLoading && !data ? (
-        <div className="flex items-center justify-center py-16 text-muted">
-          <MaterialIcon name="progress_activity" size={24} className="animate-spin" />
-          <span className="ml-2">Loading envelopes…</span>
-        </div>
-      ) : error && !data ? (
-        <EmptyState icon="error" title="Failed to load envelopes" description="Please try again." />
-      ) : envelopes.length === 0 ? (
-        <EmptyState
-          icon="mail"
-          title="No envelopes found"
-          description="Create a new envelope to get started."
-          action={
-            <Button asChild>
-              <Link href="/dashboard/envelopes/create">Create Envelope</Link>
+        <AsyncStatePanel
+          variant="loading"
+          title="Loading envelopes"
+          description="Fetching your latest envelope activity."
+        />
+      ) : envelopeError && !data ? (
+        <AsyncStatePanel
+          variant="error"
+          title="Failed to load envelopes"
+          description={envelopeError.message}
+          primaryAction={
+            <Button type="button" onClick={() => void refetch()}>
+              Retry
             </Button>
+          }
+        />
+      ) : envelopes.length === 0 ? (
+        <AsyncStatePanel
+          variant="empty"
+          title={hasClientSideFilterMismatch ? 'No envelopes match this filter on this page' : 'No envelopes found'}
+          description={
+            hasClientSideFilterMismatch
+              ? 'This filter is applied after pagination, so matching envelopes may still exist on other pages. Try another filter or adjust your search.'
+              : 'Create a new envelope to get started.'
+          }
+          primaryAction={
+            hasClientSideFilterMismatch ? (
+              <Button type="button" onClick={() => setQuickFilter('all')}>
+                Clear Filter
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/dashboard/envelopes/create">Create Envelope</Link>
+              </Button>
+            )
+          }
+          secondaryAction={
+            hasClientSideFilterMismatch && searchTerm ? (
+              <Button type="button" variant="outline" onClick={() => setSearchTerm('')}>
+                Clear Search
+              </Button>
+            ) : undefined
           }
         />
       ) : (

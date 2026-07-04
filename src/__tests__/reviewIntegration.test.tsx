@@ -57,7 +57,7 @@ jest.mock('@/hooks/signing', () => ({
     pdfLoadedByDocId: {},
     setPdfLoadedByDocId: jest.fn(),
   }),
-  useUserSignatures: () => ({ signatures: [], isLoading: false }),
+  useUserSignatures: () => ({ signatures: [], isLoading: false, refetch: jest.fn() }),
   useSignActions: () => ({
     approveAndSign: jest.fn(),
     signMutation: { isPending: false },
@@ -65,12 +65,39 @@ jest.mock('@/hooks/signing', () => ({
     declineMutation: { isPending: false, mutate: jest.fn() },
     declineMessage: '',
     setDeclineMessage: jest.fn(),
+    validateRequiredFields: () => [],
+    frozenEnvelopeMessage: null,
+    clearFrozenEnvelopeMessage: jest.fn(),
   }),
   useSigningFieldValues: () => ({
     fieldValues: {},
     setFieldValue: jest.fn(),
     activeFieldPreview: null,
     toggleFieldPreview: jest.fn(),
+  }),
+  useSigningProgress: () => ({
+    signedFor: {},
+    totalFields: 0,
+    completedFields: 0,
+    remainingCount: 0,
+    canComplete: false,
+    fieldChecklist: [],
+    activeFieldId: undefined,
+    markSignaturePreviewed: jest.fn(),
+    markSignatureConfirmed: jest.fn(),
+    markAllSignaturesComplete: jest.fn(),
+    isSignatureComplete: () => false,
+  }),
+  useSigningSubmit: () => ({
+    phase: 'idle',
+    overlayPhase: 'polling',
+    showOverlay: false,
+    isSigningInFlight: false,
+    submitSign: jest.fn(),
+    retry: jest.fn(),
+    keepWaiting: jest.fn(),
+    dismissFailure: jest.fn(),
+    errorMessage: null,
   }),
   resolveSignatureId: () => undefined,
   resolveSignatureImage: () => undefined,
@@ -130,6 +157,6 @@ describe('Review Integration Tests', () => {
 
   it('renders dashboard sign flow page', async () => {
     render(<SignFlowPage isDashboard />, { wrapper })
-    expect(await screen.findByText('Complete Signing')).toBeInTheDocument()
+    expect(await screen.findByText('Sign document')).toBeInTheDocument()
   })
 })

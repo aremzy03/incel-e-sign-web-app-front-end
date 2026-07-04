@@ -1,3 +1,5 @@
+"use client"
+
 /**
  * Authority Button Component - Production-level button with all states and variants
  * Designed for legal confidence and professional e-signature interfaces
@@ -44,7 +46,7 @@ const buttonVariants = cva(
         
         // Secondary - Clean outline
         secondary: [
-          "bg-white border border-outline-variant text-primary shadow-sm",
+          "bg-surface-container-lowest border border-outline-variant text-primary shadow-sm dark:text-primary-fixed",
           "hover:bg-surface-container-low hover:border-outline hover:-translate-y-0.5",
           "active:translate-y-0",
           "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",

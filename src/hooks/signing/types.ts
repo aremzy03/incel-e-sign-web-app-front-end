@@ -7,7 +7,7 @@ import {
 } from '@/lib/utils/field-geometry'
 import type { Envelope, EnvelopeSignature, EnvelopeSigningOrderEntry, EnvelopeCurrentSigner, EnvelopeRecipient } from '@/lib/api/envelopes'
 
-export type SigningViewStep = 'landing' | 'sign'
+export type SigningViewStep = 'landing' | 'review' | 'sign'
 export type SigningViewStatus = 'waiting' | 'processing' | 'complete' | 'declined' | 'cancelled'
 
 export type SigningView =

@@ -73,7 +73,8 @@ export function useUserSignatures({ envelopeId, mode, enabled = true }: UseUserS
 export function resolveSignatureId(signature: unknown): string | undefined {
   if (!signature || typeof signature !== 'object') return undefined
   const raw = signature as Record<string, unknown>
-  const id = raw.id ?? raw.signature_id
+  // Prefer linked UserSignature id (envelope Signature rows expose this as signature_id).
+  const id = raw.signature_id ?? raw.id
   return id != null ? String(id) : undefined
 }
 

@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import {
   PageHeader,
+  AsyncStatePanel,
   SearchField,
   StatusBadge,
   DataTable,
@@ -19,6 +20,7 @@ import {
 import type { DataTableColumn } from '@/components/library'
 import { useUserProfile, useUpdateOwnProfile } from '@/hooks/useUserProfile'
 import type { EnvelopeBetweenUsersItem } from '@/lib/api/profile'
+import { classifyError } from '@/lib/errors'
 import toast from 'react-hot-toast'
 
 function getInitials(name: string) {
@@ -38,8 +40,9 @@ export function ProfilePageContent({ userId }: ProfilePageContentProps) {
   const { data: session } = useSession()
   const isSelf = session?.user?.id === userId
 
-  const { data, isLoading, error } = useUserProfile(userId)
+  const { data, isLoading, error, refetch } = useUserProfile(userId)
   const profileUser = data?.data.user
+  const profileError = error ? classifyError(error, 'Failed to load profile') : null
   const envelopes = data?.data.envelopes_between_users ?? []
 
   const [fullName, setFullName] = useState('')
@@ -95,9 +98,38 @@ export function ProfilePageContent({ userId }: ProfilePageContentProps) {
     return <div className="py-16 text-center text-muted">Loading profile…</div>
   }
 
-  if (error || !profileUser) {
+  if (profileError?.isNotFound) {
     return (
-      <EmptyState icon="person" title="User not found" description="Please check the URL." />
+      <AsyncStatePanel
+        variant="notFound"
+        title="User not found"
+        description="Please check the URL and try again."
+      />
+    )
+  }
+
+  if (profileError) {
+    return (
+      <AsyncStatePanel
+        variant="error"
+        title="Unable to load profile"
+        description={profileError.message}
+        primaryAction={
+          <Button type="button" onClick={() => void refetch()}>
+            Retry
+          </Button>
+        }
+      />
+    )
+  }
+
+  if (!profileUser) {
+    return (
+      <AsyncStatePanel
+        variant="notFound"
+        title="Profile unavailable"
+        description="We couldn't find the profile requested for this page."
+      />
     )
   }
 

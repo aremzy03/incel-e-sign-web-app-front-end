@@ -29,7 +29,7 @@ export function Navigation() {
 
   return (
     <motion.nav 
-      className="bg-white shadow-sm border-b border-border sticky top-0 z-50"
+      className="sticky top-0 z-50 border-b border-border bg-surface-container-lowest shadow-sm"
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}

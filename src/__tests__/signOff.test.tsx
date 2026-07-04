@@ -31,13 +31,14 @@ jest.mock('@/hooks/useProfile', () => ({
 }))
 
 jest.mock('@/hooks/useSigningView', () => ({
-  useSigningView: () => ({
+  useSigningView: jest.fn(() => ({
     view: { kind: 'step', step: 'sign' },
     goToSign: jest.fn(),
+    goToReview: jest.fn(),
     goToStatus: jest.fn(),
     navigateToView: jest.fn(),
     buildUrl: jest.fn(),
-  }),
+  })),
 }))
 
 jest.mock('@/hooks/signing', () => ({
@@ -75,6 +76,7 @@ jest.mock('@/hooks/signing', () => ({
   useUserSignatures: () => ({
     signatures: [{ id: 'sig-1', image_url: '/sig.png', is_default: true }],
     isLoading: false,
+    refetch: jest.fn(),
   }),
   useSignActions: () => ({
     approveAndSign: jest.fn(),
@@ -94,6 +96,30 @@ jest.mock('@/hooks/signing', () => ({
     activeFieldPreview: null,
     setActiveFieldPreview: jest.fn(),
     toggleFieldPreview: jest.fn(),
+  }),
+  useSigningProgress: () => ({
+    signedFor: {},
+    totalFields: 1,
+    completedFields: 0,
+    remainingCount: 1,
+    canComplete: false,
+    fieldChecklist: [],
+    activeFieldId: undefined,
+    markSignaturePreviewed: jest.fn(),
+    markSignatureConfirmed: jest.fn(),
+    markAllSignaturesComplete: jest.fn(),
+    isSignatureComplete: () => false,
+  }),
+  useSigningSubmit: () => ({
+    phase: 'idle',
+    overlayPhase: 'polling',
+    showOverlay: false,
+    isSigningInFlight: false,
+    submitSign: jest.fn(),
+    retry: jest.fn(),
+    keepWaiting: jest.fn(),
+    dismissFailure: jest.fn(),
+    errorMessage: null,
   }),
   resolveSignatureId: () => 'sig-1',
   resolveSignatureImage: () => '/sig.png',
@@ -120,10 +146,26 @@ describe('Sign flow page (dashboard)', () => {
     <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
   )
 
-  it('renders signing shell with complete action', async () => {
+  it('renders signing shell with sign document action', async () => {
     render(<SignFlowPage isDashboard />, { wrapper })
     expect(await screen.findByText('Incel E-Sign')).toBeInTheDocument()
-    expect(await screen.findByText('Complete Signing')).toBeInTheDocument()
+    expect(await screen.findByText('Sign document')).toBeInTheDocument()
     expect(screen.getByTestId('signing-document-viewer')).toBeInTheDocument()
+  })
+
+  it('renders review panel when view step is review', async () => {
+    const { useSigningView } = require('@/hooks/useSigningView')
+    useSigningView.mockReturnValue({
+      view: { kind: 'step', step: 'review' },
+      goToSign: jest.fn(),
+      goToReview: jest.fn(),
+      goToStatus: jest.fn(),
+      navigateToView: jest.fn(),
+      buildUrl: jest.fn(),
+    })
+
+    render(<SignFlowPage isDashboard />, { wrapper })
+    expect(await screen.findByText('Continue to sign')).toBeInTheDocument()
+    expect(screen.getByText(/requested your signature/i)).toBeInTheDocument()
   })
 })

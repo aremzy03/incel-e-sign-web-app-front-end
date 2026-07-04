@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react'
 import { Document as PDFDocument, Page } from 'react-pdf'
 import '@/lib/pdf-worker'
 import { useDroppable } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AsyncStatePanel } from '@/components/library'
 import { cn } from '@/lib/utils'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { FieldBox } from './FieldBox'
@@ -64,6 +65,36 @@ interface DocumentPageInfo {
 
 export type { DocumentPageInfo }
 
+interface PreviewErrorState {
+  title: string
+  description: string
+}
+
+function getPreviewErrorState(loadError: { message?: string } | null | undefined): PreviewErrorState {
+  const message = loadError?.message?.trim() || 'Failed to load document preview.'
+
+  if (/\b404\b/.test(message)) {
+    return {
+      title: 'Preview not found',
+      description:
+        'This document preview is no longer available. The file may have been removed or the preview endpoint returned a missing resource.',
+    }
+  }
+
+  if (/\b504\b/.test(message) || /gateway timeout|timed out|timeout/i.test(message)) {
+    return {
+      title: 'Preview timed out',
+      description:
+        'The preview service took too long to respond. Please try again in a moment, or download the document instead.',
+    }
+  }
+
+  return {
+    title: 'Preview unavailable',
+    description: message,
+  }
+}
+
 export function VerticalPDFViewer({
   documents,
   fieldPositions,
@@ -87,11 +118,12 @@ export function VerticalPDFViewer({
   const password = usePdfPasswordDialog()
   const resetPasswordDialog = password.reset
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [errorState, setErrorState] = useState<PreviewErrorState | null>(null)
   const [documentPages, setDocumentPages] = useState<Record<string, number>>({})
   const [pageDimensions, setPageDimensions] = useState<Record<string, { width: number; height: number }>>({})
   const [actualPDFDimensions, setActualPDFDimensions] = useState<Record<string, { width: number; height: number }>>({})
   const [previewFallbackDocIds, setPreviewFallbackDocIds] = useState<Set<string>>(() => new Set())
+  const [retryNonce, setRetryNonce] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const scale = (editorLayout ? 1.2 : 1) * viewerScale
 
@@ -135,16 +167,17 @@ export function VerticalPDFViewer({
     return options
   }, [validDocuments, previewFallbackDocIds, pdfPassword, accessToken])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // If the caller supplies a password (e.g. completed envelope lock), we should not show prompts.
     // When documents change, reset any previous cancel state and PDF render cache.
     resetPasswordDialog()
     setIsLoading(true)
-    setError(null)
+    setErrorState(null)
     setDocumentPages({})
     setPageDimensions({})
     setActualPDFDimensions({})
     setPreviewFallbackDocIds(new Set())
+    setRetryNonce(0)
   }, [documentRevision, resetPasswordDialog])
 
   // Calculate all pages to render
@@ -281,6 +314,15 @@ export function VerticalPDFViewer({
     containerRef.current?.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' })
   }
 
+  const handleRetryPreview = useCallback(() => {
+    resetPasswordDialog()
+    setErrorState(null)
+    setIsLoading(true)
+    setDocumentPages({})
+    setPreviewFallbackDocIds(new Set())
+    setRetryNonce((current) => current + 1)
+  }, [resetPasswordDialog])
+
   if (validDocuments.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center bg-surface-container-low p-8">
@@ -350,12 +392,26 @@ export function VerticalPDFViewer({
             <PdfLoadingIndicator label="Loading document…" />
           </div>
         )}
-        {error && editorLayout && (
+        {errorState && editorLayout && !readOnly && (
           <div className="absolute left-4 right-4 top-4 z-20 flex items-center gap-2 rounded-lg border border-error/20 bg-error-light px-4 py-3 font-body-sm text-body-sm text-error md:left-8 md:right-8">
             <MaterialIcon name="error_outline" size={18} />
-            <span>{error}</span>
+            <span>{errorState.description}</span>
           </div>
         )}
+        {errorState && readOnly ? (
+          <div className="flex min-h-[420px] items-center justify-center px-4 py-8">
+            <AsyncStatePanel
+              variant={errorState.title === 'Preview not found' ? 'notFound' : 'error'}
+              title={errorState.title}
+              description={errorState.description}
+              primaryAction={
+                <Button type="button" onClick={handleRetryPreview}>
+                  Retry Preview
+                </Button>
+              }
+            />
+          </div>
+        ) : (
         <div className="flex flex-col items-center gap-6">
         {validDocuments.map((document) => {
           const usesPreviewFallback = previewFallbackDocIds.has(document.id)
@@ -368,17 +424,17 @@ export function VerticalPDFViewer({
           const needsAuth = documentUrlNeedsAuth(documentUrl)
           const canLoadPdf = Boolean(documentUrl) && (!needsAuth || accessToken)
           const numPages = documentPages[document.id]
-          const docLoadKey = `${document.id}:${pdfOptionsKey}:${document.updated_at ?? ''}`
+          const docLoadKey = `${document.id}:${pdfOptionsKey}:${document.updated_at ?? ''}:${retryNonce}`
 
           const handleDocumentLoadError = (loadError: Error) => {
             if (shouldFallbackToPreviewApi(directUrl, usesPreviewFallback, document.id)) {
               setPreviewFallbackDocIds((prev) => new Set(prev).add(document.id))
-              setError(null)
+              setErrorState(null)
               setIsLoading(true)
               return
             }
             console.error('PDF load error:', loadError)
-            setError(`Failed to load PDF: ${loadError.message}`)
+            setErrorState(getPreviewErrorState(loadError))
             setIsLoading(false)
           }
 
@@ -475,7 +531,7 @@ export function VerticalPDFViewer({
                             style={{ width: pageWidth, height: pageHeight }}
                           >
                             <div className="absolute inset-0">
-                              {!error && !password.cancelled ? (
+                              {!errorState && !password.cancelled ? (
                                 <Page
                                   pageNumber={pageInfo.pageNumber}
                                   scale={scale}
@@ -540,6 +596,7 @@ export function VerticalPDFViewer({
           )
         })}
         </div>
+        )}
       </div>
     </div>
   )

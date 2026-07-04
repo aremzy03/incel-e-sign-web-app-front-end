@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import type { Envelope } from '@/lib/api/envelopes'
 import type { EnvelopeDocumentResponse } from '@/lib/api/envelopes'
 import { MaterialIcon } from '@/components/ui/material-icon'
@@ -31,6 +32,8 @@ export function EnvelopeDetailsCard({ description }: EnvelopeDetailsCardProps) {
 interface EnvelopeDocumentsCardProps {
   documents: EnvelopeDocumentResponse[]
   isLoading?: boolean
+  errorMessage?: string | null
+  errorAction?: ReactNode
   envelope: Envelope
   isSelfSign?: boolean
 }
@@ -38,6 +41,8 @@ interface EnvelopeDocumentsCardProps {
 export function EnvelopeDocumentsCard({
   documents,
   isLoading,
+  errorMessage,
+  errorAction,
   envelope,
   isSelfSign,
 }: EnvelopeDocumentsCardProps) {
@@ -52,6 +57,11 @@ export function EnvelopeDocumentsCard({
 
       {isLoading ? (
         <p className="font-body-sm text-body-sm text-muted">Loading documents…</p>
+      ) : errorMessage ? (
+        <div className="space-y-3 rounded-lg border border-error/20 bg-error-light/40 p-4">
+          <p className="font-body-sm text-body-sm text-error">{errorMessage}</p>
+          {errorAction}
+        </div>
       ) : documents.length === 0 ? (
         <p className="font-body-sm text-body-sm text-muted">No documents in this envelope.</p>
       ) : (

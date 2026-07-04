@@ -5,20 +5,23 @@ import { MaterialIcon } from '@/components/ui/material-icon'
 import { Button } from '@/components/ui/button'
 import { useConfetti } from '@/hooks/signing/useConfetti'
 
+export type SigningCompletionPhase = 'submitted' | 'envelope_complete'
+
 interface SigningStatusCompleteProps {
   envelopeName?: string
-  isEnvelopeComplete?: boolean
+  completionPhase?: SigningCompletionPhase
   dashboardHomeHref: string
   downloadHref?: string
 }
 
 export function SigningStatusComplete({
   envelopeName,
-  isEnvelopeComplete,
+  completionPhase = 'submitted',
   dashboardHomeHref,
   downloadHref,
 }: SigningStatusCompleteProps) {
-  const canvasRef = useConfetti(true)
+  const isEnvelopeComplete = completionPhase === 'envelope_complete'
+  const canvasRef = useConfetti(isEnvelopeComplete)
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-12">
@@ -30,7 +33,7 @@ export function SigningStatusComplete({
           </div>
         </div>
         <h1 className="mb-3 font-headline-2xl text-headline-2xl text-primary">
-          {isEnvelopeComplete ? 'Signing complete!' : 'Your signature has been recorded'}
+          {isEnvelopeComplete ? 'Signing complete!' : 'Signature submitted'}
         </h1>
         <p className="mb-8 font-body-base text-body-base text-on-surface-variant">
           {envelopeName ? `"${envelopeName}"` : 'This document'}{' '}

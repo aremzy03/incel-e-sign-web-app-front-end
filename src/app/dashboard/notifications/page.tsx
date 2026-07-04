@@ -8,6 +8,7 @@ import {
   PageHeader,
   SegmentedControl,
   EmptyState,
+  AsyncStatePanel,
   NotificationFeedItem,
   NotificationFeedGroup,
   groupNotificationsByTime,
@@ -18,6 +19,7 @@ import {
   markAllNotificationsRead,
   type NotificationItem,
 } from '@/lib/api/notifications'
+import { classifyError } from '@/lib/errors'
 import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
 import toast from 'react-hot-toast'
 
@@ -26,13 +28,14 @@ export default function NotificationsPage() {
   const { isReady } = useAuthReady()
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
-  const { data, isLoading, error } = useQuery<NotificationItem[]>({
+  const { data, isLoading, error, refetch } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: listNotifications,
     enabled: isReady,
     staleTime: 30_000,
     retry: shouldRetryAuthQuery,
   })
+  const notificationsError = error ? classifyError(error, 'Failed to load notifications') : null
 
   const markOne = useMutation({
     mutationFn: markNotificationRead,
@@ -92,8 +95,17 @@ export default function NotificationsPage() {
 
       {isLoading ? (
         <div className="flex justify-center py-16 text-muted">Loading notifications…</div>
-      ) : error ? (
-        <EmptyState icon="error" title="Failed to load notifications" />
+      ) : notificationsError ? (
+        <AsyncStatePanel
+          variant="error"
+          title="Failed to load notifications"
+          description={notificationsError.message}
+          primaryAction={
+            <Button type="button" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          }
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="notifications"

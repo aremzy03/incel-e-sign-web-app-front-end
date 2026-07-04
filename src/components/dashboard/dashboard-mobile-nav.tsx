@@ -42,7 +42,7 @@ export function DashboardMobileNav({
       <div
         ref={panelRef}
         className={cn(
-          'absolute inset-y-0 left-0 flex w-sidebar-width flex-col bg-primary shadow-modal',
+          'absolute inset-y-0 left-0 flex w-sidebar-width flex-col bg-primary shadow-modal dark:bg-primary-container',
           'animate-slide-in-right'
         )}
       >

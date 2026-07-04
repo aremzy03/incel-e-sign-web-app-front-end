@@ -10,7 +10,7 @@ export function FieldPalettePanel() {
   const disabled = uploadedDocuments.length === 0
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-white p-4 wizard-custom-scrollbar">
+    <div className="flex h-full flex-col overflow-y-auto bg-surface-container-lowest p-4 wizard-custom-scrollbar">
       <h2 className="mb-6 shrink-0 text-label-sm font-medium uppercase tracking-wider text-muted">
         Field Palette
       </h2>

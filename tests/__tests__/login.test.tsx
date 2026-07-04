@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useRouter } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { getSession, signIn } from 'next-auth/react'
 import LoginPage from '@/app/(auth)/login/page'
 
 // Mock Next.js router
@@ -22,13 +22,20 @@ jest.mock('next-auth/react', () => ({
 
 const mockPush = jest.fn()
 const mockSignIn = signIn as jest.MockedFunction<typeof signIn>
+const mockGetSession = getSession as jest.MockedFunction<typeof getSession>
 
 describe('LoginPage', () => {
+  const buildAccessToken = () =>
+    `header.${Buffer.from(
+      JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 60 }),
+    ).toString('base64')}.signature`
+
   beforeEach(() => {
     (useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
     })
     mockSignIn.mockResolvedValue({ error: null })
+    mockGetSession.mockResolvedValue(null)
   })
 
   afterEach(() => {
@@ -45,10 +52,8 @@ describe('LoginPage', () => {
   it('renders email and password input fields', () => {
     render(<LoginPage />)
     
-    expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
   })
 
   it('renders Sign In button', () => {
@@ -81,8 +86,8 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     render(<LoginPage />)
     
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
     const submitButton = screen.getByRole('button', { name: /^sign in$/i })
     
     await user.clear(emailInput)
@@ -99,8 +104,8 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     render(<LoginPage />)
     
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
     const submitButton = screen.getByRole('button', { name: /^sign in$/i })
     
     await user.type(emailInput, 'test@example.com')
@@ -114,10 +119,17 @@ describe('LoginPage', () => {
 
   it('calls signIn with correct credentials on form submission', async () => {
     const user = userEvent.setup()
+    mockGetSession
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        accessToken: buildAccessToken(),
+        user: { id: '1', email: 'test@example.com', full_name: 'Test User' },
+        expires: new Date(Date.now() + 60_000).toISOString(),
+      } as any)
     render(<LoginPage />)
     
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
     const submitButton = screen.getByRole('button', { name: /^sign in$/i })
     
     await user.type(emailInput, 'test@example.com')
@@ -131,6 +143,10 @@ describe('LoginPage', () => {
         redirect: false,
       })
     })
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalled()
+    })
   })
 
   it('shows error message when login fails', async () => {
@@ -139,8 +155,8 @@ describe('LoginPage', () => {
     
     render(<LoginPage />)
     
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
     const submitButton = screen.getByRole('button', { name: /^sign in$/i })
     
     await user.type(emailInput, 'test@example.com')
@@ -162,8 +178,8 @@ describe('LoginPage', () => {
     
     render(<LoginPage />)
     
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Enter your password')
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
     const submitButton = screen.getByRole('button', { name: /^sign in$/i })
     
     await user.type(emailInput, 'test@example.com')
@@ -176,5 +192,17 @@ describe('LoginPage', () => {
 
     // cleanup: resolve pending sign-in to avoid leaks
     resolveSignIn?.({ error: null })
+  })
+
+  it('marks invalid fields with aria-invalid when validation fails', async () => {
+    const user = userEvent.setup()
+    render(<LoginPage />)
+
+    await user.click(screen.getByRole('button', { name: /^sign in$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/email address/i)).toHaveAttribute('aria-invalid', 'true')
+      expect(screen.getByLabelText(/^password/i)).toHaveAttribute('aria-invalid', 'true')
+    })
   })
 })

@@ -2,7 +2,10 @@ import apiClient from '@/lib/axios'
 import type { DocumentWithPositions, EnvelopeSignature, Position } from '@/lib/api/envelopes'
 import {
   FrozenEnvelopeError,
+  SigningApiError,
+  SigningRequestTimeoutError,
 } from '@/lib/api/signing-errors'
+import { isLoggingEnabled } from '@/lib/env'
 import {
   ensurePdfPointsPosition,
   normalizeDocumentsWithPositionsForApi,
@@ -44,48 +47,136 @@ export type SignEnvelopeResult =
   | { kind: 'queued'; data: SignJobQueuedData }
   | { kind: 'already_signed'; signature: EnvelopeSignature }
 
+/** Sign enqueue should return quickly; worker handles heavy PDF/S3 work. */
+export const SIGNING_API_TIMEOUT_MS = 30_000
+
+function isAxiosTimeout(error: unknown): boolean {
+  const axiosError = error as AxiosError
+  return axiosError?.code === 'ECONNABORTED' || axiosError?.message?.toLowerCase().includes('timeout') === true
+}
+
 function unwrapApiData<T>(payload: unknown): T {
   const body = payload as { data?: T }
   return (body?.data ?? payload) as T
+}
+
+function parseApiErrorMessage(payload: unknown, fallback: string): string {
+  const body = payload as { message?: string; detail?: string }
+  return body?.message?.trim() || body?.detail?.trim() || fallback
+}
+
+/** Strip undefined fields and enforce one signature source for POST /signatures/{envelope_id}/sign/. */
+export function buildSignEnvelopePayload(payload: SignEnvelopePayload): SignEnvelopePayload {
+  const hasImage = typeof payload.signature_image === 'string' && payload.signature_image.trim() !== ''
+  const hasSavedId = typeof payload.signature_id === 'string' && payload.signature_id.trim() !== ''
+
+  if (hasImage && hasSavedId) {
+    throw new SigningApiError(
+      'Provide either signature_image or signature_id, not both.',
+      400,
+    )
+  }
+
+  const cleaned: SignEnvelopePayload = {}
+  if (hasImage) cleaned.signature_image = payload.signature_image!.trim()
+  if (hasSavedId) cleaned.signature_id = payload.signature_id!.trim()
+
+  if (typeof payload.page === 'number' && Number.isFinite(payload.page) && payload.page >= 1) {
+    cleaned.page = payload.page
+  }
+  if (typeof payload.x === 'number' && Number.isFinite(payload.x)) cleaned.x = payload.x
+  if (typeof payload.y === 'number' && Number.isFinite(payload.y)) cleaned.y = payload.y
+  if (typeof payload.width === 'number' && Number.isFinite(payload.width) && payload.width >= 1) {
+    cleaned.width = payload.width
+  }
+  if (typeof payload.height === 'number' && Number.isFinite(payload.height) && payload.height >= 1) {
+    cleaned.height = payload.height
+  }
+
+  return cleaned
 }
 
 export async function signEnvelope(
   envelopeId: string | number,
   payload: SignEnvelopePayload = {},
 ): Promise<SignEnvelopeResult> {
+  const resolvedEnvelopeId = String(envelopeId).trim()
+  if (!resolvedEnvelopeId) {
+    throw new SigningApiError('Missing envelope id.', 400)
+  }
+
+  const requestPayload = buildSignEnvelopePayload(payload)
+  const requestUrl = `/api/signatures/${encodeURIComponent(resolvedEnvelopeId)}/sign`
+
+  if (isLoggingEnabled()) {
+    console.info('[signEnvelope] POST', requestUrl, requestPayload)
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), SIGNING_API_TIMEOUT_MS)
+
   try {
-    const response = await apiClient.post(`/signatures/${envelopeId}/sign/`, payload)
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      cache: 'no-store',
+      body: JSON.stringify(requestPayload),
+      signal: controller.signal,
+    })
+
+    let data: unknown
+    try {
+      data = await response.json()
+    } catch {
+      throw new SigningApiError('Server returned an invalid response.', response.status)
+    }
+
+    if ((data as { status?: string })?.status === 'error') {
+      const message = parseApiErrorMessage(data, 'Signing failed')
+      if (response.status === 409) {
+        throw new FrozenEnvelopeError(message)
+      }
+      throw new SigningApiError(message, response.status, (data as { data?: unknown }).data)
+    }
 
     if (response.status === 409) {
-      const message =
-        (response.data as { message?: string })?.message ||
-        'Envelope frozen for system upgrade. Ask the creator to resend.'
-      throw new FrozenEnvelopeError(message)
+      throw new FrozenEnvelopeError(
+        parseApiErrorMessage(
+          data,
+          'Envelope frozen for system upgrade. Ask the creator to resend.',
+        ),
+      )
     }
 
     if (response.status === 200) {
-      const signature = unwrapApiData<EnvelopeSignature>(response.data)
+      const signature = unwrapApiData<EnvelopeSignature>(data)
       return { kind: 'already_signed', signature }
     }
 
     if (response.status !== 202) {
-      throw new Error(`Unexpected sign response status: ${response.status}`)
-    }
-
-    const data = unwrapApiData<SignJobQueuedData>(response.data)
-    return { kind: 'queued', data }
-  } catch (error) {
-    if (error instanceof FrozenEnvelopeError) {
-      throw error
-    }
-    const axiosError = error as AxiosError<{ message?: string }>
-    if (axiosError?.response?.status === 409) {
-      throw new FrozenEnvelopeError(
-        axiosError.response?.data?.message ||
-          'Envelope frozen for system upgrade. Ask the creator to resend.',
+      throw new SigningApiError(
+        parseApiErrorMessage(data, `Unexpected sign response status: ${response.status}`),
+        response.status,
+        (data as { data?: unknown }).data,
       )
     }
+
+    const queued = unwrapApiData<SignJobQueuedData>(data)
+    return { kind: 'queued', data: queued }
+  } catch (error) {
+    if (error instanceof FrozenEnvelopeError || error instanceof SigningApiError) {
+      throw error
+    }
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new SigningRequestTimeoutError()
+    }
+    if (isAxiosTimeout(error)) {
+      throw new SigningRequestTimeoutError()
+    }
     throw error
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
@@ -95,7 +186,9 @@ export async function getSigningJob(jobId: string): Promise<SigningJobDetail> {
 }
 
 export async function retrySigningJob(jobId: string): Promise<SignJobQueuedData> {
-  const response = await apiClient.post(`/signatures/jobs/${jobId}/retry/`)
+  const response = await apiClient.post(`/signatures/jobs/${jobId}/retry/`, undefined, {
+    timeout: SIGNING_API_TIMEOUT_MS,
+  })
   if (response.status !== 202) {
     throw new Error(`Unexpected retry response status: ${response.status}`)
   }

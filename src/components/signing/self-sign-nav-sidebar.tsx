@@ -23,13 +23,13 @@ export function SelfSignNavSidebar({
   onUploadClick,
 }: SelfSignNavSidebarProps) {
   return (
-    <aside className="z-20 flex w-sidebar-width shrink-0 flex-col gap-2 bg-primary p-4 pt-4 text-on-primary shadow-md">
+    <aside className="z-20 flex w-sidebar-width shrink-0 flex-col gap-2 bg-primary p-4 pt-4 text-on-primary shadow-md dark:bg-primary-container">
       <div className="mb-4">
         <div className="mb-2 font-caption-xs uppercase tracking-wider text-on-primary/60">Editor Status</div>
         <div className="flex items-center gap-2 rounded-lg border border-primary-fixed/20 bg-primary-container p-3">
           <MaterialIcon name="edit_square" size={22} className="text-secondary-fixed" />
           <div>
-            <div className="font-label-sm text-white">Self-Signing</div>
+            <div className="font-label-sm text-on-primary">Self-Signing</div>
             <div className="text-[10px] text-on-primary-container">Live Session Active</div>
           </div>
         </div>

@@ -64,7 +64,7 @@ export function EnvelopeWizardFooter() {
               variant="outline"
               onClick={() => router.push('/dashboard/envelopes')}
               disabled={isBusy}
-              className="border-border bg-white text-primary"
+              className="border-border bg-surface-container-lowest text-primary"
             >
               Cancel
             </Button>

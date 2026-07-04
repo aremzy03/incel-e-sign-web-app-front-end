@@ -19,7 +19,7 @@ function idsMatch(a?: string, b?: string): boolean {
 }
 
 function parseStep(raw: string | null): SigningViewStep | null {
-  if (raw === 'landing' || raw === 'sign') return raw
+  if (raw === 'landing' || raw === 'review' || raw === 'sign') return raw
   return null
 }
 
@@ -85,9 +85,10 @@ export function deriveSigningView(
   }
 
   if (urlStep === 'landing') return { kind: 'step', step: 'landing' }
+  if (urlStep === 'review') return { kind: 'step', step: 'review' }
   if (urlStep === 'sign') return { kind: 'step', step: 'sign' }
 
-  if (isDashboard) return { kind: 'step', step: 'sign' }
+  if (isDashboard) return { kind: 'step', step: 'review' }
   return { kind: 'step', step: 'landing' }
 }
 
@@ -151,6 +152,7 @@ export function useSigningView({
   }, [buildUrl, canonicalView, envelope?.id, isLoading, router, searchParams])
 
   const goToLanding = () => navigateToView({ kind: 'step', step: 'landing' })
+  const goToReview = () => navigateToView({ kind: 'step', step: 'review' })
   const goToSign = () => navigateToView({ kind: 'step', step: 'sign' })
   const goToStatus = (status: SigningViewStatus) => navigateToView({ kind: 'status', status })
 
@@ -158,6 +160,7 @@ export function useSigningView({
     view: canonicalView,
     navigateToView,
     goToLanding,
+    goToReview,
     goToSign,
     goToStatus,
     buildUrl,

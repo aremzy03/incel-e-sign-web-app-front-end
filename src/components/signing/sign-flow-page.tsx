@@ -1,13 +1,13 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { getUserById, type User } from '@/lib/api/users'
 import { uploadUserSignature } from '@/lib/api/signatures'
-import { buildSigningFieldChecklist, getActiveFieldId } from '@/lib/signing/signing-field-checklist'
+import { scrollToSigningTarget, type SigningFieldChecklistItem } from '@/lib/signing/signing-field-checklist'
 import { useAuthReady } from '@/hooks/useAuthReady'
 import { useProfile } from '@/hooks/useProfile'
 import { useSigningView } from '@/hooks/useSigningView'
@@ -16,6 +16,8 @@ import {
   useSigningEnvelope,
   useSignActions,
   useSigningFieldValues,
+  useSigningProgress,
+  useSigningSubmit,
   useUserSignatures,
   resolveSignatureId,
   resolveSignatureImage,
@@ -27,6 +29,7 @@ import { usePdfPasswordDialog } from '@/components/pdf/usePdfPasswordDialog'
 import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 import { SigningShell } from '@/components/signing/signing-shell'
 import { SigningLanding } from '@/components/signing/signing-landing'
+import { SigningReviewPanel } from '@/components/signing/signing-review-panel'
 import { SigningStatusWaiting } from '@/components/signing/signing-status-waiting'
 import { SigningStatusComplete } from '@/components/signing/signing-status-complete'
 import { SigningStatusDeclined } from '@/components/signing/signing-status-declined'
@@ -36,7 +39,10 @@ import { SigningDocumentViewer } from '@/components/signing/signing-document-vie
 import { SigningFieldsSidebar } from '@/components/signing/signing-fields-sidebar'
 import { SigningMobileSheet } from '@/components/signing/signing-mobile-sheet'
 import { SigningSignFooter } from '@/components/signing/signing-sign-footer'
+import { SigningInlineConfirm } from '@/components/signing/signing-inline-confirm'
+import { SigningProcessingOverlay } from '@/components/signing/signing-processing-overlay'
 import { SignatureModal } from '@/components/library/signature-modal'
+import { AsyncStatePanel } from '@/components/library'
 import {
   SigningToolbar,
   SIGNING_ZOOM_DEFAULT,
@@ -73,28 +79,36 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const password = usePdfPasswordDialog()
   const coords = useSigningCoordinates()
   const fieldState = useSigningFieldValues()
+  const documentSectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  const [signedFor, setSignedFor] = useState<Record<string, boolean>>({})
   const [previewSignerId, setPreviewSignerId] = useState<string | null>(null)
   const [selected, setSelected] = useState<SignerDocumentPositionEntry | null>(null)
+  const [selectedFieldKey, setSelectedFieldKey] = useState<string | null>(null)
+  const [focusedTargetId, setFocusedTargetId] = useState<string | null>(null)
+  const [inlineConfirmOpen, setInlineConfirmOpen] = useState(false)
   const [draftPlacement, setDraftPlacement] = useState<Position | null>(null)
   const [isDraggingDraft, setIsDraggingDraft] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [signerDetails, setSignerDetails] = useState<Record<string, User>>({})
   const [selectedSignature, setSelectedSignature] = useState<unknown>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false)
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [zoom, setZoom] = useState(SIGNING_ZOOM_DEFAULT)
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null)
   const [pageIndicator, setPageIndicator] = useState({ current: 1, total: 1 })
 
   const {
     envelope,
     loadingEnv,
+    envelopeErrorState,
+    refetchEnvelope,
     envelopeDocuments,
     loadingDocs,
     docsError,
+    documentsErrorState,
+    refetchDocuments,
+    waitingForDocumentsAuth,
     pdfFileByDocumentId,
     pdfLoadedByDocId,
     setPdfLoadedByDocId,
@@ -102,7 +116,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   } = useSigningEnvelope({
     envelopeId,
     enabled: isDashboard ? isReady : !!envelopeId,
-    accessToken: isDashboard ? accessToken : accessToken,
+    accessToken,
   })
 
   const { signatures, refetch: refetchSignatures } = useUserSignatures({
@@ -128,6 +142,40 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     currentUserId,
     isDashboard,
     isLoading: loadingEnv,
+  })
+
+  const mySignatureId = useMemo(() => resolveSignatureId(selectedSignature), [selectedSignature])
+
+  const progress = useSigningProgress({
+    envelopeDocuments,
+    envelope,
+    currentUserId,
+    fieldValues: fieldState.fieldValues,
+    mySignatureId,
+  })
+
+  const signActions = useSignActions({
+    envelopeId,
+    envelope,
+    envelopeDocuments,
+    currentUserId,
+    mySignatureId,
+    placement: draftPlacement,
+    signerDetails,
+    fieldValues: fieldState.fieldValues,
+    supportsDecline: isDashboard,
+    supportsFieldSave: isDashboard,
+    onDeclineSuccess: () => goToStatus('declined'),
+  })
+
+  const signingSubmit = useSigningSubmit({
+    envelopeId,
+    signActions,
+    onSignComplete: () => {
+      progress.markAllSignaturesComplete()
+      setInlineConfirmOpen(false)
+      goToStatus('complete')
+    },
   })
 
   useEffect(() => {
@@ -157,63 +205,85 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     fetchSigners()
   }, [envelope?.signing_order, isDashboard, isReady])
 
-  const mySignatureId = useMemo(() => resolveSignatureId(selectedSignature), [selectedSignature])
-
-  const signActions = useSignActions({
-    envelopeId,
-    envelope,
-    envelopeDocuments,
-    currentUserId,
-    mySignatureId,
-    signerDetails,
-    fieldValues: fieldState.fieldValues,
-    signedFor,
-    supportsDecline: isDashboard,
-    supportsFieldSave: isDashboard,
-    onSignSuccess: () => goToStatus('complete'),
-    onDeclineSuccess: () => goToStatus('declined'),
-  })
-
-  const isSigningInFlight =
-    signActions.signMutation.isPending || signActions.saveValuesMutation.isPending
+  useEffect(() => {
+    if (envelopeDocuments.length > 0 && !activeDocumentId) {
+      setActiveDocumentId(envelopeDocuments[0].id)
+    }
+  }, [activeDocumentId, envelopeDocuments])
 
   const mySignatureStatus = envelope?.signatures?.find(
     (s) => String(s.signer) === String(currentUserId),
   )?.status
 
-  const handleApproveAndSign = async () => {
-    const result = await signActions.approveAndSign()
-    if (result?.kind === 'queued') {
-      setIsDialogOpen(false)
-      goToStatus('complete')
-    }
-  }
-
   const onPlaceholderClick = useCallback(
     (entry: SignerDocumentPositionEntry) => {
       const documentIdForEntry = entry.document_id || selected?.document_id
-      if (documentIdForEntry && signedFor[`${documentIdForEntry}-${entry.signer_id}`]) return
+      if (!documentIdForEntry) return
+      if (progress.isSignatureComplete(documentIdForEntry, entry.signer_id)) return
       if (!selectedSignature) {
         toast.error('Please select a signature first')
         return
       }
-      if (previewSignerId !== entry.signer_id) {
-        setPreviewSignerId(entry.signer_id)
-        setSelected(entry)
-        if (!entry.position) setDraftPlacement(null)
-        return
-      }
-      setIsDialogOpen(true)
+
+      const positions =
+        envelopeDocuments
+          .find((d) => d.id === documentIdForEntry)
+          ?.signer_document_positions?.filter((p) => p.signer_id === currentUserId) ?? []
+      const idx = positions.findIndex((p) => p.signer_id === entry.signer_id)
+      const targetKey = `sig-${documentIdForEntry}-${entry.signer_id}-${Math.max(idx, 0)}`
+
+      setPreviewSignerId(entry.signer_id)
+      setSelected(entry)
+      setSelectedFieldKey(targetKey)
+      setFocusedTargetId(targetKey)
+      setInlineConfirmOpen(true)
+      if (!entry.position) setDraftPlacement(null)
     },
-    [previewSignerId, selected?.document_id, selectedSignature, signedFor],
+    [currentUserId, envelopeDocuments, progress, selected?.document_id, selectedSignature],
   )
 
   const handleClearPreview = useCallback(() => {
-    if (previewSignerId && !isDialogOpen) {
+    if (previewSignerId && !inlineConfirmOpen) {
       setPreviewSignerId(null)
       setSelected(null)
+      setSelectedFieldKey(null)
+      setInlineConfirmOpen(false)
     }
-  }, [isDialogOpen, previewSignerId])
+  }, [inlineConfirmOpen, previewSignerId])
+
+  const handleInlineConfirm = useCallback(async () => {
+    if (selected?.document_id && selected.signer_id) {
+      progress.markSignatureConfirmed(selected.document_id, selected.signer_id)
+    }
+    setInlineConfirmOpen(false)
+    setPreviewSignerId(null)
+    setSelected(null)
+    setSelectedFieldKey(null)
+  }, [progress, selected])
+
+  const handleSignDocument = useCallback(async () => {
+    if (!progress.canComplete) {
+      toast.error(`Complete ${progress.remainingCount} remaining field${progress.remainingCount === 1 ? '' : 's'}`)
+      return
+    }
+    await signingSubmit.submitSign()
+  }, [progress.canComplete, progress.remainingCount, signingSubmit])
+
+  const handleFieldSelect = useCallback((item: SigningFieldChecklistItem) => {
+    setFocusedTargetId(item.id)
+    scrollToSigningTarget(item.id)
+    if (item.target?.documentId) {
+      setActiveDocumentId(item.target.documentId)
+      const section = documentSectionRefs.current[item.target.documentId]
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [])
+
+  const handleDocumentSelect = useCallback((documentId: string) => {
+    setActiveDocumentId(documentId)
+    const section = documentSectionRefs.current[documentId]
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
 
   const handlePageIndicatorChange = useCallback((current: number, total: number) => {
     setPageIndicator((prev) =>
@@ -221,53 +291,33 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     )
   }, [])
 
-  const totalFields = useMemo(() => {
-    const sigCount = envelopeDocuments.reduce((acc, doc) => {
-      return (
-        acc +
-        (doc.signer_document_positions?.filter((p) => p.signer_id === currentUserId).length ?? 0)
-      )
-    }, 0)
-    const otherFields =
-      envelope?.fields?.filter((f) => f.assigned_signer === currentUserId).length ?? 0
-    return sigCount + otherFields
-  }, [currentUserId, envelope?.fields, envelopeDocuments])
-
-  const completedFields = useMemo(() => {
-    let count = Object.keys(signedFor).filter((k) => signedFor[k]).length
-    envelope?.fields
-      ?.filter((f) => f.assigned_signer === currentUserId)
-      .forEach((f) => {
-        if (f.type === 'date' || f.type === 'initials' || f.type === 'designation') count += 1
-        if (f.type === 'text' && fieldState.fieldValues[f.id ?? '']) count += 1
-      })
-    return Math.min(count, totalFields || 1)
-  }, [currentUserId, envelope?.fields, fieldState.fieldValues, signedFor, totalFields])
-
-  const canComplete = completedFields >= totalFields && totalFields > 0 && !!mySignatureId
-
-  const fieldChecklist = useMemo(
-    () =>
-      buildSigningFieldChecklist({
-        envelopeDocuments,
-        envelope,
-        currentUserId,
-        signedFor,
-        fieldValues: fieldState.fieldValues,
-      }),
-    [currentUserId, envelope, envelopeDocuments, fieldState.fieldValues, signedFor],
-  )
-
-  const activeFieldId = useMemo(() => getActiveFieldId(fieldChecklist), [fieldChecklist])
-
   const isSignStep = view.kind === 'step' && view.step === 'sign'
   const needsDocuments = isSignStep
+
+  const documentTabs = useMemo(
+    () =>
+      envelopeDocuments.map((doc) => ({
+        id: doc.id,
+        label: doc.file_name || `Document ${doc.id.slice(0, 6)}`,
+      })),
+    [envelopeDocuments],
+  )
+
+  const activeDocLabel = documentTabs.find((d) => d.id === activeDocumentId)?.label
+
   const signToolbar = isSignStep ? (
     <SigningToolbar
       zoom={zoom}
       onZoomIn={() => setZoom((z) => Math.min(SIGNING_ZOOM_MAX, z + SIGNING_ZOOM_STEP))}
       onZoomOut={() => setZoom((z) => Math.max(SIGNING_ZOOM_MIN, z - SIGNING_ZOOM_STEP))}
-      pageIndicator={`Page ${pageIndicator.current} of ${pageIndicator.total}`}
+      pageIndicator={
+        activeDocLabel
+          ? `Page ${pageIndicator.current} of ${pageIndicator.total} · ${activeDocLabel}`
+          : `Page ${pageIndicator.current} of ${pageIndicator.total}`
+      }
+      documents={documentTabs}
+      activeDocumentId={activeDocumentId ?? undefined}
+      onDocumentSelect={handleDocumentSelect}
     />
   ) : undefined
 
@@ -288,12 +338,24 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
 
   const homeHref = isDashboard ? '/dashboard' : '/'
   const dashboardHref = isDashboard ? '/dashboard/envelopes' : '/login'
+  const fallbackHref = isDashboard ? dashboardHref : homeHref
+
+  const selectedFieldLabel = useMemo(() => {
+    if (!selectedFieldKey) return 'Signature field'
+    return progress.fieldChecklist.find((i) => i.id === selectedFieldKey)?.label ?? 'Signature field'
+  }, [progress.fieldChecklist, selectedFieldKey])
+
+  const inlineContextLabel = useMemo(() => {
+    if (!selected?.position?.page) return undefined
+    const doc = envelopeDocuments.find((d) => d.id === selected.document_id)
+    return `${doc?.file_name ?? 'Document'}, page ${selected.position.page}`
+  }, [envelopeDocuments, selected])
 
   if (isDashboard && !isReady) {
     return <PdfLoadingIndicator label="Loading…" />
   }
 
-  if (loadingEnv || !envelope) {
+  if (loadingEnv) {
     return (
       <SigningShell documentTitle="Loading…" user={shellUser}>
         <PdfLoadingIndicator label="Loading envelope…" />
@@ -301,25 +363,110 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     )
   }
 
-  if (needsDocuments && loadingDocs) {
+  if (!envelope && envelopeErrorState) {
     return (
-      <SigningShell documentTitle={envelope.name} user={shellUser}>
-        <PdfLoadingIndicator label="Loading documents…" />
+      <SigningShell documentTitle="Envelope unavailable" user={shellUser}>
+        <div className="flex flex-1 items-center justify-center p-8">
+          <AsyncStatePanel
+            variant={envelopeErrorState.isNotFound ? 'notFound' : 'error'}
+            title={envelopeErrorState.isNotFound ? 'Envelope not found' : 'Unable to load envelope'}
+            description={
+              envelopeErrorState.isNotFound
+                ? 'This signing request may have expired, been removed, or you may not have access to it.'
+                : envelopeErrorState.message
+            }
+            primaryAction={
+              !envelopeErrorState.isNotFound ? (
+                <Button type="button" onClick={() => void refetchEnvelope()}>
+                  Retry
+                </Button>
+              ) : undefined
+            }
+            secondaryAction={
+              <Button type="button" variant="outline" onClick={() => router.push(fallbackHref)}>
+                {isDashboard ? 'Back to Envelopes' : 'Back to Home'}
+              </Button>
+            }
+          />
+        </div>
       </SigningShell>
     )
   }
 
-  if (needsDocuments && (docsError || envelopeDocuments.length === 0)) {
+  if (!envelope) {
+    return (
+      <SigningShell documentTitle="Envelope unavailable" user={shellUser}>
+        <div className="flex flex-1 items-center justify-center p-8">
+          <AsyncStatePanel
+            variant="notFound"
+            title="Envelope unavailable"
+            description="We couldn't find the envelope needed for this signing session."
+            secondaryAction={
+              <Button type="button" variant="outline" onClick={() => router.push(fallbackHref)}>
+                {isDashboard ? 'Back to Envelopes' : 'Back to Home'}
+              </Button>
+            }
+          />
+        </div>
+      </SigningShell>
+    )
+  }
+
+  if (needsDocuments && (waitingForDocumentsAuth || loadingDocs)) {
+    return (
+      <SigningShell documentTitle={envelope.name} user={shellUser}>
+        <PdfLoadingIndicator
+          label={waitingForDocumentsAuth ? 'Preparing secure preview…' : 'Loading documents…'}
+        />
+      </SigningShell>
+    )
+  }
+
+  if (needsDocuments && documentsErrorState) {
     return (
       <SigningShell documentTitle={envelope.name} user={shellUser}>
         <div className="flex flex-1 items-center justify-center p-8">
-          <p className="text-muted">{docsError || 'No documents found.'}</p>
+          <AsyncStatePanel
+            variant="error"
+            title="Unable to load signing documents"
+            description={documentsErrorState.message}
+            primaryAction={
+              <Button type="button" onClick={refetchDocuments}>
+                Retry
+              </Button>
+            }
+            secondaryAction={
+              <Button type="button" variant="outline" onClick={() => router.push(fallbackHref)}>
+                {isDashboard ? 'Back to Envelopes' : 'Back to Home'}
+              </Button>
+            }
+          />
+        </div>
+      </SigningShell>
+    )
+  }
+
+  if (needsDocuments && envelopeDocuments.length === 0) {
+    return (
+      <SigningShell documentTitle={envelope.name} user={shellUser}>
+        <div className="flex flex-1 items-center justify-center p-8">
+          <AsyncStatePanel
+            variant="empty"
+            title="No documents available to sign"
+            description={docsError || 'This envelope does not currently contain any signable documents.'}
+            secondaryAction={
+              <Button type="button" variant="outline" onClick={() => router.push(fallbackHref)}>
+                {isDashboard ? 'Back to Envelopes' : 'Back to Home'}
+              </Button>
+            }
+          />
         </div>
       </SigningShell>
     )
   }
 
   const envelopeAsFull = envelope as unknown as Envelope
+  const isEnvelopeFullyComplete = (envelope.status || '').toLowerCase().includes('complete')
 
   const renderContent = () => {
     if (view.kind === 'status') {
@@ -337,7 +484,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
           return (
             <SigningStatusComplete
               envelopeName={envelope.name}
-              isEnvelopeComplete={(envelope.status || '').toLowerCase().includes('complete')}
+              completionPhase={isEnvelopeFullyComplete ? 'envelope_complete' : 'submitted'}
               dashboardHomeHref={homeHref}
               downloadHref={
                 isDashboard && envelopeId ? `/dashboard/envelopes/${envelopeId}` : undefined
@@ -378,14 +525,31 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
       )
     }
 
-    const handleCompleteSigning = () => {
-      if (previewSignerId) setIsDialogOpen(true)
-      else toast.error('Click a signature field on the document first')
+    if (view.step === 'review') {
+      return (
+        <SigningReviewPanel
+          envelope={envelopeAsFull}
+          currentUserId={currentUserId}
+          signerName={session?.user?.full_name}
+          signerEmail={session?.user?.email}
+          onContinue={goToSign}
+          onDecline={isDashboard ? () => setIsDeclineDialogOpen(true) : undefined}
+          onViewDetails={
+            isDashboard && envelopeId
+              ? () => router.push(`/dashboard/envelopes/${envelopeId}`)
+              : undefined
+          }
+        />
+      )
     }
 
     return (
       <>
-        <div className="flex min-h-0 flex-1 overflow-hidden pb-[72px]">
+        <div
+          className="flex min-h-0 flex-1 overflow-hidden pb-[72px]"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <SigningDocumentViewer
             envelopeDocuments={envelopeDocuments}
             envelope={envelope as SigningEnvelopeResponse}
@@ -403,7 +567,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             passwordCancelled={password.cancelled}
             currentUserId={currentUserId}
             signerDetails={signerDetails}
-            signedFor={signedFor}
+            signedFor={progress.signedFor}
             previewSignerId={previewSignerId}
             selectedSignature={selectedSignature}
             onPlaceholderClick={onPlaceholderClick}
@@ -421,13 +585,17 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             setSelected={setSelected}
             onClearPreview={handleClearPreview}
             zoom={zoom}
+            focusedTargetId={focusedTargetId}
+            selectedFieldKey={selectedFieldKey}
+            documentSectionRefs={documentSectionRefs}
             onPageIndicatorChange={handlePageIndicatorChange}
           />
           <SigningFieldsSidebar
-            completedCount={completedFields}
-            totalCount={totalFields || 1}
-            fieldItems={fieldChecklist}
-            activeFieldId={activeFieldId}
+            completedCount={progress.completedFields}
+            totalCount={progress.totalFields || 1}
+            fieldItems={progress.fieldChecklist}
+            activeFieldId={progress.activeFieldId}
+            onFieldSelect={handleFieldSelect}
             signatures={signatures}
             selectedSignature={selectedSignature}
             onSelectSignature={setSelectedSignature}
@@ -438,8 +606,11 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
           <SigningMobileSheet
             open={isMobileSheetOpen}
             onOpenChange={setIsMobileSheetOpen}
-            completedCount={completedFields}
-            totalCount={totalFields || 1}
+            completedCount={progress.completedFields}
+            totalCount={progress.totalFields || 1}
+            fieldItems={progress.fieldChecklist}
+            activeFieldId={progress.activeFieldId}
+            onFieldSelect={handleFieldSelect}
             signatures={signatures}
             selectedSignature={selectedSignature}
             onSelectSignature={setSelectedSignature}
@@ -447,47 +618,32 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             isUploading={uploadSignatureMutation.isPending}
           />
         </div>
-        <SigningSignFooter
-          completedCount={completedFields}
-          totalCount={totalFields || 1}
-          canComplete={canComplete}
-          isSubmitting={isSigningInFlight}
-          onDecline={() => setIsDeclineDialogOpen(true)}
-          onFinishLater={() => router.push(dashboardHref)}
-          onComplete={handleCompleteSigning}
+
+        <SigningInlineConfirm
+          open={inlineConfirmOpen}
+          signatureImage={resolveSignatureImage(selectedSignature)}
+          fieldLabel={selectedFieldLabel}
+          contextLabel={inlineContextLabel}
+          isSubmitting={signingSubmit.isSigningInFlight}
+          onConfirm={handleInlineConfirm}
+          onChangeSignature={() => setIsMobileSheetOpen(true)}
+          onDismiss={() => {
+            setInlineConfirmOpen(false)
+            setPreviewSignerId(null)
+            setSelected(null)
+            setSelectedFieldKey(null)
+          }}
         />
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirm Signature Placement</DialogTitle>
-              <DialogDescription>
-                Approve to finalize signing on this envelope.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="my-4 flex justify-center">
-              {resolveSignatureImage(selectedSignature) ? (
-                <img
-                  src={resolveSignatureImage(selectedSignature)}
-                  alt="Signature preview"
-                  className="h-[60px] w-[200px] rounded-md border border-border object-contain"
-                />
-              ) : (
-                <p className="text-sm text-muted">No signature selected</p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleApproveAndSign}
-                disabled={isSigningInFlight}
-              >
-                {isSigningInFlight ? 'Processing…' : 'Approve & Sign'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+        <SigningSignFooter
+          completedCount={progress.completedFields}
+          totalCount={progress.totalFields || 1}
+          canComplete={progress.canComplete}
+          remainingCount={progress.remainingCount}
+          isSubmitting={signingSubmit.isSigningInFlight}
+          onDecline={() => setIsDeclineDialogOpen(true)}
+          onComplete={handleSignDocument}
+        />
       </>
     )
   }
@@ -496,7 +652,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     <>
       <SigningShell
         documentTitle={envelope.name}
-        showNavRail={isSignStep}
+        showNavRail={false}
         hideClose={isSignStep}
         user={shellUser}
         toolbar={signToolbar}
@@ -504,6 +660,17 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
       >
         {renderContent()}
       </SigningShell>
+
+      <SigningProcessingOverlay
+        open={signingSubmit.showOverlay}
+        phase={signingSubmit.overlayPhase}
+        title="Applying your signature to the document…"
+        message="Please wait while we embed your signature. This may take a moment."
+        errorMessage={signingSubmit.errorMessage}
+        onRetry={signingSubmit.retry}
+        onKeepWaiting={signingSubmit.keepWaiting}
+        onDismiss={signingSubmit.dismissFailure}
+      />
 
       <Dialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen}>
         <DialogContent>
@@ -523,7 +690,11 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             </Button>
             <Button
               variant="destructive"
-              disabled={signActions.declineMutation.isPending || isSigningInFlight || mySignatureStatus === 'processing'}
+              disabled={
+                signActions.declineMutation.isPending ||
+                signingSubmit.isSigningInFlight ||
+                mySignatureStatus === 'processing'
+              }
               onClick={() => signActions.declineMutation.mutate(signActions.declineMessage)}
             >
               {signActions.declineMutation.isPending ? 'Declining…' : 'Decline Envelope'}

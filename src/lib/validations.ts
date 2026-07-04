@@ -33,6 +33,9 @@ export const registerSchema = z.object({
       'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     ),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
+  acceptedTerms: z.boolean().refine((value) => value, {
+    message: 'Please accept the terms and conditions',
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],

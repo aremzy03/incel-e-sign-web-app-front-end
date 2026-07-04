@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { cn } from '@/lib/utils'
@@ -5,19 +6,21 @@ import { cn } from '@/lib/utils'
 interface AuthBrandHeaderProps {
   className?: string
   subtitle?: string
-  iconFill?: boolean
 }
 
 export function AuthBrandHeader({
   className,
   subtitle = 'Legal Authority',
-  iconFill = true,
 }: AuthBrandHeaderProps) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-on-secondary">
-        <MaterialIcon name="gavel" fill={iconFill} size={22} className="text-on-secondary" />
-      </div>
+      <Image
+        src="/E%20sign%20logo.svg"
+        alt="INCEL E-Sign"
+        width={40}
+        height={40}
+        className="h-10 w-10 object-contain"
+      />
       <div className="flex flex-col">
         <span className="text-lg font-bold text-primary">Incel E-Sign</span>
         <span className="text-xs font-medium text-muted">{subtitle}</span>
@@ -35,7 +38,7 @@ export function AuthSplitLayout({ children, brandPanel }: AuthSplitLayoutProps) 
   return (
     <main className="flex min-h-screen overflow-hidden bg-surface-bright">
       {/* Left branding panel */}
-      <section className="relative hidden w-1/2 flex-col bg-primary p-8 text-on-primary md:p-16 lg:flex">
+      <section className="relative hidden w-1/2 flex-col bg-primary p-8 text-on-primary dark:bg-primary-container md:p-16 lg:flex">
         {brandPanel ?? (
           <>
             <AuthBrandHeader className="text-on-primary [&_span]:text-on-primary [&_.text-muted]:text-on-primary-container" />
@@ -75,7 +78,7 @@ export function AuthSplitLayout({ children, brandPanel }: AuthSplitLayoutProps) 
       </section>
 
       {/* Right form panel */}
-      <section className="flex w-full flex-col bg-white lg:w-1/2">
+      <section className="flex w-full flex-col bg-surface-container-lowest lg:w-1/2">
         {children}
       </section>
     </main>
@@ -123,7 +126,7 @@ export function GoogleOAuthButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-white px-4 py-3 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-low',
+        'flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-low',
         className
       )}
     >

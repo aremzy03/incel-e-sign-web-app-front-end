@@ -18,9 +18,10 @@ export function WizardDocumentUpload({ onDocumentAdd, disabled = false }: Wizard
   const queryClient = useQueryClient()
 
   const { queue, isUploading, error, uploadFile, removeFromQueue } = useDocumentUploadQueue({
-    onSuccess: async (result: DocumentUploadResponse) => {
+    onSuccess: (result: DocumentUploadResponse) => {
       onDocumentAdd(result.data as Document)
-      await queryClient.invalidateQueries({ queryKey: ['documents'] })
+      // Refresh library in the background; do not block upload completion.
+      void queryClient.invalidateQueries({ queryKey: ['documents'] })
     },
     onError: (message, file) => {
       toast.error(message || `Failed to upload ${file.name}`)

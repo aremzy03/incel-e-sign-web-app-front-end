@@ -9,6 +9,7 @@ import {
   normalizeEnvelopeListItem,
   type EnvelopeDocumentResponse,
 } from '@/lib/api/envelopes'
+import { classifyError } from '@/lib/errors'
 import {
   documentUrlNeedsAuth,
   getDocumentFileUrlForViewer,
@@ -29,10 +30,13 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
   const [envelopeDocuments, setEnvelopeDocuments] = useState<EnvelopeDocumentResponse[]>([])
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
+  const [documentsError, setDocumentsError] = useState<unknown>(null)
   const [pdfLoadedByDocId, setPdfLoadedByDocId] = useState<Record<string, boolean>>({})
   const [previewFallbackDocIds, setPreviewFallbackDocIds] = useState<Set<string>>(() => new Set())
+  const [documentReloadToken, setDocumentReloadToken] = useState(0)
 
   const resolveUrl = (url?: string | null) => resolveBackendUrl(url)
+  const waitingForDocumentsAuth = Boolean(enabled && envelopeId && !effectiveAccessToken)
 
   const getDocumentViewerUrl = (
     doc: EnvelopeDocumentResponse,
@@ -68,15 +72,18 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     const fetchDocuments = async () => {
       setLoadingDocs(true)
       setDocsError(null)
+      setDocumentsError(null)
       try {
         const docs = await getEnvelopeDocuments(envelopeId)
         if (cancelled) return
         setEnvelopeDocuments(docs)
         if (docs.length === 0) setDocsError('No documents found for this envelope.')
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          setDocsError('Failed to load documents for signing')
-          toast.error('Failed to load documents for signing')
+          const errorState = classifyError(error, 'Failed to load documents for signing')
+          setDocumentsError(error)
+          setDocsError(errorState.message)
+          toast.error(errorState.message)
         }
       } finally {
         if (!cancelled) setLoadingDocs(false)
@@ -87,7 +94,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     return () => {
       cancelled = true
     }
-  }, [envelopeId, enabled, effectiveAccessToken])
+  }, [documentReloadToken, effectiveAccessToken, enabled, envelopeId])
 
   useEffect(() => {
     setPreviewFallbackDocIds(new Set())
@@ -120,14 +127,30 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     setPdfLoadedByDocId({})
   }, [pdfFileByDocumentId])
 
+  const refetchDocuments = useCallback(() => {
+    setDocumentReloadToken((current) => current + 1)
+  }, [])
+
+  const envelopeErrorState = envelopeError
+    ? classifyError(envelopeError, 'Failed to load envelope')
+    : null
+  const documentsErrorState = documentsError
+    ? classifyError(documentsError, 'Failed to load documents for signing')
+    : null
+
   return {
     envelope,
     loadingEnv,
     envelopeError,
+    envelopeErrorState,
     refetchEnvelope,
     envelopeDocuments,
     loadingDocs,
     docsError,
+    documentsError,
+    documentsErrorState,
+    refetchDocuments,
+    waitingForDocumentsAuth,
     pdfFileByDocumentId,
     pdfLoadedByDocId,
     setPdfLoadedByDocId,

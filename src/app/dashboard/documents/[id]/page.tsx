@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { FileText, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MaterialIcon } from '@/components/ui/material-icon'
+import { AsyncStatePanel } from '@/components/library'
+import { classifyError } from '@/lib/errors'
 import { getDocument } from '@/lib/api/documents'
 import { useDownloadDocument } from '@/hooks/useDocuments'
 import { SelfSignEditorHeader } from '@/components/signing/self-sign-editor-header'
@@ -32,11 +34,12 @@ export default function DocumentDetailPage() {
   const [documentPages, setDocumentPages] = useState<DocumentPageInfo[]>([])
   const [activePageKey, setActivePageKey] = useState<string | null>(null)
 
-  const { data: documentData, isLoading, error } = useQuery({
+  const { data: documentData, isLoading, error, refetch } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => getDocument(documentId),
     enabled: !!documentId,
   })
+  const documentError = error ? classifyError(error, 'Failed to load document') : null
 
   const downloadDocumentMutation = useDownloadDocument()
 
@@ -79,17 +82,58 @@ export default function DocumentDetailPage() {
     )
   }
 
-  if (error || !documentData) {
+  if (documentError?.isNotFound) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
-        <FileText className="mb-4 h-12 w-12 text-muted" />
-        <h3 className="mb-2 text-lg font-medium text-on-surface">Document not found</h3>
-        <p className="mb-4 text-center text-muted">
-          The document you&apos;re looking for doesn&apos;t exist or has been removed.
-        </p>
-        <Button asChild>
-          <Link href="/dashboard/documents">Back to Documents</Link>
-        </Button>
+        <AsyncStatePanel
+          variant="notFound"
+          title="Document not found"
+          description="The document you're looking for doesn't exist or has been removed."
+          secondaryAction={
+            <Button asChild>
+              <Link href="/dashboard/documents">Back to Documents</Link>
+            </Button>
+          }
+        />
+      </div>
+    )
+  }
+
+  if (documentError) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
+        <AsyncStatePanel
+          variant="error"
+          title="Unable to load document"
+          description={documentError.message}
+          primaryAction={
+            <Button type="button" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          }
+          secondaryAction={
+            <Button asChild variant="outline">
+              <Link href="/dashboard/documents">Back to Documents</Link>
+            </Button>
+          }
+        />
+      </div>
+    )
+  }
+
+  if (!documentData) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
+        <AsyncStatePanel
+          variant="notFound"
+          title="Document unavailable"
+          description="We couldn't find the document requested for this view."
+          secondaryAction={
+            <Button asChild variant="outline">
+              <Link href="/dashboard/documents">Back to Documents</Link>
+            </Button>
+          }
+        />
       </div>
     )
   }

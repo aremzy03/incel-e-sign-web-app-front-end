@@ -13,6 +13,7 @@ interface SigningStatusWaitingProps {
   backLabel?: string
   title?: string
   description?: string
+  variant?: 'not_your_turn' | 'already_signed'
 }
 
 export function SigningStatusWaiting({
@@ -20,9 +21,22 @@ export function SigningStatusWaiting({
   currentUserId,
   onClose,
   backLabel = 'Back to Dashboard',
-  title = 'Waiting for others to sign',
-  description = "This document requires a specific signing order. You'll receive an email as soon as it's your turn to sign.",
+  title,
+  description,
+  variant = 'not_your_turn',
 }: SigningStatusWaitingProps) {
+  const currentSignerName =
+    envelope.current_signer?.name || envelope.current_signer?.email || 'the current signer'
+
+  const resolvedTitle =
+    title ??
+    (variant === 'already_signed' ? "You've already signed" : 'Waiting for others to sign')
+
+  const resolvedDescription =
+    description ??
+    (variant === 'already_signed'
+      ? 'Your signature on this envelope has already been recorded.'
+      : `This document requires a specific signing order. Waiting for ${currentSignerName}. You'll receive an email when it's your turn.`)
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-y-auto bg-surface-container-low/30">
       <div className="relative z-10 w-full max-w-2xl px-6 py-8">
@@ -32,10 +46,10 @@ export function SigningStatusWaiting({
           </div>
 
           <h1 className="mb-3 font-headline-2xl text-headline-2xl text-primary">
-            {title}
+            {resolvedTitle}
           </h1>
           <p className="mb-12 max-w-md font-body-base text-body-base text-on-surface-variant">
-            {description}
+            {resolvedDescription}
           </p>
 
           <div className="mb-12 w-full max-w-sm text-left">

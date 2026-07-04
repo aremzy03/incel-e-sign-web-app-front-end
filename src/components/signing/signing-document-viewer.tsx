@@ -64,7 +64,10 @@ export interface SigningDocumentViewerProps {
   setSelected: React.Dispatch<React.SetStateAction<SignerDocumentPositionEntry | null>>
   onClearPreview: () => void
   zoom: number
+  focusedTargetId?: string | null
+  selectedFieldKey?: string | null
   onPageIndicatorChange?: (currentPage: number, totalPages: number) => void
+  documentSectionRefs?: React.MutableRefObject<Record<string, HTMLDivElement | null>>
   className?: string
 }
 
@@ -113,7 +116,10 @@ export function SigningDocumentViewer({
   setSelected,
   onClearPreview,
   zoom,
+  focusedTargetId,
+  selectedFieldKey,
   onPageIndicatorChange,
+  documentSectionRefs,
   className,
 }: SigningDocumentViewerProps) {
   const [pdf, setPdf] = useState<PdfComponents | null>(null)
@@ -198,7 +204,10 @@ export function SigningDocumentViewer({
 
       return myPositionsOnThisPage.map((entry, idx) => {
         const isMe = entry.signer_id === currentUserId
+        const targetKey = `sig-${docItem.id}-${entry.signer_id}-${idx}`
         const isSigned = signedFor[`${docItem.id}-${entry.signer_id}`]
+        const isSelected = selectedFieldKey === targetKey
+        const isFocused = focusedTargetId === targetKey
         const isPreview = previewSignerId === entry.signer_id && !isSigned
         const commonStyle = dims
           ? positionToPixelStyle(entry.position, dims, { coordinateSpace: positionCoordinateSpace })
@@ -207,13 +216,19 @@ export function SigningDocumentViewer({
         if (!commonStyle) return null
 
         return (
-          <div key={`${docItem.id}-${entry.signer_id}-${idx}`} className="absolute" style={commonStyle}>
+          <div
+            key={targetKey}
+            data-signing-target={targetKey}
+            className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+            style={commonStyle}
+          >
             {!isSigned ? (
               isPreview && selectedSignatureImage ? (
-                <div
+                <button
+                  type="button"
                   className="relative h-full w-full cursor-pointer rounded-md border-2 border-green-500 bg-white shadow-lg transition hover:border-green-600 group"
                   onClick={() => (isMe ? onPlaceholderClick({ ...entry, document_id: docItem.id }) : undefined)}
-                  title="Click to confirm and sign"
+                  title="Selected signature field"
                 >
                   <img
                     src={selectedSignatureImage}
@@ -222,23 +237,30 @@ export function SigningDocumentViewer({
                   />
                   <div className="absolute inset-0 flex items-center justify-center rounded-md bg-green-500/10 opacity-0 transition-opacity group-hover:opacity-100">
                     <span className="rounded bg-white/90 px-2 py-1 text-xs font-semibold text-green-700">
-                      Click to confirm
+                      Selected
                     </span>
                   </div>
-                </div>
+                </button>
               ) : (
                 <div className="relative h-full w-full">
-                  <div
-                    role="button"
+                  <button
+                    type="button"
                     onClick={() => onPlaceholderClick({ ...entry, document_id: docItem.id })}
-                    className="field-pulse group absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-status-your-turn bg-accent-light/30 transition hover:bg-accent-light/50"
-                    title="Click to place your signature"
+                    className={cn(
+                      'field-pulse group absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed bg-accent-light/30 transition hover:bg-accent-light/50',
+                      isSelected
+                        ? 'border-status-your-turn ring-2 ring-status-your-turn/30'
+                        : 'border-status-your-turn',
+                    )}
+                    title="Place your signature here"
                   >
                     <div className="flex items-center gap-2 text-status-your-turn">
                       <MaterialIcon name="history_edu" size={20} fill />
-                      <span className="font-label-sm text-label-sm font-bold">CLICK TO SIGN</span>
+                      <span className="font-label-sm text-label-sm font-bold">
+                        {isSelected ? 'SELECTED' : 'PLACE SIGNATURE'}
+                      </span>
                     </div>
-                  </div>
+                  </button>
                   <div className="absolute -left-2 -top-3 rounded bg-status-your-turn px-2 py-0.5 text-[10px] font-bold text-white">
                     REQUIRED
                   </div>
@@ -264,6 +286,8 @@ export function SigningDocumentViewer({
       previewSignerId,
       selectedSignatureImage,
       signedFor,
+      selectedFieldKey,
+      focusedTargetId,
       signerDetails,
       positionCoordinateSpace,
     ],
@@ -283,6 +307,7 @@ export function SigningDocumentViewer({
 
       return fieldsForPage.map((f, idx) => {
         const key = f.id || `${docItem.id}-${pageNo}-${idx}`
+        const targetId = f.id ?? `field-${idx}`
         const style = dims
           ? positionToPixelStyle(fieldToPosition(f), dims, { coordinateSpace: positionCoordinateSpace })
           : null
@@ -290,6 +315,7 @@ export function SigningDocumentViewer({
 
         const isMine = !currentUserId || !f.assigned_signer || f.assigned_signer === currentUserId
         const isActive = activeFieldPreview === key
+        const isFocused = focusedTargetId === targetId
         const fontFamily = f.font_family || 'Helvetica'
         const fontSize = f.font_size || 12
         const requiredMark = f.required ? ' *' : ''
@@ -314,7 +340,12 @@ export function SigningDocumentViewer({
         if (f.type === 'date') {
           const value = f.prefill_value && f.prefill_value.trim() !== '' ? f.prefill_value : today
           return (
-            <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+            <div
+              key={`nf-${docItem.id}-${idx}`}
+              data-signing-target={targetId}
+              className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+              style={style}
+            >
               <div
                 className={
                   isMine
@@ -340,7 +371,12 @@ export function SigningDocumentViewer({
         if (f.type === 'initials') {
           const value = f.prefill_value && f.prefill_value.trim() !== '' ? f.prefill_value : initials
           return (
-            <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+            <div
+              key={`nf-${docItem.id}-${idx}`}
+              data-signing-target={targetId}
+              className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+              style={style}
+            >
               <div
                 className={isMine ? interactiveCls : disabledCls}
                 title={`Initials${requiredMark}`}
@@ -364,7 +400,12 @@ export function SigningDocumentViewer({
         if (f.type === 'designation') {
           const value = f.prefill_value ?? 'Designation not set'
           return (
-            <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+            <div
+              key={`nf-${docItem.id}-${idx}`}
+              data-signing-target={targetId}
+              className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+              style={style}
+            >
               <div
                 className={isMine ? interactiveCls : disabledCls}
                 title={`Designation${requiredMark}`}
@@ -386,7 +427,12 @@ export function SigningDocumentViewer({
         }
 
         return (
-          <div key={`nf-${docItem.id}-${idx}`} className="absolute" style={style}>
+          <div
+            key={`nf-${docItem.id}-${idx}`}
+            data-signing-target={targetId}
+            className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+            style={style}
+          >
             <div
               className={isMine ? interactiveCls : disabledCls}
               title={`Text${requiredMark}`}
@@ -396,7 +442,7 @@ export function SigningDocumentViewer({
               {header}
               <input
                 type="text"
-                defaultValue={f.prefill_value || fieldValues[f.id || ''] || ''}
+                value={fieldValues[f.id || ''] ?? f.prefill_value ?? ''}
                 placeholder={f.placeholder || ''}
                 maxLength={f.max_length || undefined}
                 readOnly={!isMine}
@@ -420,6 +466,7 @@ export function SigningDocumentViewer({
     },
     [
       activeFieldPreview,
+      focusedTargetId,
       currentUserId,
       envelope.fields,
       fieldValues,
@@ -591,7 +638,14 @@ export function SigningDocumentViewer({
           }
 
           return (
-            <div key={docItem.id} className="flex w-full max-w-[850px] flex-col items-center gap-8">
+            <div
+              key={docItem.id}
+              ref={(el) => {
+                if (documentSectionRefs) documentSectionRefs.current[docItem.id] = el
+              }}
+              className="flex w-full max-w-[850px] flex-col items-center gap-8 scroll-mt-4"
+              data-document-section={docItem.id}
+            >
               {!pdfLoadedByDocId[docItem.id] ? (
                 <PdfLoadingIndicator label="Loading document…" />
               ) : null}

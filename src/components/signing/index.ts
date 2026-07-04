@@ -1,6 +1,8 @@
 export { SigningShell } from './signing-shell'
 export { SignFlowPage } from './sign-flow-page'
 export { SigningLanding } from './signing-landing'
+export { SigningReviewPanel } from './signing-review-panel'
+export { SigningInlineConfirm } from './signing-inline-confirm'
 export { SigningDocumentViewer } from './signing-document-viewer'
 export { SigningFieldsSidebar } from './signing-fields-sidebar'
 export { SigningMobileSheet } from './signing-mobile-sheet'

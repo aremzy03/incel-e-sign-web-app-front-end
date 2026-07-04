@@ -12,6 +12,7 @@ interface SigningProcessingOverlayProps {
   errorMessage?: string | null
   onRetry?: () => void
   onKeepWaiting?: () => void
+  onDismiss?: () => void
   className?: string
 }
 
@@ -23,6 +24,7 @@ export function SigningProcessingOverlay({
   errorMessage,
   onRetry,
   onKeepWaiting,
+  onDismiss,
   className,
 }: SigningProcessingOverlayProps) {
   if (!open) return null
@@ -52,6 +54,11 @@ export function SigningProcessingOverlay({
             {onRetry ? (
               <Button onClick={onRetry} className="w-full">
                 Retry
+              </Button>
+            ) : null}
+            {onDismiss ? (
+              <Button variant="outline" onClick={onDismiss} className="mt-2 w-full">
+                Close
               </Button>
             ) : null}
           </>

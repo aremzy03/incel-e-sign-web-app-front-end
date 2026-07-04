@@ -17,6 +17,13 @@ export class SigningFailedError extends Error {
   }
 }
 
+export class SigningRequestTimeoutError extends Error {
+  constructor(message = 'Signing request timed out before the server responded. Please try again.') {
+    super(message)
+    this.name = 'SigningRequestTimeoutError'
+  }
+}
+
 export class SigningTimeoutError extends Error {
   readonly jobId: string
 
@@ -31,6 +38,18 @@ export class AlreadySignedError extends Error {
   constructor(message = 'Document already signed.') {
     super(message)
     this.name = 'AlreadySignedError'
+  }
+}
+
+export class SigningApiError extends Error {
+  readonly status: number
+  readonly data?: unknown
+
+  constructor(message: string, status: number, data?: unknown) {
+    super(message)
+    this.name = 'SigningApiError'
+    this.status = status
+    this.data = data
   }
 }
 

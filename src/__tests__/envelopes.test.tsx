@@ -106,6 +106,7 @@ describe('Envelopes Pages', () => {
       isLoading: false,
       error: null,
       isFetching: false,
+      refetch: jest.fn(),
     })
     useEnvelope.mockReturnValue({
       data: {
@@ -119,6 +120,7 @@ describe('Envelopes Pages', () => {
       },
       isLoading: false,
       error: null,
+      refetch: jest.fn(),
     })
     useCreateEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
     useSendEnvelope.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
@@ -129,6 +131,8 @@ describe('Envelopes Pages', () => {
     useEnvelopeDocuments.mockReturnValue({
       data: [{ id: 'doc-1', document: 'doc-1', file_name: 'doc.pdf' }],
       isLoading: false,
+      error: null,
+      refetch: jest.fn(),
     })
     useDocuments.mockReturnValue({ data: { count: 0, next: null, previous: null, results: [] }, isLoading: false, error: null })
     useUploadDocument.mockReturnValue({ mutateAsync: jest.fn(), isPending: false })
@@ -156,6 +160,16 @@ describe('Envelopes Pages', () => {
     expect(useEnvelopes).toHaveBeenCalledWith(1, 10, 'draft', undefined, undefined)
   })
 
+  it('shows a filter-specific empty state instead of a false global empty state', () => {
+    render(<EnvelopesPage />, { wrapper })
+    fireEvent.click(screen.getByRole('button', { name: 'Waiting for Me' }))
+
+    expect(screen.getByText('No envelopes match this filter on this page')).toBeInTheDocument()
+    expect(
+      screen.getByText(/This filter is applied after pagination, so matching envelopes may still exist on other pages/i),
+    ).toBeInTheDocument()
+  })
+
   it('renders create envelope page header', () => {
     useDocuments.mockReturnValue({
       data: { count: 0, next: null, previous: null, results: [] },
@@ -170,6 +184,22 @@ describe('Envelopes Pages', () => {
   it('renders envelope detail page header', () => {
     render(<EnvelopeDetailPage />, { wrapper })
     expect(screen.getByText('Test Envelope')).toBeInTheDocument()
+  })
+
+  it('shows a not-found state when the envelope request returns 404', () => {
+    useEnvelope.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: { response: { status: 404, data: { detail: 'Envelope not found' } } },
+      refetch: jest.fn(),
+    })
+
+    render(<EnvelopeDetailPage />, { wrapper })
+
+    expect(screen.getByText('Envelope not found')).toBeInTheDocument()
+    expect(
+      screen.getByText(/The requested envelope could not be found or you may no longer have access to it/i),
+    ).toBeInTheDocument()
   })
 
   it('hides Send and Edit actions for self-signed envelopes', () => {

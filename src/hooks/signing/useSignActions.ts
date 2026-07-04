@@ -4,10 +4,10 @@ import { useCallback, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
-import { signEnvelope } from '@/lib/api/signatures'
-import { FrozenEnvelopeError } from '@/lib/api/signing-errors'
+import { FrozenEnvelopeError, SigningApiError, SigningRequestTimeoutError } from '@/lib/api/signing-errors'
 import { saveSigningJob } from '@/lib/signing/signing-job-storage'
-import type { EnvelopeDocumentResponse } from '@/lib/api/envelopes'
+import { SIGNING_API_TIMEOUT_MS, signEnvelope, type SignEnvelopePayload } from '@/lib/api/signatures'
+import type { EnvelopeDocumentResponse, Position } from '@/lib/api/envelopes'
 import type { User } from '@/lib/api/users'
 import type { SigningEnvelopeField, SigningEnvelopeResponse } from './types'
 import { formatSigningDate, getInitialsFromName } from './types'
@@ -22,13 +22,40 @@ interface UseSignActionsOptions {
   envelopeDocuments: EnvelopeDocumentResponse[]
   currentUserId?: string
   mySignatureId?: string
+  placement?: Position | null
   signerDetails: Record<string, User>
   fieldValues: Record<string, string>
-  signedFor: Record<string, boolean>
-  onSignSuccess?: () => void
   onDeclineSuccess?: (message?: string) => void
   supportsDecline?: boolean
   supportsFieldSave?: boolean
+}
+
+function resolveEnvelopeIdForSign(
+  envelope?: SigningEnvelopeResponse,
+  routeEnvelopeId?: string,
+): string | undefined {
+  const fromEnvelope = envelope?.id != null ? String(envelope.id).trim() : ''
+  const fromRoute = routeEnvelopeId?.trim() ?? ''
+  return fromEnvelope || fromRoute || undefined
+}
+
+function buildPlacementPayload(placement?: Position | null): Pick<
+  SignEnvelopePayload,
+  'page' | 'x' | 'y' | 'width' | 'height'
+> {
+  if (!placement) return {}
+  const page = Number(placement.page)
+  const x = Number(placement.x)
+  const y = Number(placement.y)
+  const width = Number(placement.width)
+  const height = Number(placement.height)
+  const payload: Pick<SignEnvelopePayload, 'page' | 'x' | 'y' | 'width' | 'height'> = {}
+  if (Number.isFinite(page) && page >= 1) payload.page = page
+  if (Number.isFinite(x)) payload.x = x
+  if (Number.isFinite(y)) payload.y = y
+  if (Number.isFinite(width) && width >= 1) payload.width = width
+  if (Number.isFinite(height) && height >= 1) payload.height = height
+  return payload
 }
 
 export function useSignActions({
@@ -36,9 +63,9 @@ export function useSignActions({
   envelope,
   currentUserId,
   mySignatureId,
+  placement,
   signerDetails,
   fieldValues,
-  onSignSuccess,
   onDeclineSuccess,
   supportsDecline = true,
   supportsFieldSave = true,
@@ -46,10 +73,11 @@ export function useSignActions({
   const queryClient = useQueryClient()
   const [declineMessage, setDeclineMessage] = useState('')
   const [frozenEnvelopeMessage, setFrozenEnvelopeMessage] = useState<string | null>(null)
+  const resolvedEnvelopeId = resolveEnvelopeIdForSign(envelope, envelopeId)
 
   const saveValuesMutation = useMutation({
     mutationFn: async () => {
-      if (!supportsFieldSave || !envelopeId || !currentUserId) return
+      if (!supportsFieldSave || !resolvedEnvelopeId || !currentUserId) return
       const allFields = envelope?.fields
       if (!allFields?.length) return
 
@@ -75,7 +103,9 @@ export function useSignActions({
       })
 
       if (items.length === 0) return
-      await apiClient.post(`/fields/signing/${envelopeId}/values/`, { items })
+      await apiClient.post(`/fields/signing/${resolvedEnvelopeId}/values/`, { items }, {
+        timeout: SIGNING_API_TIMEOUT_MS,
+      })
     },
   })
 
@@ -83,24 +113,35 @@ export function useSignActions({
     mutationFn: async (): Promise<SignMutationResult> => {
       if (!mySignatureId) throw new Error('No signature on file. Please create/upload your signature first.')
       if (!envelope) throw new Error('Envelope data not loaded.')
-      if (!envelopeId) throw new Error('Missing envelope id.')
+      if (!resolvedEnvelopeId) throw new Error('Missing envelope id.')
 
-      const result = await signEnvelope(envelopeId, { signature_id: mySignatureId })
+      const result = await signEnvelope(resolvedEnvelopeId, {
+        signature_id: mySignatureId,
+        ...buildPlacementPayload(placement),
+      })
 
       if (result.kind === 'already_signed') {
         return { kind: 'already_signed' }
       }
 
-      saveSigningJob(envelopeId, result.data.job_id)
+      saveSigningJob(resolvedEnvelopeId, result.data.job_id)
       return {
         kind: 'queued',
         jobId: result.data.job_id,
-        envelopeId: result.data.envelope_id || envelopeId,
+        envelopeId: result.data.envelope_id || resolvedEnvelopeId,
       }
     },
     onError: (err: unknown) => {
       if (err instanceof FrozenEnvelopeError) {
         setFrozenEnvelopeMessage(err.message)
+        return
+      }
+      if (err instanceof SigningRequestTimeoutError) {
+        toast.error(err.message)
+        return
+      }
+      if (err instanceof SigningApiError) {
+        toast.error(err.message)
         return
       }
       const e = err as { response?: { data?: { detail?: string; message?: string } }; message?: string }
@@ -110,11 +151,11 @@ export function useSignActions({
 
   const declineMutation = useMutation({
     mutationFn: async (message?: string) => {
-      if (!supportsDecline || !envelopeId) throw new Error('Decline not available')
+      if (!supportsDecline || !resolvedEnvelopeId) throw new Error('Decline not available')
       const body = message
         ? { decline_message: message }
         : { decline_message: 'Declined without specific reason.' }
-      const res = await apiClient.post(`/signatures/${envelopeId}/decline/`, body)
+      const res = await apiClient.post(`/signatures/${resolvedEnvelopeId}/decline/`, body)
       return res.data
     },
     onSuccess: (_data, message) => {
@@ -164,14 +205,21 @@ export function useSignActions({
       const result = await signMutation.mutateAsync()
       if (result.kind === 'already_signed') {
         toast.success('Signed successfully!')
-        queryClient.invalidateQueries({ queryKey: ['sign-envelope', envelopeId] })
-        queryClient.invalidateQueries({ queryKey: ['envelopeDocuments', envelopeId] })
-        onSignSuccess?.()
+        queryClient.invalidateQueries({ queryKey: ['sign-envelope', resolvedEnvelopeId] })
+        queryClient.invalidateQueries({ queryKey: ['envelopeDocuments', resolvedEnvelopeId] })
       }
       return result
     } catch (e: unknown) {
       if (e instanceof FrozenEnvelopeError) {
         setFrozenEnvelopeMessage(e.message)
+        return null
+      }
+      if (e instanceof SigningRequestTimeoutError) {
+        toast.error(e.message)
+        return null
+      }
+      if (e instanceof SigningApiError) {
+        toast.error(e.message)
         return null
       }
       const err = e as { response?: { data?: { detail?: string } }; message?: string }

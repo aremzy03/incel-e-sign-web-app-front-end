@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -84,20 +83,6 @@ export function SigningShell({
               <span className="font-caption-xs text-caption-xs text-muted">{user.email}</span>
             </div>
           ) : null}
-          <button
-            type="button"
-            className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container"
-            aria-label="Help"
-          >
-            <MaterialIcon name="help_outline" size={22} />
-          </button>
-          <button
-            type="button"
-            className="hidden rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container md:inline-flex"
-            aria-label="Language"
-          >
-            <MaterialIcon name="language" size={22} />
-          </button>
           {user ? (
             <UserAvatar
               userId={user.id}
@@ -121,34 +106,6 @@ export function SigningShell({
       </header>
 
       <div className="flex flex-1 overflow-hidden pt-topbar-height">
-        {showNavRail ? (
-          <nav
-            className="hidden w-[80px] shrink-0 flex-col items-center gap-8 border-r border-outline-variant bg-primary py-6 md:flex"
-            aria-label="Signing navigation"
-          >
-            <div className="flex cursor-pointer flex-col items-center gap-1">
-              <div className="rounded-xl bg-secondary-container p-3 text-on-secondary-container shadow-md">
-                <MaterialIcon name="edit_document" fill size={24} className="text-on-secondary-container" />
-              </div>
-              <span className="font-label-xs text-label-xs text-on-primary">Sign</span>
-            </div>
-            <div className="flex cursor-not-allowed flex-col items-center gap-1 opacity-60">
-              <div className="p-3">
-                <MaterialIcon name="visibility" size={24} className="text-on-primary-fixed-variant" />
-              </div>
-              <span className="font-label-xs text-label-xs text-on-primary-fixed-variant">Review</span>
-            </div>
-            <div className="mt-auto flex flex-col items-center gap-6">
-              <Link href="/dashboard/settings" className="text-on-primary-fixed-variant hover:text-white">
-                <MaterialIcon name="settings" size={22} />
-              </Link>
-              <button type="button" className="text-on-primary-fixed-variant hover:text-white">
-                <MaterialIcon name="contact_support" size={22} />
-              </button>
-            </div>
-          </nav>
-        ) : null}
-
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
       </div>
 

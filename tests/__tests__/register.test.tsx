@@ -25,12 +25,12 @@ const mockedAxios = axios as jest.Mocked<typeof axios>
 const mockPush = jest.fn()
 
 async function fillRegisterForm(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('checkbox'))
-  await user.type(screen.getByPlaceholderText('First name'), 'John')
-  await user.type(screen.getByPlaceholderText('Last name'), 'Doe')
-  await user.type(screen.getByPlaceholderText('your@company.com'), 'john@example.com')
-  await user.type(screen.getByPlaceholderText('Create password'), 'Password123')
-  await user.type(screen.getByPlaceholderText('Confirm password'), 'Password123')
+  await user.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
+  await user.type(screen.getByLabelText(/first name/i), 'John')
+  await user.type(screen.getByLabelText(/last name/i), 'Doe')
+  await user.type(screen.getByLabelText(/email address/i), 'john@example.com')
+  await user.type(screen.getByLabelText(/^password/i), 'Password123')
+  await user.type(screen.getByLabelText(/confirm password/i), 'Password123')
 }
 
 describe('RegisterPage', () => {
@@ -55,11 +55,12 @@ describe('RegisterPage', () => {
   it('renders all required form fields', () => {
     render(<RegisterPage />)
     
-    expect(screen.getByPlaceholderText('First name')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Last name')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('your@company.com')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Create password')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Confirm password')).toBeInTheDocument()
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /i agree to the/i })).toBeInTheDocument()
   })
 
   it('renders Register button', () => {
@@ -79,7 +80,6 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
     
-    await user.click(screen.getByRole('checkbox'))
     const submitButton = screen.getByRole('button', { name: /create account/i })
     await user.click(submitButton)
     
@@ -88,6 +88,7 @@ describe('RegisterPage', () => {
       expect(screen.getByText('Email is required')).toBeInTheDocument()
       expect(screen.getByText('Password is required')).toBeInTheDocument()
       expect(screen.getByText('Please confirm your password')).toBeInTheDocument()
+      expect(screen.getByText('Please accept the terms and conditions')).toBeInTheDocument()
     })
   })
 
@@ -95,11 +96,11 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
     
-    const firstNameInput = screen.getByPlaceholderText('First name')
-    const lastNameInput = screen.getByPlaceholderText('Last name')
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Create password')
-    const confirmPasswordInput = screen.getByPlaceholderText('Confirm password')
+    const firstNameInput = screen.getByLabelText(/first name/i)
+    const lastNameInput = screen.getByLabelText(/last name/i)
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
     const submitButton = screen.getByRole('button', { name: /create account/i })
     
     await user.type(firstNameInput, 'John')
@@ -107,6 +108,7 @@ describe('RegisterPage', () => {
     await user.type(emailInput, 'invalid-email')
     await user.type(passwordInput, 'Password123')
     await user.type(confirmPasswordInput, 'Password123')
+    await user.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
     await user.click(submitButton)
     
     await waitFor(() => {
@@ -118,7 +120,7 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
     
-    const firstNameInput = screen.getByPlaceholderText('First name')
+    const firstNameInput = screen.getByLabelText(/first name/i)
     const submitButton = screen.getByRole('button', { name: /create account/i })
     
     await user.type(firstNameInput, 'A')
@@ -133,11 +135,11 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
     
-    const firstNameInput = screen.getByPlaceholderText('First name')
-    const lastNameInput = screen.getByPlaceholderText('Last name')
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Create password')
-    const confirmPasswordInput = screen.getByPlaceholderText('Confirm password')
+    const firstNameInput = screen.getByLabelText(/first name/i)
+    const lastNameInput = screen.getByLabelText(/last name/i)
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
     const submitButton = screen.getByRole('button', { name: /create account/i })
     
     await user.type(firstNameInput, 'John')
@@ -145,6 +147,7 @@ describe('RegisterPage', () => {
     await user.type(emailInput, 'john@example.com')
     await user.type(passwordInput, 'weak')
     await user.type(confirmPasswordInput, 'weak')
+    await user.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
     await user.click(submitButton)
     
     await waitFor(() => {
@@ -156,11 +159,11 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
     
-    const firstNameInput = screen.getByPlaceholderText('First name')
-    const lastNameInput = screen.getByPlaceholderText('Last name')
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Create password')
-    const confirmPasswordInput = screen.getByPlaceholderText('Confirm password')
+    const firstNameInput = screen.getByLabelText(/first name/i)
+    const lastNameInput = screen.getByLabelText(/last name/i)
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
     const submitButton = screen.getByRole('button', { name: /create account/i })
     
     await user.type(firstNameInput, 'John')
@@ -168,6 +171,7 @@ describe('RegisterPage', () => {
     await user.type(emailInput, 'john@example.com')
     await user.type(passwordInput, 'weakpassword')
     await user.type(confirmPasswordInput, 'weakpassword')
+    await user.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
     await user.click(submitButton)
     
     await waitFor(() => {
@@ -179,11 +183,11 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
     
-    const firstNameInput = screen.getByPlaceholderText('First name')
-    const lastNameInput = screen.getByPlaceholderText('Last name')
-    const emailInput = screen.getByPlaceholderText('your@company.com')
-    const passwordInput = screen.getByPlaceholderText('Create password')
-    const confirmPasswordInput = screen.getByPlaceholderText('Confirm password')
+    const firstNameInput = screen.getByLabelText(/first name/i)
+    const lastNameInput = screen.getByLabelText(/last name/i)
+    const emailInput = screen.getByLabelText(/email address/i)
+    const passwordInput = screen.getByLabelText(/^password/i)
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
     const submitButton = screen.getByRole('button', { name: /create account/i })
     
     await user.type(firstNameInput, 'John')
@@ -191,6 +195,7 @@ describe('RegisterPage', () => {
     await user.type(emailInput, 'john@example.com')
     await user.type(passwordInput, 'Password123')
     await user.type(confirmPasswordInput, 'DifferentPassword123')
+    await user.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
     await user.click(submitButton)
     
     await waitFor(() => {
@@ -253,6 +258,17 @@ describe('RegisterPage', () => {
     
     await waitFor(() => {
       expect(submitButton).toBeDisabled()
+    })
+  })
+
+  it('marks the terms checkbox invalid when not accepted', async () => {
+    const user = userEvent.setup()
+    render(<RegisterPage />)
+
+    await user.click(screen.getByRole('button', { name: /create account/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('checkbox', { name: /i agree to the/i })).toHaveAttribute('aria-invalid', 'true')
     })
   })
 })

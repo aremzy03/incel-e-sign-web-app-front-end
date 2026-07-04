@@ -109,6 +109,8 @@ export const uploadDocument = async (
   try {
     // Do NOT set Content-Type manually; let the browser set the multipart boundary
     const response = await apiClient.post('/documents/upload/', formData, {
+      // Uploads (especially Word conversion) can exceed the default 30s client timeout.
+      timeout: 120_000,
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total) {
           onProgress?.(Math.round((progressEvent.loaded * 100) / progressEvent.total))

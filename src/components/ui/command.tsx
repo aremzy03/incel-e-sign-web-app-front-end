@@ -7,7 +7,7 @@ type CommandProps = React.HTMLAttributes<HTMLDivElement> & { children: React.Rea
 
 export function Command({ children, className, ...props }: CommandProps) {
   return (
-    <div className={cn("w-full rounded-xl border border-border bg-white shadow-card overflow-hidden", className)} {...props}>
+    <div className={cn("w-full overflow-hidden rounded-xl border border-border bg-surface-container-lowest shadow-card", className)} {...props}>
       {children}
     </div>
   )

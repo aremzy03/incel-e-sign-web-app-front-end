@@ -59,62 +59,64 @@ export default function DocumentUploadPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader
-        title="Upload Documents"
-        subtitle="Add PDF or Word files to your document library"
-        actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/documents">
-              <MaterialIcon name="arrow_back" size={18} className="mr-2" />
-              Back to Documents
-            </Link>
-          </Button>
-        }
-      />
-
-      <div className="rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card">
-        <FileDropzone
-          onFileSelect={handleFileSelect}
-          isDragOver={isDragOver}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onBrowseClick={handleBrowseClick}
-          error={error}
-          disabled={isUploading}
-        />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="sr-only"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) handleFileSelect(file)
-          }}
-        />
-
-        {queue.length > 0 && (
-          <div className="mt-6">
-            <UploadQueue items={queue} onRemove={handleRemove} />
-          </div>
-        )}
-
-        {uploadedId && (
-          <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
-            <Button variant="outline" asChild className="sm:flex-1">
-              <Link href={`/dashboard/envelopes/self-sign?documentId=${uploadedId}`}>
-                Sign Myself
+    <div className="-m-4 flex min-h-[calc(100dvh-7rem)] w-full items-center justify-center md:-m-8 lg:min-h-[calc(100dvh-4rem)]">
+      <div className="w-full max-w-3xl space-y-6">
+        <PageHeader
+          title="Upload Documents"
+          subtitle="Add PDF or Word files to your document library"
+          actions={
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/documents">
+                <MaterialIcon name="arrow_back" size={18} className="mr-2" />
+                Back to Documents
               </Link>
             </Button>
-            <Button asChild className="bg-secondary hover:bg-accent-hover sm:flex-1">
-              <Link href={`/dashboard/envelopes/create?documentId=${uploadedId}`}>
-                Create Envelope
-              </Link>
-            </Button>
-          </div>
-        )}
+          }
+        />
+
+        <div className="rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card">
+          <FileDropzone
+            onFileSelect={handleFileSelect}
+            isDragOver={isDragOver}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onBrowseClick={handleBrowseClick}
+            error={error}
+            disabled={isUploading}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleFileSelect(file)
+            }}
+          />
+
+          {queue.length > 0 && (
+            <div className="mt-6">
+              <UploadQueue items={queue} onRemove={handleRemove} />
+            </div>
+          )}
+
+          {uploadedId && (
+            <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
+              <Button variant="outline" asChild className="sm:flex-1">
+                <Link href={`/dashboard/envelopes/self-sign?documentId=${uploadedId}`}>
+                  Sign Myself
+                </Link>
+              </Button>
+              <Button asChild className="bg-secondary hover:bg-accent-hover sm:flex-1">
+                <Link href={`/dashboard/envelopes/create?documentId=${uploadedId}`}>
+                  Create Envelope
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

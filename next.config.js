@@ -84,6 +84,20 @@ const nextConfig = {
 
     return config
   },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard/sign/:envelopeId',
+        destination: '/dashboard/envelopes/:envelopeId/sign',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/sign/review/:envelopeId',
+        destination: '/dashboard/envelopes/:envelopeId/sign?step=sign',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     // Derive the backend origin (for CSP connect-src) from NEXT_PUBLIC_API_URL, ignoring any path.
     let apiOrigin = ''
@@ -129,12 +143,26 @@ const nextConfig = {
     // Content Security Policy
     // Allow images and XHR/WebSocket connections to the backend API origin (for profile photos, etc.)
     const imgSrc = "img-src 'self' data: blob: https:" + (apiOrigin ? ` ${apiOrigin}` : '')
-    const connectSrc = "connect-src 'self'" + (apiOrigin ? ` ${apiOrigin}` : '')
+
+    let cdnOrigin = ''
+    if (process.env.NEXT_PUBLIC_PDF_DIRECT_CDN === 'true' && process.env.NEXT_PUBLIC_PDF_CDN_ORIGIN) {
+      try {
+        cdnOrigin = new URL(process.env.NEXT_PUBLIC_PDF_CDN_ORIGIN).origin
+      } catch {
+        // ignore invalid CDN origin
+      }
+    }
+
+    const connectSrc =
+      "connect-src 'self' blob:" +
+      (apiOrigin ? ` ${apiOrigin}` : '') +
+      (cdnOrigin ? ` ${cdnOrigin}` : '')
 
     const cspHeader = [
       // Allow blob: for inline PDF blobs created on the frontend
       "default-src 'self' blob:",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed for PDF.js
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       imgSrc,
       "font-src 'self' data:",
@@ -191,9 +219,15 @@ const nextConfig = {
   // Enable compression
   compress: true,
   // Reduce bundle size
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-  },
+  experimental: isProduction
+    ? {
+        optimizePackageImports: [
+          'lucide-react',
+          '@radix-ui/react-dialog',
+          '@radix-ui/react-dropdown-menu',
+        ],
+      }
+    : undefined,
 }
 
 module.exports = withBundleAnalyzer(nextConfig)

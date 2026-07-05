@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import '@fontsource-variable/material-symbols-outlined/index.css'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { NavigationGate } from '@/components/navigation-gate'
@@ -46,10 +47,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable}`}>
+    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body className="font-body antialiased bg-background text-foreground">
         <Providers>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-bg">
             <NavigationGate />
             <main className="flex-1">
               {children}

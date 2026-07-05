@@ -135,6 +135,27 @@ if (!global.URL.revokeObjectURL) {
   global.URL.revokeObjectURL = jest.fn()
 }
 
+// react-pdf v10 is ESM-only; mock it globally so document/PDF page tests can load
+jest.mock('react-pdf', () => {
+  const React = require('react')
+  return {
+    Document: ({
+      children,
+      onLoadSuccess,
+    }: {
+      children?: React.ReactNode
+      onLoadSuccess?: (payload: { numPages: number }) => void
+    }) => {
+      React.useEffect(() => {
+        onLoadSuccess?.({ numPages: 1 })
+      }, [onLoadSuccess])
+      return React.createElement('div', { 'data-testid': 'pdf-document' }, children)
+    },
+    Page: () => React.createElement('div', { 'data-testid': 'pdf-page' }),
+    pdfjs: { version: '5.3.93', GlobalWorkerOptions: { workerSrc: '' } },
+  }
+})
+
 // Avoid async next/dynamic loadable updates that trigger act(...) warnings in tests
 jest.mock('next/dynamic', () => {
   const React = require('react')
@@ -232,6 +253,25 @@ jest.mock('@radix-ui/react-select', () => {
     Viewport,
   }
 })
+
+// Mock useAuthReady to align with session state in tests
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: jest.fn(() => {
+    const { useSession } = require('next-auth/react')
+    const { data: session, status } = useSession()
+    const isReady =
+      status === 'authenticated' &&
+      !!session?.accessToken &&
+      session.error !== 'RefreshAccessTokenError'
+    return {
+      isReady,
+      status,
+      accessToken: session?.accessToken,
+      session,
+    }
+  }),
+  shouldRetryAuthQuery: jest.fn((failureCount: number) => failureCount < 1),
+}))
 
 // Mock environment variables
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000/api'

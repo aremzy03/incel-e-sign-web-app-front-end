@@ -65,8 +65,8 @@ describe('Audit Log Page', () => {
     expect(screen.getByText('Administrative view of system audit trails')).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getAllByText('CREATE_ENV').length).toBeGreaterThan(0)
-      expect(screen.getAllByText('SIGN_DOC').length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/CREATE ENV/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/SIGN DOC/i).length).toBeGreaterThan(0)
       expect(screen.getAllByText('Admin User').length).toBeGreaterThan(0)
       expect(screen.getAllByText('User Two').length).toBeGreaterThan(0)
     })

@@ -122,12 +122,12 @@ export function EnvelopeCreationSidebar({
   const unassignedCount = getUnassignedFieldCount()
 
   return (
-      <div className="w-full bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden">
+      <div className="w-full bg-white border-r border-border flex flex-col h-full overflow-hidden">
         <div className="flex-1 overflow-y-auto space-y-3 p-2.5 w-full min-w-0">
           {/* Envelope Details / Actions */}
-          <Card className="w-full min-w-0 shadow-none border border-gray-200">
+          <Card className="w-full min-w-0 shadow-none border border-border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-gray-900">
+              <CardTitle className="text-xs font-semibold text-on-surface">
                 Envelope details
               </CardTitle>
             </CardHeader>
@@ -160,16 +160,16 @@ export function EnvelopeCreationSidebar({
                   className="text-xs resize-none h-20"
                   placeholder="Message or instructions for recipients"
                 />
-                <p className="text-[10px] text-gray-500">
+                <p className="text-[10px] text-muted">
                   Shown to all recipients before signing. {(description || '').length}/1000.
                 </p>
               </div>
             </CardContent>
           </Card>
           {/* Document Upload Section */}
-          <Card className="w-full min-w-0 shadow-none border border-gray-200">
+          <Card className="w-full min-w-0 shadow-none border border-border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-gray-900 flex items-center gap-2">
+              <CardTitle className="text-xs font-semibold text-on-surface flex items-center gap-2">
                 <DocumentUploadZone
                   uploadedDocuments={uploadedDocuments}
                   onDocumentAdd={onDocumentAdd}
@@ -183,9 +183,9 @@ export function EnvelopeCreationSidebar({
           </Card>
 
           {/* Recipients Section */}
-          <Card className="w-full min-w-0 shadow-none border border-gray-200">
+          <Card className="w-full min-w-0 shadow-none border border-border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-gray-900 flex items-center gap-2">
+              <CardTitle className="text-xs font-semibold text-on-surface flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Recipients
                 <Badge variant="secondary">{recipients.length}</Badge>
@@ -204,14 +204,14 @@ export function EnvelopeCreationSidebar({
               {/* Recipients List */}
               {recipients.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-[11px] font-medium text-gray-700">Added recipients</h4>
+                  <h4 className="text-[11px] font-medium text-body">Added recipients</h4>
                   <div className="space-y-1">
                     {recipients.map((recipient, index) => {
                       const fieldCount = getFieldCountForRecipient(recipient.id)
                       return (
                         <div
                           key={recipient.id}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200"
+                          className="flex items-center justify-between p-2 bg-surface rounded border border-border"
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div
@@ -219,10 +219,10 @@ export function EnvelopeCreationSidebar({
                               style={{ backgroundColor: recipient.color }}
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-gray-900 truncate">
+                              <p className="text-xs font-medium text-on-surface truncate">
                                 {recipient.name || recipient.email}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-muted truncate">
                                 {recipient.email}
                               </p>
                             </div>
@@ -270,9 +270,9 @@ export function EnvelopeCreationSidebar({
           </Card>
 
           {/* Field Palette Section */}
-          <Card className="w-full min-w-0 shadow-none border border-gray-200">
+          <Card className="w-full min-w-0 shadow-none border border-border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-gray-900 flex items-center gap-2">
+              <CardTitle className="text-xs font-semibold text-on-surface flex items-center gap-2">
                 <Palette className="h-4 w-4" />
                 Field Types
                 {unassignedCount > 0 && (
@@ -284,7 +284,7 @@ export function EnvelopeCreationSidebar({
             </CardHeader>
             <CardContent className="pt-2">
               <div className="space-y-2">
-                <p className="text-[11px] text-gray-600 mb-2">
+                <p className="text-[11px] text-muted mb-2">
                   Drag fields onto documents to place them
                 </p>
                 {FIELD_TYPES.map((fieldType) => (
@@ -297,8 +297,8 @@ export function EnvelopeCreationSidebar({
               </div>
               
               {/* Field Type Notes */}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-xs text-blue-800">
+              <div className="mt-4 p-3 bg-info-light rounded-lg">
+                <p className="text-xs text-secondary">
                   <strong>Note:</strong> Signature positions are required. Other fields (initials, date, text, designation) are optional and sent when assigned.
                 </p>
               </div>

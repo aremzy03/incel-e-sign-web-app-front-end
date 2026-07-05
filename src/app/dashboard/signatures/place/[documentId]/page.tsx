@@ -107,8 +107,8 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Place Signature on Document</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-on-surface">Place Signature on Document</h1>
+          <p className="text-muted mt-1">
             Drag and drop your signatures onto the document preview
           </p>
         </div>
@@ -137,23 +137,23 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
             <CardContent>
               <div 
                 ref={documentRef}
-                className="relative bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 min-h-[600px]"
+                className="relative bg-surface border-2 border-dashed border-outline-variant rounded-lg p-4 min-h-[600px]"
               >
                 {/* Document Pages */}
                 {Array.from({ length: dummyDocument.pages }, (_, index) => (
                   <div
                     key={index}
-                    className={`relative mb-4 bg-white border border-gray-200 rounded shadow-sm p-4 min-h-[200px] transition-colors ${
-                      dragOverPage === index + 1 ? 'bg-blue-50 border-blue-300' : ''
+                    className={`relative mb-4 bg-white border border-border rounded shadow-sm p-4 min-h-[200px] transition-colors ${
+                      dragOverPage === index + 1 ? 'bg-info-light border-secondary/30' : ''
                     }`}
                     onDragOver={(e) => handleDragOver(e, index + 1)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, index + 1)}
                   >
-                    <div className="text-center text-gray-500 mb-4">
+                    <div className="text-center text-muted mb-4">
                       <FileImage className="h-8 w-8 mx-auto mb-2" />
                       <p className="text-sm">Page {index + 1}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted">
                         {dragOverPage === index + 1 ? 'Drop signature here' : 'Drag signature here'}
                       </p>
                     </div>
@@ -166,7 +166,7 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
                         return (
                           <div
                             key={placement.id}
-                            className="absolute border-2 border-blue-400 bg-blue-50 rounded p-2 cursor-move"
+                            className="absolute border-2 border-secondary/50 bg-info-light rounded p-2 cursor-move"
                             style={{
                               left: `${placement.x}px`,
                               top: `${placement.y}px`,
@@ -175,8 +175,8 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
                             }}
                           >
                             <div className="text-center">
-                              <FileImage className="h-4 w-4 mx-auto mb-1 text-blue-600" />
-                              <p className="text-xs text-blue-600 font-medium">
+                              <FileImage className="h-4 w-4 mx-auto mb-1 text-secondary" />
+                              <p className="text-xs text-secondary font-medium">
                                 {signature?.name || 'Signature'}
                               </p>
                             </div>
@@ -206,19 +206,19 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
                   draggable
                   onDragStart={(e) => handleDragStart(e, signature.id)}
                   onDragEnd={handleDragEnd}
-                  className={`p-3 border border-gray-200 rounded-lg cursor-move hover:shadow-md transition-all ${
+                  className={`p-3 border border-border rounded-lg cursor-move hover:shadow-md transition-all ${
                     draggedSignature === signature.id ? 'opacity-50' : ''
                   }`}
                 >
-                  <div className="bg-gray-50 rounded-md p-3 mb-2 flex items-center justify-center h-16 border-2 border-dashed border-gray-300">
+                  <div className="bg-surface rounded-md p-3 mb-2 flex items-center justify-center h-16 border-2 border-dashed border-outline-variant">
                     <div className="text-center">
-                      <FileImage className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                      <p className="text-xs text-gray-500">Signature Preview</p>
+                      <FileImage className="h-6 w-6 text-muted mx-auto mb-1" />
+                      <p className="text-xs text-muted">Signature Preview</p>
                     </div>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-gray-900">{signature.name}</p>
-                    <p className="text-xs text-gray-500">Drag to place</p>
+                    <p className="text-sm font-medium text-on-surface">{signature.name}</p>
+                    <p className="text-xs text-muted">Drag to place</p>
                   </div>
                 </div>
               ))}
@@ -227,7 +227,7 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
 
           {/* Placement Summary */}
           {placements.length > 0 && (
-            <Card className="bg-blue-50 border-blue-200 mt-4">
+            <Card className="bg-info-light border-info-light mt-4">
               <CardHeader>
                 <CardTitle className="text-lg">Placements</CardTitle>
                 <CardDescription>
@@ -239,9 +239,9 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
                   {placements.map((placement) => {
                     const signature = getSignatureById(placement.signatureId)
                     return (
-                      <div key={placement.id} className="text-sm text-gray-700">
+                      <div key={placement.id} className="text-sm text-body">
                         <span className="font-medium">{signature?.name}</span>
-                        <span className="text-gray-500"> on page {placement.page}</span>
+                        <span className="text-muted"> on page {placement.page}</span>
                       </div>
                     )
                   })}

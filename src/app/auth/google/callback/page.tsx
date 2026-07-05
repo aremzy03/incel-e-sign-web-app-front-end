@@ -59,10 +59,10 @@ function GoogleOAuthCallbackHandler() {
   }, [router, searchParams])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-surface">
       <div className="text-center space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
-        <p className="text-gray-700 text-sm">
+        <p className="text-body text-sm">
           Signing you in with Google, please wait...
         </p>
       </div>
@@ -73,10 +73,10 @@ function GoogleOAuthCallbackHandler() {
 export default function GoogleOAuthCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
-          <p className="text-gray-700 text-sm">
+          <p className="text-body text-sm">
             Loading...
           </p>
         </div>

@@ -1,19 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
+import { useMemo } from 'react'
 import { 
   getEnvelopes, 
   getEnvelope, 
+  getEnvelopeDocuments,
+  normalizeEnvelopeDocumentEntries,
   createEnvelope, 
   sendEnvelope, 
   rejectEnvelope, 
   deleteEnvelope,
   CreateEnvelopeRequest,
   EditEnvelopeRequest,
-  Envelope
+  Envelope,
+  type EnvelopeDocumentResponse,
 } from '@/lib/api/envelopes'
 import { editEnvelope } from '@/lib/api/envelopes'
 import { selfSignEnvelope, type SelfSignRequest } from '@/lib/api/signatures'
+import { FrozenEnvelopeError, resolveSigningInProgressMessage } from '@/lib/api/signing-errors'
 
 function normalizeEnvelopeSearch(search?: string) {
   const trimmed = search?.trim()
@@ -52,6 +57,33 @@ export const useEnvelope = (id: string) => {
     staleTime: 5 * 60 * 1000,
     retry: shouldRetryAuthQuery,
   })
+}
+
+// Hook to get documents for an envelope (waits for auth; falls back to inline envelope docs)
+export const useEnvelopeDocuments = (
+  envelopeId: string,
+  inlineDocuments?: Envelope['documents'],
+) => {
+  const { isReady } = useAuthReady()
+
+  const inline = useMemo(
+    () => normalizeEnvelopeDocumentEntries(inlineDocuments ?? []),
+    [inlineDocuments],
+  )
+
+  const query = useQuery<EnvelopeDocumentResponse[]>({
+    queryKey: ['envelopeDocuments', envelopeId],
+    queryFn: () => getEnvelopeDocuments(envelopeId),
+    enabled: isReady && !!envelopeId,
+    staleTime: 5 * 60 * 1000,
+    retry: shouldRetryAuthQuery,
+  })
+
+  return {
+    ...query,
+    data: query.data ?? (inline.length > 0 ? inline : undefined),
+    isLoading: query.isLoading && inline.length === 0,
+  }
 }
 
 // Hook to create an envelope
@@ -100,6 +132,16 @@ export const useCreateEnvelope = () => {
   })
 }
 
+function invalidateEnvelopeDocumentQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  envelopeId: string,
+) {
+  queryClient.invalidateQueries({ queryKey: ['envelope', envelopeId] })
+  queryClient.invalidateQueries({ queryKey: ['envelopeDocuments', envelopeId] })
+  queryClient.invalidateQueries({ queryKey: ['envelope-documents', envelopeId] })
+  queryClient.invalidateQueries({ queryKey: ['sign-envelope', envelopeId] })
+}
+
 // Hook to send an envelope
 export const useSendEnvelope = () => {
   const queryClient = useQueryClient()
@@ -107,13 +149,17 @@ export const useSendEnvelope = () => {
   return useMutation({
     mutationFn: sendEnvelope,
     onSuccess: (data, envelopeId) => {
-      // Invalidate and refetch envelopes list and specific envelope
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
-      queryClient.invalidateQueries({ queryKey: ['envelope', envelopeId] })
+      invalidateEnvelopeDocumentQueries(queryClient, envelopeId)
       toast.success('Envelope sent successfully!')
     },
     onError: (error: any) => {
       console.error('Send envelope error:', error)
+      const signingInProgress = resolveSigningInProgressMessage(error)
+      if (signingInProgress) {
+        toast.error(signingInProgress)
+        return
+      }
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           'Failed to send envelope'
@@ -132,12 +178,16 @@ export const useEditEnvelope = () => {
       return await editEnvelope(id, data)
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['envelope', variables.id] })
-      queryClient.invalidateQueries({ queryKey: ['envelope-documents', variables.id] })
+      invalidateEnvelopeDocumentQueries(queryClient, variables.id)
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
       toast.success('Envelope saved successfully!')
     },
     onError: (error: any) => {
+      const signingInProgress = resolveSigningInProgressMessage(error)
+      if (signingInProgress) {
+        toast.error(signingInProgress)
+        return
+      }
       const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Failed to save envelope'
       toast.error(errorMessage)
     },
@@ -172,12 +222,18 @@ export const useSelfSignEnvelope = () => {
 
   return useMutation({
     mutationFn: (data: SelfSignRequest) => selfSignEnvelope(data),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['envelopes'] })
-      toast.success('Document signed successfully!')
+      if (result.kind === 'already_signed') {
+        toast.success('Document signed successfully!')
+      }
     },
     onError: (error: any) => {
       console.error('Self-sign error:', error)
+      if (error instanceof FrozenEnvelopeError) {
+        toast.error(error.message)
+        return
+      }
       let errorMessage = 'Failed to self-sign document'
 
       if (error.response?.status === 400) {

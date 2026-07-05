@@ -15,11 +15,16 @@
 // ===== DESIGN TOKENS =====
 export { 
   tokens, 
-  primitives, 
-  semantic,
+  colors,
+  typography,
+  spacing,
+  radii,
+  shadows,
+  signature,
   motion,
   layout,
-  a11y
+  a11y,
+  toHslChannels,
 } from './design-tokens';
 
 // ===== MOTION SYSTEM =====

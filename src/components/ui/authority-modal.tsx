@@ -60,34 +60,34 @@ const sizeConfig = {
 // ===== VARIANT CONFIGURATIONS =====
 const variantConfig = {
   default: {
-    border: 'border-gray-200',
-    titleColor: 'text-navy-900',
+    border: 'border-border',
+    titleColor: 'text-primary',
     icon: null,
     iconBg: '',
   },
   authority: {
-    border: 'border-navy-200',
-    titleColor: 'text-navy-900',
+    border: 'border-primary-light',
+    titleColor: 'text-primary',
     icon: <Info className="w-5 h-5" />,
-    iconBg: 'bg-navy-100 text-navy-600',
+    iconBg: 'bg-primary-light text-primary',
   },
   warning: {
-    border: 'border-warning-200',
-    titleColor: 'text-warning-900',
+    border: 'border-warning-light',
+    titleColor: 'text-warning',
     icon: <AlertTriangle className="w-5 h-5" />,
-    iconBg: 'bg-warning-100 text-warning-600',
+    iconBg: 'bg-warning-light text-warning',
   },
   success: {
-    border: 'border-success-200',
-    titleColor: 'text-success-900',
+    border: 'border-success-light',
+    titleColor: 'text-success',
     icon: <CheckCircle className="w-5 h-5" />,
-    iconBg: 'bg-success-100 text-success-600',
+    iconBg: 'bg-success-light text-success',
   },
   info: {
-    border: 'border-blue-200',
-    titleColor: 'text-blue-900',
+    border: 'border-info-light',
+    titleColor: 'text-info',
     icon: <Info className="w-5 h-5" />,
-    iconBg: 'bg-blue-100 text-blue-600',
+    iconBg: 'bg-info-light text-secondary',
   },
 } as const;
 
@@ -105,7 +105,7 @@ const ModalOverlay = React.forwardRef<
   >
     <motion.div
       className={cn(
-        'fixed inset-0 z-modal bg-navy-900/80 backdrop-blur-sm',
+        'fixed inset-0 z-modal bg-inverse-surface/80 backdrop-blur-sm',
         className
       )}
       variants={{
@@ -145,7 +145,7 @@ const ModalContent = React.forwardRef<
           className={cn(
             'fixed left-1/2 top-1/2 z-modal w-full -translate-x-1/2 -translate-y-1/2',
             'bg-white rounded-lg shadow-authority border-2',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+            'focus:outline-none focus:ring-2 focus:ring-status-your-turn focus:ring-offset-2',
             sizeStyles,
             variantStyles.border,
             className
@@ -178,7 +178,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     <div
       ref={ref}
       className={cn(
-        'flex flex-col space-y-1.5 text-center sm:text-left px-6 py-4 border-b border-gray-100',
+        'flex flex-col space-y-1.5 text-center sm:text-left px-6 py-4 border-b border-border',
         className
       )}
       {...props}
@@ -219,7 +219,7 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
     <div
       ref={ref}
       className={cn(
-        'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 px-6 py-4 border-t border-gray-100',
+        'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 px-6 py-4 border-t border-border',
         className
       )}
       {...props}
@@ -260,7 +260,7 @@ const ModalDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm text-gray-600 font-body', className)}
+    className={cn('text-sm text-muted font-body', className)}
     {...props}
   />
 ));

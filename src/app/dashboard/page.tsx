@@ -1,444 +1,350 @@
-"use client";
+'use client'
 
-import React from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
-import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady';
-import { 
-  FileText, 
-  Send, 
-  PenTool, 
-  Plus, 
-  ArrowRight,
-  Clock,
-  CheckCircle,
-  Users,
-  BarChart3
-} from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
+import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
+import { Button } from '@/components/ui/button'
+import { MaterialIcon } from '@/components/ui/material-icon'
+import type { MaterialIconName } from '@/components/ui/material-icon'
+import { AsyncStatePanel } from '@/components/library'
+import { classifyError } from '@/lib/errors'
+import { cn } from '@/lib/utils'
+import {
+  getEnvelopeDashboard,
+  type Envelope,
+  type EnvelopeDashboardActivity,
+} from '@/lib/api/envelopes'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AuthorityButton, Button } from '@/components/ui/button';
-import { SignatureSeal } from '@/components/ui/signature-seal';
-import { createStagger, createEntrance } from '@/lib/motion';
-import { getDocuments, type Document } from '@/lib/api/documents';
-import { getEnvelopes, type EnvelopesListResponse, getEnvelopeMetrics, type EnvelopeMetrics } from '@/lib/api/envelopes';
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
 
-const StatCard = ({
+function MetricCard({
   label,
   value,
-  icon: Icon,
-  color,
+  icon,
+  iconBg,
   helper,
 }: {
   label: string
   value: string
-  icon: React.ComponentType<{ className?: string }>
-  color: string
-  helper: string
-}) => (
-  <motion.div
-    variants={createEntrance('up')}
-    whileHover={{ y: -4, scale: 1.02 }}
-    transition={{ type: 'spring', stiffness: 300 }}
-  >
-    <Card className="authority-container">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-600">
-              {label}
-            </p>
-            <p className="text-2xl font-bold font-heading text-navy-900">
-              {value}
-            </p>
-          </div>
-          
-          <div className={`p-3 rounded-lg bg-gray-50 ${color}`}>
-            <Icon className="w-6 h-6" />
-          </div>
-        </div>
-        
-        <div className="mt-4 text-sm text-gray-500">
-          {helper}
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-)
-
-export default function DashboardPage() {
-  const { data: session } = useSession();
-  const { isReady } = useAuthReady();
-  
-  // Get user's display name
-  const userName = session?.user?.full_name || 'User';
-  
-  const { data: documentsData, isLoading: docsLoading } = useQuery({
-    queryKey: ['documents', 'recent'],
-    queryFn: () => getDocuments({ page: 1, pageSize: 20 }),
-    enabled: isReady,
-    staleTime: 30_000,
-    retry: shouldRetryAuthQuery,
-  });
-  
-  const { data: envelopesResp, isLoading: envLoading } = useQuery<EnvelopesListResponse>({
-    queryKey: ['envelopes', { page: 1, pageSize: 10 }],
-    queryFn: () => getEnvelopes(1, 10),
-    enabled: isReady,
-    staleTime: 30_000,
-    retry: shouldRetryAuthQuery,
-  });
-
-  const documents: Document[] = documentsData?.results ?? [];
-
-  const { data: metrics, isLoading: metricsLoading } = useQuery<EnvelopeMetrics>({
-    queryKey: ['envelopes', 'metrics'],
-    queryFn: getEnvelopeMetrics,
-    enabled: isReady,
-    staleTime: 60_000,
-    retry: shouldRetryAuthQuery,
-  });
-
-  const recentDocs = documents.slice(0, 3);
-  const recentEnvs = (envelopesResp?.results || []).slice(0, 3);
-
+  icon: MaterialIconName
+  iconBg: string
+  helper?: string
+}) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container-corporate py-8 space-y-8">
-        {/* Welcome Header */}
-        <motion.div
-          className="authority-container p-8 bg-gray-50 border border-gray-200"
-          variants={createEntrance('up')}
-          initial="initial"
-          animate="animate"
-        >
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold font-heading text-navy-900">
-                Welcome back, {userName}
-              </h1>
-              <p className="text-gray-600 text-lg">
-                Manage your digital signatures with legal authority and confidence.
-              </p>
-            </div>
-            
-            <div className="hidden lg:flex items-center gap-4">
-              <SignatureSeal
-                status="signed"
-                signerName="You"
-                size="md"
-                variant="minimal"
-                companyName="INCEL"
-                animate={false}
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-          variants={createStagger(0.1)}
-          initial="initial"
-          animate="animate"
-        >
-          <StatCard
-            label="Documents Signed"
-            value={metricsLoading ? '—' : (metrics?.documents_signed ?? 0).toString()}
-            icon={CheckCircle}
-            color="text-success-600"
-            helper="Total signatures completed"
-          />
-          <StatCard
-            label="Pending Signatures"
-            value={metricsLoading ? '—' : (metrics?.pending_signatures ?? 0).toString()}
-            icon={Clock}
-            color="text-warning-600"
-            helper="Waiting on recipients"
-          />
-          <StatCard
-            label="Active Envelopes"
-            value={metricsLoading ? '—' : (metrics?.active_envelopes ?? 0).toString()}
-            icon={Send}
-            color="text-blue-600"
-            helper="Draft or pending envelopes"
-          />
-          <StatCard
-            label="Completion Rate"
-            value={metricsLoading ? '—' : `${(metrics?.completion_rate ?? 0).toFixed(0)}%`}
-            icon={BarChart3}
-            color="text-navy-600"
-            helper="Completed envelopes ratio"
-          />
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div
-          className="space-y-6"
-          variants={createEntrance('up')}
-          initial="initial"
-          animate="animate"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-h2">Quick Actions</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Upload Document */}
-            <Card className="authority-container group hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-h3">Upload Document</CardTitle>
-                    <CardDescription>
-                      Add new documents for signing
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <AuthorityButton size="lg" className="w-full" asChild>
-                  <Link href="/dashboard/documents/upload">
-                    <Plus className="w-4 h-4" />
-                    Upload Document
-                  </Link>
-                </AuthorityButton>
-              </CardContent>
-            </Card>
-
-            {/* Create Envelope */}
-            <Card className="authority-container group hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center group-hover:bg-success-200 transition-colors">
-                    <Send className="w-6 h-6 text-success-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-h3">Create Envelope</CardTitle>
-                    <CardDescription>
-                      Send documents for signature
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button variant="default" size="lg" className="w-full" asChild>
-                  <Link href="/dashboard/envelopes/create">
-                    <Send className="w-4 h-4" />
-                    Create Envelope
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Sign yourself */}
-            <Card className="authority-container group hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-200 transition-colors">
-                    <PenTool className="w-6 h-6 text-violet-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-h3">Sign Yourself</CardTitle>
-                    <CardDescription>
-                      Upload, sign, and complete in one step
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button variant="outline" size="lg" className="w-full" asChild>
-                  <Link href="/dashboard/envelopes/self-sign">
-                    <PenTool className="w-4 h-4" />
-                    Sign a Document
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Manage Signatures */}
-            <Card className="authority-container group hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center group-hover:bg-warning-200 transition-colors">
-                    <PenTool className="w-6 h-6 text-warning-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-h3">Signatures</CardTitle>
-                    <CardDescription>
-                      Manage your digital signatures
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button variant="secondary" size="lg" className="w-full" asChild>
-                  <Link href="/dashboard/signatures">
-                    <PenTool className="w-4 h-4" />
-                    Manage Signatures
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </motion.div>
-
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Documents */}
-          <motion.div
-            variants={createEntrance('up')}
-            initial="initial"
-            animate="animate"
-          >
-            <Card className="authority-container h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                    <CardTitle className="text-h3">Recent Documents</CardTitle>
-                  </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href="/dashboard/documents">
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </div>
-                <CardDescription>
-                  Your latest uploaded documents
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {docsLoading ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="loading-authority h-16 rounded-lg" />
-                    ))}
-                  </div>
-                ) : recentDocs.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-body">No recent documents</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentDocs.map((doc, index) => (
-                      <motion.div
-                        key={doc.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-navy-900">{doc.file_name}</p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(doc.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-                
-                <div className="mt-6">
-                  <Button variant="outline" size="lg" className="w-full" asChild>
-                    <Link href="/dashboard/documents">
-                      View All Documents
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Recent Envelopes */}
-          <motion.div
-            variants={createEntrance('up')}
-            initial="initial"
-            animate="animate"
-          >
-            <Card className="authority-container h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Send className="w-5 h-5 text-success-600" />
-                    <CardTitle className="text-h3">Recent Envelopes</CardTitle>
-                  </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href="/dashboard/envelopes">
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </div>
-                <CardDescription>
-                  Your latest document envelopes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {envLoading ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="loading-authority h-16 rounded-lg" />
-                    ))}
-                  </div>
-                ) : recentEnvs.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Send className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-body">No recent envelopes</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentEnvs.map((env, index) => (
-                      <motion.div
-                        key={env.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center">
-                            <Send className="w-5 h-5 text-success-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-navy-900">
-                              {env.name || env.documents?.[0]?.file_name || 'Envelope'}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(env.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-                
-                <div className="mt-6">
-                  <Button variant="outline" size="lg" className="w-full" asChild>
-                    <Link href="/dashboard/envelopes">
-                      View All Envelopes
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+    <div className="rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-label-sm text-muted">{label}</p>
+          <p className="mt-2 text-headline-2xl font-bold text-on-surface">{value}</p>
+          {helper && <p className="mt-2 text-caption-xs text-muted">{helper}</p>}
+        </div>
+        <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl', iconBg)}>
+          <MaterialIcon name={icon} size={22} />
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+function formatSentDate(dateStr?: string) {
+  if (!dateStr) return 'Recently'
+  const date = new Date(dateStr)
+  return `Sent ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+}
+
+function getActivityIcon(action: string): MaterialIconName {
+  switch (action) {
+    case 'SEND_ENVELOPE':
+      return 'send'
+    case 'SIGN_DOC':
+    case 'SELF_SIGN_DOC':
+      return 'check_circle'
+    case 'REJECT_ENVELOPE':
+    case 'DECLINE_SIGN':
+      return 'cancel'
+    default:
+      return 'history'
+  }
+}
+
+function getActivityIconClass(action: string): string {
+  switch (action) {
+    case 'SEND_ENVELOPE':
+      return 'text-info'
+    case 'SIGN_DOC':
+    case 'SELF_SIGN_DOC':
+      return 'text-success'
+    case 'REJECT_ENVELOPE':
+    case 'DECLINE_SIGN':
+      return 'text-error'
+    default:
+      return 'text-muted'
+  }
+}
+
+function QuickActionCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string
+  icon: MaterialIconName
+  title: string
+  description: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-start gap-3 rounded-xl border border-border bg-surface-container-lowest p-3 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-secondary group-hover:text-on-secondary">
+        <MaterialIcon name={icon} size={18} className="text-inherit" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-primary">{title}</p>
+        <p className="mt-1 text-xs leading-4 text-muted">{description}</p>
+      </div>
+    </Link>
+  )
+}
+
+export default function DashboardPage() {
+  const { data: session } = useSession()
+  const { isReady } = useAuthReady()
+  const userName = session?.user?.full_name?.split(' ')[0] || 'User'
+
+  const { data: dashboard, isLoading, error, refetch } = useQuery({
+    queryKey: ['envelopes', 'dashboard'],
+    queryFn: getEnvelopeDashboard,
+    enabled: isReady,
+    staleTime: 60_000,
+    retry: shouldRetryAuthQuery,
+  })
+
+  const dashboardError = error ? classifyError(error, 'Failed to load dashboard') : null
+  const metrics = dashboard?.metrics
+  const actionRequired: Envelope[] = dashboard?.action_required ?? []
+  const recentActivity: EnvelopeDashboardActivity[] = dashboard?.recent_activity ?? []
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-headline-2xl font-bold text-on-surface">
+          {getGreeting()}, {userName}
+        </h1>
+        <p className="mt-1 text-body-sm text-muted">
+          Here&apos;s what needs your attention today.
+        </p>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Pending Signatures"
+          value={isLoading ? '—' : String(metrics?.pending_signatures ?? 0)}
+          icon="pending_actions"
+          iconBg="bg-warning-light text-warning"
+          helper="Awaiting your signature"
+        />
+        <MetricCard
+          label="Awaiting Others"
+          value={isLoading ? '—' : String(metrics?.active_envelopes ?? 0)}
+          icon="layers"
+          iconBg="bg-info-light text-info"
+          helper="Out for signature"
+        />
+        <MetricCard
+          label="Completed"
+          value={isLoading ? '—' : String(metrics?.documents_signed ?? 0)}
+          icon="check_circle"
+          iconBg="bg-success-light text-success"
+          helper="Fully executed"
+        />
+        <MetricCard
+          label="Drafts"
+          value={isLoading ? '—' : String(dashboard?.counts.draft ?? 0)}
+          icon="edit_square"
+          iconBg="bg-surface text-status-draft"
+          helper="Not yet sent"
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="mb-6 text-headline-lg font-semibold text-primary">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <QuickActionCard
+            href="/dashboard/documents/upload"
+            icon="upload_file"
+            title="Upload Document"
+            description="Select a PDF or Word file from your computer."
+          />
+          <QuickActionCard
+            href="/dashboard/envelopes/create"
+            icon="mail_lock"
+            title="Send for Signature"
+            description="Prepare an envelope for others to sign securely."
+          />
+          <QuickActionCard
+            href="/dashboard/envelopes/self-sign"
+            icon="draw"
+            title="Sign Myself"
+            description="Add your digital signature to a document instantly."
+          />
+        </div>
+      </div>
+
+      {dashboardError && !dashboard ? (
+        <AsyncStatePanel
+          variant="error"
+          title="Unable to load your dashboard"
+          description={dashboardError.message}
+          primaryAction={
+            <Button type="button" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+
+      {/* Action Required + Recent Activity */}
+      {!dashboardError || dashboard ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
+        <div className="lg:col-span-6">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface-container-lowest shadow-card">
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <h2 className="text-headline-lg font-semibold text-primary">Action Required</h2>
+              <span className="rounded-full bg-error-light px-2.5 py-1 text-label-xs font-bold text-error">
+                Urgent
+              </span>
+            </div>
+            <div className="divide-y divide-border">
+              {isLoading ? (
+                <div className="p-6 text-sm text-muted">Loading...</div>
+              ) : actionRequired.length === 0 ? (
+                <div className="flex flex-col items-center py-12 text-center">
+                  <MaterialIcon name="task_alt" size={40} className="text-success" />
+                  <p className="mt-3 text-body-sm text-muted">You&apos;re all caught up!</p>
+                </div>
+              ) : (
+                actionRequired.map((env) => (
+                  <div
+                    key={env.id}
+                    className="flex flex-col gap-4 p-6 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="pulse-teal flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-your-turn text-white shadow-lg shadow-secondary/20">
+                        <MaterialIcon name="edit_square" size={20} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold text-primary">
+                          {env.name || 'Untitled Envelope'}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-body-sm text-muted">
+                          <span>{env.creator_name || env.creator?.full_name || 'Unknown sender'}</span>
+                          <span className="h-1 w-1 rounded-full bg-border" />
+                          <span>{formatSentDate(env.sent_at || env.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-4 sm:ml-4">
+                      <span className="hidden items-center gap-1 text-label-xs font-bold uppercase tracking-wider text-status-your-turn md:inline-flex">
+                        <span className="h-2 w-2 rounded-full bg-status-your-turn" />
+                        Your Turn
+                      </span>
+                      <Link
+                        href={`/dashboard/envelopes/${env.id}/sign`}
+                        className="rounded-lg bg-secondary px-6 py-2 text-label-sm font-bold text-on-secondary shadow-sm transition-all hover:bg-accent-hover"
+                      >
+                        Sign Now
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {actionRequired.length > 0 && (
+              <div className="border-t border-border bg-surface px-6 py-4 text-center">
+                <Link
+                  href="/dashboard/envelopes"
+                  className="text-label-sm font-bold text-secondary hover:underline"
+                >
+                  View all pending actions
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-4">
+          <div className="rounded-xl border border-border bg-surface-container-lowest shadow-card">
+            <div className="border-b border-border px-6 py-4">
+              <h2 className="text-headline-lg font-semibold text-on-surface">Recent Activity</h2>
+            </div>
+            <div className="space-y-0 p-4">
+              {isLoading ? (
+                <div className="p-2 text-sm text-muted">Loading...</div>
+              ) : recentActivity.length === 0 ? (
+                <p className="py-8 text-center text-body-sm text-muted">No recent activity</p>
+              ) : (
+                recentActivity.map((entry, i) => {
+                  const content = (
+                    <>
+                      <div
+                        className={cn(
+                          'relative z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 border-border bg-surface-container-lowest',
+                        )}
+                      >
+                        <MaterialIcon
+                          name={getActivityIcon(entry.action)}
+                          size={12}
+                          className={getActivityIconClass(entry.action)}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-body-sm font-medium text-on-surface">
+                          {entry.message || entry.envelope_name || 'Envelope activity'}
+                        </p>
+                        <p className="text-caption-xs text-muted">
+                          {entry.created_at
+                            ? new Date(entry.created_at).toLocaleString()
+                            : 'Recently'}
+                        </p>
+                      </div>
+                    </>
+                  )
+
+                  return (
+                    <div key={entry.id} className="relative flex gap-3 pb-6 pl-2">
+                      {i < recentActivity.length - 1 && (
+                        <div className="absolute left-[11px] top-6 h-full w-px bg-border" />
+                      )}
+                      {entry.envelope_id ? (
+                        <Link
+                          href={`/dashboard/envelopes/${entry.envelope_id}`}
+                          className="relative flex min-w-0 flex-1 gap-3 transition-colors hover:text-secondary"
+                        >
+                          {content}
+                        </Link>
+                      ) : (
+                        <div className="relative flex min-w-0 flex-1 gap-3">{content}</div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+        </div>
+      ) : null}
+    </div>
+  )
 }

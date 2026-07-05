@@ -43,9 +43,9 @@ describe('Document Review Page', () => {
     render(<DocumentReviewPage />, { wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('Document: contract.pdf')).toBeInTheDocument()
-      expect(screen.getByText('Document Information')).toBeInTheDocument()
-      expect(screen.getByText('Download')).toBeInTheDocument()
+      expect(screen.getAllByText('contract.pdf').length).toBeGreaterThan(0)
+      expect(screen.getByText('Document Details')).toBeInTheDocument()
+      expect(screen.getAllByText('Download').length).toBeGreaterThan(0)
     })
   })
 })

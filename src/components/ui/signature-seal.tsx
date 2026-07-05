@@ -72,19 +72,19 @@ const sizeConfig = {
 // ===== STATUS CONFIGURATIONS =====
 const statusConfig = {
   pending: {
-    color: 'text-warning-600 border-warning-300',
+    color: 'text-warning border-warning-light',
     bg: 'bg-warning-50',
     icon: '⏳',
     label: 'Pending',
   },
   signing: {
-    color: 'text-blue-600 border-blue-300', 
-    bg: 'bg-blue-50',
+    color: 'text-secondary border-secondary/30', 
+    bg: 'bg-info-light',
     icon: '✍️',
     label: 'Signing',
   },
   signed: {
-    color: 'text-success-600 border-success-400',
+    color: 'text-success border-success-400',
     bg: 'bg-success-50',
     icon: '✓',
     label: 'Signed',
@@ -96,8 +96,8 @@ const statusConfig = {
     label: 'Declined',
   },
   expired: {
-    color: 'text-gray-500 border-gray-300',
-    bg: 'bg-gray-50',
+    color: 'text-muted border-outline-variant',
+    bg: 'bg-surface',
     icon: '⚠️',
     label: 'Expired',
   },
@@ -281,8 +281,8 @@ export function SignatureSeal({
           initial="initial"
           animate="animate"
         >
-          <div className="w-full h-full rounded-full border-2 border-blue-200 opacity-10" />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue-200 font-heading font-bold text-xs opacity-20">
+          <div className="w-full h-full rounded-full border-2 border-info-light opacity-10" />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-accent-light font-heading font-bold text-xs opacity-20">
             {companyName}
           </div>
         </motion.div>
@@ -367,12 +367,12 @@ export function SignatureSeal({
             animate="animate"
           >
             {signerName && (
-              <div className="text-xs font-medium text-gray-700">
+              <div className="text-xs font-medium text-body">
                 {signerName}
               </div>
             )}
             {signedDate && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted">
                 {formatDate(signedDate)}
               </div>
             )}
@@ -402,7 +402,7 @@ export function SignatureSeal({
           <motion.div
             className={cn(
               'absolute inset-0 rounded-full border-2 pointer-events-none z-5',
-              status === 'pending' ? 'border-warning-300' : 'border-blue-300'
+              status === 'pending' ? 'border-warning-light' : 'border-secondary/30'
             )}
             initial={{ scale: 1, opacity: 0.7 }}
             animate={{ 

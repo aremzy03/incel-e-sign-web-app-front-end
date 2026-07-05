@@ -175,15 +175,15 @@ export function getPlatformStyles(platform: PlatformInfo): PlatformStyles {
   // Mobile optimizations
   if (platform.type === 'mobile') {
     styles.spacing = {
-      'container-padding': tokens.primitives.spacing[4], // 16px
-      'section-gap': tokens.primitives.spacing[6], // 24px
-      'element-gap': tokens.primitives.spacing[3], // 12px
+      'container-padding': tokens.spacing[4], // 16px
+      'section-gap': tokens.spacing[6], // 24px
+      'element-gap': tokens.spacing[3], // 12px
     };
     
     styles.fontSize = {
-      'body-size': tokens.primitives.fontSize.base, // Keep readable
+      'body-size': tokens.typography.bodyBase.fontSize, // Keep readable
       'heading-scale': '0.9', // Slightly smaller headings
-      'caption-size': tokens.primitives.fontSize.sm,
+      'caption-size': tokens.typography.bodySm.fontSize,
     };
     
     styles.touchTargets = {
@@ -196,9 +196,9 @@ export function getPlatformStyles(platform: PlatformInfo): PlatformStyles {
   // Tablet optimizations
   if (platform.type === 'tablet') {
     styles.spacing = {
-      'container-padding': tokens.primitives.spacing[6], // 24px
-      'section-gap': tokens.primitives.spacing[8], // 32px
-      'element-gap': tokens.primitives.spacing[4], // 16px
+      'container-padding': tokens.spacing[6], // 24px
+      'section-gap': tokens.spacing[8], // 32px
+      'element-gap': tokens.spacing[4], // 16px
     };
     
     styles.touchTargets = {
@@ -211,15 +211,15 @@ export function getPlatformStyles(platform: PlatformInfo): PlatformStyles {
   // Desktop optimizations
   if (platform.type === 'desktop') {
     styles.spacing = {
-      'container-padding': tokens.primitives.spacing[8], // 32px
-      'section-gap': tokens.primitives.spacing[12], // 48px
-      'element-gap': tokens.primitives.spacing[6], // 24px
+      'container-padding': tokens.spacing[8], // 32px
+      'section-gap': tokens.spacing[12], // 48px
+      'element-gap': tokens.spacing[6], // 24px
     };
     
     if (platform.supportsHover) {
       styles.shadows = {
-        'hover-elevation': tokens.primitives.boxShadow.lg,
-        'authority-hover': tokens.primitives.boxShadow.authority,
+        'hover-elevation': tokens.shadows.raised,
+        'authority-hover': tokens.shadows.authority,
       };
     }
   }
@@ -375,10 +375,10 @@ export function useAdaptiveSpacing(platform?: PlatformInfo) {
     const styles = getPlatformStyles(currentPlatform);
     
     return {
-      container: styles.spacing?.['container-padding'] || tokens.primitives.spacing[6],
-      section: styles.spacing?.['section-gap'] || tokens.primitives.spacing[8],
-      element: styles.spacing?.['element-gap'] || tokens.primitives.spacing[4],
-      interactive: styles.spacing?.['interactive-gap'] || tokens.primitives.spacing[2],
+      container: styles.spacing?.['container-padding'] || tokens.spacing[6],
+      section: styles.spacing?.['section-gap'] || tokens.spacing[8],
+      element: styles.spacing?.['element-gap'] || tokens.spacing[4],
+      interactive: styles.spacing?.['interactive-gap'] || tokens.spacing[2],
     };
   }, [currentPlatform]);
 }

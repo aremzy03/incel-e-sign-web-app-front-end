@@ -43,7 +43,7 @@ export function ProfileDisplay({
         )}
         <div>
           <div className="text-sm font-medium">Unknown User</div>
-          {showEmail && <div className="text-xs text-gray-500">No profile data</div>}
+          {showEmail && <div className="text-xs text-muted">No profile data</div>}
         </div>
       </div>
     )
@@ -70,8 +70,8 @@ export function ProfileDisplay({
       )}
       <div>
         <div className="text-sm font-medium">{profile.full_name}</div>
-        {showEmail && <div className="text-xs text-gray-500">{profile.email}</div>}
-        {showRole && <div className="text-xs text-gray-500 capitalize">User</div>}
+        {showEmail && <div className="text-xs text-muted">{profile.email}</div>}
+        {showRole && <div className="text-xs text-muted capitalize">User</div>}
       </div>
     </div>
   )

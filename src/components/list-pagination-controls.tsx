@@ -1,7 +1,7 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { MaterialIcon } from '@/components/ui/material-icon'
 import { cn } from '@/lib/utils'
 
 export interface ListPaginationControlsProps {
@@ -32,8 +32,8 @@ export function ListPaginationControls({
   }
 
   return (
-    <div className={cn('flex items-center justify-between mt-4', className)}>
-      <div className="text-sm text-gray-600">
+    <div className={cn('mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between', className)}>
+      <div className="text-body-sm text-muted">
         Page {page} of {totalPages}
         {totalCount !== undefined ? ` · ${totalCount} total` : ''}
       </div>
@@ -46,7 +46,7 @@ export function ListPaginationControls({
           disabled={!hasPrevious}
           aria-label="Previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <MaterialIcon name="chevron_left" size={18} />
         </Button>
         <Button
           type="button"
@@ -56,7 +56,7 @@ export function ListPaginationControls({
           disabled={!hasNext}
           aria-label="Next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <MaterialIcon name="chevron_right" size={18} />
         </Button>
       </div>
     </div>

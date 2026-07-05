@@ -28,18 +28,18 @@ describe('Notifications + Audit integration', () => {
   })
 
   test('Notifications render and mark as read', async () => {
-    mockApi.get.mockResolvedValueOnce({ data: [
+    mockApi.get.mockResolvedValue({ data: [
       { id: 1, message: 'New doc uploaded', created_at: new Date().toISOString(), is_read: false },
       { id: 2, message: 'Envelope sent', created_at: new Date().toISOString(), is_read: false },
     ] })
 
     render(wrapper(<NotificationsPage />))
 
-    expect(await screen.findByText('New doc uploaded')).toBeInTheDocument()
+    const notification = await screen.findByRole('button', { name: /new doc uploaded/i })
+    expect(notification).toBeInTheDocument()
 
     mockApi.patch.mockResolvedValueOnce({ data: {} })
-    const markButtons = screen.getAllByRole('button', { name: /mark as read/i })
-    await userEvent.click(markButtons[0])
+    await userEvent.click(notification)
 
     await waitFor(() => {
       expect(mockApi.patch).toHaveBeenCalledWith('/notifications/1/read/')
@@ -47,7 +47,7 @@ describe('Notifications + Audit integration', () => {
   })
 
   test('Audit logs render, filter, and paginate', async () => {
-    mockApi.get.mockResolvedValueOnce({ data: { count: 12, next: null, previous: null, results: Array.from({ length: 10 }).map((_, i) => ({
+    mockApi.get.mockResolvedValue({ data: { count: 12, next: null, previous: null, results: Array.from({ length: 10 }).map((_, i) => ({
       id: i + 1,
       created_at: new Date().toISOString(),
       actor: { id: 'u', email: 'a@b.com' },
@@ -59,11 +59,11 @@ describe('Notifications + Audit integration', () => {
     render(wrapper(<AuditPage />))
 
     expect(await screen.findByText(/Audit Logs/)).toBeInTheDocument()
-    expect(await screen.findByText(/12 total entries/)).toBeInTheDocument()
+    expect(await screen.findByText(/12 total/)).toBeInTheDocument()
 
     const actionSelect = screen.getAllByText(/Action type/i)[0]
     await userEvent.click(actionSelect)
-    const options = await screen.findAllByText('SEND_ENVELOPE')
+    const options = await screen.findAllByText(/SEND ENVELOPE/i)
     await userEvent.click(options[0])
 
     // After selecting, a new GET is issued with action param

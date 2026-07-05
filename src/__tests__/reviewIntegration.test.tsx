@@ -3,18 +3,120 @@ import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import DocumentReviewPage from '../app/dashboard/documents/[id]/page'
 import EnvelopeReviewPage from '../app/dashboard/envelopes/review/[id]/page'
-import FinalSignOffPage from '../app/dashboard/sign/review/[envelopeId]/page'
+import SignFlowPage from '@/components/signing/sign-flow-page'
 import { useParams } from 'next/navigation'
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
   useRouter: jest.fn(() => ({
     push: jest.fn(),
+    replace: jest.fn(),
   })),
   useSearchParams: jest.fn(() => ({
-    get: jest.fn(() => null),
-    has: jest.fn(() => false),
+    get: jest.fn((key: string) => (key === 'step' ? 'sign' : null)),
   })),
+}))
+
+jest.mock('next-auth/react', () => ({
+  useSession: () => ({
+    data: { user: { id: '1', email: 'a@b.com', full_name: 'User' }, accessToken: 't' },
+    status: 'authenticated',
+  }),
+}))
+
+jest.mock('@/hooks/useAuthReady', () => ({
+  useAuthReady: () => ({ isReady: true }),
+  shouldRetryAuthQuery: false,
+}))
+
+jest.mock('@/hooks/useProfile', () => ({ useProfile: () => ({ data: null }) }))
+
+jest.mock('@/hooks/useSigningView', () => ({
+  useSigningView: () => ({
+    view: { kind: 'step', step: 'sign' },
+    goToSign: jest.fn(),
+    goToStatus: jest.fn(),
+  }),
+}))
+
+jest.mock('@/hooks/signing', () => ({
+  useSigningCoordinates: () => ({
+    pageDims: {},
+    setPageContainerRef: () => () => {},
+    measurePageCanvas: jest.fn(),
+    setPageDimensions: jest.fn(),
+    setDocumentNumPages: jest.fn(),
+  }),
+  useSigningEnvelope: () => ({
+    envelope: { id: '1', name: 'Doc', status: 'pending', signing_order: [], fields: [] },
+    loadingEnv: false,
+    envelopeDocuments: [{ id: 'd1', document: 'd1', file_name: 'f.pdf', signer_document_positions: [] }],
+    loadingDocs: false,
+    docsError: null,
+    pdfFileByDocumentId: {},
+    pdfLoadedByDocId: {},
+    setPdfLoadedByDocId: jest.fn(),
+  }),
+  useUserSignatures: () => ({ signatures: [], isLoading: false, refetch: jest.fn() }),
+  useSignActions: () => ({
+    approveAndSign: jest.fn(),
+    signMutation: { isPending: false },
+    saveValuesMutation: { isPending: false },
+    declineMutation: { isPending: false, mutate: jest.fn() },
+    declineMessage: '',
+    setDeclineMessage: jest.fn(),
+    validateRequiredFields: () => [],
+    frozenEnvelopeMessage: null,
+    clearFrozenEnvelopeMessage: jest.fn(),
+  }),
+  useSigningFieldValues: () => ({
+    fieldValues: {},
+    setFieldValue: jest.fn(),
+    activeFieldPreview: null,
+    toggleFieldPreview: jest.fn(),
+  }),
+  useSigningProgress: () => ({
+    signedFor: {},
+    totalFields: 0,
+    completedFields: 0,
+    remainingCount: 0,
+    canComplete: false,
+    fieldChecklist: [],
+    activeFieldId: undefined,
+    markSignaturePreviewed: jest.fn(),
+    markSignatureConfirmed: jest.fn(),
+    markAllSignaturesComplete: jest.fn(),
+    isSignatureComplete: () => false,
+  }),
+  useSigningSubmit: () => ({
+    phase: 'idle',
+    overlayPhase: 'polling',
+    showOverlay: false,
+    isSigningInFlight: false,
+    submitSign: jest.fn(),
+    retry: jest.fn(),
+    keepWaiting: jest.fn(),
+    dismissFailure: jest.fn(),
+    errorMessage: null,
+  }),
+  resolveSignatureId: () => undefined,
+  resolveSignatureImage: () => undefined,
+}))
+
+jest.mock('@/components/pdf/usePdfPasswordDialog', () => {
+  const mockResetPasswordDialog = jest.fn()
+  return {
+    usePdfPasswordDialog: () => ({
+      dialog: null,
+      onPassword: jest.fn(),
+      cancelled: false,
+      reset: mockResetPasswordDialog,
+    }),
+  }
+})
+
+jest.mock('@/components/signing/signing-document-viewer', () => ({
+  SigningDocumentViewer: () => <div>PDF</div>,
 }))
 
 describe('Review Integration Tests', () => {
@@ -29,7 +131,7 @@ describe('Review Integration Tests', () => {
   }
 
   beforeEach(() => {
-    (useParams as jest.Mock).mockReturnValue({ id: '1', envelopeId: '1' })
+    ;(useParams as jest.Mock).mockReturnValue({ id: '1', envelopeId: '1' })
   })
 
   it('renders document review page from API data', async () => {
@@ -50,8 +152,8 @@ describe('Review Integration Tests', () => {
     render(<DocumentReviewPage />, { wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('Document: contract.pdf')).toBeInTheDocument()
-      expect(screen.getByText('Document Information')).toBeInTheDocument()
+      expect(screen.getAllByText('contract.pdf').length).toBeGreaterThan(0)
+      expect(screen.getByText('Document Details')).toBeInTheDocument()
     })
   })
 
@@ -61,9 +163,8 @@ describe('Review Integration Tests', () => {
     expect(screen.getByText('Send Envelope')).toBeInTheDocument()
   })
 
-  it('renders final sign-off page actions', () => {
-    render(<FinalSignOffPage />, { wrapper })
-    expect(screen.getByText('Review & Sign')).toBeInTheDocument()
-    expect(screen.getByText('Confirm & Sign')).toBeInTheDocument()
+  it('renders dashboard sign flow page', async () => {
+    render(<SignFlowPage isDashboard />, { wrapper })
+    expect(await screen.findByText('Sign document')).toBeInTheDocument()
   })
 })

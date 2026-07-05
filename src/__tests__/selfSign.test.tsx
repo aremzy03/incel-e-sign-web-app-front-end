@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SelfSignPage from '@/app/dashboard/envelopes/self-sign/page'
 
 const mockPush = jest.fn()
+const mockReplace = jest.fn()
 const selfSignAsync = jest.fn()
 const listUserSignatures = jest.fn()
 
@@ -12,14 +13,24 @@ jest.mock('@/lib/axios', () => ({
 }))
 
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn((key: string) => {
+      if (key === 'step') return 'editor'
+      return null
+    }),
+  })),
 }))
 
 jest.mock('next-auth/react', () => ({
   useSession: () => ({
-    data: { user: { id: 'user-1', name: 'Test User', email: 'test@example.com' } },
+    data: { user: { id: 'user-1', name: 'Test User', email: 'test@example.com', full_name: 'Test User' } },
     status: 'authenticated',
   }),
+}))
+
+jest.mock('@/hooks/useProfile', () => ({
+  useProfile: () => ({ data: null }),
 }))
 
 jest.mock('@/hooks/useEnvelopes', () => ({
@@ -27,6 +38,10 @@ jest.mock('@/hooks/useEnvelopes', () => ({
     mutateAsync: selfSignAsync,
     isPending: false,
   }),
+}))
+
+jest.mock('@/components/signing/signing-job-background-watcher', () => ({
+  SigningJobBackgroundWatcher: () => null,
 }))
 
 jest.mock('@/lib/api/signatures', () => {
@@ -52,20 +67,21 @@ describe('SelfSignPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    selfSignAsync.mockResolvedValue({ id: 'env-self-1', status: 'completed' })
+    selfSignAsync.mockResolvedValue({
+      kind: 'queued',
+      data: { job_id: 'job-1', status: 'queued', envelope_id: 'env-self-1' },
+    })
     listUserSignatures.mockResolvedValue([
       { id: 'sig-1', name: 'Default', image_url: '/sig.png', is_default: true, uploaded_at: new Date().toISOString() },
     ])
   })
 
-  it('renders header, Sign & complete button, and no recipient UI', async () => {
+  it('renders editor header and Sign & complete button', async () => {
     render(<SelfSignPage />, { wrapper })
-    expect(screen.getByText('Sign a document')).toBeInTheDocument()
+    expect(screen.getByText('Your Tools')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /sign & complete/i }).length).toBeGreaterThan(0)
     expect(screen.queryByText(/add recipient/i)).not.toBeInTheDocument()
-    await waitFor(() => {
-      expect(screen.getByText(/Default \(default\)/i)).toBeInTheDocument()
-    })
+    expect(screen.getByText('Self-Signing')).toBeInTheDocument()
   })
 
   it('shows validation when no document is uploaded', async () => {
@@ -76,14 +92,29 @@ describe('SelfSignPage', () => {
 
   it('shows validation when signature field is missing', async () => {
     render(<SelfSignPage />, { wrapper })
-    expect(await screen.findByText(/At least one signature field is required/i)).toBeInTheDocument()
+    const signButtons = screen.getAllByRole('button', { name: /sign & complete/i })
+    expect(signButtons[0]).toBeDisabled()
+  })
+
+  it('renders start screen when step=start', async () => {
+    const { useSearchParams } = require('next/navigation')
+    useSearchParams.mockReturnValue({
+      get: jest.fn((key: string) => (key === 'step' ? 'start' : null)),
+    })
+    render(<SelfSignPage />, { wrapper })
+    expect(screen.getByText('Sign a document yourself')).toBeInTheDocument()
   })
 })
 
 describe('selfSignEnvelope API', () => {
-  it('posts payload without signing_order', async () => {
+  it('returns queued job on 202', async () => {
     const apiClient = (await import('@/lib/axios')).default
-    ;(apiClient.post as jest.Mock).mockResolvedValue({ data: { data: { id: 'env-1', status: 'completed' } } })
+    ;(apiClient.post as jest.Mock).mockResolvedValue({
+      status: 202,
+      data: {
+        data: { job_id: 'job-1', status: 'queued', envelope_id: 'env-1' },
+      },
+    })
     const { selfSignEnvelope } = await import('@/lib/api/signatures')
     const payload = {
       document_ids: ['doc-1'],
@@ -95,8 +126,17 @@ describe('selfSignEnvelope API', () => {
       }],
     }
     const result = await selfSignEnvelope(payload)
-    expect(apiClient.post).toHaveBeenCalledWith('/signatures/self-sign/', payload)
-    expect(result).toEqual({ id: 'env-1', status: 'completed' })
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/signatures/self-sign/',
+      expect.objectContaining({
+        document_ids: ['doc-1'],
+        documents_with_positions: payload.documents_with_positions,
+      }),
+    )
+    expect(result).toEqual({
+      kind: 'queued',
+      data: { job_id: 'job-1', status: 'queued', envelope_id: 'env-1' },
+    })
     expect(JSON.stringify(payload)).not.toContain('signing_order')
   })
 

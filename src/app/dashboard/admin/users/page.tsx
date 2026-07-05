@@ -116,7 +116,7 @@ export default function UserManagementPage() {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">Checking access permissions...</p>
+              <p className="text-muted">Checking access permissions...</p>
             </div>
           </CardContent>
         </Card>
@@ -131,8 +131,8 @@ export default function UserManagementPage() {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
+              <p className="text-muted mb-4">
                 You don&apos;t have permission to view user management. Admin access required.
               </p>
               <button
@@ -154,11 +154,11 @@ export default function UserManagementPage() {
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Users className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-on-surface mb-2 flex items-center gap-2">
+              <Users className="h-8 w-8 text-secondary" />
               User Management
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-muted text-lg">
               Manage user accounts and permissions.
             </p>
           </div>
@@ -219,7 +219,7 @@ export default function UserManagementPage() {
             <IncelLogo className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-secondary">
               {users.filter(user => user.role === 'Admin').length}
             </div>
             <p className="text-xs text-muted-foreground">

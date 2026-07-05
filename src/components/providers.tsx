@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { SessionMonitor } from './SessionMonitor'
 import { SessionTokenSync } from './SessionTokenSync'
 import { ErrorBoundary } from './ErrorBoundary'
+import { ThemeProvider } from './theme-provider'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ErrorBoundary>
+      <ThemeProvider>
       <SessionProvider refetchOnWindowFocus={false}>
         <QueryClientProvider client={queryClient}>
           <SessionTokenSync />
@@ -54,6 +56,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           />
         </QueryClientProvider>
       </SessionProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }

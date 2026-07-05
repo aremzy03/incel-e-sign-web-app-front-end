@@ -1,3 +1,5 @@
+"use client"
+
 /**
  * Authority Button Component - Production-level button with all states and variants
  * Designed for legal confidence and professional e-signature interfaces
@@ -16,7 +18,7 @@ import { buttonVariants as motionButtonVariants } from "@/lib/motion"
 const buttonVariants = cva(
   [
     "inline-flex items-center justify-center gap-2",
-    "whitespace-nowrap rounded-lg text-sm font-medium font-body",
+    "whitespace-nowrap rounded-xl text-label-sm font-medium font-body",
     "ring-offset-background transition-all duration-normal ease-authority-ease",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
@@ -26,65 +28,65 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Authority primary - Deep navy gradient for legal confidence
+        // Authority primary - Deep navy for legal confidence
         authority: [
-          "bg-gradient-to-r from-slate-600 to-slate-900 text-white shadow-lg",
-          "hover:shadow-xl hover:-translate-y-0.5 hover:scale-[1.02]",
+          "bg-primary text-on-primary shadow-lg shadow-primary/10",
+          "hover:bg-primary-hover hover:-translate-y-0.5 hover:scale-[1.02]",
           "active:translate-y-0 active:scale-100",
-          "focus-visible:ring-slate-500 focus-visible:ring-offset-2",
+          "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",
         ],
         
-        // Trust primary - Royal blue for clear actions
+        // CTA teal - dashboard actions
         default: [
-          "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md",
-          "hover:shadow-lg hover:-translate-y-0.5 hover:from-blue-600 hover:to-blue-700",
+          "bg-secondary text-on-secondary shadow-sm",
+          "hover:bg-accent-hover hover:-translate-y-0.5",
           "active:translate-y-0",
-          "focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+          "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",
         ],
         
-        // Secondary - Clean and professional
+        // Secondary - Clean outline
         secondary: [
-          "bg-white border-2 border-gray-300 text-gray-900 shadow-sm",
-          "hover:border-gray-400 hover:shadow-md hover:-translate-y-0.5 hover:bg-gray-50",
+          "bg-surface-container-lowest border border-outline-variant text-primary shadow-sm dark:text-primary-fixed",
+          "hover:bg-surface-container-low hover:border-outline hover:-translate-y-0.5",
           "active:translate-y-0",
-          "focus-visible:ring-gray-400 focus-visible:ring-offset-2",
+          "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",
         ],
         
-        // Outline - Minimal authority
+        // Outline - Minimal
         outline: [
-          "border-2 border-slate-300 text-slate-700 bg-transparent",
-          "hover:bg-slate-50 hover:border-slate-500",
-          "focus-visible:ring-slate-400 focus-visible:ring-offset-2",
+          "border-2 border-outline-variant text-on-surface-variant bg-transparent",
+          "hover:bg-surface-container-low hover:border-outline",
+          "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",
         ],
         
         // Ghost - Subtle interactions
         ghost: [
-          "text-gray-700 bg-transparent",
-          "hover:bg-gray-100 hover:text-gray-900",
-          "focus-visible:ring-gray-400 focus-visible:ring-offset-2",
+          "text-on-surface-variant bg-transparent",
+          "hover:bg-surface-container hover:text-on-surface",
+          "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",
         ],
         
         // Destructive - For critical actions
         destructive: [
-          "bg-red-500 text-white shadow-md",
-          "hover:bg-red-600 hover:shadow-lg hover:-translate-y-0.5",
+          "bg-error text-on-error shadow-md",
+          "hover:bg-error/90 hover:shadow-lg hover:-translate-y-0.5",
           "active:translate-y-0",
-          "focus-visible:ring-red-500 focus-visible:ring-offset-2",
+          "focus-visible:ring-error focus-visible:ring-offset-2",
         ],
         
         // Success - For completed actions
         success: [
-          "bg-green-500 text-white shadow-md",
-          "hover:bg-green-600 hover:shadow-lg hover:-translate-y-0.5",
+          "bg-success text-white shadow-md",
+          "hover:bg-success/90 hover:shadow-lg hover:-translate-y-0.5",
           "active:translate-y-0",
-          "focus-visible:ring-green-500 focus-visible:ring-offset-2",
+          "focus-visible:ring-success focus-visible:ring-offset-2",
         ],
         
         // Link - Text-based actions
         link: [
-          "text-blue-600 underline-offset-4 p-0 h-auto",
-          "hover:underline hover:text-blue-700",
-          "focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+          "text-secondary underline-offset-4 p-0 h-auto",
+          "hover:underline hover:text-accent-hover",
+          "focus-visible:ring-status-your-turn focus-visible:ring-offset-2",
         ],
       },
       

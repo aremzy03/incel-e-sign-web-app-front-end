@@ -6,6 +6,7 @@ import {
   getDocument,
   deleteDocument,
   downloadDocument,
+  mergeDocuments,
   Document,
   DocumentsListResponse,
 } from '@/lib/api/documents'
@@ -187,6 +188,31 @@ export const useDownloadDocument = () => {
         errorMessage = error.message
       }
 
+      toast.error(errorMessage)
+    },
+  })
+}
+
+export const useMergeDocuments = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      documentIds,
+      name,
+    }: {
+      documentIds: string[]
+      name?: string
+    }) => mergeDocuments(documentIds, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] })
+      queryClient.refetchQueries({ queryKey: ['documents'] })
+      toast.success('Documents merged successfully')
+    },
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string }
+      const errorMessage =
+        err?.response?.data?.message || err?.message || 'Failed to merge documents'
       toast.error(errorMessage)
     },
   })

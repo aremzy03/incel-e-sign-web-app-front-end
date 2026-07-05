@@ -132,7 +132,7 @@ function DocumentToolbar({
   return (
     <motion.div
       className={cn(
-        'flex items-center justify-between p-4 bg-white border-b border-gray-200 shadow-sm',
+        'flex items-center justify-between p-4 bg-white border-b border-border shadow-sm',
         className
       )}
       initial={{ y: -100, opacity: 0 }}
@@ -152,7 +152,7 @@ function DocumentToolbar({
           {!isMobile && 'Zoom Out'}
         </Button>
         
-        <div className="px-3 py-1 bg-gray-100 rounded text-sm font-mono min-w-[60px] text-center">
+        <div className="px-3 py-1 bg-surface-container-low rounded text-sm font-mono min-w-[60px] text-center">
           {Math.round(zoom * 100)}%
         </div>
         
@@ -290,8 +290,8 @@ function SignatureFieldComponent({
 
   const getFieldColor = () => {
     if (field.signed) return 'border-success-400 bg-success-50';
-    if (signer) return `border-blue-400 bg-blue-50`;
-    return 'border-gray-400 bg-gray-50';
+    if (signer) return `border-secondary/50 bg-info-light`;
+    return 'border-outline bg-surface';
   };
 
   return (
@@ -300,7 +300,7 @@ function SignatureFieldComponent({
       className={cn(
         'border-2 border-dashed rounded cursor-pointer transition-all duration-200',
         getFieldColor(),
-        isActive && 'ring-2 ring-blue-500 ring-opacity-50',
+        isActive && 'ring-2 ring-status-your-turn ring-opacity-50',
         field.required && !field.signed && 'animate-pulse-authority'
       )}
       onClick={handleClick}
@@ -334,7 +334,7 @@ function SignatureFieldComponent({
           </div>
         ) : (
           <div className="text-center">
-            <span className="text-xs text-gray-500 font-medium">
+            <span className="text-xs text-muted font-medium">
               {field.type === 'signature' ? 'Sign' : 
                field.type === 'initial' ? 'Initial' :
                field.type === 'date' ? 'Date' : 'Text'}
@@ -441,7 +441,7 @@ function DocumentPageComponent({
       </AnimatePresence>
 
       {/* Page Number */}
-      <div className="absolute bottom-4 right-4 bg-navy-900/80 text-white px-2 py-1 rounded text-sm font-medium">
+      <div className="absolute bottom-4 right-4 bg-primary/80 text-white px-2 py-1 rounded text-sm font-medium">
         Page {page.pageNumber}
       </div>
     </motion.div>
@@ -460,7 +460,7 @@ interface SignersPanelProps {
 function SignersPanel({ signers, currentSigner, onSignerSelect, className }: SignersPanelProps) {
   return (
     <motion.div
-      className={cn('bg-white border-l border-gray-200 p-4 space-y-4 min-w-[280px]', className)}
+      className={cn('bg-white border-l border-border p-4 space-y-4 min-w-[280px]', className)}
       initial={{ x: 300, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
@@ -477,8 +477,8 @@ function SignersPanel({ signers, currentSigner, onSignerSelect, className }: Sig
             className={cn(
               'p-3 rounded-lg border-2 cursor-pointer transition-all',
               currentSigner?.id === signer.id 
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-status-your-turn bg-info-light'
+                : 'border-border hover:border-outline-variant'
             )}
             onClick={() => onSignerSelect?.(signer)}
             variants={createEntrance('right')}
@@ -498,8 +498,8 @@ function SignersPanel({ signers, currentSigner, onSignerSelect, className }: Sig
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="font-medium text-navy-900">{signer.name}</div>
-                  <div className="text-sm text-gray-600">{signer.role}</div>
+                  <div className="font-medium text-primary">{signer.name}</div>
+                  <div className="text-sm text-muted">{signer.role}</div>
                 </div>
               </div>
 
@@ -512,7 +512,7 @@ function SignersPanel({ signers, currentSigner, onSignerSelect, className }: Sig
             </div>
 
             {signer.signedAt && (
-              <div className="mt-2 flex items-center gap-1 text-xs text-success-600">
+              <div className="mt-2 flex items-center gap-1 text-xs text-success">
                 <Clock className="w-3 h-3" />
                 Signed {signer.signedAt.toLocaleDateString()}
               </div>
@@ -627,7 +627,7 @@ export function SignatureDocumentViewer({
 
   return (
     <div className={cn(
-      'flex flex-col h-full bg-gray-50',
+      'flex flex-col h-full bg-surface',
       isFullscreen && 'fixed inset-0 z-50',
       className
     )}>
@@ -651,15 +651,15 @@ export function SignatureDocumentViewer({
       {/* Progress Bar */}
       {!isReadOnly && document.status === 'in-progress' && (
         <motion.div 
-          className="bg-white border-b border-gray-200 p-4"
+          className="bg-white border-b border-border p-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-navy-900">
+            <span className="text-sm font-medium text-primary">
               Signature Progress
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted">
               {completedSignatures} of {totalSignatures} completed
             </span>
           </div>
@@ -726,7 +726,7 @@ export function SignatureDocumentViewer({
       {/* Mobile Signers Sheet */}
       {showSigners && isMobile && (
         <motion.div
-          className="bg-white border-t border-gray-200 p-4"
+          className="bg-white border-t border-border p-4"
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
         >
@@ -734,7 +734,7 @@ export function SignatureDocumentViewer({
             {document.signers.map((signer) => (
               <div
                 key={signer.id}
-                className="flex-shrink-0 flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                className="flex-shrink-0 flex items-center gap-2 p-2 bg-surface rounded-lg"
               >
                 <div 
                   className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs"

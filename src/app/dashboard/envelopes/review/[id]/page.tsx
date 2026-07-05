@@ -77,13 +77,13 @@ const dummyEnvelopes = [
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Draft':
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-surface-container-low text-body'
     case 'Sent':
-      return 'bg-blue-100 text-blue-800'
+      return 'bg-info-light text-secondary'
     case 'Completed':
       return 'bg-green-100 text-green-800'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-surface-container-low text-body'
   }
 }
 
@@ -129,11 +129,11 @@ export default function EnvelopeReviewPage() {
       <div className="max-w-4xl mx-auto">
         <Card className="bg-white shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted mb-4">
               <FileText className="h-12 w-12" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Envelope not found</h3>
-            <p className="text-gray-600 text-center mb-4">
+            <h3 className="text-lg font-medium text-on-surface mb-2">Envelope not found</h3>
+            <p className="text-muted text-center mb-4">
               The envelope you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
             <Button asChild>
@@ -207,12 +207,12 @@ export default function EnvelopeReviewPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Review Envelope: {envelope.subject}</h1>
+        <h1 className="text-3xl font-bold text-on-surface">Review Envelope: {envelope.subject}</h1>
         <div className="flex items-center space-x-4 mt-2">
           <Badge className={getStatusColor(envelope.status)}>
             Status: {envelope.status}
           </Badge>
-          <span className="text-gray-600">Created: {envelope.createdAt}</span>
+          <span className="text-muted">Created: {envelope.createdAt}</span>
         </div>
       </div>
 
@@ -238,8 +238,8 @@ export default function EnvelopeReviewPage() {
                 <span className="text-red-600 text-sm font-bold">PDF</span>
               </div>
               <div>
-                <p className="font-medium text-gray-900">{envelope.documentName}</p>
-                <p className="text-sm text-gray-600">PDF Document</p>
+                <p className="font-medium text-on-surface">{envelope.documentName}</p>
+                <p className="text-sm text-muted">PDF Document</p>
               </div>
             </div>
             <Button variant="outline" asChild>
@@ -274,11 +274,11 @@ export default function EnvelopeReviewPage() {
                     <TableCell className="font-medium">
                       {recipient.order}
                     </TableCell>
-                    <TableCell className="text-gray-900">
+                    <TableCell className="text-on-surface">
                       {recipient.email}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-gray-100 text-gray-800">
+                      <Badge variant="outline" className="bg-surface-container-low text-body">
                         Pending
                       </Badge>
                     </TableCell>
@@ -301,14 +301,14 @@ export default function EnvelopeReviewPage() {
           {/* Comments List */}
           <div className="space-y-4 mb-6">
             {comments.map((comment) => (
-              <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+              <div key={comment.id} className="border-b border-border pb-4 last:border-b-0">
                 <div className="flex items-start space-x-3">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm font-medium text-gray-900">{comment.author}</span>
-                      <span className="text-xs text-gray-500">({comment.timestamp})</span>
+                      <span className="text-sm font-medium text-on-surface">{comment.author}</span>
+                      <span className="text-xs text-muted">({comment.timestamp})</span>
                     </div>
-                    <p className="text-sm text-gray-700">{comment.message}</p>
+                    <p className="text-sm text-body">{comment.message}</p>
                   </div>
                 </div>
               </div>
@@ -341,8 +341,8 @@ export default function EnvelopeReviewPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to Send?</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-lg font-semibold text-on-surface mb-2">Ready to Send?</h3>
+              <p className="text-sm text-muted">
                 Review the details above and send the envelope to all recipients
               </p>
             </div>

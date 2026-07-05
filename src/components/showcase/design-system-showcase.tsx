@@ -31,6 +31,7 @@ import { usePerformanceMonitor } from '@/lib/performance';
 
 // Import our components
 import { Button, AuthorityButton, SignButton, DeclineButton } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { SignatureSeal, SignatureCollection } from '@/components/ui/signature-seal';
 import { AuthorityModal, ConfirmationModal } from '@/components/ui/authority-modal';
 import { 
@@ -64,7 +65,7 @@ function Section({ title, description, icon, children, className }: SectionProps
     >
       <div className="text-center space-y-4">
         <motion.div
-          className="flex items-center justify-center w-16 h-16 mx-auto bg-navy-100 text-navy-600 rounded-full"
+          className="flex items-center justify-center w-16 h-16 mx-auto bg-primary-light text-primary rounded-full"
           whileHover={{ scale: 1.05, rotate: 5 }}
           transition={{ type: 'spring', stiffness: 300 }}
         >
@@ -73,7 +74,7 @@ function Section({ title, description, icon, children, className }: SectionProps
         
         <div className="space-y-2">
           <h2 className="text-h1">{title}</h2>
-          <p className="text-body text-gray-600 max-w-2xl mx-auto">
+          <p className="text-body text-muted max-w-2xl mx-auto">
             {description}
           </p>
         </div>
@@ -93,18 +94,20 @@ function ColorPaletteShowcase() {
     {
       name: 'Brand Colors',
       colors: [
-        { name: 'Deep Navy', value: tokens.primitives.colors.navy[900], description: 'Authority & Seriousness' },
-        { name: 'Royal Blue', value: tokens.primitives.colors.blue[500], description: 'Trust & Clarity' },
-        { name: 'Cool Gray', value: tokens.primitives.colors.gray[400], description: 'Neutrality' },
-        { name: 'Pure White', value: tokens.primitives.colors.white, description: 'Simplicity & Space' },
+        { name: 'Primary Navy', value: tokens.colors.primary, description: 'Authority & sidebar' },
+        { name: 'CTA Teal', value: tokens.colors.secondary, description: 'Primary actions' },
+        { name: 'Accent Teal', value: tokens.colors.accent, description: 'Focus & your turn' },
+        { name: 'Surface', value: tokens.colors.surface, description: 'Cards & tables' },
       ]
     },
     {
       name: 'Status Colors',
       colors: [
-        { name: 'Success', value: tokens.primitives.colors.success[500], description: 'Signed Documents' },
-        { name: 'Warning', value: tokens.primitives.colors.warning[500], description: 'Pending Signatures' },
-        { name: 'Error', value: tokens.primitives.colors.error[500], description: 'Declined/Issues' },
+        { name: 'Draft', value: tokens.colors.statusDraft, description: 'Not yet sent' },
+        { name: 'Pending', value: tokens.colors.statusPending, description: 'Awaiting signatures' },
+        { name: 'Completed', value: tokens.colors.statusCompleted, description: 'Fully executed' },
+        { name: 'Rejected', value: tokens.colors.statusRejected, description: 'Declined' },
+        { name: 'Your Turn', value: tokens.colors.statusYourTurn, description: 'Action required' },
       ]
     }
   ];
@@ -125,7 +128,7 @@ function ColorPaletteShowcase() {
             {group.colors.map((color, colorIndex) => (
               <motion.div
                 key={color.name}
-                className="authority-container p-6 text-center space-y-4"
+                className="rounded-xl border border-border bg-white p-6 text-center space-y-4 shadow-card"
                 variants={createEntrance('up')}
                 whileHover={{ y: -4, scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300 }}
@@ -136,13 +139,13 @@ function ColorPaletteShowcase() {
                 />
                 
                 <div className="space-y-1">
-                  <h4 className="font-heading font-semibold text-navy-900">
+                  <h4 className="font-heading font-semibold text-primary">
                     {color.name}
                   </h4>
-                  <p className="text-xs font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                  <p className="text-xs font-mono text-muted bg-surface px-2 py-1 rounded">
                     {color.value}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted">
                     {color.description}
                   </p>
                 </div>
@@ -173,7 +176,7 @@ function TypographyShowcase() {
       {typeScale.map((type, index) => (
         <motion.div
           key={type.name}
-          className="authority-container p-6 space-y-2"
+          className="rounded-xl border border-border bg-white shadow-card p-6 space-y-2"
           variants={createEntrance('up')}
           initial="initial"
           whileInView="animate"
@@ -181,10 +184,10 @@ function TypographyShowcase() {
           transition={{ delay: index * 0.05 }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-500">
+            <span className="text-sm font-medium text-muted">
               {type.name}
             </span>
-            <span className="text-xs font-mono text-gray-400">
+            <span className="text-xs font-mono text-muted">
               {type.class}
             </span>
           </div>
@@ -262,6 +265,18 @@ function ComponentShowcase() {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Status Badges */}
+      <div className="space-y-6">
+        <h3 className="text-h2 text-center">Status Badges</h3>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Badge variant="draft">Draft</Badge>
+          <Badge variant="pending">Pending</Badge>
+          <Badge variant="completed">Completed</Badge>
+          <Badge variant="rejected">Rejected</Badge>
+          <Badge variant="yourTurn">Your Turn</Badge>
         </div>
       </div>
 
@@ -410,59 +425,59 @@ function PlatformShowcase() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
         >
-          <PlatformIcon className="w-8 h-8 text-blue-500" />
+          <PlatformIcon className="w-8 h-8 text-secondary" />
           <span className="text-h3 capitalize">{platform.type} Experience</span>
         </motion.div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="authority-container p-6 space-y-4">
+        <div className="rounded-xl border border-border bg-white shadow-card p-6 space-y-4">
           <h4 className="text-h3 flex items-center gap-2">
             <Eye className="w-5 h-5" />
             Detection
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Platform:</span>
+              <span className="text-muted">Platform:</span>
               <span className="font-medium">{platform.type}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Touch Device:</span>
+              <span className="text-muted">Touch Device:</span>
               <span className="font-medium">{platform.isTouchDevice ? 'Yes' : 'No'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Hover Support:</span>
+              <span className="text-muted">Hover Support:</span>
               <span className="font-medium">{platform.supportsHover ? 'Yes' : 'No'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Screen Size:</span>
+              <span className="text-muted">Screen Size:</span>
               <span className="font-medium">{platform.screenSize.width}×{platform.screenSize.height}</span>
             </div>
           </div>
         </div>
 
-        <div className="authority-container p-6 space-y-4">
+        <div className="rounded-xl border border-border bg-white shadow-card p-6 space-y-4">
           <h4 className="text-h3 flex items-center gap-2">
             <Settings className="w-5 h-5" />
             Adaptations
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Button Size:</span>
+              <span className="text-muted">Button Size:</span>
               <span className="font-medium">{isMobile ? 'Large (Touch)' : 'Standard'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Animations:</span>
+              <span className="text-muted">Animations:</span>
               <span className="font-medium">{platform.prefersReducedMotion ? 'Reduced' : 'Full'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Contrast:</span>
+              <span className="text-muted">Contrast:</span>
               <span className="font-medium">{platform.isHighContrast ? 'High' : 'Normal'}</span>
             </div>
           </div>
         </div>
 
-        <div className="authority-container p-6 space-y-4">
+        <div className="rounded-xl border border-border bg-white shadow-card p-6 space-y-4">
           <h4 className="text-h3 flex items-center gap-2">
             <Zap className="w-5 h-5" />
             Performance
@@ -481,10 +496,10 @@ function PerformanceDisplay() {
     <div className="space-y-2 text-sm">
       {metrics.LCP && (
         <div className="flex justify-between">
-          <span className="text-gray-600">LCP:</span>
+          <span className="text-muted">LCP:</span>
           <span className={cn(
             'font-medium',
-            getScore('LCP') === 'good' ? 'text-success-600' : 'text-warning-600'
+            getScore('LCP') === 'good' ? 'text-success' : 'text-warning'
           )}>
             {Math.round(metrics.LCP)}ms
           </span>
@@ -492,10 +507,10 @@ function PerformanceDisplay() {
       )}
       {metrics.FID && (
         <div className="flex justify-between">
-          <span className="text-gray-600">FID:</span>
+          <span className="text-muted">FID:</span>
           <span className={cn(
             'font-medium',
-            getScore('FID') === 'good' ? 'text-success-600' : 'text-warning-600'
+            getScore('FID') === 'good' ? 'text-success' : 'text-warning'
           )}>
             {Math.round(metrics.FID)}ms
           </span>
@@ -503,10 +518,10 @@ function PerformanceDisplay() {
       )}
       {metrics.CLS !== undefined && (
         <div className="flex justify-between">
-          <span className="text-gray-600">CLS:</span>
+          <span className="text-muted">CLS:</span>
           <span className={cn(
             'font-medium',
-            getScore('CLS') === 'good' ? 'text-success-600' : 'text-warning-600'
+            getScore('CLS') === 'good' ? 'text-success' : 'text-warning'
           )}>
             {metrics.CLS.toFixed(3)}
           </span>
@@ -521,7 +536,7 @@ function PerformanceDisplay() {
 export function DesignSystemShowcase() {
   return (
     <motion.div
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-surface"
       variants={pageVariants}
       initial="initial"
       animate="animate"
@@ -542,7 +557,7 @@ export function DesignSystemShowcase() {
             </motion.h1>
             
             <motion.p 
-              className="text-xl lg:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed"
+              className="text-xl lg:text-2xl text-on-primary-container max-w-3xl mx-auto leading-relaxed"
               variants={createEntrance('up')}
             >
               Award-winning design system for legal confidence and professional e-signature experiences
@@ -574,7 +589,7 @@ export function DesignSystemShowcase() {
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400/20 rounded-full blur-xl"
+            className="absolute top-1/4 left-1/4 w-32 h-32 bg-accent-light/20 rounded-full blur-xl"
             animate={{
               x: [0, 100, 0],
               y: [0, -50, 0],
@@ -630,23 +645,23 @@ export function DesignSystemShowcase() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-navy-900 text-white py-12">
+      <footer className="bg-primary text-white py-12">
         <div className="container-corporate text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
-            <IncelLogo className="w-6 h-6 text-blue-400" />
+            <IncelLogo className="w-6 h-6 text-accent-light" />
             <span className="text-xl font-heading font-bold">INCEL E-Sign</span>
           </div>
-          <p className="text-blue-200">
+          <p className="text-accent-light">
             Award-winning design system for legal confidence
           </p>
           <div className="flex justify-center gap-6 pt-4">
-            <Button variant="ghost" size="sm" className="text-blue-200 hover:text-white">
+            <Button variant="ghost" size="sm" className="text-accent-light hover:text-white">
               Documentation
             </Button>
-            <Button variant="ghost" size="sm" className="text-blue-200 hover:text-white">
+            <Button variant="ghost" size="sm" className="text-accent-light hover:text-white">
               GitHub
             </Button>
-            <Button variant="ghost" size="sm" className="text-blue-200 hover:text-white">
+            <Button variant="ghost" size="sm" className="text-accent-light hover:text-white">
               Figma
             </Button>
           </div>

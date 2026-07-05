@@ -86,7 +86,9 @@ describe('Signatures integration', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/signatures/user', expect.objectContaining({ method: 'POST' }))
     })
 
-    expect(await screen.findByText('my-sign')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getAllByText('my-sign').length).toBeGreaterThanOrEqual(1)
+    })
   })
 
   test('Sign page renders sign flow', async () => {

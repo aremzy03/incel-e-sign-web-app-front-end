@@ -135,6 +135,27 @@ if (!global.URL.revokeObjectURL) {
   global.URL.revokeObjectURL = jest.fn()
 }
 
+// react-pdf v10 is ESM-only; mock it globally so document/PDF page tests can load
+jest.mock('react-pdf', () => {
+  const React = require('react')
+  return {
+    Document: ({
+      children,
+      onLoadSuccess,
+    }: {
+      children?: React.ReactNode
+      onLoadSuccess?: (payload: { numPages: number }) => void
+    }) => {
+      React.useEffect(() => {
+        onLoadSuccess?.({ numPages: 1 })
+      }, [onLoadSuccess])
+      return React.createElement('div', { 'data-testid': 'pdf-document' }, children)
+    },
+    Page: () => React.createElement('div', { 'data-testid': 'pdf-page' }),
+    pdfjs: { version: '5.3.93', GlobalWorkerOptions: { workerSrc: '' } },
+  }
+})
+
 // Avoid async next/dynamic loadable updates that trigger act(...) warnings in tests
 jest.mock('next/dynamic', () => {
   const React = require('react')

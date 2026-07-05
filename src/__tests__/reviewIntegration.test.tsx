@@ -103,9 +103,17 @@ jest.mock('@/hooks/signing', () => ({
   resolveSignatureImage: () => undefined,
 }))
 
-jest.mock('@/components/pdf/usePdfPasswordDialog', () => ({
-  usePdfPasswordDialog: () => ({ dialog: null, onPassword: jest.fn(), cancelled: false }),
-}))
+jest.mock('@/components/pdf/usePdfPasswordDialog', () => {
+  const mockResetPasswordDialog = jest.fn()
+  return {
+    usePdfPasswordDialog: () => ({
+      dialog: null,
+      onPassword: jest.fn(),
+      cancelled: false,
+      reset: mockResetPasswordDialog,
+    }),
+  }
+})
 
 jest.mock('@/components/signing/signing-document-viewer', () => ({
   SigningDocumentViewer: () => <div>PDF</div>,
@@ -144,8 +152,8 @@ describe('Review Integration Tests', () => {
     render(<DocumentReviewPage />, { wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('Document: contract.pdf')).toBeInTheDocument()
-      expect(screen.getByText('Document Information')).toBeInTheDocument()
+      expect(screen.getAllByText('contract.pdf').length).toBeGreaterThan(0)
+      expect(screen.getByText('Document Details')).toBeInTheDocument()
     })
   })
 

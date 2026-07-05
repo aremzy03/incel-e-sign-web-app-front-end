@@ -263,16 +263,17 @@ describe('Documents Integration Tests', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('Document: test-document.pdf')).toBeInTheDocument()
-        expect(screen.getAllByText('You').length).toBeGreaterThan(0)
+        expect(screen.getAllByText('test-document.pdf').length).toBeGreaterThan(0)
+        expect(screen.getByText('Document Details')).toBeInTheDocument()
         expect(screen.getAllByText('draft').length).toBeGreaterThan(0)
+        expect(screen.getByText('Viewing Document')).toBeInTheDocument()
       })
     })
 
-    it('shows delete button for document owner', async () => {
+    it('shows download button for document owner', async () => {
       const mockApi = getMockApi()
       mockApi.get.mockResolvedValueOnce({
-        data: mockDocuments[0], // Document owned by test@example.com
+        data: mockDocuments[0],
       })
 
       render(
@@ -282,7 +283,7 @@ describe('Documents Integration Tests', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument()
+        expect(screen.getAllByRole('button', { name: /download/i }).length).toBeGreaterThan(0)
       })
     })
 

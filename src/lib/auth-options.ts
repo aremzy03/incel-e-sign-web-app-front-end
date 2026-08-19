@@ -2,6 +2,11 @@ import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import axios from 'axios'
 import { getApiBaseUrl, getNextAuthSecret, getNextAuthUrl } from '@/lib/env'
+import {
+  ACCESS_TOKEN_REFRESH_BUFFER_MS,
+  getAccessTokenExpiresAt,
+  REFRESH_TOKEN_LIFETIME_S,
+} from '@/lib/auth-utils'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -129,11 +134,20 @@ export const authOptions: NextAuthOptions = {
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
           user: user.user,
-          accessTokenExpires: Date.now() + 60 * 60 * 1000,
+          accessTokenExpires: getAccessTokenExpiresAt(user.accessToken),
+          error: undefined,
         }
       }
 
-      if (Date.now() < token.accessTokenExpires) {
+      // Prefer the real access JWT exp so older sessions with a wrong
+      // accessTokenExpires value still refresh at the correct time.
+      const expiresAt = token.accessToken
+        ? getAccessTokenExpiresAt(String(token.accessToken))
+        : typeof token.accessTokenExpires === 'number'
+          ? token.accessTokenExpires
+          : 0
+
+      if (Date.now() < expiresAt - ACCESS_TOKEN_REFRESH_BUFFER_MS) {
         return token
       }
 
@@ -164,43 +178,67 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60,
+    // Keep the NextAuth session cookie alive for the full refresh-token lifetime.
+    maxAge: REFRESH_TOKEN_LIFETIME_S,
   },
   secret: getNextAuthSecret(),
 }
 
-async function refreshAccessToken(token: any) {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
-      refresh: token.refreshToken,
-    })
+let inFlightRefresh: Promise<any> | null = null
+let inFlightRefreshKey: string | null = null
 
-    if (response.data.access) {
+async function refreshAccessToken(token: any) {
+  const refreshToken = token.refreshToken as string | undefined
+  if (!refreshToken) return null
+
+  // Dedupe concurrent refreshes (e.g. refetchInterval + 401 retry) so rotation
+  // does not blacklist the token still held by a sibling request.
+  if (inFlightRefresh && inFlightRefreshKey === refreshToken) {
+    return inFlightRefresh
+  }
+
+  inFlightRefreshKey = refreshToken
+  inFlightRefresh = (async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
+        refresh: refreshToken,
+      })
+
+      if (response.data.access) {
+        const accessToken = response.data.access as string
+        return {
+          ...token,
+          accessToken,
+          // Backend rotates refresh tokens; always prefer the new one when present.
+          refreshToken: response.data.refresh || refreshToken,
+          accessTokenExpires: getAccessTokenExpiresAt(accessToken),
+          error: undefined,
+        }
+      }
+
+      throw new Error('Invalid refresh response')
+    } catch (error: any) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Token refresh error:', error)
+      }
+
+      if (
+        error.response?.data?.code === 'token_not_valid' ||
+        error.response?.data?.detail?.includes('blacklisted') ||
+        error.response?.status === 401
+      ) {
+        return null
+      }
+
       return {
         ...token,
-        accessToken: response.data.access,
-        refreshToken: response.data.refresh || token.refreshToken,
-        accessTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        error: 'RefreshAccessTokenError',
       }
+    } finally {
+      inFlightRefresh = null
+      inFlightRefreshKey = null
     }
+  })()
 
-    throw new Error('Invalid refresh response')
-  } catch (error: any) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Token refresh error:', error)
-    }
-
-    if (
-      error.response?.data?.code === 'token_not_valid' ||
-      error.response?.data?.detail?.includes('blacklisted') ||
-      error.response?.status === 401
-    ) {
-      return null
-    }
-
-    return {
-      ...token,
-      error: 'RefreshAccessTokenError',
-    }
-  }
+  return inFlightRefresh
 }

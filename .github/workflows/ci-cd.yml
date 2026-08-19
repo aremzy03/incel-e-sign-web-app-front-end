@@ -8,16 +8,20 @@ on:
         required: true
         default: 'https://esignapi.app.incelgroup.com/api'
         type: string
-
-# # Future trigger - uncomment to enable automatic runs on push to main
-#   push:
-#     branches:
-#       - main
+  pull_request:
+    branches:
+      - staging
+      - main
+  push:
+    branches:
+      - staging
+      - main
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  NEXT_PUBLIC_API_URL_DEFAULT: https://esignapi.app.incelgroup.com/api
+  # PRs use the target branch; pushes use the branch itself.
+  NEXT_PUBLIC_API_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.next_public_api_url || ((github.event.pull_request.base.ref || github.ref_name) == 'staging') && 'https://esignapi.staging.incelgroup.com/api' || 'https://esignapi.app.incelgroup.com/api' }}
 
 jobs:
   test-and-lint:
@@ -42,7 +46,7 @@ jobs:
       - name: Run tests
         run: npm run test:ci
         env:
-          NEXT_PUBLIC_API_URL: ${{ inputs.next_public_api_url || 'http://localhost:8000/api' }}
+          NEXT_PUBLIC_API_URL: http://localhost:8000/api
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: test-secret
           NODE_ENV: test
@@ -74,7 +78,7 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ inputs.next_public_api_url || env.NEXT_PUBLIC_API_URL_DEFAULT }}
+          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: build-placeholder-must-override-at-runtime
 
@@ -117,7 +121,8 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
+            type=sha,prefix={{branch}}-,enable=${{ github.event_name != 'pull_request' }}
+            type=sha,prefix=pr-${{ github.event.pull_request.number }}-,enable=${{ github.event_name == 'pull_request' }}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
@@ -128,7 +133,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ inputs.next_public_api_url || env.NEXT_PUBLIC_API_URL_DEFAULT }}
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
             NEXTAUTH_URL=http://localhost:3000
             NEXTAUTH_SECRET=build-placeholder-must-override-at-runtime
           cache-from: type=gha

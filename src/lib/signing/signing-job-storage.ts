@@ -3,18 +3,32 @@ const STORAGE_PREFIX = 'signing-job:'
 export interface StoredSigningJob {
   jobId: string
   envelopeId: string
+  envelopeName?: string
+  token?: string
   startedAt: number
+}
+
+export interface SaveSigningJobMeta {
+  envelopeName?: string
+  token?: string
 }
 
 function storageKey(envelopeId: string): string {
   return `${STORAGE_PREFIX}${envelopeId}`
 }
 
-export function saveSigningJob(envelopeId: string, jobId: string): void {
+export function saveSigningJob(
+  envelopeId: string,
+  jobId: string,
+  meta?: SaveSigningJobMeta,
+): void {
   if (typeof window === 'undefined') return
+  const existing = loadSigningJob(envelopeId)
   const entry: StoredSigningJob = {
     jobId,
     envelopeId,
+    envelopeName: meta?.envelopeName ?? existing?.envelopeName,
+    token: meta?.token ?? existing?.token,
     startedAt: Date.now(),
   }
   sessionStorage.setItem(storageKey(envelopeId), JSON.stringify(entry))

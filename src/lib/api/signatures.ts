@@ -5,7 +5,7 @@ import {
   SigningApiError,
   SigningRequestTimeoutError,
 } from '@/lib/api/signing-errors'
-import { isLoggingEnabled } from '@/lib/env'
+import { getApiBaseUrl, isLoggingEnabled } from '@/lib/env'
 import {
   ensurePdfPointsPosition,
   normalizeDocumentsWithPositionsForApi,
@@ -36,6 +36,8 @@ export interface SigningJobDetail {
 export type SignEnvelopePayload = {
   signature_image?: string
   signature_id?: string
+  token?: string
+  field_values?: Record<string, string> | Array<{ id: string; value: string }>
   page?: number
   x?: number
   y?: number
@@ -80,6 +82,12 @@ export function buildSignEnvelopePayload(payload: SignEnvelopePayload): SignEnve
   const cleaned: SignEnvelopePayload = {}
   if (hasImage) cleaned.signature_image = payload.signature_image!.trim()
   if (hasSavedId) cleaned.signature_id = payload.signature_id!.trim()
+  if (typeof payload.token === 'string' && payload.token.trim() !== '') {
+    cleaned.token = payload.token.trim()
+  }
+  if (payload.field_values) {
+    cleaned.field_values = payload.field_values
+  }
 
   if (typeof payload.page === 'number' && Number.isFinite(payload.page) && payload.page >= 1) {
     cleaned.page = payload.page
@@ -106,7 +114,8 @@ export async function signEnvelope(
   }
 
   const requestPayload = buildSignEnvelopePayload(payload)
-  const requestUrl = `/api/signatures/${encodeURIComponent(resolvedEnvelopeId)}/sign`
+  const tokenQuery = requestPayload.token ? `?token=${encodeURIComponent(requestPayload.token)}` : ''
+  const requestUrl = `/api/signatures/${encodeURIComponent(resolvedEnvelopeId)}/sign${tokenQuery}`
 
   if (isLoggingEnabled()) {
     console.info('[signEnvelope] POST', requestUrl, requestPayload)
@@ -116,9 +125,13 @@ export async function signEnvelope(
   const timeoutId = setTimeout(() => controller.abort(), SIGNING_API_TIMEOUT_MS)
 
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (requestPayload.token) {
+      headers['X-Signing-Token'] = requestPayload.token
+    }
     const response = await fetch(requestUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       credentials: 'include',
       cache: 'no-store',
       body: JSON.stringify(requestPayload),
@@ -180,15 +193,26 @@ export async function signEnvelope(
   }
 }
 
-export async function getSigningJob(jobId: string): Promise<SigningJobDetail> {
+export async function getSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
+  if (token) {
+    const response = await apiClient.get(`/signatures/jobs/${jobId}/public/`, {
+      params: { token },
+    })
+    return unwrapApiData<SigningJobDetail>(response.data)
+  }
   const response = await apiClient.get(`/signatures/jobs/${jobId}/`)
   return unwrapApiData<SigningJobDetail>(response.data)
 }
 
-export async function retrySigningJob(jobId: string): Promise<SignJobQueuedData> {
-  const response = await apiClient.post(`/signatures/jobs/${jobId}/retry/`, undefined, {
-    timeout: SIGNING_API_TIMEOUT_MS,
-  })
+export async function retrySigningJob(jobId: string, token?: string): Promise<SignJobQueuedData> {
+  const response = await apiClient.post(
+    `/signatures/jobs/${jobId}/retry/`,
+    token ? { token } : undefined,
+    {
+      params: token ? { token } : undefined,
+      timeout: SIGNING_API_TIMEOUT_MS,
+    },
+  )
   if (response.status !== 202) {
     throw new Error(`Unexpected retry response status: ${response.status}`)
   }
@@ -212,9 +236,9 @@ export interface UploadSignatureResponse {
 /**
  * Helper to normalize raw backend signature payloads into ReusableSignature
  */
-function mapToReusableSignature(item: any): ReusableSignature {
-  const id = String(item.id)
-  const imageUrl = item.image_url || item.image || ''
+export function mapToReusableSignature(item: any): ReusableSignature {
+  const id = String(item.id ?? item.signature_id)
+  const imageUrl = item.image_url || item.image || item.signature_image || ''
   const uploadedAt = item.uploaded_at || item.created_at || new Date().toISOString()
   const isDefault = Boolean(item.is_default)
   const name = item.name || (isDefault ? 'Default Signature' : 'Signature')
@@ -258,19 +282,27 @@ export async function listUserSignatures(): Promise<ReusableSignature[]> {
   }
 }
 
-export async function uploadUserSignature(file: File, name?: string, isDefault?: boolean): Promise<ReusableSignature> {
+export async function uploadUserSignature(
+  file: File,
+  name?: string,
+  isDefault?: boolean,
+  token?: string,
+): Promise<ReusableSignature> {
   const formData = new FormData()
   // Backend expects 'image' field for the file
   formData.append('image', file)
   if (typeof isDefault === 'boolean') formData.append('is_default', String(isDefault))
   if (name) formData.append('name', name)
 
-  // Use the documented Next.js API route which will forward multipart form-data
-  // Use relative URL - Next.js will handle protocol automatically
-  const response = await fetch('/api/signatures/user', {
+  const apiBase = getApiBaseUrl().replace(/\/$/, '')
+  const targetUrl = token
+    ? `${apiBase}/signatures/me/public/?token=${encodeURIComponent(token)}`
+    : '/api/signatures/user'
+
+  const response = await fetch(targetUrl, {
     method: 'POST',
     body: formData,
-    credentials: 'include',
+    credentials: token ? 'omit' : 'include',
     cache: 'no-store', // Prevent browser from using cached redirects
   })
 

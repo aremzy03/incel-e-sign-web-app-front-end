@@ -21,12 +21,16 @@ interface UseSigningSubmitOptions {
   envelopeId?: string
   signActions: SignActionsReturn
   onSignComplete: () => void
+  onSignQueued?: (result: Extract<SignMutationResult, { kind: 'queued' }>) => void
+  token?: string
 }
 
 export function useSigningSubmit({
   envelopeId,
   signActions,
   onSignComplete,
+  onSignQueued,
+  token,
 }: UseSigningSubmitOptions) {
   const [activeJobId, setActiveJobId] = useState<string | null>(null)
   const [phase, setPhase] = useState<SigningSubmitPhase>('idle')
@@ -35,7 +39,8 @@ export function useSigningSubmit({
     jobId: activeJobId,
     envelopeId: envelopeId ?? '',
     enabled: !!activeJobId && !!envelopeId,
-    background: false,
+    background: true,
+    token,
     onSucceeded: () => {
       setPhase('succeeded')
       setActiveJobId(null)
@@ -51,7 +56,6 @@ export function useSigningSubmit({
 
   const isSigningInFlight =
     phase === 'submitting' ||
-    phase === 'polling' ||
     signActions.signMutation.isPending ||
     signActions.saveValuesMutation.isPending
 
@@ -69,8 +73,9 @@ export function useSigningSubmit({
     }
     setActiveJobId(result.jobId)
     setPhase('polling')
+    onSignQueued?.(result)
     return result
-  }, [onSignComplete, signActions])
+  }, [onSignComplete, onSignQueued, signActions])
 
   const retry = useCallback(async () => {
     await poller.retry()
@@ -103,8 +108,7 @@ export function useSigningSubmit({
         ? 'failed'
         : 'polling'
 
-  const showOverlay =
-    phase === 'submitting' || phase === 'polling' || phase === 'timeout' || phase === 'failed'
+  const showOverlay = false
 
   return {
     phase,

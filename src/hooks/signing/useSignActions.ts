@@ -28,6 +28,7 @@ interface UseSignActionsOptions {
   onDeclineSuccess?: (message?: string) => void
   supportsDecline?: boolean
   supportsFieldSave?: boolean
+  token?: string
 }
 
 function resolveEnvelopeIdForSign(
@@ -69,6 +70,7 @@ export function useSignActions({
   onDeclineSuccess,
   supportsDecline = true,
   supportsFieldSave = true,
+  token,
 }: UseSignActionsOptions) {
   const queryClient = useQueryClient()
   const [declineMessage, setDeclineMessage] = useState('')
@@ -77,13 +79,14 @@ export function useSignActions({
 
   const saveValuesMutation = useMutation({
     mutationFn: async () => {
-      if (!supportsFieldSave || !resolvedEnvelopeId || !currentUserId) return
+      if (!supportsFieldSave || !resolvedEnvelopeId) return
       const allFields = envelope?.fields
       if (!allFields?.length) return
 
       const items: Array<{ id: string; value: string }> = []
       allFields.forEach((f) => {
-        if (f.assigned_signer !== currentUserId || !f.id) return
+        if (currentUserId && f.assigned_signer !== currentUserId) return
+        if (!f.id) return
         let value = ''
         if (f.type === 'text') value = (fieldValues[f.id] ?? f.prefill_value ?? '').toString()
         if (f.type === 'date') {
@@ -96,16 +99,27 @@ export function useSignActions({
           value =
             f.prefill_value && f.prefill_value.trim() !== ''
               ? f.prefill_value
-              : getInitialsFromName(signerDetails[currentUserId]?.full_name)
+              : getInitialsFromName(currentUserId ? signerDetails[currentUserId]?.full_name : undefined)
         }
         if (f.type === 'designation') value = (f.prefill_value ?? '').toString()
         if (value !== '') items.push({ id: f.id, value })
       })
 
       if (items.length === 0) return
-      await apiClient.post(`/fields/signing/${resolvedEnvelopeId}/values/`, { items }, {
-        timeout: SIGNING_API_TIMEOUT_MS,
-      })
+
+      if (token) {
+        await apiClient.post(
+          `/fields/signing/${resolvedEnvelopeId}/values-public/?token=${encodeURIComponent(token)}`,
+          { items },
+          { timeout: SIGNING_API_TIMEOUT_MS },
+        )
+      } else {
+        await apiClient.post(
+          `/fields/signing/${resolvedEnvelopeId}/values/`,
+          { items },
+          { timeout: SIGNING_API_TIMEOUT_MS },
+        )
+      }
     },
   })
 
@@ -117,6 +131,7 @@ export function useSignActions({
 
       const result = await signEnvelope(resolvedEnvelopeId, {
         signature_id: mySignatureId,
+        token,
         ...buildPlacementPayload(placement),
       })
 
@@ -124,7 +139,10 @@ export function useSignActions({
         return { kind: 'already_signed' }
       }
 
-      saveSigningJob(resolvedEnvelopeId, result.data.job_id)
+      saveSigningJob(resolvedEnvelopeId, result.data.job_id, {
+        envelopeName: envelope.name,
+        token,
+      })
       return {
         kind: 'queued',
         jobId: result.data.job_id,
@@ -155,6 +173,13 @@ export function useSignActions({
       const body = message
         ? { decline_message: message }
         : { decline_message: 'Declined without specific reason.' }
+      if (token) {
+        const res = await apiClient.post(
+          `/signatures/${resolvedEnvelopeId}/decline-public/`,
+          { ...body, token },
+        )
+        return res.data
+      }
       const res = await apiClient.post(`/signatures/${resolvedEnvelopeId}/decline/`, body)
       return res.data
     },

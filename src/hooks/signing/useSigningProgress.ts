@@ -9,8 +9,10 @@ import {
 } from '@/lib/signing/signing-field-checklist'
 import type { SigningEnvelopeResponse } from './types'
 
-function signatureKey(docId: string, signerId: string): string {
-  return `${docId}-${signerId}`
+function signatureKey(docId: string, signerId: string, positionIndex?: number): string {
+  return positionIndex !== undefined
+    ? `${docId}-${signerId}-${positionIndex}`
+    : `${docId}-${signerId}`
 }
 
 interface UseSigningProgressOptions {
@@ -71,15 +73,21 @@ export function useSigningProgress({
 
   const activeFieldId = useMemo(() => getActiveFieldId(fieldChecklist), [fieldChecklist])
 
-  const markSignaturePreviewed = useCallback((docId: string, signerId: string) => {
-    const key = signatureKey(docId, signerId)
-    setSignedFor((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
-  }, [])
+  const markSignaturePreviewed = useCallback(
+    (docId: string, signerId: string, positionIndex?: number) => {
+      const key = signatureKey(docId, signerId, positionIndex)
+      setSignedFor((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
+    },
+    [],
+  )
 
-  const markSignatureConfirmed = useCallback((docId: string, signerId: string) => {
-    const key = signatureKey(docId, signerId)
-    setSignedFor((prev) => ({ ...prev, [key]: true }))
-  }, [])
+  const markSignatureConfirmed = useCallback(
+    (docId: string, signerId: string, positionIndex?: number) => {
+      const key = signatureKey(docId, signerId, positionIndex)
+      setSignedFor((prev) => ({ ...prev, [key]: true }))
+    },
+    [],
+  )
 
   const markAllSignaturesComplete = useCallback(() => {
     setSignedFor((prev) => {
@@ -87,16 +95,20 @@ export function useSigningProgress({
       for (const doc of envelopeDocuments) {
         const positions =
           doc.signer_document_positions?.filter((p) => p.signer_id === currentUserId) ?? []
-        for (const pos of positions) {
-          next[signatureKey(doc.id, pos.signer_id)] = true
-        }
+        positions.forEach((pos, idx) => {
+          next[signatureKey(doc.id, pos.signer_id, idx)] = true
+        })
       }
       return next
     })
   }, [currentUserId, envelopeDocuments])
 
   const isSignatureComplete = useCallback(
-    (docId: string, signerId: string) => Boolean(signedFor[signatureKey(docId, signerId)]),
+    (docId: string, signerId: string, positionIndex?: number) =>
+      Boolean(
+        (positionIndex !== undefined && signedFor[signatureKey(docId, signerId, positionIndex)]) ||
+          signedFor[signatureKey(docId, signerId)],
+      ),
     [signedFor],
   )
 

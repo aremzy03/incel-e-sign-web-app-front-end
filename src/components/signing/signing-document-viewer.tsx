@@ -197,15 +197,21 @@ export function SigningDocumentViewer({
   const renderSignaturePlaceholders = useCallback(
     (docItem: EnvelopeDocumentResponse, pageNo: number) => {
       const signerPositionsForThisDoc = docItem.signer_document_positions || []
-      const myPositionsOnThisPage = signerPositionsForThisDoc.filter(
-        (sp) => currentUserId && sp.signer_id === currentUserId && sp.position.page === pageNo,
-      )
+      const myPositionsWithIdx = signerPositionsForThisDoc
+        .map((sp, signerIdx) => ({ sp, signerIdx }))
+        .filter(({ sp }) => currentUserId && sp.signer_id === currentUserId)
+      const myPositionsOnThisPage = myPositionsWithIdx
+        .map(({ sp }, idx) => ({ sp, idx }))
+        .filter(({ sp }) => sp.position.page === pageNo)
       const dims = pageDims[docItem.id]?.[pageNo]
 
-      return myPositionsOnThisPage.map((entry, idx) => {
+      return myPositionsOnThisPage.map(({ sp: entry, idx }) => {
         const isMe = entry.signer_id === currentUserId
         const targetKey = `sig-${docItem.id}-${entry.signer_id}-${idx}`
-        const isSigned = signedFor[`${docItem.id}-${entry.signer_id}`]
+        const isSigned = Boolean(
+          signedFor[`${docItem.id}-${entry.signer_id}-${idx}`] ||
+            signedFor[`${docItem.id}-${entry.signer_id}`],
+        )
         const isSelected = selectedFieldKey === targetKey
         const isFocused = focusedTargetId === targetKey
         const isPreview = previewSignerId === entry.signer_id && !isSigned
@@ -227,7 +233,11 @@ export function SigningDocumentViewer({
                 <button
                   type="button"
                   className="relative h-full w-full cursor-pointer rounded-md border-2 border-green-500 bg-white shadow-lg transition hover:border-green-600 group"
-                  onClick={() => (isMe ? onPlaceholderClick({ ...entry, document_id: docItem.id }) : undefined)}
+                  onClick={() =>
+                    isMe
+                      ? onPlaceholderClick({ ...entry, document_id: docItem.id, position_index: idx })
+                      : undefined
+                  }
                   title="Selected signature field"
                 >
                   <img
@@ -245,7 +255,9 @@ export function SigningDocumentViewer({
                 <div className="relative h-full w-full">
                   <button
                     type="button"
-                    onClick={() => onPlaceholderClick({ ...entry, document_id: docItem.id })}
+                    onClick={() =>
+                      onPlaceholderClick({ ...entry, document_id: docItem.id, position_index: idx })
+                    }
                     className={cn(
                       'field-pulse group absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed bg-accent-light/30 transition hover:bg-accent-light/50',
                       isSelected

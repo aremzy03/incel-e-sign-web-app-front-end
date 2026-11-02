@@ -97,7 +97,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const params = useParams<{ id: string }>()
   const envelopeId = params?.id
   const router = useRouter()
-  const searchParams = typeof useSearchParams === 'function' ? useSearchParams() : null
+  const searchParams = useSearchParams()
   const tokenFromQuery = searchParams?.get('token')
   const tokenFromWindow = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null
   const token = (tokenFromQuery || tokenFromWindow || '').trim() || undefined

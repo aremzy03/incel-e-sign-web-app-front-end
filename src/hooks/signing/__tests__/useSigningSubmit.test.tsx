@@ -39,8 +39,9 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('useSigningSubmit', () => {
-  it('enters polling phase for queued sign jobs', async () => {
+  it('enters polling phase and invokes onSignQueued without blocking overlay for queued sign jobs', async () => {
     const onSignComplete = jest.fn()
+    const onSignQueued = jest.fn()
     const signActions = createSignActions({
       kind: 'queued',
       jobId: 'job-1',
@@ -53,6 +54,7 @@ describe('useSigningSubmit', () => {
           envelopeId: 'env-1',
           signActions,
           onSignComplete,
+          onSignQueued,
         }),
       { wrapper },
     )
@@ -62,7 +64,12 @@ describe('useSigningSubmit', () => {
     })
 
     expect(result.current.phase).toBe('polling')
-    expect(result.current.showOverlay).toBe(true)
+    expect(result.current.showOverlay).toBe(false)
+    expect(onSignQueued).toHaveBeenCalledWith({
+      kind: 'queued',
+      jobId: 'job-1',
+      envelopeId: 'env-1',
+    })
     expect(onSignComplete).not.toHaveBeenCalled()
   })
 

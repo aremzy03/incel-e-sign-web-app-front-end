@@ -2,6 +2,7 @@ import type { EnvelopeCardVariant } from '@/components/library'
 import type { EnvelopeSignerStackUser } from '@/components/library/envelope-signer-stack'
 import type { Envelope, EnvelopeSigningOrderEntry } from '@/lib/api/envelopes'
 import { isSelfSignEnvelope } from '@/lib/api/envelopes'
+import { loadSigningJob } from '@/lib/signing/signing-job-storage'
 
 export function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString)
@@ -51,6 +52,16 @@ function idsMatch(a?: string, b?: string): boolean {
   return String(a) === String(b)
 }
 
+export function isEnvelopeSigningInProgress(env: Envelope, currentUserId?: string): boolean {
+  if (env.id && loadSigningJob(env.id)) {
+    return true
+  }
+  if (currentUserId && env.signatures?.some((s) => idsMatch(s.signer, currentUserId) && s.status === 'processing')) {
+    return true
+  }
+  return false
+}
+
 export function getEnvelopeVariant(
   env: Envelope,
   currentUserId?: string,
@@ -60,6 +71,10 @@ export function getEnvelopeVariant(
   if (status.includes('reject')) return 'rejected'
   if (isSelfSignEnvelope(env)) return 'completed'
   if (status.includes('complete')) return 'completed'
+
+  if (isEnvelopeSigningInProgress(env, currentUserId)) {
+    return 'pending'
+  }
 
   if (status.includes('pending') && idsMatch(env.current_signer?.id, currentUserId)) {
     return 'your-turn'
@@ -84,6 +99,9 @@ export function getEnvelopeSubtitle(
   const status = env.status?.toLowerCase() ?? ''
   const recipients = env.recipients ?? []
 
+  if (isEnvelopeSigningInProgress(env, currentUserId)) {
+    return 'Signing in progress — embedding signature…'
+  }
   if (variant === 'your-turn') return 'Needs your signature for final approval'
   if (isSelfSignEnvelope(env)) return 'Signed by you'
   if (variant === 'completed') return 'All signatures captured'

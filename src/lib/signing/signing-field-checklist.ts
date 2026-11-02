@@ -41,11 +41,12 @@ export function buildSigningFieldChecklist({
   for (const doc of envelopeDocuments) {
     const positions = doc.signer_document_positions?.filter((p) => p.signer_id === currentUserId) ?? []
     positions.forEach((pos, idx) => {
-      const key = `${doc.id}-${pos.signer_id}`
+      const legacyKey = `${doc.id}-${pos.signer_id}`
+      const indexedKey = `${doc.id}-${pos.signer_id}-${idx}`
       items.push({
-        id: `sig-${key}-${idx}`,
+        id: `sig-${legacyKey}-${idx}`,
         label: positions.length > 1 ? `Signature ${idx + 1}` : 'Signature Required',
-        completed: Boolean(signedFor[key]),
+        completed: Boolean(signedFor[indexedKey] || signedFor[legacyKey]),
         target: {
           kind: 'signature',
           documentId: doc.id,

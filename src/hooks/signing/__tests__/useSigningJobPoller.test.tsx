@@ -150,7 +150,7 @@ describe('useSigningJobPoller', () => {
       await result.current.retry()
     })
 
-    expect(retrySigningJobMock).toHaveBeenCalledWith('job-1')
+    expect(retrySigningJobMock).toHaveBeenCalledWith('job-1', undefined)
     expect(result.current.phase).toBe('polling')
   })
 })

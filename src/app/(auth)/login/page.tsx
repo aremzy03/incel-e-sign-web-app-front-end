@@ -30,11 +30,22 @@ import { getSafePostLoginPath, POST_LOGIN_FALLBACK } from '@/lib/post-login-redi
 
 export const dynamic = 'force-dynamic'
 
-function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }) {
+function LoginParamHandler({
+  onSetError,
+  onSetEmail,
+}: {
+  onSetError: (msg: string) => void
+  onSetEmail?: (email: string) => void
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   React.useEffect(() => {
+    const email = searchParams?.get('email')
+    if (email && onSetEmail) {
+      onSetEmail(email)
+    }
+
     const message = searchParams?.get('message')
     if (message) {
       switch (message) {
@@ -49,6 +60,10 @@ function LoginParamHandler({ onSetError }: { onSetError: (msg: string) => void }
         case 'confirm_email':
           toast.success('Registration successful. Confirm your email, then sign in.')
           onSetError('Confirm your email before signing in.')
+          break
+        case 'token_expired':
+          toast.error('Your signing link has expired. Please sign in to access and sign this document.')
+          onSetError('Your signing link has expired. Sign in to access your document.')
           break
         default:
           break
@@ -125,7 +140,10 @@ export default function LoginPage() {
   return (
     <>
       <Suspense fallback={null}>
-        <LoginParamHandler onSetError={setError} />
+        <LoginParamHandler
+          onSetError={setError}
+          onSetEmail={(email) => form.setValue('email', email)}
+        />
       </Suspense>
       <AuthSplitLayout>
         <div className="flex flex-1 flex-col justify-center p-8 md:p-16">

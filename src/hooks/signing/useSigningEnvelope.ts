@@ -6,10 +6,13 @@ import toast from 'react-hot-toast'
 import apiClient from '@/lib/axios'
 import {
   getEnvelopeDocuments,
+  getPublicEnvelope,
+  getPublicEnvelopeDocuments,
   normalizeEnvelopeListItem,
   type EnvelopeDocumentResponse,
 } from '@/lib/api/envelopes'
 import { classifyError } from '@/lib/errors'
+import { getApiBaseUrl } from '@/lib/env'
 import {
   documentUrlNeedsAuth,
   getDocumentFileUrlForViewer,
@@ -23,10 +26,12 @@ interface UseSigningEnvelopeOptions {
   envelopeId?: string
   enabled?: boolean
   accessToken?: string
+  token?: string
 }
 
-export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: UseSigningEnvelopeOptions) {
+export function useSigningEnvelope({ envelopeId, enabled = true, accessToken, token }: UseSigningEnvelopeOptions) {
   const effectiveAccessToken = accessToken ?? getCachedAccessToken() ?? undefined
+  const hasToken = Boolean(token && token.trim())
   const [envelopeDocuments, setEnvelopeDocuments] = useState<EnvelopeDocumentResponse[]>([])
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
@@ -36,7 +41,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
   const [documentReloadToken, setDocumentReloadToken] = useState(0)
 
   const resolveUrl = (url?: string | null) => resolveBackendUrl(url)
-  const waitingForDocumentsAuth = Boolean(enabled && envelopeId && !effectiveAccessToken)
+  const waitingForDocumentsAuth = Boolean(enabled && envelopeId && !effectiveAccessToken && !hasToken)
 
   const getDocumentViewerUrl = (
     doc: EnvelopeDocumentResponse,
@@ -55,10 +60,14 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     error: envelopeError,
     refetch: refetchEnvelope,
   } = useQuery<SigningEnvelopeResponse>({
-    queryKey: ['sign-envelope', envelopeId],
-    enabled: enabled && !!envelopeId,
+    queryKey: ['sign-envelope', envelopeId, token],
+    enabled: enabled && !!envelopeId && (hasToken || Boolean(effectiveAccessToken)),
     retry: shouldRetryAuthQuery,
     queryFn: async () => {
+      if (hasToken) {
+        const raw = await getPublicEnvelope(envelopeId!, token!)
+        return normalizeEnvelopeListItem(raw) as SigningEnvelopeResponse
+      }
       const res = await apiClient.get(`/envelopes/${envelopeId}/`)
       const raw = (res.data?.data ?? res.data) as Record<string, unknown>
       return normalizeEnvelopeListItem(raw) as SigningEnvelopeResponse
@@ -66,7 +75,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
   })
 
   useEffect(() => {
-    if (!envelopeId || !enabled || !effectiveAccessToken) return
+    if (!envelopeId || !enabled || (!effectiveAccessToken && !hasToken)) return
     let cancelled = false
 
     const fetchDocuments = async () => {
@@ -74,7 +83,9 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
       setDocsError(null)
       setDocumentsError(null)
       try {
-        const docs = await getEnvelopeDocuments(envelopeId)
+        const docs = hasToken
+          ? await getPublicEnvelopeDocuments(envelopeId, token!)
+          : await getEnvelopeDocuments(envelopeId)
         if (cancelled) return
         setEnvelopeDocuments(docs)
         if (docs.length === 0) setDocsError('No documents found for this envelope.')
@@ -94,7 +105,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     return () => {
       cancelled = true
     }
-  }, [documentReloadToken, effectiveAccessToken, enabled, envelopeId])
+  }, [documentReloadToken, effectiveAccessToken, enabled, envelopeId, hasToken, token])
 
   useEffect(() => {
     setPreviewFallbackDocIds(new Set())
@@ -103,13 +114,17 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
   const pdfFileByDocumentId = useMemo(() => {
     const nextMap: Record<string, { url: string; httpHeaders?: Record<string, string> }> = {}
     const prevMap = pdfFileCacheRef.current
+    const apiBase = getApiBaseUrl().replace(/\/$/, '')
     for (const d of envelopeDocuments) {
       const docId = d.document
       if (!docId) continue
-      const url = getDocumentViewerUrl(d, previewFallbackDocIds.has(docId))
+      let url = getDocumentViewerUrl(d, previewFallbackDocIds.has(docId))
+      if (hasToken) {
+        url = `${apiBase}/documents/${docId}/preview-public/?token=${encodeURIComponent(token!)}`
+      }
       if (!url) continue
       const nextHeaders =
-        effectiveAccessToken && documentUrlNeedsAuth(url)
+        !hasToken && effectiveAccessToken && documentUrlNeedsAuth(url)
           ? { Authorization: `Bearer ${effectiveAccessToken}` }
           : undefined
       const prev = prevMap[docId]
@@ -121,7 +136,7 @@ export function useSigningEnvelope({ envelopeId, enabled = true, accessToken }: 
     }
     pdfFileCacheRef.current = nextMap
     return nextMap
-  }, [effectiveAccessToken, envelopeDocuments, previewFallbackDocIds])
+  }, [effectiveAccessToken, envelopeDocuments, hasToken, previewFallbackDocIds, token])
 
   useEffect(() => {
     setPdfLoadedByDocId({})

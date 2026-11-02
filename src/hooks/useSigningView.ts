@@ -65,7 +65,10 @@ export function deriveSigningView(
   if (mySignature?.status === 'rejected') {
     return { kind: 'status', status: 'declined' }
   }
-  if (mySignature?.status === 'processing' || mySignature?.status === 'signed') {
+  if (mySignature?.status === 'processing') {
+    return { kind: 'status', status: 'processing' }
+  }
+  if (mySignature?.status === 'signed') {
     return { kind: 'status', status: 'complete' }
   }
 
@@ -77,19 +80,31 @@ export function deriveSigningView(
     return { kind: 'status', status: 'complete' }
   }
 
-  const isCurrentSigner = idsMatch(envelope?.current_signer?.id, currentUserId)
+  const tokenRecipient = (envelope as unknown as {
+    recipient?: { is_current_signer?: boolean; has_already_signed?: boolean }
+  })?.recipient
+
+  if (tokenRecipient?.has_already_signed) {
+    return { kind: 'status', status: 'complete' }
+  }
+
+  if (urlStatus === 'processing') {
+    return { kind: 'status', status: 'processing' }
+  }
+  if (urlStatus === 'complete') {
+    return { kind: 'status', status: 'complete' }
+  }
+
+  const isCurrentSigner =
+    idsMatch(envelope?.current_signer?.id, currentUserId) ||
+    Boolean(tokenRecipient?.is_current_signer)
   const variant = envelope ? getEnvelopeVariant(envelope as Envelope, currentUserId) : 'pending'
 
-  if (!isCurrentSigner || variant !== 'your-turn') {
+  if (!isCurrentSigner || (variant !== 'your-turn' && !tokenRecipient?.is_current_signer)) {
     return { kind: 'status', status: 'waiting' }
   }
 
-  if (urlStep === 'landing') return { kind: 'step', step: 'landing' }
-  if (urlStep === 'review') return { kind: 'step', step: 'review' }
-  if (urlStep === 'sign') return { kind: 'step', step: 'sign' }
-
-  if (isDashboard) return { kind: 'step', step: 'review' }
-  return { kind: 'step', step: 'landing' }
+  return { kind: 'step', step: 'sign' }
 }
 
 export function useSigningView({
@@ -113,10 +128,21 @@ export function useSigningView({
       const base = isDashboard
         ? `/dashboard/envelopes/${envelope?.id}/sign`
         : `/envelopes/${envelope?.id}/sign`
-      if (view.kind === 'status') return `${base}?status=${view.status}`
-      return `${base}?step=${view.step}`
+      const params = new URLSearchParams()
+      const token =
+        searchParams?.get('token') ||
+        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null)
+      if (token) {
+        params.set('token', token)
+      }
+      if (view.kind === 'status') {
+        params.set('status', view.status)
+      } else {
+        params.set('step', view.step)
+      }
+      return `${base}?${params.toString()}`
     },
-    [envelope?.id, isDashboard],
+    [envelope?.id, isDashboard, searchParams],
   )
 
   const navigateToView = useCallback(

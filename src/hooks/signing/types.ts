@@ -18,6 +18,7 @@ export interface SignerDocumentPositionEntry {
   signer_id: string
   position: Position
   document_id: string
+  position_index?: number
 }
 
 export interface SigningOrderEntry {

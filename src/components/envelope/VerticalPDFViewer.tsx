@@ -388,7 +388,7 @@ export function VerticalPDFViewer({
       >
         {password.dialog}
         {isLoading && (
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-surface-container-low/80">
+          <div className="flex w-full flex-col items-center">
             <PdfLoadingIndicator label="Loading document…" />
           </div>
         )}
@@ -537,6 +537,7 @@ export function VerticalPDFViewer({
                                   scale={scale}
                                   renderTextLayer={false}
                                   renderAnnotationLayer={false}
+                                  loading={<PdfLoadingIndicator size="sm" label="Loading page…" />}
                                   onLoadSuccess={(page) =>
                                     onPageLoadSuccess(pageInfo.documentId, pageInfo.pageNumber, page)
                                   }

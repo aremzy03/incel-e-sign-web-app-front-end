@@ -178,7 +178,9 @@ describe('Envelopes Pages', () => {
     })
     render(<CreateEnvelopePage />, { wrapper })
     expect(screen.getByText('Create Envelope')).toBeInTheDocument()
-    expect(screen.getByText('Select from Library')).toBeInTheDocument()
+    expect(screen.getByText(/Select from Library/i)).toBeInTheDocument()
+    expect(screen.getByText(/Signing Order & Recipients/i)).toBeInTheDocument()
+    expect(screen.getByText(/Envelope Details & Security/i)).toBeInTheDocument()
   })
 
   it('renders envelope detail page header', () => {

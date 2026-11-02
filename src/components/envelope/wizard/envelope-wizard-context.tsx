@@ -38,7 +38,7 @@ function readStoredStep(): WizardStep | null {
   const raw = sessionStorage.getItem(WIZARD_STEP_STORAGE_KEY)
   if (!raw) return null
   const n = Number(raw)
-  if (n >= 1 && n <= 5) return n as WizardStep
+  if (n === 1 || n === 2) return n as WizardStep
   return null
 }
 
@@ -155,7 +155,7 @@ export function EnvelopeWizardProvider({
     const fromUrl = searchParams?.get('step')
     if (fromUrl) {
       const n = Number(fromUrl)
-      if (n >= 1 && n <= 5) return n as WizardStep
+      if (n === 1 || n === 2) return n as WizardStep
     }
     return initialStep ?? readStoredStep() ?? 1
   })
@@ -229,7 +229,7 @@ export function EnvelopeWizardProvider({
       toast.error(gate)
       return
     }
-    if (currentStep < 5) {
+    if (currentStep < 2) {
       setCurrentStep((currentStep + 1) as WizardStep)
     }
   }, [currentStep, validationInput, setCurrentStep])

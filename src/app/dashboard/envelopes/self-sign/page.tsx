@@ -474,7 +474,9 @@ function SelfSignPageInner() {
       if (!payload) return
       const result = await selfSignAsync(payload)
       if (result.kind === 'queued') {
-        saveSigningJob(result.data.envelope_id, result.data.job_id)
+        saveSigningJob(result.data.envelope_id, result.data.job_id, {
+          envelopeName: envelopeName || uploadedDocuments[0]?.file_name || 'Self-signed document',
+        })
         router.push(`/dashboard/envelopes/${result.data.envelope_id}`)
       }
     } catch (err: unknown) {

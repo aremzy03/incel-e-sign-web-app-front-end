@@ -245,10 +245,13 @@ describe('RegisterPage', () => {
 
   it('shows loading state during form submission', async () => {
     const user = userEvent.setup()
-    const pending = new Promise((resolve) => {
-      setTimeout(() => resolve({ status: 201 }), 1000)
-    })
-    mockedAxios.post.mockReturnValue(pending as any)
+    let resolveRegistration!: (value: { status: number }) => void
+    mockedAxios.post.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRegistration = resolve
+        }) as any
+    )
     
     render(<RegisterPage />)
     
@@ -258,6 +261,11 @@ describe('RegisterPage', () => {
     
     await waitFor(() => {
       expect(submitButton).toBeDisabled()
+    })
+
+    resolveRegistration({ status: 201 })
+    await waitFor(() => {
+      expect(submitButton).not.toBeDisabled()
     })
   })
 

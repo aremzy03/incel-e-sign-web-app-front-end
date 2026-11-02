@@ -76,31 +76,41 @@ async function refreshSessionAccessToken(): Promise<string | null> {
   return refreshPromise
 }
 
+function isPublicOrAuthEndpoint(url: string): boolean {
+  return (
+    url.includes('/auth/token/refresh/') ||
+    url.includes('/auth/login/') ||
+    url.includes('/auth/register/') ||
+    url.includes('/auth/logout/') ||
+    url.includes('token=')
+  )
+}
+
 function shouldAttemptSilentRefresh(config?: InternalAxiosRequestConfig): boolean {
   if (!config || config.__isRetry) return false
 
   const url = config.url ?? ''
-  if (
-    url.includes('/auth/token/refresh/') ||
-    url.includes('/auth/login/') ||
-    url.includes('/auth/register/') ||
-    url.includes('/auth/logout/')
-  ) {
+  if (isPublicOrAuthEndpoint(url)) {
     return false
   }
 
-  return config.__hadAuthHeader === true
+  return true
 }
 
 // Request interceptor to add auth token from in-memory cache (synced by SessionTokenSync)
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     if (hasRefreshAccessTokenError()) {
       void handleAuthFailure(buildLoginUrlFromBrowser('session_expired'))
       return Promise.reject(new Error('Session expired - user logged out'))
     }
 
-    const accessToken = getCachedAccessToken()
+    let accessToken = getCachedAccessToken()
+    const url = config.url ?? ''
+    if (!accessToken && typeof window !== 'undefined' && !isPublicOrAuthEndpoint(url)) {
+      accessToken = await refreshSessionAccessToken()
+    }
+
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`
     }

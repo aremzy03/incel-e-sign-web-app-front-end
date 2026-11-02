@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -10,6 +11,7 @@ import { MaterialIcon } from '@/components/ui/material-icon'
 import { AsyncStatePanel } from '@/components/library'
 import { classifyError } from '@/lib/errors'
 import { getDocument } from '@/lib/api/documents'
+import { useAuthReady } from '@/hooks/useAuthReady'
 import { useDownloadDocument } from '@/hooks/useDocuments'
 import { SelfSignEditorHeader } from '@/components/signing/self-sign-editor-header'
 import {
@@ -18,9 +20,22 @@ import {
   SIGNING_ZOOM_MIN,
   SIGNING_ZOOM_STEP,
 } from '@/components/signing/signing-toolbar'
-import { VerticalPDFViewer, type DocumentPageInfo } from '@/components/envelope/VerticalPDFViewer'
+import type { DocumentPageInfo } from '@/components/envelope/VerticalPDFViewer'
+import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 import { DocumentViewNavSidebar } from '@/components/documents/document-view-nav-sidebar'
 import { DocumentViewDetailsSidebar } from '@/components/documents/document-view-details-sidebar'
+
+const VerticalPDFViewer = dynamic(
+  () => import('@/components/envelope/VerticalPDFViewer').then((m) => m.VerticalPDFViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="pdf-canvas-scroll-area-editor flex w-full flex-col items-center">
+        <PdfLoadingIndicator label="Loading document…" />
+      </div>
+    ),
+  },
+)
 
 export default function DocumentDetailPage() {
   const params = useParams()
@@ -33,11 +48,12 @@ export default function DocumentDetailPage() {
   const [zoom, setZoom] = useState(SIGNING_ZOOM_DEFAULT)
   const [documentPages, setDocumentPages] = useState<DocumentPageInfo[]>([])
   const [activePageKey, setActivePageKey] = useState<string | null>(null)
+  const { status: authStatus } = useAuthReady()
 
   const { data: documentData, isLoading, error, refetch } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => getDocument(documentId),
-    enabled: !!documentId,
+    enabled: !!documentId && authStatus !== 'loading',
   })
   const documentError = error ? classifyError(error, 'Failed to load document') : null
 
@@ -71,7 +87,7 @@ export default function DocumentDetailPage() {
 
   const noop = useCallback(() => {}, [])
 
-  if (isLoading) {
+  if (isLoading || authStatus === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center bg-surface">
         <div className="flex items-center gap-2 text-muted">

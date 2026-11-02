@@ -9,7 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useEnvelopeWizard } from './envelope-wizard-context'
-import { getRecipientInitials } from './wizard-utils'
+import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
+import { countRecipientFields, getRecipientInitials } from './wizard-utils'
 import type { DocumentPageInfo } from '@/components/envelope/VerticalPDFViewer'
 
 const PdfPageThumbnail = dynamic(
@@ -17,8 +18,8 @@ const PdfPageThumbnail = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex aspect-[3/4] w-full items-center justify-center rounded-lg border border-border bg-surface-container text-caption-xs text-muted">
-        …
+      <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+        <PdfLoadingIndicator size="thumbnail" label="Loading page thumbnail…" />
       </div>
     ),
   },
@@ -35,7 +36,13 @@ export function PlaceFieldsRightPanel({
   activePageKey,
   onPageSelect,
 }: PlaceFieldsRightPanelProps) {
-  const { recipients, activeRecipientId, setActiveRecipientId, uploadedDocuments } = useEnvelopeWizard()
+  const {
+    recipients,
+    activeRecipientId,
+    setActiveRecipientId,
+    uploadedDocuments,
+    fieldPositions,
+  } = useEnvelopeWizard()
 
   const sortedRecipients = [...recipients].sort((a, b) => a.order - b.order)
   const activeRecipient = sortedRecipients.find((r) => r.id === activeRecipientId)
@@ -66,13 +73,54 @@ export function PlaceFieldsRightPanel({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {sortedRecipients.map((recipient) => (
-              <SelectItem key={recipient.id} value={String(recipient.id)}>
-                {recipient.name || recipient.email}
-              </SelectItem>
-            ))}
+            {sortedRecipients.map((recipient) => {
+              const count = countRecipientFields(fieldPositions, recipient.id)
+              return (
+                <SelectItem key={recipient.id} value={String(recipient.id)}>
+                  {recipient.name || recipient.email} ({count} field{count === 1 ? '' : 's'})
+                </SelectItem>
+              )
+            })}
           </SelectContent>
         </Select>
+
+        {sortedRecipients.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {sortedRecipients.map((recipient) => {
+              const count = countRecipientFields(fieldPositions, recipient.id)
+              const isSelected = recipient.id === activeRecipientId
+              return (
+                <button
+                  key={recipient.id}
+                  type="button"
+                  onClick={() => setActiveRecipientId(recipient.id)}
+                  className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-caption-xs transition-colors ${
+                    isSelected
+                      ? 'bg-secondary/10 font-semibold text-primary'
+                      : 'text-on-surface-variant hover:bg-surface'
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-2 truncate">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: recipient.color }}
+                    />
+                    <span className="truncate">{recipient.name || recipient.email}</span>
+                  </span>
+                  <span
+                    className={`ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      count > 0
+                        ? 'bg-success/15 text-success'
+                        : 'bg-warning-light text-warning'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
@@ -81,7 +129,14 @@ export function PlaceFieldsRightPanel({
         </h3>
         <div className="wizard-custom-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto pr-2">
           {pages.length === 0 ? (
-            <p className="text-caption-xs text-muted">Loading pages…</p>
+            <div className="space-y-4">
+              <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+                <PdfLoadingIndicator size="thumbnail" label="Loading pages…" />
+              </div>
+              <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-border bg-white opacity-60 shadow-sm">
+                <PdfLoadingIndicator size="thumbnail" label="Loading pages…" />
+              </div>
+            </div>
           ) : (
             pages.map((page) => {
               const pageKey = `${page.documentId}-${page.pageNumber}`

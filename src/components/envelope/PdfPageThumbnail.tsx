@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Document as PDFDocument, Page, pdfjs } from 'react-pdf'
 import { useSession } from 'next-auth/react'
 import { getCachedAccessToken } from '@/lib/auth-session-cache'
+import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 import { cn } from '@/lib/utils'
 import type { DocumentUrlLike } from '@/lib/url'
 import {
@@ -91,11 +92,7 @@ export function PdfPageThumbnail({
               setUsePreviewFallback(true)
             }
           }}
-          loading={
-            <div className="flex h-full w-full items-center justify-center bg-surface-container text-caption-xs text-muted">
-              …
-            </div>
-          }
+          loading={<PdfLoadingIndicator size="thumbnail" label="Loading page thumbnail…" />}
           error={
             <div className="flex h-full w-full items-center justify-center bg-surface-container p-2 text-center text-[10px] text-muted">
               Preview unavailable

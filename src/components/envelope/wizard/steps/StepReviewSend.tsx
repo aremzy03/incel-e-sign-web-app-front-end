@@ -88,7 +88,7 @@ export function StepReviewSend() {
               </h4>
               <button
                 type="button"
-                onClick={() => goToStep(4)}
+                onClick={() => goToStep(1)}
                 className="text-label-sm font-medium text-secondary hover:underline"
               >
                 Edit
@@ -135,7 +135,7 @@ export function StepReviewSend() {
               </h4>
               <button
                 type="button"
-                onClick={() => goToStep(2)}
+                onClick={() => goToStep(1)}
                 className="text-label-sm font-medium text-secondary hover:underline"
               >
                 Manage Order
@@ -206,7 +206,7 @@ export function StepReviewSend() {
             <div className="mt-6">
               <button
                 type="button"
-                onClick={() => goToStep(3)}
+                onClick={() => goToStep(2)}
                 className="text-label-sm font-medium text-secondary hover:underline"
               >
                 Edit fields

@@ -35,3 +35,13 @@ export function getDocumentBadgeLabel(status?: string): string | null {
   if (normalized === 'rejected') return 'Shared'
   return null
 }
+
+export function getDefaultEnvelopeNamePreview(
+  documents: Array<{ file_name?: string }>,
+): string {
+  if (!documents.length) return 'e.g. Q4 Commercial Lease Agreement'
+  const firstName = documents[0]?.file_name || 'Document'
+  const lastDot = firstName.lastIndexOf('.')
+  const base = (lastDot > 0 ? firstName.slice(0, lastDot) : firstName).trim() || 'Document'
+  return documents.length > 1 ? `${base} (+${documents.length - 1})` : base
+}

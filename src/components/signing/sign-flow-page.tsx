@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { useMutation } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getUserById, type User } from '@/lib/api/users'
 import { mapToReusableSignature, uploadUserSignature } from '@/lib/api/signatures'
@@ -65,6 +66,31 @@ import type { Position } from '@/lib/api/envelopes'
 
 interface SignFlowPageProps {
   isDashboard: boolean
+}
+
+function PageLoadingSpinner({
+  label = 'Loading…',
+  fullScreen = false,
+}: {
+  label?: string
+  fullScreen?: boolean
+}) {
+  return (
+    <div
+      className={
+        fullScreen
+          ? 'flex min-h-screen w-full items-center justify-center bg-surface p-8'
+          : 'flex min-h-[320px] flex-1 items-center justify-center p-8'
+      }
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex items-center gap-2.5 text-muted">
+        <Loader2 className="h-5 w-5 animate-spin text-secondary" />
+        <span className="font-body-sm text-body-sm">{label}</span>
+      </div>
+    </div>
+  )
 }
 
 function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
@@ -476,7 +502,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const fallbackHref = isAuthenticatedSigner ? dashboardHref : homeHref
 
   if (isDashboard && !isReady) {
-    return <PdfLoadingIndicator label="Loading…" />
+    return <PageLoadingSpinner label="Loading…" fullScreen />
   }
 
   if (!isDashboard && !token && !accessToken) {
@@ -510,7 +536,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   if (loadingEnv) {
     return (
       <SigningShell documentTitle="Loading…" user={shellUser}>
-        <PdfLoadingIndicator label="Loading envelope…" />
+        <PageLoadingSpinner label="Loading envelope…" />
       </SigningShell>
     )
   }
@@ -612,17 +638,9 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     )
   }
 
-  if (needsDocuments && (waitingForDocumentsAuth || loadingDocs)) {
-    return (
-      <SigningShell documentTitle={envelope.name} user={shellUser}>
-        <PdfLoadingIndicator
-          label={waitingForDocumentsAuth ? 'Preparing secure preview…' : 'Loading documents…'}
-        />
-      </SigningShell>
-    )
-  }
+  const isLoadingSignDocuments = needsDocuments && (waitingForDocumentsAuth || loadingDocs)
 
-  if (needsDocuments && documentsErrorState) {
+  if (needsDocuments && !isLoadingSignDocuments && documentsErrorState) {
     return (
       <SigningShell documentTitle={envelope.name} user={shellUser}>
         <div className="flex flex-1 items-center justify-center p-8">
@@ -646,7 +664,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     )
   }
 
-  if (needsDocuments && envelopeDocuments.length === 0) {
+  if (needsDocuments && !isLoadingSignDocuments && envelopeDocuments.length === 0) {
     return (
       <SigningShell documentTitle={envelope.name} user={shellUser}>
         <div className="flex flex-1 items-center justify-center p-8">
@@ -789,46 +807,56 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
           aria-live="polite"
           aria-atomic="true"
         >
-          <SigningDocumentViewer
-            envelopeDocuments={envelopeDocuments}
-            envelope={envelope as SigningEnvelopeResponse}
-            pdfFileByDocumentId={pdfFileByDocumentId}
-            pdfLoadedByDocId={pdfLoadedByDocId}
-            setPdfLoadedByDocId={setPdfLoadedByDocId}
-            markPreviewFallback={markPreviewFallback}
-            pageDims={coords.pageDims}
-            setPageContainerRef={coords.setPageContainerRef}
-            measurePageCanvas={coords.measurePageCanvas}
-            setPageDimensions={coords.setPageDimensions}
-            setDocumentNumPages={coords.setDocumentNumPages}
-            passwordDialog={password.dialog}
-            onPassword={password.onPassword as never}
-            passwordCancelled={password.cancelled}
-            currentUserId={effectiveUserId}
-            signerDetails={signerDetails}
-            signedFor={progress.signedFor}
-            previewSignerId={previewSignerId}
-            selectedSignature={selectedSignature}
-            onPlaceholderClick={onPlaceholderClick}
-            fieldValues={fieldState.fieldValues}
-            setFieldValue={fieldState.setFieldValue}
-            activeFieldPreview={fieldState.activeFieldPreview}
-            toggleFieldPreview={fieldState.toggleFieldPreview}
-            draftPlacement={draftPlacement}
-            setDraftPlacement={setDraftPlacement}
-            isDraggingDraft={isDraggingDraft}
-            setIsDraggingDraft={setIsDraggingDraft}
-            dragOffset={dragOffset}
-            setDragOffset={setDragOffset}
-            selected={selected}
-            setSelected={setSelected}
-            onClearPreview={handleClearPreview}
-            zoom={zoom}
-            focusedTargetId={focusedTargetId}
-            selectedFieldKey={selectedFieldKey}
-            documentSectionRefs={documentSectionRefs}
-            onPageIndicatorChange={handlePageIndicatorChange}
-          />
+          {isLoadingSignDocuments ? (
+            <div className="flex flex-1 flex-col items-center overflow-y-auto bg-surface-container-low bg-[radial-gradient(#041534_1px,transparent_1px)] [background-size:20px_20px] wizard-custom-scrollbar p-8">
+              <div className="flex w-full max-w-[850px] flex-col items-center">
+                <PdfLoadingIndicator
+                  label={waitingForDocumentsAuth ? 'Preparing secure preview…' : 'Loading documents…'}
+                />
+              </div>
+            </div>
+          ) : (
+            <SigningDocumentViewer
+              envelopeDocuments={envelopeDocuments}
+              envelope={envelope as SigningEnvelopeResponse}
+              pdfFileByDocumentId={pdfFileByDocumentId}
+              pdfLoadedByDocId={pdfLoadedByDocId}
+              setPdfLoadedByDocId={setPdfLoadedByDocId}
+              markPreviewFallback={markPreviewFallback}
+              pageDims={coords.pageDims}
+              setPageContainerRef={coords.setPageContainerRef}
+              measurePageCanvas={coords.measurePageCanvas}
+              setPageDimensions={coords.setPageDimensions}
+              setDocumentNumPages={coords.setDocumentNumPages}
+              passwordDialog={password.dialog}
+              onPassword={password.onPassword as never}
+              passwordCancelled={password.cancelled}
+              currentUserId={effectiveUserId}
+              signerDetails={signerDetails}
+              signedFor={progress.signedFor}
+              previewSignerId={previewSignerId}
+              selectedSignature={selectedSignature}
+              onPlaceholderClick={onPlaceholderClick}
+              fieldValues={fieldState.fieldValues}
+              setFieldValue={fieldState.setFieldValue}
+              activeFieldPreview={fieldState.activeFieldPreview}
+              toggleFieldPreview={fieldState.toggleFieldPreview}
+              draftPlacement={draftPlacement}
+              setDraftPlacement={setDraftPlacement}
+              isDraggingDraft={isDraggingDraft}
+              setIsDraggingDraft={setIsDraggingDraft}
+              dragOffset={dragOffset}
+              setDragOffset={setDragOffset}
+              selected={selected}
+              setSelected={setSelected}
+              onClearPreview={handleClearPreview}
+              zoom={zoom}
+              focusedTargetId={focusedTargetId}
+              selectedFieldKey={selectedFieldKey}
+              documentSectionRefs={documentSectionRefs}
+              onPageIndicatorChange={handlePageIndicatorChange}
+            />
+          )}
           <SigningFieldsSidebar
             completedCount={progress.completedFields}
             totalCount={progress.totalFields || 1}
@@ -938,7 +966,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
 
 export function SignFlowPage(props: SignFlowPageProps) {
   return (
-    <Suspense fallback={<PdfLoadingIndicator label="Loading…" />}>
+    <Suspense fallback={<PageLoadingSpinner label="Loading…" fullScreen />}>
       <SignFlowPageInner {...props} />
     </Suspense>
   )

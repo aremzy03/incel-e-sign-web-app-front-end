@@ -593,8 +593,17 @@ export function SigningDocumentViewer({
 
   if (!pdf) {
     return (
-      <div className={cn('flex flex-1 items-center justify-center bg-surface-dim p-8', className)}>
-        <PdfLoadingIndicator label="Initializing PDF viewer…" />
+      <div
+        className={cn(
+          'flex flex-1 flex-col items-center overflow-y-auto bg-surface-container-low p-8',
+          'bg-[radial-gradient(#041534_1px,transparent_1px)] [background-size:20px_20px]',
+          'wizard-custom-scrollbar',
+          className,
+        )}
+      >
+        <div className="flex w-full max-w-[850px] flex-col items-center">
+          <PdfLoadingIndicator label="Initializing PDF viewer…" />
+        </div>
       </div>
     )
   }
@@ -687,7 +696,7 @@ export function SigningDocumentViewer({
                   setPdfLoadedByDocId((prev) => ({ ...prev, [docItem.id]: false }))
                 }}
                 onPassword={onPassword as never}
-                loading={<PdfLoadingIndicator label="Loading document…" />}
+                loading=""
               >
                 {Array.from({ length: pageDims[docItem.id]?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => (
                   <div

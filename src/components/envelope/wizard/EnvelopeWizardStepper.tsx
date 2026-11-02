@@ -10,7 +10,7 @@ interface EnvelopeWizardStepperProps {
   className?: string
 }
 
-const SHORT_LABELS = ['Documents', 'Recipients', 'Place Fields', 'Settings', 'Review']
+const SHORT_LABELS = ['Prepare Envelope', 'Place Fields & Send']
 
 export function EnvelopeWizardStepper({
   variant = 'inline',
@@ -91,7 +91,7 @@ export function EnvelopeWizardStepper({
   }
 
   if (variant === 'pills') {
-    const pillLabels = ['Upload', 'Recipients', 'Fields', 'Settings', 'Review & Send']
+    const pillLabels = ['Prepare Envelope', 'Place Fields & Send']
     return (
       <nav aria-label="Envelope creation progress" className={cn('flex items-center gap-2', className)}>
         {pillLabels.map((label, index) => {

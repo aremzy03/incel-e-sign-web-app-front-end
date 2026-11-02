@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 
 export interface SigningShellProps {
   children: React.ReactNode
+  banner?: React.ReactNode
   documentTitle?: string
   /** Show condensed left nav rail (active signing). */
   showNavRail?: boolean
@@ -30,6 +31,7 @@ export interface SigningShellProps {
 
 export function SigningShell({
   children,
+  banner,
   documentTitle,
   showNavRail = false,
   user,
@@ -105,7 +107,8 @@ export function SigningShell({
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden pt-topbar-height">
+      <div className="flex flex-1 flex-col overflow-hidden pt-topbar-height">
+        {banner}
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
       </div>
 

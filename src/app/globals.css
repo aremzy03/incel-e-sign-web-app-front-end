@@ -686,3 +686,27 @@
   50% { transform: scale(1); }
   100% { transform: scale(0.8); }
 }
+
+@keyframes pdf-sheet-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.pdf-skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(241, 245, 249, 0.65) 40%,
+    rgba(13, 148, 136, 0.08) 50%,
+    rgba(241, 245, 249, 0.65) 60%,
+    transparent 80%
+  );
+  animation: pdf-sheet-shimmer 1.75s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

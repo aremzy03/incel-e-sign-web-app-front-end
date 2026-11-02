@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import apiClient from '@/lib/axios'
-import { listUserSignatures, type ReusableSignature } from '@/lib/api/signatures'
+import { listUserSignatures, mapToReusableSignature, type ReusableSignature } from '@/lib/api/signatures'
 import { shouldRetryAuthQuery } from '@/hooks/useAuthReady'
 
 interface MySignatureResponse {
@@ -19,9 +19,10 @@ interface UseUserSignaturesOptions {
   envelopeId?: string
   mode: 'dashboard' | 'public'
   enabled?: boolean
+  token?: string
 }
 
-export function useUserSignatures({ envelopeId, mode, enabled = true }: UseUserSignaturesOptions) {
+export function useUserSignatures({ envelopeId, mode, enabled = true, token }: UseUserSignaturesOptions) {
   const queryClient = useQueryClient()
 
   const dashboardQuery = useQuery<ReusableSignature[]>({
@@ -32,11 +33,14 @@ export function useUserSignatures({ envelopeId, mode, enabled = true }: UseUserS
   })
 
   const publicQuery = useQuery<MySignatureResponse | MySignatureResponse[]>({
-    queryKey: ['my-signature', envelopeId],
-    enabled: enabled && mode === 'public' && !!envelopeId,
+    queryKey: ['my-signature', envelopeId, token],
+    enabled: enabled && mode === 'public' && !!envelopeId && Boolean(token),
     queryFn: async () => {
-      const res = await apiClient.get(`/signatures/me/`, { params: { envelope: envelopeId } })
-      return (res.data?.data ?? res.data) as MySignatureResponse | MySignatureResponse[]
+      if (token) {
+        const res = await apiClient.get(`/signatures/me/public/`, { params: { token } })
+        return (res.data?.data ?? res.data) as MySignatureResponse | MySignatureResponse[]
+      }
+      return []
     },
   })
 
@@ -59,13 +63,13 @@ export function useUserSignatures({ envelopeId, mode, enabled = true }: UseUserS
   }
 
   const raw = publicQuery.data
-  const single = Array.isArray(raw) ? raw[0] : raw
-  const signatures = single ? [single as ReusableSignature] : []
+  const rawList = Array.isArray(raw) ? raw : raw ? [raw] : []
+  const signatures: ReusableSignature[] = rawList.map(mapToReusableSignature)
 
   return {
     signatures,
     isLoading: publicQuery.isLoading,
-    selectedSource: 'single' as const,
+    selectedSource: 'list' as const,
     refetch,
   }
 }

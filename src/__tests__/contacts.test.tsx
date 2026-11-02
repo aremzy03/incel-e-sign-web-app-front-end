@@ -79,8 +79,7 @@ async function openRecipientsStep() {
   render(<TestWrapper><CreateEnvelopePage /></TestWrapper>)
   const doc = await screen.findByText('Doc.pdf')
   await userEvent.click(doc)
-  await userEvent.click(screen.getByRole('button', { name: /next: add recipients/i }))
-  expect(await screen.findByText('Signing Order')).toBeInTheDocument()
+  expect(await screen.findByText(/Signing Order/i)).toBeInTheDocument()
 }
 
 describe('Contacts', () => {

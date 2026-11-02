@@ -93,6 +93,18 @@ export interface Envelope {
   sent_at?: string
   completed_at?: string
   rejected_at?: string
+  recipient?: {
+    email: string
+    user_id?: string
+    is_current_signer?: boolean
+    has_already_signed?: boolean
+  }
+  saved_signatures?: Array<{
+    id: string
+    image: string
+    is_default?: boolean
+    created_at?: string
+  }>
 }
 
 export interface Position {
@@ -296,6 +308,8 @@ export function normalizeEnvelopeListItem(raw: Record<string, unknown>): Envelop
     sent_at: raw.sent_at as string | undefined,
     completed_at: raw.completed_at as string | undefined,
     rejected_at: raw.rejected_at as string | undefined,
+    recipient: (raw.recipient as Envelope['recipient']) ?? undefined,
+    saved_signatures: (raw.saved_signatures as Envelope['saved_signatures']) ?? undefined,
   }
 }
 
@@ -618,6 +632,23 @@ export const getEnvelopeDocuments = async (envelopeId: string): Promise<Envelope
     logger.errorSafe(error, `Error fetching documents for envelope ${envelopeId}`)
     throw error
   }
+}
+
+export const getPublicEnvelope = async (envelopeId: string, token: string): Promise<Record<string, unknown>> => {
+  const response = await apiClient.get(`/envelopes/${envelopeId}/public/`, {
+    params: { token },
+  })
+  return (response.data?.data ?? response.data) as Record<string, unknown>
+}
+
+export const getPublicEnvelopeDocuments = async (envelopeId: string, token: string): Promise<EnvelopeDocumentResponse[]> => {
+  const response = await apiClient.get(`/envelopes/${envelopeId}/documents/public/`, {
+    params: { token },
+  })
+  const payload = response.data
+  const documents = (payload && payload.data) || payload
+  if (!Array.isArray(documents)) return []
+  return normalizeEnvelopeDocumentEntries(documents)
 }
 
 // Edit an envelope (PATCH)

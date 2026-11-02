@@ -48,6 +48,50 @@ describe('useSigningProgress', () => {
     expect(result.current.fieldChecklist[0]?.completed).toBe(true)
   })
 
+  it('tracks multiple signature fields on the same document individually', () => {
+    const multiSigDocs: EnvelopeDocumentResponse[] = [
+      {
+        id: 'doc-1',
+        document: 'doc-1',
+        file_name: 'contract.pdf',
+        signer_document_positions: [
+          { signer_id: 'user-1', position: { page: 1, x: 10, y: 20, width: 100, height: 40 } },
+          { signer_id: 'user-1', position: { page: 2, x: 10, y: 20, width: 100, height: 40 } },
+        ],
+      } as EnvelopeDocumentResponse,
+    ]
+
+    const { result } = renderHook(() =>
+      useSigningProgress({
+        envelopeDocuments: multiSigDocs,
+        envelope: { id: 'env-1', status: 'pending', signing_order: [], fields: [] },
+        currentUserId: 'user-1',
+        fieldValues: {},
+        mySignatureId: 'sig-1',
+      }),
+    )
+
+    expect(result.current.totalFields).toBe(2)
+    expect(result.current.completedFields).toBe(0)
+
+    act(() => {
+      result.current.markSignatureConfirmed('doc-1', 'user-1', 0)
+    })
+
+    expect(result.current.completedFields).toBe(1)
+    expect(result.current.canComplete).toBe(false)
+    expect(result.current.fieldChecklist[0]?.completed).toBe(true)
+    expect(result.current.fieldChecklist[1]?.completed).toBe(false)
+
+    act(() => {
+      result.current.markSignatureConfirmed('doc-1', 'user-1', 1)
+    })
+
+    expect(result.current.completedFields).toBe(2)
+    expect(result.current.canComplete).toBe(true)
+    expect(result.current.fieldChecklist[1]?.completed).toBe(true)
+  })
+
   it('counts text fields toward completion', () => {
     const { result } = renderHook(() =>
       useSigningProgress({

@@ -25,7 +25,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-      <SessionProvider refetchOnWindowFocus={false}>
+      <SessionProvider
+        refetchOnWindowFocus={false}
+        // Re-evaluate the JWT periodically so silent refresh can run before access expiry.
+        refetchInterval={5 * 60}
+      >
         <QueryClientProvider client={queryClient}>
           <SessionTokenSync />
           <SessionMonitor />

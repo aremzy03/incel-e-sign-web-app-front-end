@@ -28,6 +28,7 @@ interface UseSigningJobPollerOptions {
   enabled?: boolean
   /** When true, never block UI on timeout — keep polling silently in the background. */
   background?: boolean
+  token?: string
   onSucceeded?: (job: SigningJobDetail) => void
   onFailed?: (error: SigningFailedError) => void
   onTimeout?: (jobId: string) => void
@@ -44,6 +45,7 @@ export function useSigningJobPoller({
   maxDurationMs = 120_000,
   enabled = true,
   background = false,
+  token,
   onSucceeded,
   onFailed,
   onTimeout,
@@ -66,16 +68,15 @@ export function useSigningJobPoller({
   const handleJobResult = useCallback(
     (job: SigningJobDetail): boolean => {
       if (job.status === 'succeeded') {
-        clearSigningJob(envelopeId)
         setPhase('succeeded')
         setErrorMessage(null)
         invalidateEnvelopeQueries()
         callbacksRef.current.onSucceeded?.(job)
+        clearSigningJob(envelopeId)
         return true
       }
 
       if (job.status === 'failed') {
-        clearSigningJob(envelopeId)
         const message = job.error_message || 'Signing failed. Please try again.'
         setPhase('failed')
         setErrorMessage(message)
@@ -99,12 +100,12 @@ export function useSigningJobPoller({
   const retry = useCallback(async () => {
     if (!jobId) return
     try {
-      await retrySigningJob(jobId)
-      saveSigningJob(envelopeId, jobId)
+      await retrySigningJob(jobId, token)
+      saveSigningJob(envelopeId, jobId, { token })
       startedAtRef.current = Date.now()
       setPhase('polling')
       setErrorMessage(null)
-      setResumeToken((token) => token + 1)
+      setResumeToken((tokenCount) => tokenCount + 1)
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -113,7 +114,7 @@ export function useSigningJobPoller({
       setPhase('failed')
       setErrorMessage(message)
     }
-  }, [envelopeId, jobId])
+  }, [envelopeId, jobId, token])
 
   useEffect(() => {
     if (!enabled || !jobId || !envelopeId) {
@@ -121,7 +122,7 @@ export function useSigningJobPoller({
       return
     }
 
-    saveSigningJob(envelopeId, jobId)
+    saveSigningJob(envelopeId, jobId, { token })
     startedAtRef.current = Date.now()
     setPhase('polling')
     setErrorMessage(null)
@@ -149,7 +150,7 @@ export function useSigningJobPoller({
       }
 
       try {
-        const job = await getSigningJob(jobId)
+        const job = await getSigningJob(jobId, token)
         if (cancelled) return
 
         if (handleJobResult(job)) {

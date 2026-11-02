@@ -30,7 +30,16 @@ export async function POST(
   const session = await getServerSession(authOptions)
   const allowedOrigin = getAllowedOrigin(request)
 
-  if (!session?.accessToken) {
+  const tokenParam = request.nextUrl.searchParams.get('token')
+  const bodyText = await request.text()
+  let bodyJson: Record<string, unknown> = {}
+  try {
+    bodyJson = bodyText ? JSON.parse(bodyText) : {}
+  } catch {}
+
+  const token = (tokenParam || bodyJson.token || request.headers.get('x-signing-token')) as string | undefined
+
+  if (!session?.accessToken && !token) {
     return NextResponse.json(
       { status: 'error', message: 'Unauthorized' },
       {
@@ -39,7 +48,7 @@ export async function POST(
           ...(allowedOrigin && {
             'Access-Control-Allow-Origin': allowedOrigin,
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Signing-Token',
             'Access-Control-Allow-Credentials': 'true',
           }),
         },
@@ -47,11 +56,12 @@ export async function POST(
     )
   }
 
-  const targetUrl = `${API_BASE_URL}/signatures/${encodeURIComponent(envelopeId)}/sign/`
+  const isPublicTokenSign = Boolean(!session?.accessToken && token)
+  const targetUrl = isPublicTokenSign
+    ? `${API_BASE_URL}/signatures/${encodeURIComponent(envelopeId)}/sign-public/`
+    : `${API_BASE_URL}/signatures/${encodeURIComponent(envelopeId)}/sign/`
 
   try {
-    const bodyText = await request.text()
-
     if (isDevelopment()) {
       console.info('[sign proxy] POST', targetUrl, bodyText || '{}')
     }
@@ -59,14 +69,25 @@ export async function POST(
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), PROXY_SIGN_TIMEOUT_MS)
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (session?.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`
+    }
+    if (token) {
+      headers['X-Signing-Token'] = token
+    }
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    if (forwardedFor) headers['X-Forwarded-For'] = forwardedFor
+    const userAgent = request.headers.get('user-agent')
+    if (userAgent) headers['User-Agent'] = userAgent
+
     let response: Response
     try {
       response = await fetch(targetUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.accessToken}`,
-        },
+        headers,
         body: bodyText || '{}',
         signal: controller.signal,
       })

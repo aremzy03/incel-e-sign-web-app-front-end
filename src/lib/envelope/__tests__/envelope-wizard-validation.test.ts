@@ -24,17 +24,23 @@ const recipient: RecipientInput = {
 }
 
 describe('envelope-wizard-validation', () => {
-  it('requires documents before advancing from step 1', () => {
+  it('requires documents and recipients before advancing from step 1', () => {
     expect(canAdvanceFromStep(1, { uploadedDocuments: [], recipients: [], fieldPositions: {} })).toBe(
       'At least one document is required',
     )
-    expect(canAdvanceFromStep(1, { uploadedDocuments: [doc], recipients: [], fieldPositions: {} })).toBeNull()
+    expect(
+      canAdvanceFromStep(1, { uploadedDocuments: [doc], recipients: [], fieldPositions: {} }),
+    ).toBe('At least one recipient is required')
+    expect(
+      canAdvanceFromStep(1, {
+        uploadedDocuments: [doc],
+        recipients: [recipient],
+        fieldPositions: {},
+      }),
+    ).toBeNull()
   })
 
-  it('requires recipients before advancing from step 2', () => {
-    expect(
-      canAdvanceFromStep(2, { uploadedDocuments: [doc], recipients: [], fieldPositions: {} }),
-    ).toBe('At least one recipient is required')
+  it('allows step 2 without additional advance gate', () => {
     expect(
       canAdvanceFromStep(2, {
         uploadedDocuments: [doc],

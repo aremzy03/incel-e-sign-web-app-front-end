@@ -10,6 +10,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // If a signing request with token lands on /dashboard/envelopes/:id/sign, redirect to public /envelopes/:id/sign
+  if (pathname.includes('/envelopes/') && pathname.endsWith('/sign')) {
+    const signingToken = request.nextUrl.searchParams.get('token')
+    if (signingToken) {
+      const publicUrl = request.nextUrl.clone()
+      publicUrl.pathname = pathname.replace(/^\/dashboard/, '')
+      return NextResponse.redirect(publicUrl)
+    }
+  }
+
   const token = await getToken({
     req: request,
     secret: getNextAuthSecret(),

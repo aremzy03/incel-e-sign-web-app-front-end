@@ -20,13 +20,15 @@ export function useAuthReady() {
 export function shouldRetryAuthQuery(failureCount: number, error: unknown): boolean {
   if (failureCount >= 1) return false
 
-  if (axios.isAxiosError(error)) {
+  if (axios?.isAxiosError?.(error)) {
     const code = error.code
     if (code === 'ERR_CANCELED' || code === 'ECONNABORTED') return false
-
-    const status = error.response?.status
-    if (status === 401 || status === 403) return false
   }
+
+  const status =
+    (axios?.isAxiosError?.(error) ? error.response?.status : undefined) ??
+    (error as { response?: { status?: number } } | null)?.response?.status
+  if (status === 401 || status === 403 || status === 404) return false
 
   if (error instanceof Error) {
     if (error.message === 'Session expired - user logged out') return false

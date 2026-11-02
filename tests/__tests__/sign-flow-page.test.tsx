@@ -11,6 +11,7 @@ const mockUseSigningEnvelope = jest.fn()
 jest.mock('next/navigation', () => ({
   useParams: () => ({ id: 'env-1' }),
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => ({ get: () => null, has: () => false }),
 }))
 
 jest.mock('next-auth/react', () => ({

@@ -158,7 +158,7 @@ export default function PdfViewer({
         )}
       >
         {loading && !error && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface-container-low/80">
+          <div className="flex w-full flex-col items-center">
             <PdfLoadingIndicator label="Loading PDF..." />
           </div>
         )}
@@ -170,7 +170,7 @@ export default function PdfViewer({
         )}
         {password.dialog}
         {!error && !password.cancelled && (
-          <div className="flex w-full max-w-[850px] flex-col items-center">
+          <div className={cn('flex w-full max-w-[850px] flex-col items-center', loading && 'sr-only')}>
             <div className="pdf-page-frame-readonly relative w-full">
               <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center overflow-hidden opacity-[0.03]">
                 <div className="rotate-[-45deg] scale-150 whitespace-nowrap text-[64px] font-black uppercase text-primary">

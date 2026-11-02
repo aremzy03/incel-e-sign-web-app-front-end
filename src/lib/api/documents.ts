@@ -189,7 +189,7 @@ export const getDocument = async (id: string): Promise<Document> => {
     console.log('Document fetched successfully:', doc);
     return normalizeDocument(doc);
   } catch (error: any) {
-    console.error('Error fetching document:', id, {
+    console.warn('Error fetching document:', id, {
       status: error.response?.status,
       statusText: error.response?.statusText,
       data: error.response?.data,

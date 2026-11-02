@@ -71,15 +71,14 @@ export function getSendValidationErrors({
 export function canAdvanceFromStep(step: WizardStep, input: ValidationInput): string | null {
   switch (step) {
     case 1:
-      return input.uploadedDocuments.length >= 1
-        ? null
-        : 'At least one document is required'
-    case 2:
-      return input.recipients.length >= 1 ? null : 'At least one recipient is required'
-    case 3:
-    case 4:
+      if (input.uploadedDocuments.length < 1) {
+        return 'At least one document is required'
+      }
+      if (input.recipients.length < 1) {
+        return 'At least one recipient is required'
+      }
       return null
-    case 5:
+    case 2:
       return null
     default:
       return null
@@ -88,19 +87,13 @@ export function canAdvanceFromStep(step: WizardStep, input: ValidationInput): st
 
 /** Minimum requirements to save a draft at a given step. */
 export function getDraftSaveErrors(
-  step: WizardStep,
-  { uploadedDocuments, recipients }: ValidationInput,
+  _step: WizardStep,
+  { uploadedDocuments }: ValidationInput,
 ): string[] {
   const errors: string[] = []
 
   if (uploadedDocuments.length === 0) {
     errors.push('At least one document is required to save a draft')
-    return errors
-  }
-
-  // Steps 2+ with recipients require valid recipient emails (checked at payload build)
-  if (step >= 2 && recipients.length === 0) {
-    errors.push('Add at least one recipient before saving')
   }
 
   return errors

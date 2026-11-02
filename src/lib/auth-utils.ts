@@ -18,8 +18,9 @@ export function getJwtExpiryMs(accessToken: string): number | null {
     const segment = accessToken.split('.')[1]
     if (!segment) return null
 
-    const normalized = segment.replace(/-/g, '+').replace(/_/g, '/')
-    const payload = JSON.parse(atob(normalized))
+    const base64 = segment.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=')
+    const payload = JSON.parse(atob(padded))
     if (typeof payload.exp !== 'number') return null
 
     return payload.exp * 1000

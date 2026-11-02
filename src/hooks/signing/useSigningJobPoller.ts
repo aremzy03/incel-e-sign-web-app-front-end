@@ -68,11 +68,11 @@ export function useSigningJobPoller({
   const handleJobResult = useCallback(
     (job: SigningJobDetail): boolean => {
       if (job.status === 'succeeded') {
-        clearSigningJob(envelopeId)
         setPhase('succeeded')
         setErrorMessage(null)
         invalidateEnvelopeQueries()
         callbacksRef.current.onSucceeded?.(job)
+        clearSigningJob(envelopeId)
         return true
       }
 

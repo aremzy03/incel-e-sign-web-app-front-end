@@ -139,6 +139,17 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      // If a previous refresh already failed or there is no refresh token,
+      // do not keep retrying a dead/blacklisted refresh token on every session check.
+      if (token.error === 'RefreshAccessTokenError' || !token.refreshToken) {
+        return {
+          ...token,
+          accessToken: undefined,
+          refreshToken: undefined,
+          error: 'RefreshAccessTokenError',
+        }
+      }
+
       // Prefer the real access JWT exp so older sessions with a wrong
       // accessTokenExpires value still refresh at the correct time.
       const expiresAt = token.accessToken
@@ -156,6 +167,9 @@ export const authOptions: NextAuthOptions = {
       if (refreshedToken === null) {
         return {
           ...token,
+          accessToken: undefined,
+          refreshToken: undefined,
+          accessTokenExpires: 0,
           error: 'RefreshAccessTokenError',
         }
       }
@@ -184,12 +198,32 @@ export const authOptions: NextAuthOptions = {
   secret: getNextAuthSecret(),
 }
 
+const RECENT_REFRESH_TTL_MS = 15_000
+const recentRefreshes = new Map<string, { result: any; expiresAt: number }>()
+
 let inFlightRefresh: Promise<any> | null = null
 let inFlightRefreshKey: string | null = null
 
 async function refreshAccessToken(token: any) {
   const refreshToken = token.refreshToken as string | undefined
   if (!refreshToken) return null
+
+  const now = Date.now()
+  for (const [key, entry] of recentRefreshes.entries()) {
+    if (entry.expiresAt <= now) {
+      recentRefreshes.delete(key)
+    }
+  }
+
+  // If a sibling request rotated this refresh token within the last few seconds
+  // before the browser applied the updated Set-Cookie, reuse that rotated result.
+  const cached = recentRefreshes.get(refreshToken)
+  if (cached && cached.expiresAt > now) {
+    return {
+      ...token,
+      ...cached.result,
+    }
+  }
 
   // Dedupe concurrent refreshes (e.g. refetchInterval + 401 retry) so rotation
   // does not blacklist the token still held by a sibling request.
@@ -206,28 +240,35 @@ async function refreshAccessToken(token: any) {
 
       if (response.data.access) {
         const accessToken = response.data.access as string
-        return {
-          ...token,
+        const refreshedFields = {
           accessToken,
           // Backend rotates refresh tokens; always prefer the new one when present.
           refreshToken: response.data.refresh || refreshToken,
           accessTokenExpires: getAccessTokenExpiresAt(accessToken),
           error: undefined,
         }
+        recentRefreshes.set(refreshToken, {
+          result: refreshedFields,
+          expiresAt: Date.now() + RECENT_REFRESH_TTL_MS,
+        })
+        return {
+          ...token,
+          ...refreshedFields,
+        }
       }
 
       throw new Error('Invalid refresh response')
     } catch (error: any) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Token refresh error:', error)
-      }
-
       if (
         error.response?.data?.code === 'token_not_valid' ||
         error.response?.data?.detail?.includes('blacklisted') ||
         error.response?.status === 401
       ) {
         return null
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Token refresh error:', error.message || error)
       }
 
       return {

@@ -1,7 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Button } from '@/components/ui/button'
 import { useSigningJobPoller } from '@/hooks/signing/useSigningJobPoller'
@@ -30,11 +29,6 @@ function SigningJobItemPoller({ job, onSucceeded, onRemove }: SigningJobItemPoll
     onSucceeded: () => {
       setCompleted(true)
       onSucceeded(job.envelopeId)
-      toast.success(
-        job.envelopeName
-          ? `Signed "${job.envelopeName}" successfully!`
-          : 'Document signed successfully!',
-      )
       window.setTimeout(() => {
         onRemove(job.envelopeId)
       }, 2500)
@@ -49,12 +43,17 @@ function SigningJobItemPoller({ job, onSucceeded, onRemove }: SigningJobItemPoll
 
   return (
     <div
-      className="flex flex-col gap-2 rounded-lg border border-outline-variant/60 bg-surface-container-low/60 px-3 py-2.5 text-xs"
+      className="flex flex-col gap-2 rounded-lg border border-outline-variant/60 bg-surface-container-low/60 px-3 py-2.5 text-xs transition-all duration-200"
       data-testid={`signing-job-toast-item-${job.envelopeId}`}
     >
       <div className="flex items-center gap-2.5">
         {completed ? (
-          <MaterialIcon name="check_circle" fill size={16} className="shrink-0 text-status-completed" />
+          <MaterialIcon
+            name="check_circle"
+            fill
+            size={16}
+            className="shrink-0 text-status-completed animate-in zoom-in-75 fade-in duration-200"
+          />
         ) : isFailed ? (
           <MaterialIcon name="error" size={16} className="shrink-0 text-error" />
         ) : (
@@ -111,7 +110,7 @@ function SigningJobItemPoller({ job, onSucceeded, onRemove }: SigningJobItemPoll
  */
 export function SigningJobBackgroundWatcher() {
   const [activeJobs, setActiveJobs] = useState<StoredSigningJob[]>([])
-  const [completedIds, setCompletedIds] = useState<Record<string, boolean>>({})
+  const completedIdsRef = useRef<Set<string>>(new Set())
 
   const refreshActiveJobs = useCallback(() => {
     const jobs = listStoredSigningJobs()
@@ -122,24 +121,20 @@ export function SigningJobBackgroundWatcher() {
       }
       // Keep recently-completed items visible until their 2.5s auto-dismiss timer fires
       for (const existing of prev) {
-        if (!byEnvelope.has(existing.envelopeId) && completedIds[existing.envelopeId]) {
+        if (!byEnvelope.has(existing.envelopeId) && completedIdsRef.current.has(existing.envelopeId)) {
           byEnvelope.set(existing.envelopeId, existing)
         }
       }
       return Array.from(byEnvelope.values())
     })
-  }, [completedIds])
+  }, [])
 
   const handleJobSucceeded = useCallback((envelopeId: string) => {
-    setCompletedIds((prev) => ({ ...prev, [envelopeId]: true }))
+    completedIdsRef.current.add(envelopeId)
   }, [])
 
   const handleRemoveJob = useCallback((envelopeId: string) => {
-    setCompletedIds((prev) => {
-      const next = { ...prev }
-      delete next[envelopeId]
-      return next
-    })
+    completedIdsRef.current.delete(envelopeId)
     clearSigningJob(envelopeId)
     setActiveJobs((prev) => prev.filter((j) => j.envelopeId !== envelopeId))
   }, [])

@@ -139,6 +139,13 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const recipientData = envelopeWithTokenMeta?.recipient
   const effectiveUserId =
     token && recipientData?.user_id ? recipientData.user_id : currentUserId || recipientData?.user_id
+  const recipientEmail = recipientData?.email
+  const isAccountMismatch = Boolean(
+    session?.user?.email &&
+      recipientEmail &&
+      session.user.email.toLowerCase() !== recipientEmail.toLowerCase(),
+  )
+  const isAuthenticatedSigner = Boolean(isDashboard || (session?.user && !isAccountMismatch))
 
   const signatures = useMemo(() => {
     if (fetchedSignatures.length > 0) return fetchedSignatures
@@ -207,7 +214,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     token,
     onSignQueued: () => {
       progress.markAllSignaturesComplete()
-      if (isDashboard) {
+      if (isAuthenticatedSigner) {
         router.push('/dashboard/envelopes')
       } else {
         goToStatus('processing')
@@ -215,7 +222,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     },
     onSignComplete: () => {
       progress.markAllSignaturesComplete()
-      if (!isDashboard) {
+      if (!isAuthenticatedSigner) {
         goToStatus('complete')
       }
     },
@@ -464,9 +471,9 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
           }
         : undefined
 
-  const homeHref = isDashboard ? '/dashboard' : '/'
-  const dashboardHref = isDashboard ? '/dashboard/envelopes' : '/login'
-  const fallbackHref = isDashboard ? dashboardHref : homeHref
+  const homeHref = isAuthenticatedSigner ? '/dashboard' : '/'
+  const dashboardHref = isAuthenticatedSigner ? '/dashboard/envelopes' : '/login'
+  const fallbackHref = isAuthenticatedSigner ? dashboardHref : homeHref
 
   if (isDashboard && !isReady) {
     return <PdfLoadingIndicator label="Loading…" />
@@ -661,13 +668,6 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const envelopeAsFull = envelope as unknown as Envelope
   const isEnvelopeFullyComplete = (envelope.status || '').toLowerCase().includes('complete')
 
-  const recipientEmail = recipientData?.email
-  const isAccountMismatch = Boolean(
-    session?.user?.email &&
-      recipientEmail &&
-      session.user.email.toLowerCase() !== recipientEmail.toLowerCase(),
-  )
-
   const mismatchBanner = isAccountMismatch ? (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-950">
       <div className="flex items-center gap-2">
@@ -698,7 +698,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
               envelope={envelopeAsFull}
               currentUserId={effectiveUserId}
               onClose={() => router.push(dashboardHref)}
-              backLabel={isDashboard ? 'Back to Dashboard' : 'Back to Home'}
+              backLabel={isAuthenticatedSigner ? 'Back to Dashboard' : 'Back to Home'}
             />
           )
         case 'processing':
@@ -707,7 +707,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
               envelope={envelopeAsFull}
               currentUserId={effectiveUserId}
               onClose={() => router.push(dashboardHref)}
-              backLabel={isDashboard ? 'Back to Dashboard' : 'Back to Home'}
+              backLabel={isAuthenticatedSigner ? 'Back to Dashboard' : 'Back to Home'}
             />
           )
         case 'complete': {

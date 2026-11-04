@@ -21,6 +21,7 @@ interface DashboardTopbarProps {
   userId: string
   onMenuOpen: () => void
   onLogout: () => void
+  onNotificationsOpen?: () => void
 }
 
 export function DashboardTopbar({
@@ -35,6 +36,7 @@ export function DashboardTopbar({
   userId,
   onMenuOpen,
   onLogout,
+  onNotificationsOpen,
 }: DashboardTopbarProps) {
   const pageTitle = getPageTitle(pathname, navItems)
 
@@ -66,7 +68,11 @@ export function DashboardTopbar({
           />
         </div>
 
-        <NotificationDropdown notifications={notifications} unreadCount={unreadCount} />
+        <NotificationDropdown
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onOpen={onNotificationsOpen}
+        />
 
         <ThemeToggle />
 
@@ -81,6 +87,7 @@ export function DashboardTopbar({
 
         <Link
           href="/dashboard/profile"
+          prefetch={false}
           className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-surface-container-low"
         >
           <div className="hidden text-right sm:block">

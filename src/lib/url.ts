@@ -163,6 +163,33 @@ export function getDocumentFileUrlForViewer(
   return getDocumentPreviewApiUrl(doc)
 }
 
+/**
+ * URL pdf.js should fetch for a signing document.
+ *
+ * CloudFront/S3 URLs are loaded directly. Token links fall back to the
+ * public preview proxy only when there is no external URL, or after a
+ * direct fetch fails. Authenticated sessions fall back to the preview API.
+ */
+export function resolveSigningDocumentUrl(options: {
+  directUrl: string
+  previewApiUrl: string
+  hasToken: boolean
+  token?: string
+  documentId: string
+  apiBase: string
+  usePreviewFallback: boolean
+}): string {
+  const directIsCdn = isExternalDocumentUrl(options.directUrl)
+  if (directIsCdn && !options.usePreviewFallback) return options.directUrl
+
+  if (options.hasToken && options.token) {
+    const apiBase = options.apiBase.replace(/\/$/, '')
+    return `${apiBase}/documents/${options.documentId}/preview-public/?token=${encodeURIComponent(options.token)}`
+  }
+
+  return options.previewApiUrl || options.directUrl
+}
+
 /** Whether a direct CDN fetch failed and callers should retry via preview API. */
 export function shouldFallbackToPreviewApi(
   directUrl: string,

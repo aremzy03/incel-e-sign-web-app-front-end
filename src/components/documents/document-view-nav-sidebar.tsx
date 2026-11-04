@@ -25,6 +25,7 @@ export function DocumentViewNavSidebar({ documentTitle }: DocumentViewNavSidebar
       <nav className="space-y-1">
         <Link
           href="/dashboard/documents"
+          prefetch={false}
           className={cn(
             'flex w-full items-center gap-3 rounded-lg px-4 py-3 font-label-sm transition-all',
             'bg-secondary text-on-secondary',
@@ -52,12 +53,14 @@ export function DocumentViewNavSidebar({ documentTitle }: DocumentViewNavSidebar
           </p>
           <Link
             href="/dashboard/envelopes/self-sign"
+            prefetch={false}
             className="mb-2 block w-full rounded-lg bg-secondary-fixed py-2 text-center font-label-sm text-on-secondary-fixed transition-colors hover:bg-secondary-fixed-dim"
           >
             Self-Sign
           </Link>
           <Link
             href="/dashboard/envelopes/create"
+            prefetch={false}
             className="block w-full rounded-lg border border-on-primary/30 py-2 text-center font-label-sm text-on-primary transition-colors hover:bg-primary-container"
           >
             Send for Signature

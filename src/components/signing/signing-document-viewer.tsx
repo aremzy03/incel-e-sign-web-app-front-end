@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { EnvelopeDocumentResponse, Position } from '@/lib/api/envelopes'
 import type { User } from '@/lib/api/users'
@@ -17,7 +17,7 @@ import {
   type SigningEnvelopeResponse,
 } from '@/hooks/signing/types'
 import { cn } from '@/lib/utils'
-import { documentUrlNeedsAuth } from '@/lib/url'
+import { documentUrlNeedsAuth, getPdfJsDocumentOptions } from '@/lib/url'
 
 type ReactPdfModule = typeof import('react-pdf')
 type PdfComponents = Pick<ReactPdfModule, 'Document' | 'Page'> & { pdfjs: ReactPdfModule['pdfjs'] }
@@ -123,6 +123,14 @@ export function SigningDocumentViewer({
   className,
 }: SigningDocumentViewerProps) {
   const [pdf, setPdf] = useState<PdfComponents | null>(null)
+  const pdfOptionsByUrl = useMemo(() => {
+    const map: Record<string, ReturnType<typeof getPdfJsDocumentOptions>> = {}
+    for (const file of Object.values(pdfFileByDocumentId)) {
+      if (!file?.url || map[file.url]) continue
+      map[file.url] = getPdfJsDocumentOptions(file.url)
+    }
+    return map
+  }, [pdfFileByDocumentId])
   const selectedSignatureImage = resolveSignatureImage(selectedSignature)
   const scale = zoom / 100
   const positionCoordinateSpace: 'auto' | 'pdf-points' = 'auto'
@@ -674,6 +682,7 @@ export function SigningDocumentViewer({
               <PdfDocument
                 className="flex w-full flex-col items-center gap-8"
                 file={pdfFileByDocumentId[docItem.document]}
+                options={pdfOptionsByUrl[pdfFileByDocumentId[docItem.document]?.url ?? '']}
                 onLoadSuccess={(info: { numPages: number }) => {
                   setPdfLoadedByDocId((prev) => ({ ...prev, [docItem.id]: true }))
                   setDocumentNumPages(docItem.id, info.numPages)

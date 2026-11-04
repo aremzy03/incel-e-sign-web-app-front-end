@@ -40,10 +40,9 @@ export const useDocuments = (params: UseDocumentsParams = {}) => {
     queryKey: ['documents', normalized],
     queryFn: () => getDocuments(normalized),
     enabled: isReady,
-    staleTime: 0,
+    staleTime: 60_000,
     retry: shouldRetryAuthQuery,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   })
 }
@@ -63,7 +62,8 @@ export const useDocumentStatusCounts = (search?: string) => {
           search: normalizedSearch,
         }),
       enabled: isReady,
-      staleTime: 30_000,
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
       retry: shouldRetryAuthQuery,
     })),
   })

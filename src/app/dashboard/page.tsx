@@ -102,6 +102,7 @@ function QuickActionCard({
   return (
     <Link
       href={href}
+      prefetch={false}
       className="group flex items-start gap-3 rounded-xl border border-border bg-surface-container-lowest p-3 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-secondary group-hover:text-on-secondary">
@@ -261,6 +262,7 @@ export default function DashboardPage() {
                       </span>
                       <Link
                         href={`/dashboard/envelopes/${env.id}/sign`}
+                        prefetch={false}
                         className="rounded-lg bg-secondary px-6 py-2 text-label-sm font-bold text-on-secondary shadow-sm transition-all hover:bg-accent-hover"
                       >
                         Sign Now
@@ -274,6 +276,7 @@ export default function DashboardPage() {
               <div className="border-t border-border bg-surface px-6 py-4 text-center">
                 <Link
                   href="/dashboard/envelopes"
+                  prefetch={false}
                   className="text-label-sm font-bold text-secondary hover:underline"
                 >
                   View all pending actions
@@ -329,6 +332,7 @@ export default function DashboardPage() {
                       {entry.envelope_id ? (
                         <Link
                           href={`/dashboard/envelopes/${entry.envelope_id}`}
+                          prefetch={false}
                           className="relative flex min-w-0 flex-1 gap-3 transition-colors hover:text-secondary"
                         >
                           {content}

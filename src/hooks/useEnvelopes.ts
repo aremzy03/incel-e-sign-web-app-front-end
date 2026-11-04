@@ -63,6 +63,7 @@ export const useEnvelope = (id: string) => {
 export const useEnvelopeDocuments = (
   envelopeId: string,
   inlineDocuments?: Envelope['documents'],
+  envelopeReady = false,
 ) => {
   const { isReady } = useAuthReady()
 
@@ -74,8 +75,10 @@ export const useEnvelopeDocuments = (
   const query = useQuery<EnvelopeDocumentResponse[]>({
     queryKey: ['envelopeDocuments', envelopeId],
     queryFn: () => getEnvelopeDocuments(envelopeId),
-    enabled: isReady && !!envelopeId,
+    // The envelope payload already includes documents. Fetch only when it does not.
+    enabled: isReady && !!envelopeId && envelopeReady && inline.length === 0,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: shouldRetryAuthQuery,
   })
 

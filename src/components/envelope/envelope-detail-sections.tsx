@@ -108,6 +108,7 @@ export function EnvelopeDocumentsCard({
                 ) : (
                   <Link
                     href={href}
+                    prefetch={false}
                     className="shrink-0 text-on-surface-variant transition-colors hover:text-primary"
                     aria-label="Open document"
                   >

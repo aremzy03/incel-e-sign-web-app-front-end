@@ -17,6 +17,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 60 * 1000, // 1 minute
             retry: 1,
+            // A Nigeria↔US round trip is expensive. Don't repeat it on every alt-tab.
+            refetchOnWindowFocus: false,
           },
         },
       })

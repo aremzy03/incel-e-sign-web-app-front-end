@@ -1,14 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
 import { getCachedRefreshToken } from '@/lib/auth-session-cache'
 import { shouldRetryAuthQuery, useAuthReady } from '@/hooks/useAuthReady'
 import { authAPI } from '@/lib/api/auth'
-import { useProfile } from '@/hooks/useProfile'
 import { listNotifications, type NotificationItem } from '@/lib/api/notifications'
 import { DashboardSidebar } from './dashboard-sidebar'
 import { DashboardTopbar } from './dashboard-topbar'
@@ -27,7 +25,11 @@ interface User {
   is_active: boolean
   created_at: string
   updated_at: string
+  profile_photo_url?: string | null
 }
+
+/** Let the page's own list request use the connection before the bell fetch. */
+const NOTIFICATIONS_DEFER_MS = 2_000
 
 interface DashboardShellProps {
   children: React.ReactNode
@@ -48,20 +50,29 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
   const pathname = usePathname()
   const currentPath = pathname ?? '/dashboard'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [loadNotifications, setLoadNotifications] = useState(false)
   const { isReady } = useAuthReady()
-  const { data: profile } = useProfile()
   const queryClient = useQueryClient()
 
-  const displayUser = profile || user
-  const profilePhotoUrl = profile?.profile_photo_url
+  const displayUser = user
+  const profilePhotoUrl = user.profile_photo_url
   const isAdmin = isAdminUser(displayUser.email)
   const navItems = getDashboardNavItems(isAdmin)
+  const onNotificationsRoute = currentPath.startsWith('/dashboard/notifications')
+  const onSigningRoute = isSigningShellPath(currentPath)
+
+  useEffect(() => {
+    if (!isReady || onSigningRoute) return
+    const timer = window.setTimeout(() => setLoadNotifications(true), NOTIFICATIONS_DEFER_MS)
+    return () => window.clearTimeout(timer)
+  }, [isReady, onSigningRoute])
 
   const { data: notificationsData } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: listNotifications,
-    enabled: isReady,
-    staleTime: 30_000,
+    enabled: isReady && !onSigningRoute && (loadNotifications || onNotificationsRoute),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
     retry: shouldRetryAuthQuery,
   })
 
@@ -140,6 +151,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           userId={displayUser.id}
           onMenuOpen={() => setIsMobileMenuOpen(true)}
           onLogout={handleLogout}
+          onNotificationsOpen={() => setLoadNotifications(true)}
         />
 
         {/* Mobile page title */}

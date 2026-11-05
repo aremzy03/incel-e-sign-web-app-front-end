@@ -50,6 +50,7 @@ export function DashboardSidebar({ navItems, className, onNavigate }: DashboardS
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               onClick={onNavigate}
               className={cn(
                 'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
@@ -78,6 +79,7 @@ export function DashboardSidebar({ navItems, className, onNavigate }: DashboardS
       <div className="border-t border-primary-hover p-4">
         <Link
           href={NEW_DOCUMENT_HREF}
+          prefetch={false}
           onClick={onNavigate}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-on-secondary transition-colors hover:bg-accent-hover"
         >

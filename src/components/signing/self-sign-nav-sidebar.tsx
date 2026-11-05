@@ -75,6 +75,7 @@ export function SelfSignNavSidebar({
           </p>
           <Link
             href="/dashboard/envelopes/create"
+            prefetch={false}
             className="block w-full rounded-lg bg-secondary-fixed py-2 text-center font-label-sm text-on-secondary-fixed transition-colors hover:bg-secondary-fixed-dim"
           >
             Send for Signature

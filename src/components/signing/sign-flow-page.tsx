@@ -11,7 +11,6 @@ import { mapToReusableSignature, uploadUserSignature } from '@/lib/api/signature
 import { getApiBaseUrl } from '@/lib/env'
 import { scrollToSigningTarget, type SigningFieldChecklistItem } from '@/lib/signing/signing-field-checklist'
 import { useAuthReady } from '@/hooks/useAuthReady'
-import { useProfile } from '@/hooks/useProfile'
 import { useSigningView } from '@/hooks/useSigningView'
 import {
   useSigningCoordinates,
@@ -103,9 +102,25 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const token = (tokenFromQuery || tokenFromWindow || '').trim() || undefined
   const { data: session } = useSession()
   const { isReady } = useAuthReady()
-  const { data: profile } = useProfile()
   const currentUserId = session?.user?.id
   const accessToken = (session as { accessToken?: string } | null)?.accessToken
+
+  useEffect(() => {
+    let cancelled = false
+    void import('react-pdf').then((mod) => {
+      if (cancelled) return
+      mod.pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`
+    })
+    const preload = document.createElement('link')
+    preload.rel = 'preload'
+    preload.as = 'script'
+    preload.href = '/pdf.worker.min.mjs'
+    document.head.appendChild(preload)
+    return () => {
+      cancelled = true
+      preload.remove()
+    }
+  }, [])
 
   const password = usePdfPasswordDialog()
   const coords = useSigningCoordinates()
@@ -151,10 +166,20 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     token,
   })
 
+  const embeddedSavedSignatures = (
+    envelope as { saved_signatures?: unknown[] } | undefined
+  )?.saved_signatures
+  const hasEmbeddedSignatures =
+    Array.isArray(embeddedSavedSignatures) && embeddedSavedSignatures.length > 0
+
   const { signatures: fetchedSignatures, refetch: refetchSignatures } = useUserSignatures({
     envelopeId,
     mode: isDashboard ? 'dashboard' : 'public',
-    enabled: isDashboard ? isReady : !!envelopeId,
+    // The public envelope already includes saved_signatures. Skip the extra
+    // /signatures/me/public/ round trip when they are present.
+    enabled: isDashboard
+      ? isReady
+      : Boolean(envelopeId && token && !loadingEnv && !hasEmbeddedSignatures),
     token,
   })
 
@@ -319,24 +344,44 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
       })
     }
 
-    // Only make authenticated user profile requests if user has an active session
-    if (session?.accessToken) {
-      const fetchSigners = async () => {
+    // Names and emails already came from the envelope. Profile lookups are only
+    // for missing labels, and they must not compete with the PDF download.
+    const needsProfileLookup = envelope.signing_order.some((entry) => {
+      if (!entry.signer_id) return false
+      const known = details[String(entry.signer_id)]
+      return !known?.full_name || known.full_name === 'Signer'
+    })
+    if (!session?.accessToken || !needsProfileLookup) return
+
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        const entries = envelope.signing_order.filter((entry) => entry.signer_id)
+        const users = await Promise.all(
+          entries.map(async (entry) => {
+            try {
+              const user = await getUserById(entry.signer_id)
+              return [entry.signer_id, user] as const
+            } catch {
+              return null
+            }
+          }),
+        )
+        if (cancelled) return
         const fullDetails: Record<string, User> = {}
-        for (const entry of envelope.signing_order) {
-          if (!entry.signer_id) continue
-          try {
-            const user = await getUserById(entry.signer_id)
-            fullDetails[entry.signer_id] = user
-          } catch {
-            /* ignore */
-          }
+        for (const row of users) {
+          if (!row) continue
+          fullDetails[row[0]] = row[1]
         }
         if (Object.keys(fullDetails).length > 0) {
           setSignerDetails((prev) => ({ ...prev, ...fullDetails }))
         }
-      }
-      fetchSigners()
+      })()
+    }, 4000)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
     }
   }, [envelope?.signatures, envelope?.signing_order, isDashboard, isReady, session?.accessToken])
 
@@ -474,7 +519,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
           id: session.user.id,
           name: session.user.full_name || 'User',
           email: session.user.email || '',
-          profilePhotoUrl: profile?.profile_photo_url,
+          profilePhotoUrl: (session.user as { profile_photo_url?: string | null }).profile_photo_url,
           initials: (session.user.full_name || 'U')
             .split(' ')
             .map((n) => n[0])

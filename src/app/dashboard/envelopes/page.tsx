@@ -140,10 +140,10 @@ export default function EnvelopesPage() {
         actions={
           <>
             <Button variant="outline" asChild>
-              <Link href="/dashboard/envelopes/self-sign">Sign yourself</Link>
+              <Link href="/dashboard/envelopes/self-sign" prefetch={false}>Sign yourself</Link>
             </Button>
             <Button asChild className="bg-secondary hover:bg-accent-hover">
-              <Link href="/dashboard/envelopes/create">
+              <Link href="/dashboard/envelopes/create" prefetch={false}>
                 <MaterialIcon name="add" size={18} className="mr-2" />
                 Create Envelope
               </Link>
@@ -203,7 +203,7 @@ export default function EnvelopesPage() {
               </Button>
             ) : (
               <Button asChild>
-                <Link href="/dashboard/envelopes/create">Create Envelope</Link>
+                <Link href="/dashboard/envelopes/create" prefetch={false}>Create Envelope</Link>
               </Button>
             )
           }

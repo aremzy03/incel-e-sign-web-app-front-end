@@ -232,6 +232,7 @@ export function SelfSignToolsSidebar({
           </button>
           <Link
             href="/dashboard/envelopes/create"
+            prefetch={false}
             className="py-2 text-center font-label-sm text-muted transition-colors hover:text-primary"
           >
             Send for Signature Instead

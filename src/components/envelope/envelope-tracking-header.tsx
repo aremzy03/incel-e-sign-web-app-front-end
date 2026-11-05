@@ -79,6 +79,7 @@ export function EnvelopeTrackingHeader({
         {!isSelfSign && isRecipient && (s.includes('draft') || s.includes('pending')) ? (
           <Link
             href={`/dashboard/envelopes/${envelopeId}/sign`}
+            prefetch={false}
             className="inline-flex items-center gap-2 rounded-xl bg-secondary px-6 py-2 font-label-sm text-label-sm text-on-secondary shadow-md transition-all hover:bg-accent-hover active:scale-95"
           >
             <MaterialIcon name="edit_document" size={18} />
@@ -110,6 +111,7 @@ export function EnvelopeTrackingHeader({
         {!isSelfSign && isCreator && (s.includes('draft') || s.includes('reject')) ? (
           <Link
             href={`/dashboard/envelopes/${envelopeId}/edit`}
+            prefetch={false}
             className="inline-flex items-center gap-2 rounded-xl bg-secondary px-6 py-2 font-label-sm text-label-sm text-on-secondary shadow-md transition-all hover:bg-accent-hover active:scale-95"
           >
             Edit

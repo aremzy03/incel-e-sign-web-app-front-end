@@ -244,7 +244,7 @@ export default function DocumentsPage() {
               {mergeDocumentsMutation.isPending ? 'Merging…' : 'Merge Selected'}
             </Button>
             <Button asChild className="bg-secondary px-6 py-2.5 hover:bg-accent-hover">
-              <Link href="/dashboard/documents/upload">
+              <Link href="/dashboard/documents/upload" prefetch={false}>
                 <MaterialIcon name="upload" size={18} className="mr-2" />
                 Upload
               </Link>
@@ -293,7 +293,7 @@ export default function DocumentsPage() {
                 description="Upload your first document to get started."
                 action={
                   <Button asChild>
-                    <Link href="/dashboard/documents/upload">Upload Your First Document</Link>
+                    <Link href="/dashboard/documents/upload" prefetch={false}>Upload Your First Document</Link>
                   </Button>
                 }
               />
@@ -378,7 +378,7 @@ export default function DocumentsPage() {
               action={
                 activeStatus === 'all' ? (
                   <Button asChild>
-                    <Link href="/dashboard/documents/upload">Upload Your First Document</Link>
+                    <Link href="/dashboard/documents/upload" prefetch={false}>Upload Your First Document</Link>
                   </Button>
                 ) : undefined
               }

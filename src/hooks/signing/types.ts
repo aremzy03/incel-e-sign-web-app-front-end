@@ -60,6 +60,7 @@ export interface SigningEnvelopeResponse {
   signatures?: EnvelopeSignature[]
   recipients?: EnvelopeRecipient[]
   is_self_sign?: boolean
+  documents?: Envelope['documents']
 }
 
 export interface PageDimEntry {

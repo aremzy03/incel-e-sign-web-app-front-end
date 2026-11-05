@@ -187,6 +187,17 @@ const nextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
+      {
+        // pdf.js fetches this before it can paint. Cache it so Nigeria users
+        // don't download the worker from the US origin on every visit.
+        source: '/pdf.worker.min.mjs',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400',
+          },
+        ],
+      },
     ]
 
     // Add CORS headers only if allowed origins are configured

@@ -24,6 +24,28 @@ const apiClient = axios.create({
   timeout: 30000,
 })
 
+/** List and shell GETs should fail fast. Mutations keep the 30s default. */
+const READ_GET_TIMEOUT_MS = 8_000
+/** SessionTokenSync fills the cache during render. Wait for that instead of calling getSession(). */
+const TOKEN_CACHE_WAIT_MS = 500
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function waitForCachedAccessToken(): Promise<string | null> {
+  const immediate = getCachedAccessToken()
+  if (immediate) return immediate
+
+  const started = Date.now()
+  while (Date.now() - started < TOKEN_CACHE_WAIT_MS) {
+    await sleep(25)
+    const token = getCachedAccessToken()
+    if (token) return token
+  }
+  return getCachedAccessToken()
+}
+
 let signOutInProgress = false
 let refreshPromise: Promise<string | null> | null = null
 
@@ -105,10 +127,16 @@ apiClient.interceptors.request.use(
       return Promise.reject(new Error('Session expired - user logged out'))
     }
 
+    const method = (config.method ?? 'get').toLowerCase()
+    const callerSetTimeout = config.timeout != null && config.timeout !== apiClient.defaults.timeout
+    if ((method === 'get' || method === 'head') && !callerSetTimeout) {
+      config.timeout = READ_GET_TIMEOUT_MS
+    }
+
     let accessToken = getCachedAccessToken()
     const url = config.url ?? ''
     if (!accessToken && typeof window !== 'undefined' && !isPublicOrAuthEndpoint(url)) {
-      accessToken = await refreshSessionAccessToken()
+      accessToken = await waitForCachedAccessToken()
     }
 
     if (accessToken) {

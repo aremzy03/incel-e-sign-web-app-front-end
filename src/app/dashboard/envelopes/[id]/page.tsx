@@ -41,11 +41,16 @@ export default function EnvelopeDetailPage() {
   const envelopeError = error ? classifyError(error, 'Failed to load envelope') : null
 
   const creatorId = envelope?.creator?.id
+  const creatorLabelFromEnvelope =
+    envelope?.creator?.full_name ||
+    envelope?.creator?.email ||
+    (envelope as { creator_email?: string } | undefined)?.creator_email
   const { data: creatorUser } = useQuery({
     queryKey: ['user', creatorId],
     queryFn: () => getUserById(creatorId as string),
-    enabled: isReady && Boolean(creatorId),
+    enabled: isReady && Boolean(creatorId) && !creatorLabelFromEnvelope,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 
   const {
@@ -56,6 +61,7 @@ export default function EnvelopeDetailPage() {
   } = useEnvelopeDocuments(
     id,
     envelope?.documents,
+    Boolean(envelope),
   )
   const envelopeDocumentsErrorState = envelopeDocumentsError
     ? classifyError(envelopeDocumentsError, 'Failed to load envelope documents')

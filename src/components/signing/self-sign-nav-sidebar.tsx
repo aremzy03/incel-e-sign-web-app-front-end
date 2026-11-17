@@ -1,87 +1,60 @@
 'use client'
 
-import Link from 'next/link'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { cn } from '@/lib/utils'
 
-type SelfSignStep = 'upload' | 'prepare' | 'sign' | 'complete'
+type SelfSignStep = 'upload' | 'sign'
 
 interface SelfSignNavSidebarProps {
   activeStep?: SelfSignStep
-  onUploadClick?: () => void
+  onChangeDocument?: () => void
 }
 
-const STEPS: Array<{ id: SelfSignStep; label: string; icon: string }> = [
-  { id: 'upload', label: 'Upload', icon: 'upload_file' },
-  { id: 'prepare', label: 'Prepare', icon: 'edit_note' },
-  { id: 'sign', label: 'Sign', icon: 'history_edu' },
-  { id: 'complete', label: 'Complete', icon: 'task_alt' },
-]
+const navyFocus =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2 focus-visible:ring-offset-primary dark:focus-visible:ring-offset-primary-container'
+
+const activeRow =
+  'border-l-4 border-status-your-turn bg-primary-hover pl-2 pr-3 text-accent-light dark:bg-primary dark:text-on-primary'
+
+const idleRow = 'px-3 text-on-primary-container hover:bg-primary-hover hover:text-on-primary'
 
 export function SelfSignNavSidebar({
   activeStep = 'upload',
-  onUploadClick,
+  onChangeDocument,
 }: SelfSignNavSidebarProps) {
+  const signing = activeStep === 'sign'
+
   return (
-    <aside className="z-20 flex w-sidebar-width shrink-0 flex-col gap-2 bg-primary p-4 pt-4 text-on-primary shadow-md dark:bg-primary-container">
-      <div className="mb-4">
-        <div className="mb-2 font-caption-xs uppercase tracking-wider text-on-primary/60">Editor Status</div>
-        <div className="flex items-center gap-2 rounded-lg border border-primary-fixed/20 bg-primary-container p-3">
-          <MaterialIcon name="edit_square" size={22} className="text-secondary-fixed" />
-          <div>
-            <div className="font-label-sm text-on-primary">Self-Signing</div>
-            <div className="text-[10px] text-on-primary-container">Live Session Active</div>
-          </div>
+    <aside className="z-20 flex w-sidebar-width shrink-0 flex-col bg-primary p-4 text-on-primary dark:bg-primary-container">
+      <h2 className="mb-4 px-1 font-label-sm text-on-primary dark:text-on-primary-container">
+        Self-Signing
+      </h2>
+
+      <nav aria-label="Self-sign" className="space-y-1">
+        <button
+          type="button"
+          onClick={onChangeDocument}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-lg py-2.5 font-label-sm transition-colors',
+            navyFocus,
+            signing ? idleRow : activeRow,
+          )}
+        >
+          <MaterialIcon name="upload_file" size={20} />
+          <span>Change document</span>
+        </button>
+
+        <div
+          className={cn(
+            'flex w-full items-center gap-3 rounded-lg py-2.5 font-label-sm',
+            signing ? activeRow : 'px-3 text-on-primary-container',
+          )}
+          aria-current={signing ? 'step' : undefined}
+        >
+          <MaterialIcon name="history_edu" size={20} />
+          <span>Sign</span>
         </div>
-      </div>
-
-      <nav className="space-y-1">
-        {STEPS.map((step) => {
-          const isActive = step.id === activeStep
-          const isUpload = step.id === 'upload'
-          const content = (
-            <>
-              <MaterialIcon name={step.icon} size={22} />
-              <span className="font-label-sm">{step.label}</span>
-            </>
-          )
-          const className = cn(
-            'flex w-full items-center gap-3 rounded-lg px-4 py-3 font-label-sm transition-all',
-            isActive
-              ? 'bg-secondary text-on-secondary'
-              : 'text-on-primary/70 hover:bg-primary-hover',
-          )
-
-          if (isUpload && onUploadClick) {
-            return (
-              <button key={step.id} type="button" onClick={onUploadClick} className={className}>
-                {content}
-              </button>
-            )
-          }
-
-          return (
-            <div key={step.id} className={cn(className, !isActive && 'cursor-default')}>
-              {content}
-            </div>
-          )
-        })}
       </nav>
-
-      <div className="mt-auto border-t border-primary-fixed/20 pt-6">
-        <div className="rounded-xl bg-primary-hover p-4">
-          <p className="mb-3 text-xs leading-relaxed text-on-primary/70">
-            Need others to sign this document instead?
-          </p>
-          <Link
-            href="/dashboard/envelopes/create"
-            prefetch={false}
-            className="block w-full rounded-lg bg-secondary-fixed py-2 text-center font-label-sm text-on-secondary-fixed transition-colors hover:bg-secondary-fixed-dim"
-          >
-            Send for Signature
-          </Link>
-        </div>
-      </div>
     </aside>
   )
 }

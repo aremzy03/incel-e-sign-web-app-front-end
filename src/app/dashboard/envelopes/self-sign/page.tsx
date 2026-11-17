@@ -1,19 +1,20 @@
 'use client'
 
-import React, { Suspense, useState, useCallback, useMemo, useEffect } from 'react'
+import React, { Suspense, useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { DndContext, DragOverlay } from '@dnd-kit/core'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import { SelfSignEditorHeader } from '@/components/signing/self-sign-editor-header'
 import { SelfSignNavSidebar } from '@/components/signing/self-sign-nav-sidebar'
-import { SelfSignToolsSidebar } from '@/components/signing/self-sign-tools-sidebar'
+import { SelfSignToolsSidebar, selfSignCommitButtonClass } from '@/components/signing/self-sign-tools-sidebar'
+import { MaterialIcon } from '@/components/ui/material-icon'
+import { cn } from '@/lib/utils'
 import { SigningShell } from '@/components/signing/signing-shell'
 import { SelfSignStart } from '@/components/signing/self-sign-start'
 import {
@@ -72,14 +73,12 @@ function SelfSignPageInner() {
   const [fieldPositions, setFieldPositions] = useState<FieldPositions>({})
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [nextFieldId, setNextFieldId] = useState(1)
-  const [envelopeName, setEnvelopeName] = useState('')
-  const [description, setDescription] = useState('')
-  const [pdfPasswordProtectionEnabled, setPdfPasswordProtectionEnabled] = useState(false)
   const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [frozenEnvelopeMessage, setFrozenEnvelopeMessage] = useState<string | null>(null)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const shortcutsRef = useRef<HTMLDivElement>(null)
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
   const [pageMetrics, setPageMetrics] = useState<
     Record<string, { baseWidthPxAtScale1: number; baseHeightPxAtScale1: number; scale: number }>
@@ -231,13 +230,19 @@ function SelfSignPageInner() {
   }, [uploadedDocuments])
 
   const selfSignActiveStep = useMemo(() => {
-    if (success) return 'complete' as const
     const hasSignature = Object.values(fieldPositions).some((docFields) =>
       Object.values(docFields).some((f) => f.type === 'signature'),
     )
-    if (hasSignature) return 'sign' as const
-    return 'upload' as const
-  }, [success, fieldPositions])
+    return hasSignature ? ('sign' as const) : ('upload' as const)
+  }, [fieldPositions])
+
+  const returnToPicker = useCallback(() => {
+    setUploadedDocuments([])
+    setFieldPositions({})
+    setActiveFieldId(null)
+    setToolsOpen(false)
+    router.push('/dashboard/envelopes/self-sign')
+  }, [router])
 
   const handleDragStart = useCallback((event: any) => {
     const data = event.active?.data?.current
@@ -441,26 +446,15 @@ function SelfSignPageInner() {
       })
     })
 
-    const trimmedDescription = description.trim()
     const payload: SelfSignRequest = {
       document_ids: uploadedDocuments.map((d) => d.id),
       documents_with_positions,
-      pdf_password_protection_enabled: pdfPasswordProtectionEnabled,
-      ...(envelopeName ? { name: envelopeName } : {}),
-      ...(trimmedDescription ? { description: trimmedDescription } : {}),
+      pdf_password_protection_enabled: false,
       ...(fields.length > 0 ? { fields } : {}),
       ...(selectedSignatureId ? { signature_id: selectedSignatureId } : {}),
     }
     return payload
-  }, [
-    uploadedDocuments,
-    fieldPositions,
-    envelopeName,
-    description,
-    pdfPasswordProtectionEnabled,
-    pageMetrics,
-    selectedSignatureId,
-  ])
+  }, [uploadedDocuments, fieldPositions, pageMetrics, selectedSignatureId])
 
   const handleSignComplete = useCallback(async () => {
     if (validationErrors.length > 0) {
@@ -475,7 +469,7 @@ function SelfSignPageInner() {
       const result = await selfSignAsync(payload)
       if (result.kind === 'queued') {
         saveSigningJob(result.data.envelope_id, result.data.job_id, {
-          envelopeName: envelopeName || uploadedDocuments[0]?.file_name || 'Self-signed document',
+          envelopeName: uploadedDocuments[0]?.file_name || 'Self-signed document',
         })
         router.push(`/dashboard/envelopes/${result.data.envelope_id}`)
       }
@@ -491,16 +485,29 @@ function SelfSignPageInner() {
         'Failed to self-sign document. Please check console for details.'
       setError(msg)
     }
-  }, [validationErrors, buildPayload, selfSignAsync, router])
+  }, [validationErrors, buildPayload, selfSignAsync, router, uploadedDocuments])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Delete' && activeFieldId) {
-        handleFieldDelete(activeFieldId)
+      const target = event.target
+      const typing =
+        target instanceof HTMLElement &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+
+      if (event.key === 'Escape') {
+        if (showKeyboardShortcuts) {
+          setShowKeyboardShortcuts(false)
+          return
+        }
+        setActiveFieldId(null)
         return
       }
-      if (event.key === 'Escape') {
-        setActiveFieldId(null)
+      if (typing) return
+      if (event.key === 'Delete' && activeFieldId) {
+        handleFieldDelete(activeFieldId)
         return
       }
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -515,12 +522,19 @@ function SelfSignPageInner() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeFieldId, handleFieldDelete, handleSignComplete])
+  }, [activeFieldId, handleFieldDelete, handleSignComplete, showKeyboardShortcuts])
+
+  useEffect(() => {
+    if (!showKeyboardShortcuts) return
+    const node = shortcutsRef.current
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    node?.querySelector<HTMLElement>('button')?.focus()
+    return () => previouslyFocused?.focus()
+  }, [showKeyboardShortcuts])
 
   if (!showEditor) {
     return (
       <SigningShell
-        documentTitle="Self-sign"
         user={shellUser}
         onClose={() => router.push('/dashboard/envelopes')}
         closeLabel="Exit"
@@ -543,6 +557,8 @@ function SelfSignPageInner() {
         onZoomOut={() => setZoom((z) => Math.max(SIGNING_ZOOM_MIN, z - SIGNING_ZOOM_STEP))}
         pageIndicator={pageIndicator}
         onExit={() => router.push('/dashboard/envelopes')}
+        onHelp={() => setShowKeyboardShortcuts(true)}
+        titleAsHeading
       />
 
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
@@ -550,7 +566,7 @@ function SelfSignPageInner() {
           <div className="hidden md:flex">
             <SelfSignNavSidebar
               activeStep={selfSignActiveStep}
-              onUploadClick={() => router.push('/dashboard/envelopes/self-sign')}
+              onChangeDocument={returnToPicker}
             />
           </div>
 
@@ -598,32 +614,100 @@ function SelfSignPageInner() {
           </div>
         </div>
 
+        {toolsOpen ? (
+          <div className="fixed inset-0 z-40 md:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-on-primary-fixed/50"
+              aria-label="Close fields"
+              onClick={() => setToolsOpen(false)}
+            />
+            <div className="absolute inset-y-0 right-0 z-10 flex h-full w-full max-w-[300px] shadow-raised">
+              <SelfSignToolsSidebar
+                hasDocuments={uploadedDocuments.length > 0}
+                signing={isSigningInFlight}
+                hasValidationErrors={validationErrors.length > 0}
+                validationMessage={validationSummary}
+                onSignComplete={handleSignComplete}
+                onAddField={handleAddFieldClick}
+                activeField={activeField}
+                onFieldSettingsChange={handleFieldPositionChange}
+                onClearActiveField={() => setActiveFieldId(null)}
+                onClose={() => setToolsOpen(false)}
+                onChangeDocument={returnToPicker}
+              />
+            </div>
+          </div>
+        ) : null}
+
         <DragOverlay dropAnimation={null}>
           {activeDragFieldType ? (
-            <div className="pointer-events-none z-[9999] rounded-md border bg-white px-3 py-2 text-xs shadow-lg">
+            <div className="pointer-events-none z-[9999] rounded-xl border border-border bg-surface-container-lowest px-3 py-2 font-label-xs text-on-surface shadow-card">
               {activeDragFieldType}
             </div>
           ) : null}
         </DragOverlay>
       </DndContext>
 
+      <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-surface-container-lowest p-3 md:hidden">
+        {validationSummary ? <p className="text-xs text-error">{validationSummary}</p> : null}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setToolsOpen(true)}
+            className="flex h-12 shrink-0 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest px-4 font-label-sm text-primary hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
+          >
+            Fields
+          </button>
+          <button
+            type="button"
+            onClick={handleSignComplete}
+            disabled={isSigningInFlight || validationErrors.length > 0}
+            className={cn(selfSignCommitButtonClass, 'min-w-0 flex-1')}
+          >
+            {isSigningInFlight ? 'Signing…' : 'Sign & Complete'}
+          </button>
+        </div>
+      </div>
+
       {showKeyboardShortcuts ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-on-surface">Keyboard shortcuts</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowKeyboardShortcuts(false)}>
-                ✕
-              </Button>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-on-primary-fixed/50 p-4"
+          onClick={() => setShowKeyboardShortcuts(false)}
+        >
+          <div
+            ref={shortcutsRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="self-sign-shortcuts-title"
+            className="w-full max-w-md rounded-xl border border-border bg-surface-container-lowest p-6 shadow-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 id="self-sign-shortcuts-title" className="font-headline-lg text-headline-lg text-on-surface">
+                Keyboard shortcuts
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowKeyboardShortcuts(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface-container hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
+                aria-label="Close keyboard shortcuts"
+              >
+                <MaterialIcon name="close" size={20} />
+              </button>
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-body">Delete selected field</span>
-                <kbd className="rounded bg-surface-container-low px-2 py-1 text-xs">Delete</kbd>
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-body-sm text-body-sm text-on-surface">Delete selected field</span>
+                <kbd className="rounded-lg bg-surface-container-low px-2 py-1 font-label-xs text-on-surface">Delete</kbd>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-body">Sign and complete</span>
-                <kbd className="rounded bg-surface-container-low px-2 py-1 text-xs">Ctrl+Enter</kbd>
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-body-sm text-body-sm text-on-surface">Sign and complete</span>
+                <kbd className="rounded-lg bg-surface-container-low px-2 py-1 font-label-xs text-on-surface">Ctrl+Enter</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-body-sm text-body-sm text-on-surface">Close this panel</span>
+                <kbd className="rounded-lg bg-surface-container-low px-2 py-1 font-label-xs text-on-surface">Escape</kbd>
               </div>
             </div>
           </div>

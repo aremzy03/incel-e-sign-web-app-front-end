@@ -12,9 +12,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { MaterialIcon } from '@/components/ui/material-icon'
-import { AsyncStatePanel } from '@/components/library'
+import { AsyncStatePanel, StatusBadge } from '@/components/library'
 import { Loader2 } from 'lucide-react'
 
 import { Document as ApiDocument, getDocument } from '@/lib/api/documents'
@@ -34,21 +33,10 @@ interface DocumentPreviewModalProps {
   pdfPassword?: string
 }
 
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'draft':
-      return 'bg-surface-container-low text-body'
-    case 'pending':
-    case 'sent':
-      return 'bg-info-light text-secondary'
-    case 'completed':
-    case 'signed':
-      return 'bg-green-100 text-green-800'
-    case 'rejected':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-surface-container-low text-body'
-  }
+function formatStatusLabel(status: string): string {
+  const words = status.replace(/[_-]+/g, ' ').trim()
+  if (!words) return 'Draft'
+  return words.replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -111,22 +99,22 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b border-border bg-surface-container-lowest px-6 py-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-light">
-              <MaterialIcon name="picture_as_pdf" size={22} className="text-primary" />
+          <div className="flex items-start gap-3 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-muted">
+              <MaterialIcon name="picture_as_pdf" size={20} />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="truncate font-headline-lg text-headline-lg text-primary">
+              <DialogTitle className="truncate text-headline-lg text-on-surface">
                 {previewDocument?.file_name ?? document.file_name}
               </DialogTitle>
-              <DialogDescription className="font-body-sm text-body-sm text-muted">
+              <DialogDescription className="text-body-sm text-muted">
                 Document preview
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-low" style={{ height: 'min(60vh, 640px)' }}>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface" style={{ height: 'min(60vh, 640px)' }}>
           {isRefreshingPreviewDocument && !freshDocument && !hasPreviewUrl ? (
             <div className="flex flex-1 items-center justify-center">
               <Loader2 className="h-5 w-5 animate-spin text-muted" />
@@ -176,26 +164,28 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
         <div className="shrink-0 border-t border-border bg-surface-container-lowest px-6 py-4">
           <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Status</div>
-              <Badge className={getStatusColor(previewDocument?.status ?? document.status)}>
-                {previewDocument?.status ?? document.status}
-              </Badge>
+              <div className="mb-1 text-caption-xs text-muted">Status</div>
+              <StatusBadge
+                status={previewDocument?.status ?? document.status}
+                label={formatStatusLabel(previewDocument?.status ?? document.status)}
+                className="normal-case tracking-normal py-0.5 font-semibold"
+              />
             </div>
             <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Size</div>
-              <p className="font-body-sm text-body-sm text-on-surface">
+              <div className="mb-1 text-caption-xs text-muted">Size</div>
+              <p className="text-body-sm tabular-nums text-on-surface">
                 {(previewDocument?.file_size ?? document.file_size)
                   ? formatFileSize(previewDocument?.file_size ?? document.file_size)
                   : 'Unknown'}
               </p>
             </div>
             <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Type</div>
-              <p className="font-body-sm text-body-sm text-on-surface">PDF</p>
+              <div className="mb-1 text-caption-xs text-muted">Type</div>
+              <p className="text-body-sm text-on-surface">PDF</p>
             </div>
             <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Created</div>
-              <p className="font-body-sm text-body-sm text-on-surface">
+              <div className="mb-1 text-caption-xs text-muted">Created</div>
+              <p className="text-body-sm tabular-nums text-on-surface">
                 {(previewDocument?.created_at ?? document.created_at)
                   ? new Date(previewDocument?.created_at ?? document.created_at).toLocaleDateString()
                   : 'Unknown'}
@@ -204,13 +194,17 @@ export function DocumentPreviewModal({ document, isOpen, onClose, pdfPassword }:
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="border border-outline-variant bg-surface-container-lowest text-primary hover:bg-surface"
+            >
               Close
             </Button>
             <Button
               onClick={handleDownload}
               disabled={downloadDocumentMutation.isPending}
-              className="gap-2"
+              className="bg-secondary hover:bg-accent-hover"
             >
               {downloadDocumentMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

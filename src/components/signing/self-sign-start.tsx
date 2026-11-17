@@ -66,7 +66,6 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
             role="button"
             tabIndex={0}
             onClick={() => !isUploading && fileInputRef.current?.click()}
-            onKeyDown={(e) => e.key === 'Enter' && !isUploading && fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault()
@@ -74,16 +73,22 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
               const file = e.dataTransfer.files?.[0]
               if (file) handleUpload(file)
             }}
-            className={`group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-outline-variant bg-surface p-16 transition-all hover:bg-surface-container-low ${
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && !isUploading) {
+                e.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
+            className={`group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-outline-variant bg-surface p-10 transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2 md:p-16 ${
               isUploading ? 'pointer-events-none opacity-60' : ''
             }`}
           >
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/5 transition-transform group-hover:scale-110">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/5">
               <MaterialIcon name="upload_file" size={40} className="text-primary" />
             </div>
             <h3 className="mb-2 font-headline-lg text-headline-lg text-primary">Drop PDF or Word file here</h3>
             <p className="font-body-sm text-body-sm text-muted">
-              or <span className="font-semibold text-status-your-turn underline">click to browse files</span>
+              or <span className="font-semibold text-secondary underline">click to browse files</span>
             </p>
             <input
               ref={fileInputRef}
@@ -112,12 +117,16 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <h2 className="font-headline-lg text-headline-lg text-primary">Select from my documents</h2>
             <div className="relative w-full sm:w-64">
+              <label htmlFor="self-sign-library-search" className="sr-only">
+                Search your documents
+              </label>
               <MaterialIcon
                 name="search"
                 size={20}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
               />
               <Input
+                id="self-sign-library-search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && loadDocuments()}
@@ -138,13 +147,13 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
                   onDocumentSelected(normalizeDocument(doc))
                   router.replace('/dashboard/envelopes/self-sign?step=editor')
                 }}
-                className="group flex items-center gap-4 rounded-xl border border-border bg-white p-4 text-left shadow-sm transition-all hover:border-status-your-turn hover:shadow-md"
+                className="group flex items-center gap-4 rounded-xl border border-border bg-surface-container-lowest p-4 text-left shadow-card transition-colors hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-light">
                   <MaterialIcon name="description" size={24} className="text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-label-sm text-label-sm text-primary group-hover:text-status-your-turn">
+                  <p className="truncate font-label-sm text-label-sm text-primary group-hover:text-secondary">
                     {doc.file_name || 'Document'}
                   </p>
                   <p className="font-caption-xs text-caption-xs text-muted">
@@ -153,14 +162,15 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
                       : 'From your library'}
                   </p>
                 </div>
-                <MaterialIcon
-                  name="chevron_right"
-                  size={20}
-                  className="text-muted opacity-0 transition-opacity group-hover:opacity-100"
-                />
+                <MaterialIcon name="chevron_right" size={20} className="text-muted" />
               </button>
             ))}
           </div>
+          {!loading && documents.length === 0 ? (
+            <p className="font-body-sm text-body-sm text-muted">
+              Search your library, or upload a file above.
+            </p>
+          ) : null}
         </section>
 
         {hasDocuments ? (

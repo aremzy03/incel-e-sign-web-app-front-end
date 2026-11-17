@@ -140,7 +140,9 @@ describe('Envelopes Pages', () => {
 
   it('renders envelopes list page', () => {
     render(<EnvelopesPage />, { wrapper })
-    expect(screen.getByText('Envelopes')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Envelopes' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Manage your document envelopes and track their status')).not.toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search envelopes' })).toBeInTheDocument()
     expect(screen.getByText('Test Envelope')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sign yourself' })).toHaveAttribute(
       'href',

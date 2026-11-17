@@ -4,41 +4,56 @@ import { Loader2 } from 'lucide-react'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import type { Document } from '@/lib/api/documents'
 
 interface DocumentViewDetailsSidebarProps {
   document: Document
   onDownload: () => void
   isDownloading: boolean
+  className?: string
 }
 
-const getStatusColor = (status: string) => {
+function statusBadgeVariant(
+  status: string,
+): 'draft' | 'pending' | 'completed' | 'rejected' | 'outline' {
   switch (status.toLowerCase()) {
     case 'draft':
-      return 'bg-surface-container-low text-body'
+      return 'draft'
     case 'pending':
     case 'sent':
-      return 'bg-info-light text-secondary'
+      return 'pending'
     case 'completed':
     case 'signed':
-      return 'bg-green-100 text-green-800'
+      return 'completed'
     case 'rejected':
-      return 'bg-red-100 text-red-800'
+      return 'rejected'
     default:
-      return 'bg-surface-container-low text-body'
+      return 'outline'
   }
 }
 
+export function DocumentStatusBadge({ status }: { status: string }) {
+  return (
+    <Badge variant={statusBadgeVariant(status)} className="shrink-0 capitalize">
+      {status}
+    </Badge>
+  )
+}
+
 const formatFileSize = (bytes: number): string => {
+  if (!Number.isFinite(bytes) || bytes < 0) return 'Unknown'
   if (bytes === 0) return '0 Bytes'
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const i = Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(k)))
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return 'Unknown'
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -51,53 +66,65 @@ export function DocumentViewDetailsSidebar({
   document,
   onDownload,
   isDownloading,
+  className,
 }: DocumentViewDetailsSidebarProps) {
   return (
-    <aside className="z-20 flex w-[300px] shrink-0 flex-col border-l border-border bg-surface-container-lowest">
-      <div className="border-b border-border p-6">
-        <h3 className="flex items-center gap-2 font-headline-lg text-headline-lg text-primary">
-          <MaterialIcon name="info" size={22} className="text-secondary" />
-          Document Details
-        </h3>
-        <p className="mt-1 font-body-sm text-body-sm text-muted">Metadata and download</p>
+    <aside
+      aria-label="Document details"
+      className={cn(
+        'flex h-[min(16rem,36vh)] w-full min-h-0 shrink-0 flex-col overflow-hidden border-t border-border bg-bg',
+        'md:h-full md:w-[300px] md:border-l md:border-t-0',
+        className,
+      )}
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4">
+        <section className="rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card">
+          <h2 className="text-headline-xl text-on-surface">Document Details</h2>
+          <p className="mt-1.5 text-body-sm text-muted">Metadata and download</p>
+
+          <dl className="mt-6 space-y-5">
+            <div>
+              <dt className="text-label-xs text-muted">File Name</dt>
+              <dd className="mt-1 break-words text-body-sm text-on-surface">{document.file_name}</dd>
+            </div>
+
+            <div>
+              <dt className="text-label-xs text-muted">Status</dt>
+              <dd className="mt-1">
+                <DocumentStatusBadge status={document.status} />
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-label-xs text-muted">File Size</dt>
+              <dd className="mt-1 text-body-sm tabular-nums text-on-surface">
+                {formatFileSize(document.file_size)}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-label-xs text-muted">File Type</dt>
+              <dd className="mt-1 text-body-sm text-on-surface">PDF</dd>
+            </div>
+
+            <div>
+              <dt className="text-label-xs text-muted">Created</dt>
+              <dd className="mt-1 text-body-sm tabular-nums text-on-surface">
+                {document.created_at ? formatDate(document.created_at) : 'Unknown'}
+              </dd>
+            </div>
+          </dl>
+        </section>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-6">
-        <div>
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">File Name</div>
-          <p className="break-all font-body-sm text-body-sm text-on-surface">{document.file_name}</p>
-        </div>
-
-        <div>
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Status</div>
-          <Badge className={getStatusColor(document.status)}>{document.status}</Badge>
-        </div>
-
-        <div>
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">File Size</div>
-          <p className="font-body-sm text-body-sm text-on-surface">{formatFileSize(document.file_size)}</p>
-        </div>
-
-        <div>
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">File Type</div>
-          <p className="font-body-sm text-body-sm text-on-surface">PDF</p>
-        </div>
-
-        <div>
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-muted">Created</div>
-          <p className="font-body-sm text-body-sm text-on-surface">
-            {document.created_at ? formatDate(document.created_at) : 'Unknown'}
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t border-border p-6">
+      <div className="shrink-0 border-t border-border p-4">
         <Button
           onClick={onDownload}
           disabled={isDownloading}
+          aria-busy={isDownloading}
           className="flex w-full items-center justify-center gap-2"
         >
-          {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MaterialIcon name="download" size={18} />}
+          {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MaterialIcon name="download" size={20} />}
           <span>Download</span>
         </Button>
       </div>

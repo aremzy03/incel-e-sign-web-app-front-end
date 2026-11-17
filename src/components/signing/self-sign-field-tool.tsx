@@ -43,7 +43,7 @@ export function SelfSignFieldTool({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center justify-between rounded-xl border border-border bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-secondary',
+        'group flex w-full items-center justify-between rounded-xl border border-border bg-surface-container-lowest p-4 shadow-card transition-colors hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2',
         isDragging && 'opacity-0',
         disabled && 'cursor-not-allowed opacity-50',
         highlighted && 'border-secondary',

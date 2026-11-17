@@ -82,11 +82,14 @@ describe('SelfSignPage', () => {
     expect(screen.getAllByRole('button', { name: /sign & complete/i }).length).toBeGreaterThan(0)
     expect(screen.queryByText(/add recipient/i)).not.toBeInTheDocument()
     expect(screen.getByText('Self-Signing')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /send for signature/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /designation/i })).toBeInTheDocument()
+    expect(screen.queryByText(/live session active/i)).not.toBeInTheDocument()
   })
 
   it('shows validation when no document is uploaded', async () => {
     render(<SelfSignPage />, { wrapper })
-    expect(await screen.findByText(/At least one document is required/i)).toBeInTheDocument()
+    expect((await screen.findAllByText(/At least one document is required/i)).length).toBeGreaterThan(0)
     expect(selfSignAsync).not.toHaveBeenCalled()
   })
 

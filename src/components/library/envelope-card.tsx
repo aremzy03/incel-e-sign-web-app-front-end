@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils'
 import { MaterialIcon } from '@/components/ui/material-icon'
-import { StatusBadge } from './status-badge'
 import { EnvelopeSignerStack } from './envelope-signer-stack'
 import type { EnvelopeSignerStackUser } from './envelope-signer-stack'
 
@@ -28,21 +27,35 @@ interface EnvelopeCardProps {
   className?: string
 }
 
-const variantStyles: Record<EnvelopeCardVariant, string> = {
-  'your-turn':
-    'border-l-4 border-l-status-your-turn bg-primary-light hover:shadow-raised',
-  draft: 'border border-dashed border-outline-variant bg-surface-container-lowest',
-  pending: 'border border-border bg-surface-container-lowest hover:shadow-raised',
-  completed: 'border border-border bg-surface-container-lowest opacity-90 hover:shadow-raised',
-  rejected: 'border border-error/20 bg-error-light/20 hover:shadow-raised',
-  default: 'border border-border bg-surface-container-lowest hover:shadow-raised',
+const statusPillStyles: Record<EnvelopeCardVariant, string> = {
+  'your-turn': 'bg-accent-light text-status-your-turn',
+  draft: 'bg-surface text-status-draft',
+  pending: 'bg-warning-light text-warning',
+  completed: 'bg-success-light text-success',
+  rejected: 'bg-error-light text-error',
+  default: 'bg-surface text-muted',
 }
 
-function getStatusBadgeLabel(status: string, variant: EnvelopeCardVariant): string {
+const statusPill =
+  'inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold normal-case leading-4 tracking-normal'
+
+function formatStatusLabel(status: string, variant: EnvelopeCardVariant): string {
   if (variant === 'your-turn') return 'Your Turn'
-  if (status.toLowerCase().replace(/_/g, '-').includes('self-sign')) return 'Self-Signed'
-  return status
+  const normalized = status.toLowerCase().replace(/_/g, '-')
+  if (normalized.includes('self-sign')) return 'Self-Signed'
+  const words = normalized.replace(/-/g, ' ').trim()
+  if (!words) return status
+  return words.replace(/\b\w/g, (char) => char.toUpperCase())
 }
+
+const focusRing =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2'
+
+const outlineAction =
+  'inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 text-label-sm font-medium text-primary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50'
+
+const authorityAction =
+  'inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-label-sm font-medium text-on-primary transition-transform hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-primary-hover active:translate-y-0 active:scale-100'
 
 export function EnvelopeCard({
   name,
@@ -68,76 +81,52 @@ export function EnvelopeCard({
   return (
     <div
       className={cn(
-        'rounded-xl p-6 shadow-card transition-shadow',
-        variantStyles[variant],
+        'rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card',
         className,
       )}
     >
-      <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-        {/* Left: title, subtitle, metadata */}
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex flex-wrap items-center gap-3">
+          <div className="flex items-start gap-3">
             <h3
-              className={cn(
-                'text-headline-lg font-semibold text-primary',
-                variant === 'rejected' && 'text-status-rejected line-through',
-                variant === 'draft' && 'text-muted',
-              )}
+              className="line-clamp-2 min-w-0 flex-1 break-words text-base font-medium leading-6 text-on-surface"
+              title={name}
             >
               {name}
             </h3>
-            <StatusBadge
-              status={getStatusBadgeLabel(status, variant)}
-              showDot={variant !== 'your-turn'}
-              className={cn(
-                variant === 'your-turn' && 'border border-status-your-turn',
-              )}
-            />
+            <span className={cn(statusPill, 'mt-0.5', statusPillStyles[variant])}>
+              {formatStatusLabel(status, variant)}
+            </span>
           </div>
 
-          {subtitle && (
-            <p
-              className={cn(
-                'mb-3 text-body-sm',
-                variant === 'rejected' ? 'text-status-rejected' : 'text-muted',
-              )}
-            >
-              {subtitle}
-            </p>
-          )}
+          {subtitle && <p className="mt-1.5 text-body-sm text-muted">{subtitle}</p>}
 
-          <div className="flex flex-wrap items-center gap-4 text-caption-xs text-muted">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption-xs text-muted">
             {isCreator ? (
-              <span className="font-medium italic text-primary">Created by you</span>
+              <span className="font-medium text-on-surface">Created by you</span>
             ) : creatorName ? (
-              <span className="flex items-center gap-1">
+              <span className="inline-flex items-center gap-1">
                 <MaterialIcon name="person" size={16} />
                 {creatorName}
               </span>
             ) : null}
 
             {documentCount !== undefined && documentCount > 0 && (
-              <span className="rounded bg-surface-variant px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+              <span className="inline-flex items-center gap-1">
+                <MaterialIcon name="description" size={16} />
                 {documentCount} document{documentCount === 1 ? '' : 's'}
               </span>
             )}
 
             {signerCount !== undefined && signerCount > 0 && (
-              <span className="flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 tabular-nums">
                 <MaterialIcon name="groups" size={16} />
                 {signerCount} signer{signerCount === 1 ? '' : 's'}
               </span>
             )}
 
-            {variant === 'completed' && (
-              <span className="flex items-center gap-1 font-bold text-status-completed">
-                <MaterialIcon name="task_alt" size={16} />
-                Certified
-              </span>
-            )}
-
             {updatedAt && (
-              <span className="flex items-center gap-1">
+              <span className="inline-flex items-center gap-1">
                 <MaterialIcon name="schedule" size={16} />
                 {updatedAt}
               </span>
@@ -145,93 +134,50 @@ export function EnvelopeCard({
           </div>
         </div>
 
-        {/* Right: signer stack + actions */}
-        <div className="flex w-full shrink-0 flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+        <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-3 sm:w-auto">
           {(signers.length > 0 || showProgress) && (
             <div className="flex flex-col items-end gap-2">
               {signers.length > 0 && <EnvelopeSignerStack users={signers} />}
               {showProgress && (
-                <span className="text-caption-xs font-medium text-muted">
+                <span className="text-caption-xs text-muted tabular-nums">
                   {signedCount} / {signerCount} Complete
                 </span>
               )}
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {variant === 'your-turn' && onSign && (
-              <button
-                type="button"
-                onClick={onSign}
-                className="rounded-xl bg-secondary px-8 py-2 text-label-sm font-medium text-on-secondary shadow-md transition-all hover:bg-accent-hover active:scale-95"
-              >
+              <button type="button" onClick={onSign} className={cn(authorityAction, focusRing)}>
                 Sign Now
               </button>
             )}
 
             {variant === 'draft' && onView && (
-              <button
-                type="button"
-                onClick={onView}
-                className="rounded-lg bg-primary px-6 py-2 text-label-sm font-medium text-on-primary transition-all hover:bg-primary-hover"
-              >
+              <button type="button" onClick={onView} className={cn(outlineAction, focusRing)}>
                 View/Edit
               </button>
             )}
 
-            {variant === 'completed' && onView && (
-              <button
-                type="button"
-                onClick={onView}
-                className="flex items-center gap-1 text-label-sm font-medium text-primary transition-colors hover:text-secondary"
-              >
-                Details
-                <MaterialIcon name="chevron_right" size={16} />
-              </button>
-            )}
-
-            {variant === 'rejected' && onView && (
-              <button
-                type="button"
-                onClick={onView}
-                className="flex items-center gap-1 text-label-sm font-medium text-primary transition-colors hover:text-secondary"
-              >
-                Details
-                <MaterialIcon name="chevron_right" size={16} />
-              </button>
-            )}
+            {(variant === 'completed' ||
+              variant === 'rejected' ||
+              variant === 'pending' ||
+              variant === 'default') &&
+              onView && (
+                <button type="button" onClick={onView} className={cn(outlineAction, focusRing)}>
+                  Details
+                  <MaterialIcon name="chevron_right" size={16} />
+                </button>
+              )}
 
             {variant === 'pending' && onRemind && (
               <button
                 type="button"
-                onClick={onRemind}
                 disabled
                 title="Coming soon"
-                className="px-4 text-label-sm font-medium text-secondary opacity-50"
+                className={cn(outlineAction, focusRing)}
               >
                 Remind
-              </button>
-            )}
-
-            {variant === 'pending' && onView && (
-              <button
-                type="button"
-                onClick={onView}
-                className="flex items-center gap-1 text-label-sm font-medium text-primary transition-colors hover:text-secondary"
-              >
-                Details
-                <MaterialIcon name="chevron_right" size={16} />
-              </button>
-            )}
-
-            {variant === 'default' && onView && (
-              <button
-                type="button"
-                onClick={onView}
-                className="flex items-center gap-1 text-label-sm font-medium text-primary transition-colors hover:text-secondary"
-              >
-                Details
-                <MaterialIcon name="chevron_right" size={16} />
               </button>
             )}
 
@@ -239,7 +185,10 @@ export function EnvelopeCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-lg p-2 text-error transition-all hover:bg-error-light"
+                className={cn(
+                  'inline-flex h-10 w-10 items-center justify-center rounded-xl text-error transition-colors hover:bg-error-light',
+                  focusRing,
+                )}
                 aria-label="Delete envelope"
               >
                 <MaterialIcon name="delete" size={20} />

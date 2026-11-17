@@ -7,12 +7,11 @@ import { Button } from '@/components/ui/button'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { ListPaginationControls } from '@/components/list-pagination-controls'
 import {
-  PageHeader,
   AsyncStatePanel,
-  FilterPills,
   SearchField,
   EnvelopeCard,
 } from '@/components/library'
+import { cn } from '@/lib/utils'
 import { useEnvelopes, useDeleteEnvelope } from '@/hooks/useEnvelopes'
 import { useSession } from 'next-auth/react'
 import type { Envelope } from '@/lib/api/envelopes'
@@ -29,6 +28,9 @@ import {
 } from './envelope-card-utils'
 
 const PAGE_SIZE = 10
+
+const outlineActionClass =
+  'border border-outline-variant bg-surface-container-lowest text-primary hover:bg-surface'
 
 type QuickFilter =
   | 'all'
@@ -134,39 +136,51 @@ export default function EnvelopesPage() {
 
   return (
     <div className="mx-auto max-w-max-content-width space-y-6">
-      <PageHeader
-        title="Envelopes"
-        subtitle="Manage your document envelopes and track their status"
-        actions={
-          <>
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/envelopes/self-sign" prefetch={false}>Sign yourself</Link>
-            </Button>
-            <Button asChild className="bg-secondary hover:bg-accent-hover">
-              <Link href="/dashboard/envelopes/create" prefetch={false}>
-                <MaterialIcon name="add" size={18} className="mr-2" />
-                Create Envelope
-              </Link>
-            </Button>
-          </>
-        }
-      />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button variant="outline" asChild className={outlineActionClass}>
+          <Link href="/dashboard/envelopes/self-sign" prefetch={false}>Sign yourself</Link>
+        </Button>
+        <Button asChild>
+          <Link href="/dashboard/envelopes/create" prefetch={false}>
+            <MaterialIcon name="add" size={20} className="mr-2" />
+            Create Envelope
+          </Link>
+        </Button>
+      </div>
 
-      <div className="space-y-4">
-        <FilterPills
-          options={quickFilterOptions}
-          value={quickFilter}
-          onChange={(v) => {
-            setQuickFilter(v as QuickFilter)
-            setPage(1)
-          }}
-          aria-label="Envelope quick filters"
-        />
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-2" role="group" aria-label="Envelope quick filters">
+          {quickFilterOptions.map((option) => {
+            const isActive = quickFilter === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => {
+                  setQuickFilter(option.value)
+                  setPage(1)
+                }}
+                className={cn(
+                  'inline-flex h-10 items-center rounded-xl px-4 text-label-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2',
+                  isActive
+                    ? 'bg-primary text-on-primary'
+                    : 'border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface',
+                )}
+              >
+                {option.label}
+              </button>
+            )
+          })}
+        </div>
 
         <SearchField
+          aria-label="Search envelopes"
           placeholder="Search envelopes, signers, or documents…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          containerClassName="w-full sm:w-72 xl:shrink-0"
+          className="h-10 rounded-xl border-outline-variant bg-transparent py-0 !text-body-base text-on-surface placeholder:text-muted/60"
         />
       </div>
 
@@ -198,7 +212,7 @@ export default function EnvelopesPage() {
           }
           primaryAction={
             hasClientSideFilterMismatch ? (
-              <Button type="button" onClick={() => setQuickFilter('all')}>
+              <Button type="button" variant="outline" className={outlineActionClass} onClick={() => setQuickFilter('all')}>
                 Clear Filter
               </Button>
             ) : (
@@ -209,7 +223,7 @@ export default function EnvelopesPage() {
           }
           secondaryAction={
             hasClientSideFilterMismatch && searchTerm ? (
-              <Button type="button" variant="outline" onClick={() => setSearchTerm('')}>
+              <Button type="button" variant="outline" className={outlineActionClass} onClick={() => setSearchTerm('')}>
                 Clear Search
               </Button>
             ) : undefined
@@ -233,6 +247,7 @@ export default function EnvelopesPage() {
             ))}
           </div>
           <ListPaginationControls
+            className="tabular-nums"
             page={page}
             totalPages={totalPages}
             hasPrevious={Boolean(data?.previous) || page > 1}

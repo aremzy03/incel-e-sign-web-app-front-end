@@ -121,7 +121,7 @@ describe('Documents Integration Tests', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('Documents')).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Upload' })).toBeInTheDocument()
         expect(screen.getAllByText('test-document.pdf').length).toBeGreaterThan(0)
         expect(screen.getAllByText('another-document.pdf').length).toBeGreaterThan(0)
       })
@@ -264,9 +264,13 @@ describe('Documents Integration Tests', () => {
 
       await waitFor(() => {
         expect(screen.getAllByText('test-document.pdf').length).toBeGreaterThan(0)
+        expect(screen.getByRole('heading', { level: 1, name: 'test-document.pdf' })).toBeInTheDocument()
         expect(screen.getByText('Document Details')).toBeInTheDocument()
         expect(screen.getAllByText('draft').length).toBeGreaterThan(0)
-        expect(screen.getByText('Viewing Document')).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Self-Sign' })).toHaveAttribute(
+          'href',
+          '/dashboard/envelopes/self-sign?documentId=1',
+        )
       })
     })
 

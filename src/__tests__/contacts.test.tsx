@@ -10,6 +10,7 @@ jest.mock('axios')
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
   useSearchParams: jest.fn(() => ({ get: jest.fn(() => null) })),
+  usePathname: jest.fn(() => '/dashboard/contacts'),
 }))
 
 jest.mock('@/hooks/useDocuments', () => ({

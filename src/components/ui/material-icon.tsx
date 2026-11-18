@@ -1,110 +1,256 @@
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Archive,
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  Ban,
+  BarChart3,
+  Bell,
+  BellRing,
+  Bold,
+  Calendar,
+  Camera,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  ClipboardCheck,
+  ClipboardList,
+  ClipboardX,
+  Clock,
+  Cloud,
+  CloudOff,
+  Contact,
+  Download,
+  DownloadCloud,
+  Eye,
+  EyeOff,
+  FileDown,
+  FileEdit,
+  FileText,
+  FileUp,
+  Fingerprint,
+  FolderArchive,
+  FolderOpen,
+  Gavel,
+  Globe,
+  GripVertical,
+  HelpCircle,
+  History,
+  Home,
+  Hourglass,
+  Inbox,
+  Info,
+  Italic,
+  KeyRound,
+  Laptop,
+  Layers,
+  LayoutDashboard,
+  LayoutGrid,
+  LifeBuoy,
+  Lightbulb,
+  ListChecks,
+  ListFilter,
+  ListOrdered,
+  Loader2,
+  Lock,
+  LockKeyhole,
+  LogOut,
+  Mail,
+  MailCheck,
+  Menu,
+  Merge,
+  MessageSquare,
+  Minus,
+  MonitorSmartphone,
+  Moon,
+  MoreHorizontal,
+  MoreVertical,
+  Package,
+  Palette,
+  Pencil,
+  PenLine,
+  PenSquare,
+  PenTool,
+  Plus,
+  PlusCircle,
+  RefreshCw,
+  Rows,
+  ScrollText,
+  Search,
+  SearchX,
+  Send,
+  Settings,
+  Shield,
+  ShieldCheck,
+  SlidersHorizontal,
+  Smartphone,
+  Sun,
+  Tablet,
+  Trash2,
+  Type,
+  Upload,
+  UploadCloud,
+  User,
+  UserPlus,
+  Users,
+  UserX,
+  Wrench,
+  X,
+  XCircle,
+  type LucideIcon,
+} from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 
-export type MaterialIconName =
-  | 'add'
-  | 'admin_panel_settings'
-  | 'analytics'
-  | 'apps'
-  | 'archive'
-  | 'arrow_back'
-  | 'arrow_forward'
-  | 'article'
-  | 'assignment_late'
-  | 'block'
-  | 'calendar_today'
-  | 'cancel'
-  | 'check'
-  | 'check_circle'
-  | 'chevron_left'
-  | 'chevron_right'
-  | 'cloud_off'
-  | 'cloud_download'
-  | 'cloud_queue'
-  | 'cloud_upload'
-  | 'contact_support'
-  | 'dashboard'
-  | 'delete'
-  | 'description'
-  | 'devices'
-  | 'download'
-  | 'drag_indicator'
-  | 'draw'
-  | 'edit'
-  | 'edit_document'
-  | 'edit_square'
-  | 'encrypted'
-  | 'error'
-  | 'expand_more'
-  | 'file_download'
-  | 'filter_list'
-  | 'fingerprint'
-  | 'folder_zip'
-  | 'gavel'
-  | 'gesture'
-  | 'grid_view'
-  | 'group'
-  | 'groups'
-  | 'help'
-  | 'help_outline'
-  | 'history'
-  | 'history_edu'
-  | 'home'
-  | 'inbox'
-  | 'info'
-  | 'inventory_2'
-  | 'laptop_mac'
-  | 'layers'
-  | 'language'
-  | 'light_mode'
-  | 'lightbulb'
-  | 'lock'
-  | 'lock_reset'
-  | 'logout'
-  | 'mail'
-  | 'mail_lock'
-  | 'merge'
-  | 'more_horiz'
-  | 'more_vert'
-  | 'notifications'
-  | 'notifications_active'
-  | 'pending'
-  | 'pending_actions'
-  | 'person'
-  | 'person_add'
-  | 'person_off'
-  | 'photo_camera'
-  | 'picture_as_pdf'
-  | 'progress_activity'
-  | 'remove'
-  | 'refresh'
-  | 'schedule'
-  | 'search'
-  | 'security'
-  | 'send'
-  | 'settings'
-  | 'shield'
-  | 'smartphone'
-  | 'style'
-  | 'sync'
-  | 'tablet'
-  | 'table_rows'
-  | 'task_alt'
-  | 'timeline'
-  | 'upload'
-  | 'upload_file'
-  | 'verified'
-  | 'verified_user'
-  | 'visibility'
-  | 'visibility_off'
-  | 'warning'
-  | 'close'
-  | 'comment'
-  | 'cloud_done'
-  | 'menu'
-  | 'dark_mode'
+/**
+ * App icon. The names are the Material Symbols names the app was written
+ * against; each one renders a lucide SVG, so no icon font is downloaded.
+ * Add a name here (and to the union below) before using it.
+ */
+const ICONS = {
+  add: Plus,
+  add_circle: PlusCircle,
+  admin_panel_settings: ShieldCheck,
+  analytics: BarChart3,
+  apps: LayoutGrid,
+  archive: Archive,
+  arrow_back: ArrowLeft,
+  arrow_forward: ArrowRight,
+  article: FileText,
+  assignment_late: ClipboardX,
+  badge: Contact,
+  block: Ban,
+  calendar_today: Calendar,
+  cancel: XCircle,
+  check: Check,
+  check_circle: CheckCircle2,
+  checklist: ListChecks,
+  chevron_left: ChevronLeft,
+  chevron_right: ChevronRight,
+  close: X,
+  cloud_done: Cloud,
+  cloud_download: DownloadCloud,
+  cloud_off: CloudOff,
+  cloud_queue: Cloud,
+  cloud_upload: UploadCloud,
+  comment: MessageSquare,
+  contact_support: LifeBuoy,
+  dark_mode: Moon,
+  dashboard: LayoutDashboard,
+  delete: Trash2,
+  description: FileText,
+  devices: MonitorSmartphone,
+  download: Download,
+  drag_indicator: GripVertical,
+  draw: PenTool,
+  edit: Pencil,
+  edit_document: FileEdit,
+  edit_square: PenSquare,
+  encrypted: LockKeyhole,
+  error: AlertCircle,
+  error_outline: AlertCircle,
+  expand_more: ChevronDown,
+  fact_check: ClipboardCheck,
+  file_download: FileDown,
+  filter_list: ListFilter,
+  fingerprint: Fingerprint,
+  folder_open: FolderOpen,
+  folder_zip: FolderArchive,
+  format_align_center: AlignCenter,
+  format_align_justify: AlignJustify,
+  format_align_left: AlignLeft,
+  format_align_right: AlignRight,
+  format_bold: Bold,
+  format_italic: Italic,
+  format_list_numbered: ListOrdered,
+  gavel: Gavel,
+  gesture: PenLine,
+  grid_view: LayoutGrid,
+  group: Users,
+  group_add: UserPlus,
+  groups: Users,
+  handyman: Wrench,
+  help: HelpCircle,
+  help_outline: HelpCircle,
+  history: History,
+  history_edu: ScrollText,
+  home: Home,
+  hourglass_top: Hourglass,
+  inbox: Inbox,
+  info: Info,
+  inventory_2: Package,
+  language: Globe,
+  laptop_mac: Laptop,
+  layers: Layers,
+  light_mode: Sun,
+  lightbulb: Lightbulb,
+  lock: Lock,
+  lock_reset: KeyRound,
+  logout: LogOut,
+  mail: Mail,
+  mail_lock: MailCheck,
+  menu: Menu,
+  merge: Merge,
+  more_horiz: MoreHorizontal,
+  more_vert: MoreVertical,
+  notifications: Bell,
+  notifications_active: BellRing,
+  pdf: FileText,
+  pending: Clock,
+  pending_actions: ClipboardList,
+  person: User,
+  person_add: UserPlus,
+  person_off: UserX,
+  photo_camera: Camera,
+  picture_as_pdf: FileText,
+  progress_activity: Loader2,
+  refresh: RefreshCw,
+  remove: Minus,
+  schedule: Clock,
+  search: Search,
+  search_off: SearchX,
+  security: Shield,
+  send: Send,
+  settings: Settings,
+  shield: Shield,
+  smartphone: Smartphone,
+  style: Palette,
+  sync: RefreshCw,
+  table_rows: Rows,
+  tablet: Tablet,
+  task_alt: CheckCircle2,
+  text_fields: Type,
+  timeline: Activity,
+  tune: SlidersHorizontal,
+  upload: Upload,
+  upload_file: FileUp,
+  verified: BadgeCheck,
+  verified_user: ShieldCheck,
+  visibility: Eye,
+  visibility_off: EyeOff,
+  warning: AlertTriangle,
+} satisfies Record<string, LucideIcon>
+
+export type MaterialIconName = keyof typeof ICONS
+
+/**
+ * Icons whose `fill` variant reads as a solid disc with a knocked-out mark.
+ * Other icons ignore `fill`: a filled outline glyph would hide its own detail.
+ */
+const FILLABLE = new Set<string>(['check_circle', 'task_alt', 'cancel', 'error', 'error_outline', 'info', 'help', 'help_outline'])
 
 interface MaterialIconProps {
-  name: MaterialIconName | string
+  name: MaterialIconName | (string & {})
   fill?: boolean
   className?: string
   size?: number
@@ -120,21 +266,27 @@ export function MaterialIcon({
   'aria-hidden': ariaHidden = true,
   'aria-label': ariaLabel,
 }: MaterialIconProps) {
+  const Icon: LucideIcon = (ICONS as Record<string, LucideIcon>)[name] ?? Circle
+  if (process.env.NODE_ENV !== 'production' && !(name in ICONS)) {
+    console.warn(`MaterialIcon: no lucide mapping for "${name}"`)
+  }
+  const solid = fill && FILLABLE.has(name)
+
   return (
-    <span
-      className={cn('material-symbols-outlined', className)}
-      style={{
-        fontFamily: "'Material Symbols Outlined Variable', 'Material Symbols Outlined'",
-        fontVariationSettings: `'FILL' ${fill ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' ${size}`,
-        fontSize: size,
-        width: size,
-        height: size,
-        lineHeight: 1,
-      }}
-      aria-hidden={ariaHidden}
+    <Icon
+      className={cn('inline-block shrink-0 align-middle', className)}
+      // Material glyphs sit in a square with built-in padding; lucide fills its box.
+      // 0.85 of the requested size keeps the visual weight the layouts were tuned for.
+      width={Math.round(size * 0.85)}
+      height={Math.round(size * 0.85)}
+      strokeWidth={2}
+      fill={solid ? 'currentColor' : 'none'}
+      // On a solid disc, the inner mark is drawn in the surface colour.
+      stroke={solid ? 'var(--color-surface-container-lowest)' : 'currentColor'}
+      style={{ margin: Math.round(size * 0.075) }}
+      aria-hidden={ariaLabel ? undefined : ariaHidden}
       aria-label={ariaLabel}
-    >
-      {name}
-    </span>
+      role={ariaLabel ? 'img' : undefined}
+    />
   )
 }

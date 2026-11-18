@@ -28,11 +28,11 @@ interface EnvelopeCardProps {
 }
 
 const statusPillStyles: Record<EnvelopeCardVariant, string> = {
-  'your-turn': 'bg-accent-light text-status-your-turn',
-  draft: 'bg-surface text-status-draft',
-  pending: 'bg-warning-light text-warning',
-  completed: 'bg-success-light text-success',
-  rejected: 'bg-error-light text-error',
+  'your-turn': 'bg-accent-light text-your-turn-text',
+  draft: 'bg-surface text-status-draft-text',
+  pending: 'bg-warning-light text-warning-text',
+  completed: 'bg-success-light text-success-text',
+  rejected: 'bg-error-light text-error-text',
   default: 'bg-surface text-muted',
 }
 

@@ -17,7 +17,7 @@ export default function GlobalRouteError({
   }, [error])
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-6">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-6">
       <AsyncStatePanel
         variant="error"
         title="Something went wrong"
@@ -33,6 +33,6 @@ export default function GlobalRouteError({
           </Button>
         }
       />
-    </div>
+    </main>
   )
 }

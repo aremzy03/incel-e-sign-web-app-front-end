@@ -1,5 +1,6 @@
 'use client'
 
+import { useInitialsChoice } from '@/hooks/signing/useInitialsChoice'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
@@ -7,8 +8,10 @@ import { useMutation } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getUserById, type User } from '@/lib/api/users'
-import { mapToReusableSignature, uploadUserSignature } from '@/lib/api/signatures'
+import { mapToReusableSignature, saveRecipientText, uploadUserSignature } from '@/lib/api/signatures'
+import { textEditErrorCopy, type AddTextOp } from '@/lib/api/documents'
 import { getApiBaseUrl } from '@/lib/env'
+import { isSavedText, textIsDrawable } from '@/lib/pdf-edit/fonts'
 import { scrollToSigningTarget, type SigningFieldChecklistItem } from '@/lib/signing/signing-field-checklist'
 import { useAuthReady } from '@/hooks/useAuthReady'
 import { useSigningView } from '@/hooks/useSigningView'
@@ -38,6 +41,7 @@ import { SigningStatusDeclined } from '@/components/signing/signing-status-decli
 import { SigningStatusCancelled } from '@/components/signing/signing-status-cancelled'
 import { SigningFrozenEnvelopeAlert } from '@/components/signing/signing-frozen-envelope-alert'
 import { SigningDocumentViewer } from '@/components/signing/signing-document-viewer'
+import { SigningPageTextLayer } from '@/components/signing/signing-page-text-layer'
 import { SigningFieldsSidebar } from '@/components/signing/signing-fields-sidebar'
 import { SigningMobileSheet } from '@/components/signing/signing-mobile-sheet'
 import { SigningSignFooter } from '@/components/signing/signing-sign-footer'
@@ -125,6 +129,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const password = usePdfPasswordDialog()
   const coords = useSigningCoordinates()
   const fieldState = useSigningFieldValues()
+  const [initialsChoice, setInitialsChoice] = useInitialsChoice()
   const documentSectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const [previewSignerId, setPreviewSignerId] = useState<string | null>(null)
@@ -143,6 +148,11 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const [zoom, setZoom] = useState(SIGNING_ZOOM_DEFAULT)
   const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null)
   const [pageIndicator, setPageIndicator] = useState({ current: 1, total: 1 })
+  const [textOps, setTextOps] = useState<Array<AddTextOp & { documentId: string }>>([])
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null)
+  const [addTextMode, setAddTextMode] = useState(false)
+  const [savingText, setSavingText] = useState(false)
+  const [textRotated, setTextRotated] = useState(false)
 
   const {
     envelope,
@@ -256,6 +266,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     supportsDecline: isDashboard || !!token,
     supportsFieldSave: isDashboard || !!token,
     token,
+    initialsChoice,
     onDeclineSuccess: () => goToStatus('declined'),
   })
 
@@ -441,13 +452,60 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     }
   }, [previewSignerId])
 
+  const saveSignerText = useCallback(async () => {
+    if (!envelopeId) return false
+    const invalid = textOps.find((op) => isSavedText(op.text) && !textIsDrawable(op.text))
+    if (invalid) {
+      setSelectedTextId(invalid.opId)
+      toast.error('This font can’t draw one of the characters in a text box.')
+      return false
+    }
+    const drawable = textOps.filter((op) => isSavedText(op.text))
+    if (drawable.length === 0) return true
+    const byDocument = new Map<string, AddTextOp[]>()
+    for (const op of drawable) {
+      const { documentId, ...rest } = op
+      const list = byDocument.get(documentId) ?? []
+      list.push(rest)
+      byDocument.set(documentId, list)
+    }
+    setSavingText(true)
+    try {
+      for (const [documentId, ops] of byDocument) {
+        const baseFileUrl = envelopeDocuments.find((doc) => doc.document === documentId)?.document_file_url
+        await saveRecipientText(envelopeId, documentId, ops, { token, baseFileUrl })
+      }
+      setTextOps([])
+      setSelectedTextId(null)
+      setAddTextMode(false)
+      await refetchEnvelope()
+      toast.success('Text is now part of the page.')
+      return true
+    } catch (error) {
+      const copy = textEditErrorCopy(error)
+      if (copy.reason === 'rotated_pages') {
+        setTextRotated(true)
+        setTextOps([])
+        setAddTextMode(false)
+      }
+      toast.error(copy.message)
+      return false
+    } finally {
+      setSavingText(false)
+    }
+  }, [envelopeDocuments, envelopeId, refetchEnvelope, textOps, token])
+
   const handleSignDocument = useCallback(async () => {
     if (!progress.canComplete) {
       toast.error(`Complete ${progress.remainingCount} remaining field${progress.remainingCount === 1 ? '' : 's'}`)
       return
     }
+    if (textOps.some((op) => isSavedText(op.text))) {
+      const saved = await saveSignerText()
+      if (!saved) return
+    }
     await signingSubmit.submitSign()
-  }, [progress.canComplete, progress.remainingCount, signingSubmit])
+  }, [progress.canComplete, progress.remainingCount, saveSignerText, signingSubmit, textOps])
 
   const handleFieldSelect = useCallback((item: SigningFieldChecklistItem) => {
     setFocusedTargetId(item.id)
@@ -472,6 +530,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   }, [])
 
   const isSignStep = view.kind === 'step' && view.step === 'sign'
+  const recipientTextEnabled = Boolean(envelope?.allow_recipient_text) && !textRotated && isSignStep
   const needsDocuments = isSignStep
 
   const documentTabs = useMemo(
@@ -502,6 +561,12 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   ) : undefined
 
   const effectiveSignerRecord = effectiveUserId ? signerDetails[String(effectiveUserId)] : undefined
+  const hasMyInitialsFields = !!envelope?.fields?.some(
+    (f) => f.type === 'initials' && f.assigned_signer === effectiveUserId && !(f.prefill_value ?? '').trim(),
+  )
+  const initialsPicker = hasMyInitialsFields
+    ? { fullName: effectiveSignerRecord?.full_name, choice: initialsChoice, onChange: setInitialsChoice }
+    : null
   const effectiveSignerName =
     (token && (recipientData?.full_name || effectiveSignerRecord?.full_name)) ||
     session?.user?.full_name ||
@@ -732,9 +797,9 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
   const isEnvelopeFullyComplete = (envelope.status || '').toLowerCase().includes('complete')
 
   const mismatchBanner = isAccountMismatch ? (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-950">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-warning/40 bg-warning-light/60 px-4 py-2.5 text-sm text-warning-text">
       <div className="flex items-center gap-2">
-        <MaterialIcon name="warning" className="text-amber-600 shrink-0" size={20} />
+        <MaterialIcon name="warning" className="text-warning-text shrink-0" size={20} />
         <span>
           Signed in as <strong>{session?.user?.email}</strong>, but this signing request is for <strong>{recipientEmail}</strong>.
         </span>
@@ -743,7 +808,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
         <Button
           size="sm"
           variant="outline"
-          className="h-8 border-amber-300 bg-amber-100 text-xs font-medium text-amber-950 hover:bg-amber-200"
+          className="h-8 border-warning/40 bg-warning-light text-xs font-medium text-warning-text hover:bg-warning-light/80"
           onClick={() => signOut({ callbackUrl: window.location.href })}
         >
           Switch Account
@@ -847,6 +912,11 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
 
     return (
       <>
+        {textRotated ? (
+          <p className="border-b border-outline-variant bg-surface-container px-4 py-2 text-label-sm text-on-surface">
+            This PDF has a rotated page, so text can’t be added. You can still sign the placed fields.
+          </p>
+        ) : null}
         <div
           className="flex min-h-0 flex-1 overflow-hidden pb-[72px]"
           aria-live="polite"
@@ -896,10 +966,41 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
               setSelected={setSelected}
               onClearPreview={handleClearPreview}
               zoom={zoom}
+              initialsChoice={initialsChoice}
               focusedTargetId={focusedTargetId}
               selectedFieldKey={selectedFieldKey}
               documentSectionRefs={documentSectionRefs}
               onPageIndicatorChange={handlePageIndicatorChange}
+              renderPageOverlay={
+                recipientTextEnabled
+                  ? (documentId, pageNo) => (
+                      <SigningPageTextLayer
+                        pageNo={pageNo}
+                        ops={textOps.filter((op) => op.documentId === documentId && op.page === pageNo)}
+                        dims={coords.pageDims[documentId]?.[pageNo]}
+                        selectedId={selectedTextId}
+                        placing={addTextMode}
+                        // Pages render at the zoomed size (no CSS transform), so pointer deltas are 1:1.
+                        pointerScale={1}
+                        onSelect={setSelectedTextId}
+                        onCreate={(op) => {
+                          setTextOps((current) => [...current, { ...op, documentId }])
+                          // Select the new box so the signer can type straight away.
+                          setSelectedTextId(op.opId)
+                        }}
+                        onChange={(opId, patch) =>
+                          setTextOps((current) =>
+                            current.map((op) => (op.opId === opId ? { ...op, ...patch } : op)),
+                          )
+                        }
+                        onDelete={(opId) => {
+                          setTextOps((current) => current.filter((op) => op.opId !== opId))
+                          setSelectedTextId((current) => (current === opId ? null : current))
+                        }}
+                      />
+                    )
+                  : undefined
+              }
             />
           )}
           <SigningFieldsSidebar
@@ -914,6 +1015,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             onUploadClick={() => setIsUploadModalOpen(true)}
             isUploading={uploadSignatureMutation.isPending}
             manageHref={isDashboard ? '/dashboard/signatures' : undefined}
+            initials={initialsPicker}
           />
           <SigningMobileSheet
             open={isMobileSheetOpen}
@@ -928,6 +1030,7 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
             onSelectSignature={setSelectedSignature}
             onUploadClick={() => setIsUploadModalOpen(true)}
             isUploading={uploadSignatureMutation.isPending}
+            initials={initialsPicker}
           />
         </div>
 
@@ -936,9 +1039,16 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
           totalCount={progress.totalFields || 1}
           canComplete={progress.canComplete}
           remainingCount={progress.remainingCount}
-          isSubmitting={signingSubmit.isSigningInFlight}
+          isSubmitting={signingSubmit.isSigningInFlight || savingText}
           onDecline={() => setIsDeclineDialogOpen(true)}
           onComplete={handleSignDocument}
+          onSaveText={recipientTextEnabled ? () => void saveSignerText() : undefined}
+          canSaveText={textOps.some((op) => isSavedText(op.text))}
+          savingText={savingText}
+          addTextMode={addTextMode}
+          onToggleAddText={
+            recipientTextEnabled ? () => setAddTextMode((current) => !current) : undefined
+          }
         />
       </>
     )

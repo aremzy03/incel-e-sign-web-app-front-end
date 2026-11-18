@@ -269,7 +269,7 @@ describe('Documents Integration Tests', () => {
         expect(screen.getAllByText('draft').length).toBeGreaterThan(0)
         expect(screen.getByRole('link', { name: 'Self-Sign' })).toHaveAttribute(
           'href',
-          '/dashboard/envelopes/self-sign?documentId=1',
+          '/dashboard/documents/1/edit?tools=sign',
         )
       })
     })

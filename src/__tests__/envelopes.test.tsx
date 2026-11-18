@@ -7,6 +7,7 @@ import EnvelopeDetailPage from '@/app/dashboard/envelopes/[id]/page'
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useParams: jest.fn(() => ({ id: 'env-1' })),
+  usePathname: jest.fn(() => '/dashboard/envelopes/env-1'),
   useSearchParams: jest.fn(() => ({
     get: jest.fn(() => null),
     has: jest.fn(() => false),

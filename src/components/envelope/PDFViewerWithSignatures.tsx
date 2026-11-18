@@ -240,7 +240,7 @@ export function PDFViewerWithSignatures({
     return (
       <Card className="w-full">
         <CardContent className="p-8 text-center">
-          <div className="text-red-600 mb-4">
+          <div className="text-error-text mb-4">
             <div className="text-lg font-semibold">Error Loading Document</div>
             <div className="text-sm">{error}</div>
           </div>

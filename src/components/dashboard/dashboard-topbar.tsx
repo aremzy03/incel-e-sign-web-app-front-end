@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import { GlobalSearch } from './global-search'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { NotificationDropdown } from './notification-dropdown'
@@ -39,9 +41,23 @@ export function DashboardTopbar({
   onNotificationsOpen,
 }: DashboardTopbarProps) {
   const pageTitle = getPageTitle(pathname, navItems)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-30 flex h-topbar-height shrink-0 items-center gap-4 border-b border-border bg-surface-container-lowest px-4 lg:px-8">
+      {mobileSearchOpen ? (
+        <div className="absolute inset-0 z-40 flex items-center gap-2 bg-surface-container-lowest px-3 sm:hidden">
+          <GlobalSearch className="flex-1" autoFocus onDone={() => setMobileSearchOpen(false)} />
+          <button
+            type="button"
+            onClick={() => setMobileSearchOpen(false)}
+            className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-low"
+            aria-label="Close search"
+          >
+            <MaterialIcon name="close" size={22} />
+          </button>
+        </div>
+      ) : null}
       <button
         type="button"
         onClick={onMenuOpen}
@@ -54,19 +70,15 @@ export function DashboardTopbar({
       <h1 className="hidden text-headline-xl font-semibold text-on-surface lg:block">{pageTitle}</h1>
 
       <div className="flex flex-1 items-center justify-end gap-3 lg:gap-4">
-        <div className="relative hidden max-w-md flex-1 sm:block">
-          <MaterialIcon
-            name="search"
-            size={20}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
-          />
-          <input
-            type="search"
-            placeholder="Search documents, envelopes..."
-            className="w-full rounded-full border border-border bg-surface py-2.5 pl-11 pr-4 text-sm text-on-surface placeholder:text-muted focus:border-status-your-turn focus:outline-none focus:ring-2 focus:ring-status-your-turn/20"
-            aria-label="Search"
-          />
-        </div>
+        <GlobalSearch className="hidden max-w-md flex-1 sm:block" />
+        <button
+          type="button"
+          onClick={() => setMobileSearchOpen(true)}
+          className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-low sm:hidden"
+          aria-label="Search"
+        >
+          <MaterialIcon name="search" size={22} />
+        </button>
 
         <NotificationDropdown
           notifications={notifications}

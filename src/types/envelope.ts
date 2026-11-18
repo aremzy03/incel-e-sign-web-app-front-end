@@ -1,4 +1,6 @@
+/** 'text' is retired: still read from existing envelopes, never created. */
 export type FieldType = 'signature' | 'initials' | 'date' | 'text' | 'designation'
+export type CreatableFieldType = Exclude<FieldType, 'text'>
 
 export interface FieldPosition {
   id: string
@@ -42,7 +44,7 @@ export interface DocumentUpload {
 }
 
 export interface FieldPaletteItem {
-  type: FieldType
+  type: CreatableFieldType
   label: string
   icon: string
   description: string
@@ -59,19 +61,13 @@ export const FIELD_TYPES: FieldPaletteItem[] = [
     type: 'initials',
     label: 'Initials',
     icon: '🖋️',
-    description: 'Initials field'
+    description: 'Signer picks the style and handwriting font'
   },
   {
     type: 'date',
-    label: 'Date',
+    label: 'Date signed',
     icon: '📅',
-    description: 'Date field'
-  },
-  {
-    type: 'text',
-    label: 'Text',
-    icon: '📝',
-    description: 'Text input field'
+    description: 'Filled with the date the signer signs'
   },
   {
     type: 'designation',

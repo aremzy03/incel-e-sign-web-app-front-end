@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AsyncStatePanel } from '@/components/library'
 import { cn } from '@/lib/utils'
 import { ChevronUp, ChevronDown } from 'lucide-react'
+import type { InitialsChoice } from '@/lib/fields/stamps'
 import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
 import { Document as DocumentType } from '@/lib/api/documents'
@@ -54,6 +55,30 @@ interface VerticalPDFViewerProps {
   onActivePageKeyChange?: (pageKey: string) => void
   /** View-only mode — no drop zones or field placement affordances. */
   readOnly?: boolean
+  /** Initials preview style/font (self-sign: the signer's own choice). */
+  initialsChoice?: InitialsChoice
+  /**
+   * Extra layer drawn over each page, under the field boxes (e.g. added text).
+   * Sizes are the rendered page in CSS px and the PDF page in points.
+   */
+  renderPageOverlay?: (page: PageOverlayInfo) => React.ReactNode
+  /**
+   * Size pages to fill the canvas width (like a browser PDF viewer); `viewerScale`
+   * then zooms from that fit. Field positions must be scaled by the caller using
+   * `onScaleChange`.
+   */
+  fitToWidth?: boolean
+  /** Rendered CSS px per PDF point, reported whenever it changes. */
+  onScaleChange?: (scale: number) => void
+}
+
+export interface PageOverlayInfo {
+  documentId: string
+  pageNumber: number
+  widthPx: number
+  heightPx: number
+  widthPt: number
+  heightPt: number
 }
 
 interface DocumentPageInfo {
@@ -113,6 +138,10 @@ export function VerticalPDFViewer({
   activePageKey,
   onActivePageKeyChange,
   readOnly = false,
+  initialsChoice,
+  renderPageOverlay,
+  fitToWidth = false,
+  onScaleChange,
 }: VerticalPDFViewerProps) {
   const { data: session } = useSession()
   const password = usePdfPasswordDialog()
@@ -125,7 +154,35 @@ export function VerticalPDFViewer({
   const [previewFallbackDocIds, setPreviewFallbackDocIds] = useState<Set<string>>(() => new Set())
   const [retryNonce, setRetryNonce] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const scale = (editorLayout ? 1.2 : 1) * viewerScale
+  // Page sizes in PDF points (scale-independent), from each page's viewport at scale 1.
+  const [pageSizesPt, setPageSizesPt] = useState<Record<string, { width: number; height: number }>>({})
+  const [availableWidth, setAvailableWidth] = useState(0)
+
+  useLayoutEffect(() => {
+    if (!fitToWidth) return
+    const node = containerRef.current
+    if (!node) return
+    const measure = () => {
+      const styles = getComputedStyle(node)
+      const inner = node.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight)
+      setAvailableWidth((current) => (Math.abs(current - inner) < 1 ? current : Math.max(200, inner)))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [fitToWidth])
+
+  const widestPagePt = useMemo(
+    () => Object.values(pageSizesPt).reduce((max, size) => Math.max(max, size.width), 0) || 595,
+    [pageSizesPt],
+  )
+  const baseScale = fitToWidth && availableWidth > 0 ? availableWidth / widestPagePt : editorLayout ? 1.2 : 1
+  const scale = baseScale * viewerScale
+
+  useEffect(() => {
+    onScaleChange?.(scale)
+  }, [scale, onScaleChange])
 
   const accessToken =
     (session?.accessToken as string | undefined) ?? getCachedAccessToken() ?? undefined
@@ -251,6 +308,13 @@ export function VerticalPDFViewer({
 
   const onPageLoadSuccess = useCallback((documentId: string, pageNumber: number, page: any) => {
     if (page) {
+      const base = page.getViewport({ scale: 1 })
+      setPageSizesPt((prev) => {
+        const key = `${documentId}-${pageNumber}`
+        const existing = prev[key]
+        if (existing && existing.width === base.width && existing.height === base.height) return prev
+        return { ...prev, [key]: { width: base.width, height: base.height } }
+      })
       const { width, height } = page.getViewport({ scale })
       setPageDimensions(prev => ({
         ...prev,
@@ -346,7 +410,7 @@ export function VerticalPDFViewer({
       }`}
     >
       {!editorLayout && (
-        <div className="flex shrink-0 items-center justify-between border-b bg-white/80 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b bg-surface-container-lowest/80 px-4 py-3">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-on-surface">Document Preview</h3>
             <span className="text-sm text-muted">
@@ -412,7 +476,7 @@ export function VerticalPDFViewer({
             />
           </div>
         ) : (
-        <div className="flex flex-col items-center gap-6">
+        <div className={cn('flex flex-col gap-6', fitToWidth ? 'items-start' : 'items-center')}>
         {validDocuments.map((document) => {
           const usesPreviewFallback = previewFallbackDocIds.has(document.id)
           const directUrl = getDirectDocumentFileUrl(document)
@@ -458,7 +522,7 @@ export function VerticalPDFViewer({
               onPassword={password.onPassword as any}
               loading=""
               {...(pagePdfOptions ? { options: pagePdfOptions } : {})}
-              className="flex w-full flex-col items-center gap-6"
+              className={cn('flex w-full flex-col gap-6', fitToWidth ? 'items-start' : 'items-center')}
             >
               {numPages != null &&
                 Array.from({ length: numPages }, (_, index) => {
@@ -471,14 +535,14 @@ export function VerticalPDFViewer({
                   }
                 const pageKey = `${pageInfo.documentId}-${pageInfo.pageNumber}`
                 const currentPageDimensions = pageDimensions[pageKey]
-                const pageWidth =
-                  actualPDFDimensions[pageKey]?.width ||
-                  currentPageDimensions?.width ||
-                  595 * scale
-                const pageHeight =
-                  actualPDFDimensions[pageKey]?.height ||
-                  currentPageDimensions?.height ||
-                  842 * scale
+                const sizePt = pageSizesPt[pageKey]
+                // Fit-to-width follows the live scale; measured sizes would lag behind it.
+                const pageWidth = fitToWidth
+                  ? (sizePt?.width ?? 595) * scale
+                  : actualPDFDimensions[pageKey]?.width || currentPageDimensions?.width || 595 * scale
+                const pageHeight = fitToWidth
+                  ? (sizePt?.height ?? 842) * scale
+                  : actualPDFDimensions[pageKey]?.height || currentPageDimensions?.height || 842 * scale
                 const fieldsForPage = Object.values(fieldPositions[pageInfo.documentId] || {}).filter(
                   (field) => Number(field.page) === pageInfo.pageNumber,
                 )
@@ -488,12 +552,13 @@ export function VerticalPDFViewer({
                     key={pageKey}
                     data-scroll-page-key={pageKey}
                     className={cn(
-                      'relative w-full scroll-mt-4',
-                      editorLayout ? 'max-w-[850px]' : 'max-w-4xl',
+                      'relative scroll-mt-4',
+                      fitToWidth ? 'w-max min-w-full' : 'w-full',
+                      fitToWidth ? 'max-w-none' : editorLayout ? 'max-w-[850px]' : 'max-w-4xl',
                     )}
                   >
                     {pageInfo.pageNumber === 1 && !editorLayout && (
-                      <Card className="mb-3 shadow-none border border-border bg-white/90">
+                      <Card className="mb-3 shadow-none border border-border bg-surface-container-lowest/90">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-on-surface">
                             {pageInfo.documentName}
@@ -502,7 +567,7 @@ export function VerticalPDFViewer({
                       </Card>
                     )}
 
-                    <div className="relative inline-flex w-full justify-center z-0">
+                    <div className={cn('relative z-0 w-full justify-center', fitToWidth ? 'flex' : 'inline-flex')}>
                       <div
                         className={cn(
                           editorLayout && readOnly && 'pdf-page-frame-readonly',
@@ -552,6 +617,19 @@ export function VerticalPDFViewer({
                               )}
                             </div>
 
+                            {renderPageOverlay ? (
+                              <div className="pointer-events-none absolute inset-0 z-[500]">
+                                {renderPageOverlay({
+                                  documentId: pageInfo.documentId,
+                                  pageNumber: pageInfo.pageNumber,
+                                  widthPx: pageWidth,
+                                  heightPx: pageHeight,
+                                  widthPt: pageWidth / scale,
+                                  heightPt: pageHeight / scale,
+                                })}
+                              </div>
+                            ) : null}
+
                             {!readOnly && (
                               <div className="absolute inset-0 pointer-events-none z-[999]">
                                 {fieldsForPage.map((field) => (
@@ -566,6 +644,7 @@ export function VerticalPDFViewer({
                                     maxWidth={pageWidth}
                                     maxHeight={pageHeight}
                                     variant={editorLayout ? 'editor' : 'default'}
+                                    initialsChoice={initialsChoice}
                                   />
                                 ))}
                               </div>

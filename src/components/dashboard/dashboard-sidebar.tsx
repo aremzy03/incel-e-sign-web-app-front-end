@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MaterialIcon } from '@/components/ui/material-icon'
+import { BrandMark } from '@/components/ui/incel-logo'
 import { cn } from '@/lib/utils'
 import {
   type DashboardNavItem,
@@ -28,16 +29,11 @@ export function DashboardSidebar({ navItems, className, onNavigate }: DashboardS
     >
       {/* Logo */}
       <div className="flex items-center gap-3 border-b border-primary-hover px-6 py-5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/E%20sign%20logo.svg"
-          alt="INCEL E-Sign"
-          className="h-10 w-10 object-contain"
-        />
+        <BrandMark size={40} tile="always" />
         <div className="min-w-0 flex-col">
-          <span className="block truncate text-sm font-bold text-on-primary">Incel E-Sign</span>
+          <span className="block truncate text-sm font-bold text-on-primary">INCEL E-Sign</span>
           <span className="block truncate text-xs text-on-primary-container">
-            Legal Authority
+            Incel Group
           </span>
         </div>
       </div>

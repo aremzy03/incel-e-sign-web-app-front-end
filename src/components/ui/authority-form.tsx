@@ -162,7 +162,7 @@ const inputVariantConfig = {
     invalid: 'border-error-500 focus:border-error-600 focus:ring-error-500',
   },
   minimal: {
-    base: 'border-border focus:border-outline focus:ring-gray-400',
+    base: 'border-border focus:border-outline focus:ring-status-your-turn',
     valid: 'border-success-400 focus:border-success-500 focus:ring-success-400',
     invalid: 'border-error-400 focus:border-error-500 focus:ring-error-400',
   },
@@ -213,7 +213,7 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
           ref={ref}
           type={inputType}
           className={cn(
-            'flex w-full rounded-xl border bg-white shadow-sm transition-all duration-normal ease-authority-ease',
+            'flex w-full rounded-xl border bg-surface-container-lowest shadow-sm transition-all duration-normal ease-authority-ease',
             'focus:outline-none focus:ring-2 focus:ring-status-your-turn/20 focus:border-status-your-turn',
             'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface',
             'placeholder:text-muted font-body',
@@ -308,7 +308,7 @@ export const FormTextarea = React.forwardRef<HTMLTextAreaElement, FormTextareaPr
         <textarea
           ref={ref}
           className={cn(
-            'flex min-h-[80px] w-full rounded-lg border bg-white px-4 py-3 text-sm shadow-sm transition-all duration-normal ease-authority-ease',
+            'flex min-h-[80px] w-full rounded-lg border bg-surface-container-lowest px-4 py-3 text-sm shadow-sm transition-all duration-normal ease-authority-ease',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
             'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface',
             'placeholder:text-muted font-body',
@@ -362,11 +362,11 @@ const messageVariantConfig = {
     icon: <AlertCircle className="w-4 h-4" />,
   },
   success: {
-    className: 'text-success',
+    className: 'text-success-text',
     icon: <CheckCircle2 className="w-4 h-4" />,
   },
   warning: {
-    className: 'text-warning',
+    className: 'text-warning-text',
     icon: <AlertCircle className="w-4 h-4" />,
   },
 } as const;
@@ -476,7 +476,7 @@ export function SignatureField({
             <p className="text-sm font-medium text-success-700">
               Signed by {signerName || 'User'}
             </p>
-            <p className="text-xs text-success mt-1">
+            <p className="text-xs text-success-text mt-1">
               Click to view or modify signature
             </p>
           </div>

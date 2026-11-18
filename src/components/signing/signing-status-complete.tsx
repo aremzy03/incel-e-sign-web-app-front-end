@@ -28,8 +28,8 @@ export function SigningStatusComplete({
       <canvas ref={canvasRef} className="confetti-canvas" aria-hidden />
       <div className="relative z-20 w-full max-w-[600px] text-center">
         <div className="relative mb-8 flex justify-center">
-          <div className="success-checkmark-bounce flex h-24 w-24 items-center justify-center rounded-full bg-success-light">
-            <MaterialIcon name="check_circle" fill size={48} className="text-status-completed" />
+          <div className="success-checkmark-settle flex h-24 w-24 items-center justify-center rounded-full bg-success-light">
+            <MaterialIcon name="check_circle" fill size={48} className="text-success-text" />
           </div>
         </div>
         <h1 className="mb-3 font-headline-2xl text-headline-2xl text-primary">

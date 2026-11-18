@@ -197,7 +197,7 @@ describe('Authentication Integration Tests', () => {
         </TestWrapper>
       )
 
-      expect(screen.getByText('Incel E-Sign')).toBeInTheDocument()
+      expect(screen.getByText('INCEL E-Sign')).toBeInTheDocument()
       expect(screen.getByText('Create Your Account')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('First name')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Last name')).toBeInTheDocument()

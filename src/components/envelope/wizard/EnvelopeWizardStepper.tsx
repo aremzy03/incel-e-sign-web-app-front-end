@@ -37,7 +37,7 @@ export function EnvelopeWizardStepper({
             >
               <span
                 className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold',
+                  'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                   isActive && 'bg-secondary text-on-secondary',
                   isComplete && 'bg-secondary text-on-secondary',
                   !isActive && !isComplete && 'bg-surface-container text-on-surface-variant',
@@ -73,9 +73,9 @@ export function EnvelopeWizardStepper({
               >
                 <span
                   className={cn(
-                    'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold',
+                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                     isActive && 'bg-secondary text-on-secondary',
-                    isComplete && 'bg-success text-on-primary',
+                    isComplete && 'bg-success-strong text-white',
                     !isActive && !isComplete && 'bg-surface-container-highest text-on-surface-variant',
                   )}
                 >
@@ -109,9 +109,9 @@ export function EnvelopeWizardStepper({
               >
                 <span
                   className={cn(
-                    'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold',
+                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                     isActive && 'bg-secondary text-on-secondary',
-                    isComplete && 'bg-success text-white',
+                    isComplete && 'bg-success-strong text-white',
                     !isActive && !isComplete && 'bg-surface-container text-muted',
                   )}
                 >
@@ -202,7 +202,7 @@ export function EnvelopeWizardStepper({
             >
               <span
                 className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold',
+                  'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                   isActive && 'bg-secondary text-on-secondary ring-2 ring-secondary ring-offset-2',
                   isComplete && 'bg-primary text-on-primary',
                   !isActive && !isComplete && 'bg-primary text-on-primary',

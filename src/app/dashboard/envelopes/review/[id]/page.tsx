@@ -81,7 +81,7 @@ const getStatusColor = (status: string) => {
     case 'Sent':
       return 'bg-info-light text-secondary'
     case 'Completed':
-      return 'bg-green-100 text-green-800'
+      return 'bg-success-light text-success-text'
     default:
       return 'bg-surface-container-low text-body'
   }
@@ -127,7 +127,7 @@ export default function EnvelopeReviewPage() {
   if (!envelope) {
     return (
       <div className="max-w-4xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="text-muted mb-4">
               <FileText className="h-12 w-12" />
@@ -218,24 +218,24 @@ export default function EnvelopeReviewPage() {
 
       {/* Success Alert */}
       {showSuccessAlert && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
+        <Alert className="border-success/30 bg-success-light">
+          <CheckCircle className="h-4 w-4 text-success-text" />
+          <AlertDescription className="text-success-text">
             Envelope sent successfully
           </AlertDescription>
         </Alert>
       )}
 
       {/* Document Section */}
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-surface-container-lowest shadow-sm">
         <CardHeader>
           <CardTitle>Document</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <span className="text-red-600 text-sm font-bold">PDF</span>
+              <div className="w-10 h-10 bg-error-light rounded-lg flex items-center justify-center">
+                <span className="text-error-text text-sm font-bold">PDF</span>
               </div>
               <div>
                 <p className="font-medium text-on-surface">{envelope.documentName}</p>
@@ -253,7 +253,7 @@ export default function EnvelopeReviewPage() {
       </Card>
 
       {/* Recipients Section */}
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-surface-container-lowest shadow-sm">
         <CardHeader>
           <CardTitle>Recipients</CardTitle>
         </CardHeader>
@@ -290,7 +290,7 @@ export default function EnvelopeReviewPage() {
       </Card>
 
       {/* Comments Section */}
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-surface-container-lowest shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <MessageSquare className="h-5 w-5" />
@@ -337,7 +337,7 @@ export default function EnvelopeReviewPage() {
       </Card>
 
       {/* Actions */}
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-surface-container-lowest shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>

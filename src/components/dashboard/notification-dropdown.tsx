@@ -133,7 +133,7 @@ export function NotificationDropdown({ notifications, unreadCount, onOpen }: Not
                 type="button"
                 onClick={() => markAll.mutate()}
                 disabled={unreadCount === 0 || markAll.isPending}
-                className="text-sm font-medium text-status-your-turn hover:text-accent-hover disabled:opacity-50"
+                className="text-sm font-medium text-your-turn-text hover:text-accent-hover disabled:opacity-50"
               >
                 Mark all as read
               </button>

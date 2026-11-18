@@ -228,6 +228,7 @@ export default function DocumentDetailPage() {
           document={documentData}
           onDownload={handleDownload}
           isDownloading={downloadDocumentMutation.isPending}
+          editHref={documentData.status === 'draft' ? `/dashboard/documents/${documentData.id}/edit` : undefined}
         />
       </div>
     </div>

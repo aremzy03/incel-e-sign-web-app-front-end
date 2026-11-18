@@ -1,11 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SelfSignPage from '@/app/dashboard/envelopes/self-sign/page'
+import { buildSelfSignPayload, getSelfSignValidationErrors } from '@/hooks/useSelfSignFields'
+import { defaultFieldSettings } from '@/lib/fields/stamps'
+import type { FieldPosition } from '@/types/envelope'
 
 const mockPush = jest.fn()
 const mockReplace = jest.fn()
 const selfSignAsync = jest.fn()
 const listUserSignatures = jest.fn()
+const getDocuments = jest.fn()
+
+jest.mock('@/lib/api/documents', () => {
+  const actual = jest.requireActual('@/lib/api/documents')
+  return { ...actual, getDocuments: (...args: unknown[]) => getDocuments(...args) }
+})
 
 jest.mock('@/lib/axios', () => ({
   __esModule: true,
@@ -58,7 +67,7 @@ jest.mock('next/dynamic', () => () => {
   return Dynamic
 })
 
-describe('SelfSignPage', () => {
+describe('SelfSignPage (document picker)', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
       {children}
@@ -67,45 +76,66 @@ describe('SelfSignPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    selfSignAsync.mockResolvedValue({
-      kind: 'queued',
-      data: { job_id: 'job-1', status: 'queued', envelope_id: 'env-self-1' },
+    getDocuments.mockResolvedValue({
+      results: [{ id: 'doc-7', file_name: 'Lease.pdf', created_at: '2026-11-01T00:00:00Z' }],
     })
-    listUserSignatures.mockResolvedValue([
-      { id: 'sig-1', name: 'Default', image_url: '/sig.png', is_default: true, uploaded_at: new Date().toISOString() },
-    ])
   })
 
-  it('renders editor header and Sign & complete button', async () => {
-    render(<SelfSignPage />, { wrapper })
-    expect(screen.getByText('Your Tools')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /sign & complete/i }).length).toBeGreaterThan(0)
-    expect(screen.queryByText(/add recipient/i)).not.toBeInTheDocument()
-    expect(screen.getByText('Self-Signing')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /send for signature/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /designation/i })).toBeInTheDocument()
-    expect(screen.queryByText(/live session active/i)).not.toBeInTheDocument()
-  })
-
-  it('shows validation when no document is uploaded', async () => {
-    render(<SelfSignPage />, { wrapper })
-    expect((await screen.findAllByText(/At least one document is required/i)).length).toBeGreaterThan(0)
-    expect(selfSignAsync).not.toHaveBeenCalled()
-  })
-
-  it('shows validation when signature field is missing', async () => {
-    render(<SelfSignPage />, { wrapper })
-    const signButtons = screen.getAllByRole('button', { name: /sign & complete/i })
-    expect(signButtons[0]).toBeDisabled()
-  })
-
-  it('renders start screen when step=start', async () => {
+  it('lists documents and opens the edit-and-sign screen for the one picked', async () => {
     const { useSearchParams } = require('next/navigation')
-    useSearchParams.mockReturnValue({
-      get: jest.fn((key: string) => (key === 'step' ? 'start' : null)),
-    })
+    useSearchParams.mockReturnValue({ get: jest.fn(() => null) })
     render(<SelfSignPage />, { wrapper })
-    expect(screen.getByText('Sign a document yourself')).toBeInTheDocument()
+    expect(screen.getByText('Add text or sign a document')).toBeInTheDocument()
+    const doc = await screen.findByRole('button', { name: /lease\.pdf/i })
+    doc.click()
+    expect(mockPush).toHaveBeenCalledWith('/dashboard/documents/doc-7/edit?tools=sign')
+  })
+
+  it('sends old ?documentId= links straight to the editor', async () => {
+    const { useSearchParams } = require('next/navigation')
+    useSearchParams.mockReturnValue({ get: jest.fn((key: string) => (key === 'documentId' ? 'doc-9' : null)) })
+    render(<SelfSignPage />, { wrapper })
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/dashboard/documents/doc-9/edit?tools=sign'))
+  })
+})
+
+describe('self-sign fields', () => {
+  const field = (over: Partial<FieldPosition>): FieldPosition => ({
+    id: 'f', type: 'signature', page: 1, x: 120, y: 240, width: 120, height: 48, assignedTo: '1', documentId: 'doc-1',
+    ...over,
+  })
+
+  it('needs a signature and rejects retired text fields', () => {
+    expect(getSelfSignValidationErrors({})).toContain('Add at least one signature field')
+    expect(getSelfSignValidationErrors({ s: field({}), t: field({ id: 't', type: 'text' }) }).join(' ')).toMatch(/Add text/)
+    expect(getSelfSignValidationErrors({ s: field({}), d: field({ id: 'd', type: 'date', ...defaultFieldSettings('date') }) })).toEqual([])
+  })
+
+  it('builds a payload where the server fills date and initials', () => {
+    const payload = buildSelfSignPayload(
+      {
+        s: field({}),
+        i: field({ id: 'i', type: 'initials', prefill_value: 'ZZ', ...defaultFieldSettings('initials') }),
+        d: field({ id: 'd', type: 'date', prefill_value: '1999-01-01', ...defaultFieldSettings('date') }),
+      },
+      {
+        documentId: 'doc-1',
+        signatureId: 'sig-1',
+        initialsChoice: { style: 'last_name', font: 'allura' },
+      },
+    )
+    expect(payload.document_ids).toEqual(['doc-1'])
+    expect(payload.documents_with_positions?.[0].signer_document_positions).toHaveLength(1)
+    expect(payload.signature_id).toBe('sig-1')
+    expect(payload.initials_style).toBe('last_name')
+    expect(payload.initials_font).toBe('allura')
+    expect(payload.timezone).toBeTruthy()
+    for (const f of payload.fields ?? []) {
+      expect(f).not.toHaveProperty('value')
+      expect(f).not.toHaveProperty('prefill_value')
+    }
+    // Fields are stored in points already.
+    expect(payload.fields?.[0]).toMatchObject({ type: 'initials', x: 120, y: 240 })
   })
 })
 

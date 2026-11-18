@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ interface DocumentViewDetailsSidebarProps {
   document: Document
   onDownload: () => void
   isDownloading: boolean
+  editHref?: string
   className?: string
 }
 
@@ -66,6 +68,7 @@ export function DocumentViewDetailsSidebar({
   document,
   onDownload,
   isDownloading,
+  editHref,
   className,
 }: DocumentViewDetailsSidebarProps) {
   return (
@@ -117,7 +120,12 @@ export function DocumentViewDetailsSidebar({
         </section>
       </div>
 
-      <div className="shrink-0 border-t border-border p-4">
+      <div className="shrink-0 space-y-2 border-t border-border p-4">
+        {editHref ? (
+          <Button asChild variant="outline" className="flex w-full items-center justify-center gap-2">
+            <Link href={editHref}>Add text</Link>
+          </Button>
+        ) : null}
         <Button
           onClick={onDownload}
           disabled={isDownloading}

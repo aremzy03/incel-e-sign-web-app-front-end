@@ -47,7 +47,7 @@ describe('RegisterPage', () => {
   it('renders register page with correct title', () => {
     render(<RegisterPage />)
     
-    expect(screen.getByText('Incel E-Sign')).toBeInTheDocument()
+    expect(screen.getByText('INCEL E-Sign')).toBeInTheDocument()
     expect(screen.getByText('Create Your Account')).toBeInTheDocument()
     expect(screen.getByText('Start sending and signing documents in minutes')).toBeInTheDocument()
   })

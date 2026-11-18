@@ -77,7 +77,7 @@ function getActivityIconClass(action: string): string {
       return 'text-muted'
     case 'SIGN_DOC':
     case 'SELF_SIGN_DOC':
-      return 'text-success'
+      return 'text-success-text'
     case 'REJECT_ENVELOPE':
     case 'DECLINE_SIGN':
       return 'text-error'
@@ -190,8 +190,8 @@ export default function DashboardPage() {
           <QuickActionCard
             href="/dashboard/envelopes/self-sign"
             icon="draw"
-            title="Sign Myself"
-            description="Add your digital signature to a document instantly."
+            title="Add Text & Sign"
+            description="Add text to a document, sign it yourself, or both."
           />
         </div>
       </div>
@@ -229,7 +229,7 @@ export default function DashboardPage() {
                   <div className="p-6 text-body-sm text-muted">Loading...</div>
                 ) : actionRequired.length === 0 ? (
                   <div className="flex flex-col items-center px-6 py-12 text-center">
-                    <MaterialIcon name="task_alt" size={28} className="text-success" />
+                    <MaterialIcon name="task_alt" size={28} className="text-success-text" />
                     <p className="mt-3 text-body-sm text-muted">You&apos;re all caught up!</p>
                   </div>
                 ) : (

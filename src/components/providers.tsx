@@ -8,6 +8,7 @@ import { SessionMonitor } from './SessionMonitor'
 import { SessionTokenSync } from './SessionTokenSync'
 import { ErrorBoundary } from './ErrorBoundary'
 import { ThemeProvider } from './theme-provider'
+import { MotionConfig } from 'framer-motion'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -27,6 +28,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
       <ThemeProvider>
+      {/* Honour the OS reduced-motion setting in every framer-motion component. */}
+      <MotionConfig reducedMotion="user">
       <SessionProvider
         refetchOnWindowFocus={false}
         // Re-evaluate the JWT periodically so silent refresh can run before access expiry.
@@ -41,20 +44,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#363636',
-                color: '#fff',
+                background: 'var(--color-inverse-surface)',
+                color: 'var(--color-inverse-on-surface)',
               },
               success: {
                 duration: 3000,
                 iconTheme: {
-                  primary: '#4ade80',
+                  primary: 'var(--color-success)',
                   secondary: '#fff',
                 },
               },
               error: {
                 duration: 5000,
                 iconTheme: {
-                  primary: '#ef4444',
+                  primary: 'var(--color-error)',
                   secondary: '#fff',
                 },
               },
@@ -62,6 +65,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           />
         </QueryClientProvider>
       </SessionProvider>
+      </MotionConfig>
       </ThemeProvider>
     </ErrorBoundary>
   )

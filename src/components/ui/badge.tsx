@@ -16,15 +16,15 @@ const badgeVariants = cva(
           "border-transparent bg-error text-on-error hover:bg-error/90",
         outline: "text-on-surface border-outline-variant",
         draft:
-          "border-transparent bg-surface text-status-draft",
+          "border-transparent bg-surface text-status-draft-text",
         pending:
-          "border-transparent bg-warning-light text-warning",
+          "border-transparent bg-warning-light text-warning-text",
         completed:
-          "border-transparent bg-success-light text-success",
+          "border-transparent bg-success-light text-success-text",
         rejected:
-          "border-transparent bg-error-light text-error",
+          "border-transparent bg-error-light text-error-text",
         yourTurn:
-          "border-transparent bg-accent-light text-status-your-turn",
+          "border-transparent bg-accent-light text-your-turn-text",
       },
     },
     defaultVariants: {

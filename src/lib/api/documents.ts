@@ -266,3 +266,77 @@ export const downloadDocument = async (id: string): Promise<Blob> => {
 
   return await res.blob()
 }
+
+export interface PdfPageSize {
+  page: number
+  width: number
+  height: number
+  rotate: number
+}
+
+export interface AddTextOp {
+  opId: string
+  op: 'add_text'
+  page: number
+  x: number
+  y: number
+  width: number
+  height: number
+  text: string
+  font: 'Helvetica' | 'Times-Roman' | 'Courier'
+  fontSize: number
+  color: string
+  bold: boolean
+  italic: boolean
+  align: 'left' | 'center' | 'right'
+}
+
+export interface TextEditSession {
+  session_id: string
+  base_file_url: string
+  page_count: number
+  pages: PdfPageSize[]
+  ops: AddTextOp[]
+  updated_at: string | null
+}
+
+export interface TextEditCommitResult {
+  document_id: string
+  file_url: string
+  file_size: number
+  revision_id: string | null
+  session_id: string
+}
+
+function unwrapData<T>(payload: unknown): T {
+  const record = payload as { data?: T }
+  return (record?.data ?? payload) as T
+}
+
+export const openTextEditSession = async (id: string): Promise<TextEditSession> => {
+  const response = await apiClient.post(`/documents/${id}/text-edits/`, {}, { timeout: 60_000 })
+  return unwrapData<TextEditSession>(response.data)
+}
+
+export const saveTextEditSession = async (id: string, ops: AddTextOp[]): Promise<TextEditSession> => {
+  const response = await apiClient.put(`/documents/${id}/text-edits/`, { ops })
+  return unwrapData<TextEditSession>(response.data)
+}
+
+export const commitTextEdits = async (id: string, ops: AddTextOp[]): Promise<TextEditCommitResult> => {
+  const response = await apiClient.post(`/documents/${id}/text-edits/commit/`, { ops }, { timeout: 120_000 })
+  return unwrapData<TextEditCommitResult>(response.data)
+}
+
+export const discardTextEditSession = async (id: string): Promise<void> => {
+  await apiClient.delete(`/documents/${id}/text-edits/`)
+}
+
+export function textEditErrorCopy(error: unknown): { reason: string; message: string } {
+  const data = (error as { response?: { data?: { reason?: string; message?: string } } })?.response?.data
+  const reason = data?.reason || 'unknown'
+  return {
+    reason,
+    message: data?.message || 'Couldn’t save the text. Try again.',
+  }
+}

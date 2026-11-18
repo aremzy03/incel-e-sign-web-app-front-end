@@ -119,7 +119,7 @@ export function EnvelopeSignerTimelinePanel({
               <div key={signer.id ?? i} className="relative z-10 flex gap-4">
                 {isCompleted ? (
                   <div
-                    className={cn(markClass, 'bg-success-light text-success')}
+                    className={cn(markClass, 'bg-success-light text-success-text')}
                   >
                     <MaterialIcon name="check" size={16} />
                   </div>
@@ -127,19 +127,19 @@ export function EnvelopeSignerTimelinePanel({
                   <div
                     className={cn(
                       markClass,
-                      'bg-accent-light text-status-your-turn'
+                      'bg-accent-light text-your-turn-text'
                     )}
                   >
                     <MaterialIcon name="edit" size={16} />
                   </div>
                 ) : isCurrent ? (
                   <div
-                    className={cn(markClass, 'bg-warning-light text-warning')}
+                    className={cn(markClass, 'bg-warning-light text-warning-text')}
                   >
                     <MaterialIcon name="edit" size={16} />
                   </div>
                 ) : isRejected ? (
-                  <div className={cn(markClass, 'bg-error-light text-error')}>
+                  <div className={cn(markClass, 'bg-error-light text-error-text')}>
                     <MaterialIcon name="close" size={16} />
                   </div>
                 ) : (
@@ -172,7 +172,7 @@ export function EnvelopeSignerTimelinePanel({
                           <span
                             className={cn(
                               statusPill,
-                              'bg-success-light text-success'
+                              'bg-success-light text-success-text'
                             )}
                           >
                             Signed
@@ -189,8 +189,8 @@ export function EnvelopeSignerTimelinePanel({
                             className={cn(
                               statusPill,
                               isYourTurn
-                                ? 'bg-accent-light text-status-your-turn'
-                                : 'bg-warning-light text-warning'
+                                ? 'bg-accent-light text-your-turn-text'
+                                : 'bg-warning-light text-warning-text'
                             )}
                           >
                             {isProcessing
@@ -206,7 +206,7 @@ export function EnvelopeSignerTimelinePanel({
                                 : 'Embedding signature…'}
                             </p>
                           ) : isYourTurn ? (
-                            <p className="font-caption-xs text-caption-xs text-status-your-turn mt-1">
+                            <p className="font-caption-xs text-caption-xs text-your-turn-text mt-1">
                               Needs your signature
                             </p>
                           ) : null}
@@ -215,7 +215,7 @@ export function EnvelopeSignerTimelinePanel({
                         <span
                           className={cn(
                             statusPill,
-                            'bg-error-light text-error'
+                            'bg-error-light text-error-text'
                           )}
                         >
                           Declined
@@ -224,7 +224,7 @@ export function EnvelopeSignerTimelinePanel({
                         <span
                           className={cn(
                             statusPill,
-                            'bg-surface text-status-draft'
+                            'bg-surface text-status-draft-text'
                           )}
                         >
                           Pending

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Document } from '@/lib/api/documents'
 import { getDocuments, normalizeDocument } from '@/lib/api/documents'
@@ -11,13 +11,12 @@ import { UploadQueue } from '@/components/library'
 import { useDocumentUploadQueue } from '@/hooks/useDocumentUploadQueue'
 import toast from 'react-hot-toast'
 
-interface SelfSignStartProps {
-  onDocumentSelected: (doc: Document) => void
-  onContinue: () => void
-  hasDocuments: boolean
+/** The edit-and-sign screen for a document, opened with the Sign tools in view. */
+export function selfSignEditorHref(documentId: string) {
+  return `/dashboard/documents/${encodeURIComponent(documentId)}/edit?tools=sign`
 }
 
-export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: SelfSignStartProps) {
+export function SelfSignStart() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
@@ -26,9 +25,9 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
 
   const { queue, isUploading, error, uploadFile, removeFromQueue } = useDocumentUploadQueue({
     onSuccess: async (result) => {
-      onDocumentSelected(normalizeDocument(result))
       toast.success('Document uploaded')
-      router.replace('/dashboard/envelopes/self-sign?step=editor')
+      const id = normalizeDocument(result).id
+      if (id) router.push(selfSignEditorHref(id))
     },
     onError: (message) => {
       toast.error(message)
@@ -47,6 +46,12 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
     }
   }, [search])
 
+  useEffect(() => {
+    void loadDocuments()
+    // Load the library once on open; later searches are explicit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleUpload = async (file: File) => {
     await uploadFile(file)
   }
@@ -55,9 +60,9 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-8 md:px-8">
       <div className="mx-auto w-full max-w-[800px] space-y-12">
         <div className="space-y-2 text-center">
-          <h1 className="font-headline-3xl text-headline-3xl text-primary">Sign a document yourself</h1>
+          <h1 className="font-headline-3xl text-headline-3xl text-primary">Add text or sign a document</h1>
           <p className="font-body-base text-body-base text-muted">
-            Upload a document to add your digital signature instantly.
+            Upload or choose a document, then add text, sign it yourself, or both.
           </p>
         </div>
 
@@ -143,10 +148,7 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
               <button
                 key={doc.id}
                 type="button"
-                onClick={() => {
-                  onDocumentSelected(normalizeDocument(doc))
-                  router.replace('/dashboard/envelopes/self-sign?step=editor')
-                }}
+                onClick={() => router.push(selfSignEditorHref(doc.id))}
                 className="group flex items-center gap-4 rounded-xl border border-border bg-surface-container-lowest p-4 text-left shadow-card transition-colors hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-light">
@@ -173,13 +175,6 @@ export function SelfSignStart({ onDocumentSelected, onContinue, hasDocuments }: 
           ) : null}
         </section>
 
-        {hasDocuments ? (
-          <div className="flex justify-center">
-            <Button type="button" onClick={onContinue} className="bg-secondary hover:bg-accent-hover">
-              Continue to editor
-            </Button>
-          </div>
-        ) : null}
       </div>
     </div>
   )

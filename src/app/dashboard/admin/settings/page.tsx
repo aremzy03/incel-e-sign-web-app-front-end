@@ -127,7 +127,7 @@ export default function SystemSettingsPage() {
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -142,10 +142,10 @@ export default function SystemSettingsPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-error-text mx-auto mb-4" />
               <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
               <p className="text-muted mb-4">
                 You don&apos;t have permission to view system settings. Admin access required.
@@ -172,7 +172,7 @@ export default function SystemSettingsPage() {
     >
       {/* Page Header */}
       <motion.div 
-        className="bg-white rounded-lg shadow-sm p-6"
+        className="bg-surface-container-lowest rounded-lg shadow-sm p-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -188,7 +188,7 @@ export default function SystemSettingsPage() {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-sm font-medium text-red-600">Admin Access</span>
+            <span className="text-sm font-medium text-error-text">Admin Access</span>
           </div>
         </div>
       </motion.div>
@@ -199,7 +199,7 @@ export default function SystemSettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
@@ -223,10 +223,10 @@ export default function SystemSettingsPage() {
                 max="50"
                 value={settings.maxUploadSize}
                 onChange={(e) => updateSetting('maxUploadSize', parseInt(e.target.value) || 0)}
-                className={errors.maxUploadSize ? 'border-red-500' : ''}
+                className={errors.maxUploadSize ? 'border-error' : ''}
               />
               {errors.maxUploadSize && (
-                <p className="text-sm text-red-500">{errors.maxUploadSize}</p>
+                <p className="text-sm text-error-text">{errors.maxUploadSize}</p>
               )}
               <p className="text-sm text-muted">
                 Maximum file size allowed for uploads (1-50 MB)
@@ -256,7 +256,7 @@ export default function SystemSettingsPage() {
                 ))}
               </div>
               {errors.allowedFileTypes && (
-                <p className="text-sm text-red-500">{errors.allowedFileTypes}</p>
+                <p className="text-sm text-error-text">{errors.allowedFileTypes}</p>
               )}
               <p className="text-sm text-muted">
                 Click on file types to enable/disable them
@@ -274,11 +274,11 @@ export default function SystemSettingsPage() {
                 type="text"
                 value={settings.brandingName}
                 onChange={(e) => updateSetting('brandingName', e.target.value)}
-                className={errors.brandingName ? 'border-red-500' : ''}
+                className={errors.brandingName ? 'border-error' : ''}
                 placeholder="Enter application name"
               />
               {errors.brandingName && (
-                <p className="text-sm text-red-500">{errors.brandingName}</p>
+                <p className="text-sm text-error-text">{errors.brandingName}</p>
               )}
               <p className="text-sm text-muted">
                 The name displayed throughout the application

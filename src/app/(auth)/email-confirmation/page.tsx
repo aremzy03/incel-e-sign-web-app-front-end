@@ -23,12 +23,12 @@ function EmailConfirmationContent() {
   return (
     <AuthCenteredLayout showBrand={false}>
       <div className="mb-6 flex justify-center">
-        <AuthBrandHeader subtitle="Legal Authority" />
+        <AuthBrandHeader />
       </div>
 
       <div className="glass-card rounded-xl p-8 text-center">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary-container">
-          <MaterialIcon name="mail" size={40} className="text-status-your-turn" />
+          <MaterialIcon name="mail" size={40} className="text-your-turn-text" />
         </div>
 
         <h1 className="text-headline-xl font-bold text-on-surface">Check your email</h1>
@@ -59,7 +59,7 @@ function EmailConfirmationContent() {
 
           <Link
             href="/login"
-            className="flex items-center justify-center gap-2 py-2 text-sm font-medium text-status-your-turn hover:text-accent-hover"
+            className="flex items-center justify-center gap-2 py-2 text-sm font-medium text-your-turn-text hover:text-accent-hover"
           >
             <MaterialIcon name="arrow_back" size={18} />
             Back to login
@@ -70,14 +70,6 @@ function EmailConfirmationContent() {
           Didn&apos;t receive the email? Check your spam folder or contact support.
         </p>
       </div>
-
-      <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 px-4 text-caption-xs text-muted opacity-60">
-        <span>AES-256 Encrypted</span>
-        <span>·</span>
-        <span>SOC 2 Compliant</span>
-        <span>·</span>
-        <span>eIDAS Ready</span>
-      </footer>
     </AuthCenteredLayout>
   )
 }

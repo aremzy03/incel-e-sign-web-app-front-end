@@ -181,8 +181,8 @@ export function EnvelopeSettingsCard({ envelope }: EnvelopeSettingsCardProps) {
           className={cn(
             'font-label-xs inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold',
             passwordEnabled
-              ? 'bg-success-light text-success'
-              : 'bg-surface text-status-draft'
+              ? 'bg-success-light text-success-text'
+              : 'bg-surface text-status-draft-text'
           )}
         >
           {passwordEnabled ? 'ON' : 'OFF'}

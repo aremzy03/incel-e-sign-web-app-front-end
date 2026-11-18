@@ -64,7 +64,7 @@ export function SelfSignFieldTool({
         </div>
         <div className="text-left">
           <div className="font-label-sm text-on-surface">{label}</div>
-          {description ? <div className="text-[11px] text-muted">{description}</div> : null}
+          {description ? <div className="text-xs text-muted">{description}</div> : null}
         </div>
       </div>
       <MaterialIcon

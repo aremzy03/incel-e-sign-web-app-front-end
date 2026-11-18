@@ -1,28 +1,25 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { MaterialIcon } from '@/components/ui/material-icon'
+import { BrandMark } from '@/components/ui/incel-logo'
 import { cn } from '@/lib/utils'
 
 interface AuthBrandHeaderProps {
   className?: string
   subtitle?: string
+  /** Set when the header sits on the navy brand panel. */
+  onDark?: boolean
 }
 
 export function AuthBrandHeader({
   className,
-  subtitle = 'Legal Authority',
+  subtitle = 'Incel Group',
+  onDark = false,
 }: AuthBrandHeaderProps) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <Image
-        src="/E%20sign%20logo.svg"
-        alt="INCEL E-Sign"
-        width={40}
-        height={40}
-        className="h-10 w-10 object-contain"
-      />
+      <BrandMark size={40} tile={onDark ? 'always' : 'dark-mode'} />
       <div className="flex flex-col">
-        <span className="text-lg font-bold text-primary">Incel E-Sign</span>
+        <span className="text-lg font-bold text-primary">INCEL E-Sign</span>
         <span className="text-xs font-medium text-muted">{subtitle}</span>
       </div>
     </div>
@@ -41,22 +38,22 @@ export function AuthSplitLayout({ children, brandPanel }: AuthSplitLayoutProps) 
       <section className="relative hidden w-1/2 flex-col bg-primary p-8 text-on-primary dark:bg-primary-container md:p-16 lg:flex">
         {brandPanel ?? (
           <>
-            <AuthBrandHeader className="text-on-primary [&_span]:text-on-primary [&_.text-muted]:text-on-primary-container" />
+            <AuthBrandHeader onDark className="text-on-primary [&_span]:text-on-primary [&_.text-muted]:text-on-primary-container" />
             <div className="mt-16 flex flex-1 flex-col justify-center">
               <h1 className="text-headline-3xl font-bold leading-tight text-on-primary">
-                Legal authority in every signature
+                Get Incel Group agreements signed
               </h1>
               <p className="mt-4 max-w-md text-body-base text-on-primary-container">
-                Secure, compliant e-signatures trusted by enterprises worldwide.
+                Prepare a document, send it to signers in order, and track it until every signature is in.
               </p>
               <div className="mt-12 space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-hover">
-                    <MaterialIcon name="verified" size={20} className="text-accent-light" />
+                    <MaterialIcon name="format_list_numbered" size={20} className="text-accent-light" />
                   </div>
                   <div>
-                    <p className="font-semibold text-on-primary">Legally binding</p>
-                    <p className="text-sm text-on-primary-container">eIDAS & ESIGN compliant signatures</p>
+                    <p className="font-semibold text-on-primary">Signing in order</p>
+                    <p className="text-sm text-on-primary-container">Each signer acts in the order you set</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -71,7 +68,7 @@ export function AuthSplitLayout({ children, brandPanel }: AuthSplitLayoutProps) 
               </div>
             </div>
             <p className="text-xs text-on-primary-container">
-              © {new Date().getFullYear()} Incel E-Sign. All rights reserved.
+              © {new Date().getFullYear()} Incel Group
             </p>
           </>
         )}
@@ -97,7 +94,7 @@ export function AuthCenteredLayout({
   maxWidth = 'md',
 }: AuthCenteredLayoutProps) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-bg p-6">
+    <main className="relative flex min-h-screen flex-col items-center justify-center bg-bg p-6">
       <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-60" />
       <div className="pointer-events-none absolute -left-32 top-20 h-64 w-64 rounded-full bg-secondary-container/30 blur-3xl" />
       <div className="pointer-events-none absolute -right-32 bottom-20 h-64 w-64 rounded-full bg-primary-light blur-3xl" />
@@ -110,7 +107,7 @@ export function AuthCenteredLayout({
         )}
         {children}
       </div>
-    </div>
+    </main>
   )
 }
 

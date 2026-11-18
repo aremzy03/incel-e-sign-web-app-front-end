@@ -18,6 +18,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 jest.mock('next/navigation', () => ({
   redirect: jest.fn(),
   usePathname: jest.fn(() => '/dashboard'),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() })),
 }))
 
 // Mock NextAuth

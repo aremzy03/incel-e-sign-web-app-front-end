@@ -94,7 +94,7 @@ export function PdfPageThumbnail({
           }}
           loading={<PdfLoadingIndicator size="thumbnail" label="Loading page thumbnail…" />}
           error={
-            <div className="flex h-full w-full items-center justify-center bg-surface-container p-2 text-center text-[10px] text-muted">
+            <div className="flex h-full w-full items-center justify-center bg-surface-container p-2 text-center text-xs text-muted">
               Preview unavailable
             </div>
           }

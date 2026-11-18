@@ -21,7 +21,7 @@ export function Navigation() {
           INCEL E-Sign
         </span>
         <span className="text-xs text-muted font-medium">
-          Legal Authority
+          Incel Group
         </span>
       </div>
     </Link>

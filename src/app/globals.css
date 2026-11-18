@@ -90,6 +90,19 @@
   --color-status-rejected: #DC2626;
   --color-status-your-turn: #0D9488;
 
+  /* Status text: the status hues above are tuned as fills and dots.
+     Text on white or on its own mist needs these darker steps (all ≥4.5:1). */
+  --color-status-draft-text: #475569;
+  --color-warning-text: #92400E;
+  --color-success-text: #047857;
+  --color-your-turn-text: #0F766E;
+  --color-error-text: #B91C1C;
+
+  /* Solid fills that carry white text (≥5.4:1 with white) */
+  --color-your-turn-strong: #0F766E;
+  --color-your-turn-strong-hover: #115E59;
+  --color-success-strong: #047857;
+
   /* shadcn semantic (via CSS vars) */
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -167,7 +180,7 @@
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-seal-stamp: seal-stamp 800ms cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --animate-seal-stamp: seal-stamp 500ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-modal-slide: modal-slide 350ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-fade-in: fade-in 250ms cubic-bezier(0, 0, 0.2, 1);
   --animate-slide-in-right: slide-in-right 250ms cubic-bezier(0.32, 0, 0.12, 1);
@@ -182,8 +195,7 @@
     to { height: 0; }
   }
   @keyframes seal-stamp {
-    0% { transform: scale(0.8) rotate(-5deg); opacity: 0; }
-    60% { transform: scale(1.1) rotate(2deg); opacity: 0.8; }
+    0% { transform: scale(0.92) rotate(-3deg); opacity: 0; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
   }
   @keyframes modal-slide {
@@ -290,6 +302,13 @@
   --color-error-light: #7f1d1d;
   --color-info-light: #1e3a8a;
   --color-accent-light: #134e4a;
+
+  /* Status text on dark surfaces and dark mists */
+  --color-status-draft-text: #CBD5E1;
+  --color-warning-text: #FCD34D;
+  --color-success-text: #6EE7B7;
+  --color-your-turn-text: #5EEAD4;
+  --color-error-text: #FCA5A5;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -340,24 +359,6 @@
     @apply bg-accent-light text-primary;
   }
 
-  .material-symbols-outlined {
-    font-family: 'Material Symbols Outlined Variable', 'Material Symbols Outlined', sans-serif;
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    vertical-align: middle;
-    user-select: none;
-  }
 }
 
 @layer utilities {
@@ -457,8 +458,8 @@
     box-shadow: 0 8px 32px rgba(4, 21, 52, 0.06);
   }
 
-  .success-checkmark-bounce {
-    animation: success-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  .success-checkmark-settle {
+    animation: success-settle 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   }
 
   .animate-float {
@@ -502,27 +503,27 @@
   }
 
   .badge-status-draft {
-    @apply bg-surface-container-high text-status-draft;
+    @apply bg-surface-container-high text-status-draft-text;
   }
 
   .badge-status-pending {
-    @apply bg-warning-light text-status-pending;
+    @apply bg-warning-light text-warning-text;
   }
 
   .badge-status-completed {
-    @apply bg-success-light text-status-completed;
+    @apply bg-success-light text-success-text;
   }
 
   .badge-status-rejected {
-    @apply bg-error-light text-status-rejected;
+    @apply bg-error-light text-error-text;
   }
 
   .badge-status-your-turn {
-    @apply bg-accent-light text-status-your-turn;
+    @apply bg-accent-light text-your-turn-text;
   }
 
   .badge-status-self-sign {
-    @apply border border-status-your-turn bg-accent-light text-status-your-turn;
+    @apply border border-status-your-turn bg-accent-light text-your-turn-text;
   }
 
   .field-pulse {
@@ -665,9 +666,8 @@
   }
 }
 
-@keyframes success-bounce {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.15); }
+@keyframes success-settle {
+  0% { transform: scale(0.85); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
@@ -709,4 +709,93 @@
     transparent 80%
   );
   animation: pdf-sheet-shimmer 1.75s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Reduced motion: keep every state change, drop the looping movement.
+   Pulses become a steady ring or dot, skeleton shimmer becomes a flat tint,
+   and the success mark fades in instead of scaling. Spinners stay: they are
+   the only signal that work is in progress. */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring,
+  .field-pulse {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.35);
+  }
+
+  .pulse-teal,
+  .pulse-dot,
+  .animate-float,
+  .animate-pulse-authority,
+  .pdf-skeleton-shimmer,
+  .pulse-active::before {
+    animation: none;
+  }
+
+  .success-checkmark-settle {
+    animation: reduced-fade-in 0.2s ease-out forwards;
+  }
+}
+
+@keyframes reduced-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+
+/* Initials handwriting fonts: the same TTFs the server embeds in signed PDFs
+   (backend signatures/fonts/initials). Loaded only when a preview uses them. */
+@font-face {
+  font-family: 'Initials Great Vibes';
+  src: url('/fonts/initials/GreatVibes-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Allura';
+  src: url('/fonts/initials/Allura-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Sacramento';
+  src: url('/fonts/initials/Sacramento-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Alex Brush';
+  src: url('/fonts/initials/AlexBrush-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Parisienne';
+  src: url('/fonts/initials/Parisienne-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Yellowtail';
+  src: url('/fonts/initials/Yellowtail-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Homemade Apple';
+  src: url('/fonts/initials/HomemadeApple-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Mr Dafoe';
+  src: url('/fonts/initials/MrDafoe-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials La Belle Aurore';
+  src: url('/fonts/initials/LaBelleAurore.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Cedarville Cursive';
+  src: url('/fonts/initials/Cedarville-Cursive.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Initials Kaushan Script';
+  src: url('/fonts/initials/KaushanScript-Regular.ttf') format('truetype');
+  font-display: swap;
 }

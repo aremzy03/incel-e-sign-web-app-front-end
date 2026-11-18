@@ -82,6 +82,12 @@ export default function EnvelopesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
+  // Global search's "See all" links arrive with ?search=…
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('search')
+    if (fromUrl) setSearchTerm(fromUrl)
+  }, [])
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedSearch(searchTerm)

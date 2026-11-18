@@ -11,6 +11,7 @@ export interface BuildPayloadInput {
   envelopeName: string
   description: string
   pdfPasswordProtectionEnabled: boolean
+  allowRecipientText?: boolean
 }
 
 export type BuildPayloadMode = 'draft' | 'send'
@@ -31,7 +32,7 @@ type BackendField = {
   y: number
   width: number
   height: number
-  type: 'initials' | 'date' | 'text' | 'designation'
+  type: 'initials' | 'date' | 'designation'
   assigned_signer: string
   required: boolean
   prefill_value?: string | null
@@ -53,6 +54,7 @@ export async function buildEnvelopePayload(
     envelopeName,
     description,
     pdfPasswordProtectionEnabled,
+    allowRecipientText = false,
   } = input
   const { mode, validateRecipients } = options
 
@@ -151,28 +153,19 @@ export async function buildEnvelopePayload(
         font_family: field.font_family,
       }
 
+      // Date and initials are filled by the server when the signer signs.
       if (field.type === 'initials') {
         fields.push({
           ...base,
           type: 'initials',
-          prefill_value: field.prefill_value ?? null,
-          font_size: field.font_size,
+          required: true,
         })
       } else if (field.type === 'date') {
         fields.push({
           ...base,
           type: 'date',
-          prefill_value: field.prefill_value ?? null,
+          required: true,
           date_format: field.date_format,
-          font_size: field.font_size,
-        })
-      } else if (field.type === 'text') {
-        fields.push({
-          ...base,
-          type: 'text',
-          prefill_value: field.prefill_value ?? null,
-          placeholder: field.placeholder,
-          max_length: field.max_length,
           font_size: field.font_size,
         })
       } else if (field.type === 'designation') {
@@ -197,6 +190,7 @@ export async function buildEnvelopePayload(
     ...(envelopeName ? { name: envelopeName } : {}),
     ...(trimmedDescription ? { description: trimmedDescription } : {}),
     pdf_password_protection_enabled: pdfPasswordProtectionEnabled,
+    allow_recipient_text: allowRecipientText,
   } as CreateEnvelopeRequest & { fields?: BackendField[] }
 
   return { ok: true, payload }

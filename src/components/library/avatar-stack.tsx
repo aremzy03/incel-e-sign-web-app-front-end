@@ -18,7 +18,7 @@ interface AvatarStackProps {
 export function AvatarStack({ users, max = 4, size = 'md', className }: AvatarStackProps) {
   const visible = users.slice(0, max)
   const overflow = users.length - max
-  const sizeClass = size === 'sm' ? 'h-7 w-7 text-[10px]' : 'h-9 w-9 text-xs'
+  const sizeClass = size === 'sm' ? 'h-7 w-7 text-xs' : 'h-9 w-9 text-xs'
 
   return (
     <div className={cn('flex items-center', className)}>

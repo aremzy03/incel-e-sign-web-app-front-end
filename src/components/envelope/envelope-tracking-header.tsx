@@ -30,13 +30,13 @@ function formatCreatedDate(value: string): string | null {
 
 function statusBadgeClass(status: string): string {
   const s = status.toLowerCase()
-  if (s.includes('complete')) return 'bg-success-light text-success'
+  if (s.includes('complete')) return 'bg-success-light text-success-text'
   if (s.includes('pending') || s.includes('sent'))
-    return 'bg-warning-light text-warning'
+    return 'bg-warning-light text-warning-text'
   if (s.includes('reject') || s.includes('cancel') || s.includes('declin')) {
-    return 'bg-error-light text-error'
+    return 'bg-error-light text-error-text'
   }
-  if (s.includes('draft')) return 'bg-surface text-status-draft'
+  if (s.includes('draft')) return 'bg-surface text-status-draft-text'
   return 'bg-info-light text-info'
 }
 

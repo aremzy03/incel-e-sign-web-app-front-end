@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 import { MaterialIcon } from '@/components/ui/material-icon'
+import { InitialsPicker } from '@/components/signing/initials-picker'
+import type { InitialsChoice } from '@/lib/fields/stamps'
 import { resolveSignatureImage } from '@/hooks/signing'
 import type { SigningFieldChecklistItem } from '@/lib/signing/signing-field-checklist'
 import { cn } from '@/lib/utils'
@@ -19,6 +21,12 @@ interface SigningMobileSheetProps {
   onSelectSignature: (sig: unknown) => void
   onUploadClick?: () => void
   isUploading?: boolean
+  /** Shown when the signer has initials fields. */
+  initials?: {
+    fullName: string | null | undefined
+    choice: InitialsChoice
+    onChange: (next: InitialsChoice) => void
+  } | null
 }
 
 export function SigningMobileSheet({
@@ -34,6 +42,7 @@ export function SigningMobileSheet({
   onSelectSignature,
   onUploadClick,
   isUploading = false,
+  initials,
 }: SigningMobileSheetProps) {
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const selectedId =
@@ -129,7 +138,7 @@ export function SigningMobileSheet({
                   <MaterialIcon
                     name={item.completed ? 'check_circle' : 'pending'}
                     size={18}
-                    className={item.completed ? 'text-status-completed' : 'text-status-your-turn'}
+                    className={item.completed ? 'text-success-text' : 'text-your-turn-text'}
                     fill={item.completed}
                   />
                   <span className="font-body-sm text-body-sm">{item.label}</span>
@@ -195,6 +204,18 @@ export function SigningMobileSheet({
             </button>
           ) : null}
         </div>
+
+        {initials ? (
+          <section aria-labelledby="signing-initials-mobile-title" className="mt-6">
+            <p
+              id="signing-initials-mobile-title"
+              className="mb-3 font-label-sm text-label-sm uppercase text-on-surface-variant"
+            >
+              Your initials
+            </p>
+            <InitialsPicker fullName={initials.fullName} value={initials.choice} onChange={initials.onChange} />
+          </section>
+        ) : null}
       </div>
     </>
   )

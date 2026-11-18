@@ -36,7 +36,7 @@ const InputWithIcon = React.forwardRef<HTMLInputElement, InputWithIconProps>(
     return (
       <div
         className={cn(
-          'relative overflow-hidden rounded-xl border bg-white transition-all',
+          'relative overflow-hidden rounded-xl border bg-surface-container-lowest transition-all',
           'focus-within:border-status-your-turn focus-within:ring-2 focus-within:ring-status-your-turn/20',
           invalid
             ? 'border-error focus-within:border-error focus-within:ring-error/20'

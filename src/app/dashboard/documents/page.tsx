@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
@@ -101,11 +101,23 @@ export default function DocumentsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const listStatus = activeStatus === 'all' ? undefined : activeStatus
+  // Set by global search's "See all documents" link (?search=…).
+  const [searchFilter, setSearchFilter] = useState('')
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('search')
+    if (fromUrl) setSearchFilter(fromUrl.trim())
+  }, [])
+  const clearSearchFilter = () => {
+    setSearchFilter('')
+    setPage(1)
+    window.history.replaceState(null, '', window.location.pathname)
+  }
 
   const { data, isLoading, error, refetch, isFetching } = useDocuments({
     page,
     pageSize: PAGE_SIZE,
     status: listStatus,
+    search: searchFilter || undefined,
   })
 
   const deleteDocumentMutation = useDeleteDocument()
@@ -280,6 +292,21 @@ export default function DocumentsPage() {
           <ViewToggle view={viewMode} onChange={setViewMode} className="shrink-0" />
         </div>
 
+        {searchFilter ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-container-low px-6 py-2">
+            <p className="text-body-sm text-on-surface">
+              Showing documents matching <span className="font-semibold">“{searchFilter}”</span>
+            </p>
+            <button
+              type="button"
+              onClick={clearSearchFilter}
+              className="rounded-lg px-2 py-1 text-label-sm font-medium text-your-turn-text hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : null}
+
         {isLoading && !data ? (
           <div className="flex items-center justify-center py-16 text-body-sm text-muted">
             <MaterialIcon name="progress_activity" size={24} className="animate-spin" />
@@ -359,6 +386,11 @@ export default function DocumentsPage() {
                     <DropdownMenuItem onClick={() => handleDocumentClick(doc)}>
                       View
                     </DropdownMenuItem>
+                    {doc.status === 'draft' ? (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/documents/${doc.id}/edit`}>Add text</Link>
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuItem onClick={() => handleDownloadDocument(doc.id)}>
                       Download
                     </DropdownMenuItem>

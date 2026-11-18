@@ -41,7 +41,7 @@ function PlaceFieldsFooter({ onOpenReview }: PlaceFieldsFooterProps) {
   const isBusy = creating || saving || sending || isValidating
 
   return (
-    <footer className="z-50 flex h-16 shrink-0 items-center justify-between border-t border-border bg-white px-6 md:px-8">
+    <footer className="z-50 flex h-16 shrink-0 items-center justify-between border-t border-border bg-surface-container-lowest px-6 md:px-8">
       <Button
         type="button"
         variant="outline"
@@ -118,6 +118,8 @@ export function StepPlaceFields() {
     setDescription,
     pdfPasswordProtectionEnabled,
     setPdfPasswordProtectionEnabled,
+    allowRecipientText,
+    setAllowRecipientText,
     sendValidationErrors,
     error,
     success,
@@ -287,13 +289,13 @@ export function StepPlaceFields() {
           )}
 
           {success && (
-            <div className="flex items-center gap-2 border-b border-success/30 bg-success-light px-6 py-2 text-xs font-medium text-success">
+            <div className="flex items-center gap-2 border-b border-success/30 bg-success-light px-6 py-2 text-xs font-medium text-success-text">
               <MaterialIcon name="check_circle" size={16} />
               <span>{success}</span>
             </div>
           )}
 
-          <div className="border-b border-warning/30 bg-warning-light px-4 py-2 text-center text-xs text-warning lg:hidden">
+          <div className="border-b border-warning/30 bg-warning-light px-4 py-2 text-center text-xs text-warning-text lg:hidden">
             Field placement works best on desktop.
           </div>
 
@@ -307,7 +309,7 @@ export function StepPlaceFields() {
                 <FieldPalettePanel />
               </aside>
 
-              <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-low">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-low">
                 <VerticalPDFViewer
                   documents={uploadedDocuments}
                   fieldPositions={fieldPositions}
@@ -323,7 +325,7 @@ export function StepPlaceFields() {
                   activePageKey={activePageKey}
                   onActivePageKeyChange={setActivePageKey}
                 />
-              </main>
+              </div>
 
               <div className="hidden h-full min-h-0 shrink-0 lg:block">
                 <PlaceFieldsRightPanel
@@ -336,7 +338,7 @@ export function StepPlaceFields() {
 
             <DragOverlay dropAnimation={null}>
               {activeDragFieldType && (
-                <div className="pointer-events-none z-[9999] rounded-md border bg-white px-3 py-2 text-xs shadow-lg">
+                <div className="pointer-events-none z-[9999] rounded-md border bg-surface-container-lowest px-3 py-2 text-xs shadow-lg">
                   {activeDragFieldType}
                 </div>
               )}
@@ -373,7 +375,7 @@ export function StepPlaceFields() {
                   {sendValidationErrors.length > 0 && (
                     <div className="rounded-xl border border-warning/40 bg-warning-light p-4">
                       <div className="flex gap-2">
-                        <MaterialIcon name="warning" size={20} className="shrink-0 text-warning" />
+                        <MaterialIcon name="warning" size={20} className="shrink-0 text-warning-text" />
                         <div>
                           <p className="text-sm font-medium text-on-surface">Action required</p>
                           <ul className="mt-1 list-inside list-disc text-xs text-muted">
@@ -405,12 +407,27 @@ export function StepPlaceFields() {
                           <p className="text-label-sm font-semibold text-primary">
                             PDF Password Protection
                           </p>
-                          <p className="text-[11px] text-muted">Lock completed PDFs</p>
+                          <p className="text-xs text-muted">Lock completed PDFs</p>
                         </div>
                         <Switch
                           checked={pdfPasswordProtectionEnabled}
                           onCheckedChange={setPdfPasswordProtectionEnabled}
                           aria-label="Enable PDF password protection"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-surface-container-lowest p-3 sm:col-span-2">
+                        <div className="pr-3">
+                          <p className="text-label-sm font-semibold text-primary">
+                            Let recipients add text
+                          </p>
+                          <p className="text-xs text-muted">
+                            Signers can type on the PDF. A signature is still required.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={allowRecipientText}
+                          onCheckedChange={setAllowRecipientText}
+                          aria-label="Let recipients add text"
                         />
                       </div>
                     </div>
@@ -501,8 +518,8 @@ export function StepPlaceFields() {
                             <span
                               className={`ml-3 shrink-0 rounded-full px-3 py-1 text-caption-xs font-semibold ${
                                 hasNoFields
-                                  ? 'bg-error-container text-error'
-                                  : 'bg-white text-primary border border-border'
+                                  ? 'bg-error-container text-on-error-container'
+                                  : 'bg-surface-container-lowest text-primary border border-border'
                               }`}
                             >
                               {hasNoFields
@@ -541,7 +558,7 @@ export function StepPlaceFields() {
 
           {showKeyboardShortcuts && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-              <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6">
+              <div className="mx-4 w-full max-w-md rounded-lg bg-surface-container-lowest p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Keyboard Shortcuts</h3>
                   <Button

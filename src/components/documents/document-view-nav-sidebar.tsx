@@ -13,7 +13,7 @@ const navyFocus =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2 focus-visible:ring-offset-primary dark:focus-visible:ring-offset-primary-container'
 
 export function DocumentViewNavSidebar({ documentTitle, documentId }: DocumentViewNavSidebarProps) {
-  const selfSignHref = `/dashboard/envelopes/self-sign?documentId=${encodeURIComponent(documentId)}`
+  const selfSignHref = `/dashboard/documents/${encodeURIComponent(documentId)}/edit?tools=sign`
 
   return (
     <aside className="flex h-full w-sidebar-width shrink-0 flex-col bg-primary text-on-primary dark:bg-primary-container">

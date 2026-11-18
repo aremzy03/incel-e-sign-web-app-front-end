@@ -23,9 +23,9 @@ const variantIconMap: Record<AsyncStateVariant, string> = {
 }
 
 const variantToneMap: Record<Exclude<AsyncStateVariant, 'loading'>, string> = {
-  error: 'bg-error-light text-error',
+  error: 'bg-error-light text-error-text',
   empty: 'bg-surface-container-low text-muted',
-  notFound: 'bg-warning-light text-warning',
+  notFound: 'bg-warning-light text-warning-text',
 }
 
 export function AsyncStatePanel({

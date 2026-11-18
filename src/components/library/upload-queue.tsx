@@ -46,7 +46,7 @@ export function UploadQueue({ items, onRemove, className }: UploadQueueProps) {
               </p>
             )}
             {item.status === 'success' && (
-              <p className="mt-1 flex items-center gap-1 text-caption-xs text-status-completed">
+              <p className="mt-1 flex items-center gap-1 text-caption-xs text-success-text">
                 <MaterialIcon name="check" size={14} />
                 Ready to sign
               </p>

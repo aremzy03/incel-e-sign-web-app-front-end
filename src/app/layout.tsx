@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import '@fontsource-variable/material-symbols-outlined/index.css'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { NavigationGate } from '@/components/navigation-gate'
@@ -15,29 +14,24 @@ const inter = Inter({
 // Using Inter for both headings and body
 
 export const metadata: Metadata = {
-  title: 'INCEL E-Sign - Legal Authority in Digital Signatures',
-  description: 'Award-winning e-signature platform designed for legal confidence and professional document management with enterprise-grade security.',
-  keywords: ['e-signature', 'digital signatures', 'legal documents', 'DocuSign alternative', 'enterprise signing'],
-  authors: [{ name: 'INCEL E-Sign Team' }],
-  creator: 'INCEL E-Sign',
-  publisher: 'INCEL E-Sign',
+  title: 'INCEL E-Sign',
+  description: 'Incel Group’s system for preparing, sending and signing its own agreements.',
+  applicationName: 'INCEL E-Sign',
+  creator: 'Incel Group',
+  publisher: 'Incel Group',
   icons: {
-    icon: '/E%20sign%20logo.svg',
+    icon: '/favicon.png',
   },
   openGraph: {
-    title: 'INCEL E-Sign - Legal Authority in Digital Signatures',
-    description: 'Professional e-signature platform with legal confidence and enterprise security',
+    title: 'INCEL E-Sign',
+    description: 'Incel Group’s system for preparing, sending and signing its own agreements.',
     siteName: 'INCEL E-Sign',
     type: 'website',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'INCEL E-Sign - Legal Authority in Digital Signatures',
-    description: 'Professional e-signature platform with legal confidence and enterprise security',
-  },
+  // Internal tool: signing links are shared privately, never meant for search results.
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
 }
 
@@ -52,9 +46,9 @@ export default function RootLayout({
         <Providers>
           <div className="min-h-screen bg-bg">
             <NavigationGate />
-            <main className="flex-1">
+            <div className="flex-1">
               {children}
-            </main>
+            </div>
           </div>
         </Providers>
       </body>

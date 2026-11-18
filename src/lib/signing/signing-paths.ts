@@ -13,7 +13,7 @@ export function isSigningShellPath(pathname: string): boolean {
   if (/^\/envelopes\/[^/]+\/sign\/?$/.test(pathname)) {
     return true
   }
-  if (/^\/dashboard\/documents\/[^/]+\/?$/.test(pathname)) {
+  if (/^\/dashboard\/documents\/[^/]+(\/edit)?\/?$/.test(pathname)) {
     return true
   }
   return false

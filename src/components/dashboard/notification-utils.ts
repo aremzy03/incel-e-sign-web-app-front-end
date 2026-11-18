@@ -20,7 +20,6 @@ export function getNotificationVariant(message: string): NotificationVariant {
 
 export function getNotificationStyleFromMessage(message: string): {
   rowClass: string
-  borderClass: string
   iconBg: string
   icon: MaterialIconName
   iconColor: string
@@ -28,25 +27,16 @@ export function getNotificationStyleFromMessage(message: string): {
 } {
   const variant = getNotificationVariant(message)
   const base = getNotificationStyle(variant)
-  const borderMap: Record<NotificationVariant, string> = {
-    your_turn: 'border-l-status-your-turn',
-    sign_request: 'border-l-status-pending',
-    completed: 'border-l-status-completed',
-    rejected: 'border-l-error',
-    expiring: 'border-l-status-pending',
-    default: 'border-l-outline-variant',
-  }
   const colorMap: Record<NotificationVariant, string> = {
-    your_turn: 'text-status-your-turn',
+    your_turn: 'text-your-turn-text',
     sign_request: 'text-secondary',
-    completed: 'text-status-completed',
-    rejected: 'text-status-rejected',
-    expiring: 'text-status-pending',
+    completed: 'text-success-text',
+    rejected: 'text-error-text',
+    expiring: 'text-warning-text',
     default: 'text-muted',
   }
   return {
     ...base,
-    borderClass: borderMap[variant],
     iconColor: colorMap[variant],
   }
 }

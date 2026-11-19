@@ -1,15 +1,11 @@
 import apiClient from '@/lib/axios'
-import type { DocumentWithPositions, EnvelopeSignature, Position } from '@/lib/api/envelopes'
+import type { EnvelopeSignature, Position } from '@/lib/api/envelopes'
 import {
   FrozenEnvelopeError,
   SigningApiError,
   SigningRequestTimeoutError,
 } from '@/lib/api/signing-errors'
 import { getApiBaseUrl, isLoggingEnabled } from '@/lib/env'
-import {
-  ensurePdfPointsPosition,
-  normalizeDocumentsWithPositionsForApi,
-} from '@/lib/utils/field-geometry'
 import type { AxiosError } from 'axios'
 
 export type SigningJobStatus = 'queued' | 'processing' | 'succeeded' | 'failed'
@@ -451,31 +447,11 @@ export type SelfSignResult =
   | { kind: 'already_signed'; signature: EnvelopeSignature }
 
 export async function selfSignEnvelope(data: SelfSignRequest): Promise<SelfSignResult> {
-  const payload: SelfSignRequest = {
-    ...data,
-    documents_with_positions: normalizeDocumentsWithPositionsForApi(
-      data.documents_with_positions as DocumentWithPositions[] | undefined,
-    ) as SelfSignRequest['documents_with_positions'],
-    fields: data.fields?.map((field) => {
-      const x = Number(field.x)
-      const y = Number(field.y)
-      const width = Number(field.width)
-      const height = Number(field.height)
-      const page = Number(field.page)
-      if (![x, y, width, height, page].every(Number.isFinite)) {
-        return field
-      }
-      const pdf = ensurePdfPointsPosition({ page, x, y, width, height })
-      return {
-        ...field,
-        page: pdf.page,
-        x: pdf.x,
-        y: pdf.y,
-        width: pdf.width,
-        height: pdf.height,
-      }
-    }),
-  }
+  // Coordinates arrive in PDF points (buildSelfSignPayload converts them). Send them as
+  // built: guessing "points or wizard pixels?" from a box's size again here divided any
+  // field 133pt wide or 42pt tall (default initials, date and signature boxes) by 1.2,
+  // so the stamps landed above and left of where they were placed.
+  const payload: SelfSignRequest = data
 
   try {
     const response = await apiClient.post('/signatures/self-sign/', payload)

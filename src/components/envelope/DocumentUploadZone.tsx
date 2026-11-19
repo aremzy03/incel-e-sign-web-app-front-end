@@ -282,7 +282,7 @@ export function DocumentUploadZone({
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {isAlreadyAdded ? (
-                          <div className="flex items-center gap-1 text-success">
+                          <div className="flex items-center gap-1 text-success-text">
                             <Check className="h-3 w-3" />
                             <span className="text-xs">Added</span>
                           </div>
@@ -344,7 +344,7 @@ export function DocumentUploadZone({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        className="h-6 w-6 p-0 text-error-text hover:text-error"
                         onClick={() => onDocumentRemove(doc.id)}
                         disabled={isBusy}
                       >

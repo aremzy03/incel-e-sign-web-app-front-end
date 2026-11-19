@@ -12,7 +12,7 @@ interface SigningStatusDeclinedProps {
 export function SigningStatusDeclined({ declineMessage, homeHref }: SigningStatusDeclinedProps) {
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-8">
-      <main className="w-full max-w-lg animate-in fade-in">
+      <div className="w-full max-w-lg animate-in fade-in">
         <div className="mb-8 flex justify-center">
           <div className="flex items-center gap-2">
             <MaterialIcon name="edit_document" size={32} className="text-primary" />
@@ -25,7 +25,7 @@ export function SigningStatusDeclined({ declineMessage, homeHref }: SigningStatu
               <MaterialIcon name="cancel" size={32} className="text-error" />
             </div>
             <h1 className="mb-2 font-headline-2xl text-headline-2xl text-on-background">You declined to sign</h1>
-            <span className="rounded-full bg-error-light px-4 py-1 font-label-sm text-label-sm uppercase tracking-wide text-status-rejected">
+            <span className="rounded-full bg-error-light px-4 py-1 font-label-sm text-label-sm uppercase tracking-wide text-error-text">
               Declined
             </span>
           </div>
@@ -51,7 +51,7 @@ export function SigningStatusDeclined({ declineMessage, homeHref }: SigningStatu
             </Link>
           </Button>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

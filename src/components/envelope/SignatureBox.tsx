@@ -77,14 +77,15 @@ export function SignatureBox({
     [position, onPositionChange]
   )
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+  const handleResizeStart = useCallback((e: React.PointerEvent) => {
     e.stopPropagation()
+      e.preventDefault()
     setIsResizing(true)
     onSelect()
   }, [onSelect])
 
   const handleResize = useCallback(
-    (e: React.MouseEvent) => {
+    (e: PointerEvent) => {
       if (!isResizing || !nodeRef.current) return
 
       e.preventDefault()
@@ -117,14 +118,16 @@ export function SignatureBox({
     setIsResizing(false)
   }, [])
 
-  // Add global mouse event listeners for resizing
+  // Global pointer listeners so resizing works with mouse, touch and pen
   React.useEffect(() => {
     if (isResizing) {
-      document.addEventListener('mousemove', handleResize as any)
-      document.addEventListener('mouseup', handleResizeEnd)
+      document.addEventListener('pointermove', handleResize)
+      document.addEventListener('pointerup', handleResizeEnd)
+      document.addEventListener('pointercancel', handleResizeEnd)
       return () => {
-        document.removeEventListener('mousemove', handleResize as any)
-        document.removeEventListener('mouseup', handleResizeEnd)
+        document.removeEventListener('pointermove', handleResize)
+        document.removeEventListener('pointerup', handleResizeEnd)
+        document.removeEventListener('pointercancel', handleResizeEnd)
       }
     }
   }, [isResizing, handleResize, handleResizeEnd])
@@ -136,6 +139,7 @@ export function SignatureBox({
       onStart={handleDragStart}
       onStop={handleDragStop}
       disabled={isResizing}
+      cancel='[data-no-drag="true"]'
       bounds={{
         left: 0,
         top: 0,
@@ -171,10 +175,11 @@ export function SignatureBox({
         {/* Resize handle */}
         <div
           className={cn(
-            'absolute bottom-0 right-0 w-3 h-3 cursor-se-resize opacity-60 hover:opacity-100',
+            'absolute bottom-0 right-0 w-3 h-3 cursor-se-resize touch-none before:absolute before:-inset-2 opacity-60 hover:opacity-100',
             'border-r-2 border-b-2 border-current'
           )}
-          onMouseDown={handleResizeStart}
+          data-no-drag="true"
+          onPointerDown={handleResizeStart}
           style={{ borderColor: color }}
         />
       </div>

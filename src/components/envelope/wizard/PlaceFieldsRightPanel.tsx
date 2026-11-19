@@ -48,7 +48,7 @@ export function PlaceFieldsRightPanel({
   const activeRecipient = sortedRecipients.find((r) => r.id === activeRecipientId)
 
   return (
-    <aside className="flex h-full min-h-0 w-[240px] shrink-0 flex-col border-l border-border bg-white">
+    <aside className="flex h-full min-h-0 w-[240px] shrink-0 flex-col border-l border-border bg-surface-container-lowest">
       <div className="shrink-0 border-b border-border p-4">
         <label className="mb-2 block text-caption-xs text-muted">Place fields for:</label>
         <Select
@@ -60,7 +60,7 @@ export function PlaceFieldsRightPanel({
               {activeRecipient && (
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-on-secondary"
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-on-secondary"
                     style={{ backgroundColor: activeRecipient.color }}
                   >
                     {getRecipientInitials(activeRecipient.name, activeRecipient.email)}
@@ -108,10 +108,10 @@ export function PlaceFieldsRightPanel({
                     <span className="truncate">{recipient.name || recipient.email}</span>
                   </span>
                   <span
-                    className={`ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                    className={`ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-xs font-bold ${
                       count > 0
-                        ? 'bg-success/15 text-success'
-                        : 'bg-warning-light text-warning'
+                        ? 'bg-success/15 text-success-text'
+                        : 'bg-warning-light text-warning-text'
                     }`}
                   >
                     {count}
@@ -144,7 +144,7 @@ export function PlaceFieldsRightPanel({
               return (
                 <div key={pageKey}>
                   {page.pageNumber === 1 && multipleDocuments && (
-                    <p className="mb-2 truncate text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                    <p className="mb-2 truncate text-xs font-bold uppercase tracking-wide text-on-surface-variant">
                       {page.documentName}
                     </p>
                   )}

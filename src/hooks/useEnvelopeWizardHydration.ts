@@ -154,6 +154,7 @@ export function useEnvelopeWizardHydration(envelopeId: string) {
         pdfPasswordProtectionEnabled:
           (envelope as { pdf_password_protection_enabled?: boolean })
             .pdf_password_protection_enabled ?? false,
+        allowRecipientText: Boolean(envelope.allow_recipient_text),
       })
 
       setInitialized(true)

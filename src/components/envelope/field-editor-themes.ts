@@ -64,7 +64,7 @@ export const FIELD_EDITOR_THEMES: Record<
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   signature: 'Signature',
   initials: 'Initials',
-  date: 'Date',
-  text: 'Text',
+  date: 'Date signed',
+  text: 'Text (retired)',
   designation: 'Designation',
 }

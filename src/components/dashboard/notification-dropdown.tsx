@@ -16,9 +16,10 @@ import { getNotificationStyle, getNotificationVariant } from './notification-uti
 interface NotificationDropdownProps {
   notifications: NotificationItem[]
   unreadCount: number
+  onOpen?: () => void
 }
 
-export function NotificationDropdown({ notifications, unreadCount }: NotificationDropdownProps) {
+export function NotificationDropdown({ notifications, unreadCount, onOpen }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -43,7 +44,10 @@ export function NotificationDropdown({ notifications, unreadCount }: Notificatio
     <div className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          onOpen?.()
+          setIsOpen(!isOpen)
+        }}
         className="relative rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
         aria-expanded={isOpen}
@@ -129,12 +133,13 @@ export function NotificationDropdown({ notifications, unreadCount }: Notificatio
                 type="button"
                 onClick={() => markAll.mutate()}
                 disabled={unreadCount === 0 || markAll.isPending}
-                className="text-sm font-medium text-status-your-turn hover:text-accent-hover disabled:opacity-50"
+                className="text-sm font-medium text-your-turn-text hover:text-accent-hover disabled:opacity-50"
               >
                 Mark all as read
               </button>
               <Link
                 href="/dashboard/notifications"
+                prefetch={false}
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-1 text-sm font-medium text-secondary hover:text-accent-hover"
               >

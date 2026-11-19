@@ -203,7 +203,7 @@ export default function ContactsPage() {
                   className="hidden text-secondary sm:inline-flex"
                   asChild
                 >
-                  <Link href="/dashboard/envelopes/create">Use in Envelope</Link>
+                  <Link href="/dashboard/envelopes/create" prefetch={false}>Use in Envelope</Link>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -213,7 +213,7 @@ export default function ContactsPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard/envelopes/create">Use in Envelope</Link>
+                      <Link href="/dashboard/envelopes/create" prefetch={false}>Use in Envelope</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-error"

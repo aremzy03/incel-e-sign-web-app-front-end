@@ -1,3 +1,4 @@
+import { formatSigningDate as formatStampDate } from '@/lib/fields/stamps'
 import type { CSSProperties } from 'react'
 import type { Position } from '@/lib/api/envelopes'
 import {
@@ -60,6 +61,8 @@ export interface SigningEnvelopeResponse {
   signatures?: EnvelopeSignature[]
   recipients?: EnvelopeRecipient[]
   is_self_sign?: boolean
+  allow_recipient_text?: boolean
+  documents?: Envelope['documents']
 }
 
 export interface PageDimEntry {
@@ -122,24 +125,9 @@ export function positionToPixelStyle(
   return style
 }
 
+/** Preview of the server-stamped signing date; see lib/fields/stamps. */
 export function formatSigningDate(d: Date, pattern?: string): string {
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mmm = d.toLocaleString('en', { month: 'short' })
-  switch (pattern) {
-    case 'MM/DD/YYYY':
-      return `${mm}/${dd}/${yyyy}`
-    case 'DD/MM/YYYY':
-      return `${dd}/${mm}/${yyyy}`
-    case 'YYYY/MM/DD':
-      return `${yyyy}/${mm}/${dd}`
-    case 'DD-MMM-YYYY':
-      return `${dd}-${mmm}-${yyyy}`
-    case 'YYYY-MM-DD':
-    default:
-      return `${yyyy}-${mm}-${dd}`
-  }
+  return formatStampDate(d, pattern)
 }
 
 export function getInitialsFromName(full?: string): string {

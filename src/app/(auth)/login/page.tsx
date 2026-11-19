@@ -155,7 +155,7 @@ export default function LoginPage() {
           <div className="mx-auto w-full max-w-md">
             <div className="mb-8">
               <h2 className="text-headline-2xl font-bold text-on-surface">Welcome Back</h2>
-              <p className="mt-2 text-body-sm text-muted">Sign in to your legal authority platform</p>
+              <p className="mt-2 text-body-sm text-muted">Sign in to prepare and send agreements</p>
             </div>
 
             {error && (
@@ -235,7 +235,7 @@ export default function LoginPage() {
                     <div className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted">Or continue with</span>
+                    <span className="bg-surface-container-lowest px-2 text-muted">Or continue with</span>
                   </div>
                 </div>
 

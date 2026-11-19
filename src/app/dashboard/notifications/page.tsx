@@ -32,7 +32,8 @@ export default function NotificationsPage() {
     queryKey: ['notifications'],
     queryFn: listNotifications,
     enabled: isReady,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
     retry: shouldRetryAuthQuery,
   })
   const notificationsError = error ? classifyError(error, 'Failed to load notifications') : null

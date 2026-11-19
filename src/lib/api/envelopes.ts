@@ -80,6 +80,7 @@ export interface Envelope {
   }>
   status: 'draft' | 'pending' | 'completed' | 'rejected' | 'self-sign'
   is_self_sign?: boolean
+  allow_recipient_text?: boolean
   decline_message?: string
   fields?: Array<{
     id?: string
@@ -303,6 +304,7 @@ export function normalizeEnvelopeListItem(raw: Record<string, unknown>): Envelop
     documents: raw.documents as Envelope['documents'],
     status: (raw.status as Envelope['status']) || 'draft',
     is_self_sign: Boolean(raw.is_self_sign),
+    allow_recipient_text: Boolean(raw.allow_recipient_text),
     created_at: String(raw.created_at ?? ''),
     updated_at: String(raw.updated_at ?? ''),
     sent_at: raw.sent_at as string | undefined,
@@ -327,6 +329,7 @@ export interface CreateEnvelopeRequest {
    * Defaults to false when omitted.
    */
   pdf_password_protection_enabled?: boolean
+  allow_recipient_text?: boolean
 }
 
 export interface EditEnvelopeRequest {

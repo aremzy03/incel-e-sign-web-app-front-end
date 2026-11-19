@@ -105,12 +105,12 @@ export default function DocumentUploadPage() {
           {uploadedId && (
             <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
               <Button variant="outline" asChild className="sm:flex-1">
-                <Link href={`/dashboard/envelopes/self-sign?documentId=${uploadedId}`}>
-                  Sign Myself
+                <Link href={`/dashboard/documents/${uploadedId}/edit?tools=sign`} prefetch={false}>
+                  Add Text & Sign
                 </Link>
               </Button>
               <Button asChild className="bg-secondary hover:bg-accent-hover sm:flex-1">
-                <Link href={`/dashboard/envelopes/create?documentId=${uploadedId}`}>
+                <Link href={`/dashboard/envelopes/create?documentId=${uploadedId}`} prefetch={false}>
                   Create Envelope
                 </Link>
               </Button>

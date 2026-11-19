@@ -31,7 +31,7 @@ export function StepReviewSend() {
       {sendValidationErrors.length > 0 && (
         <div className="rounded-xl border border-warning/40 bg-warning-light p-4">
           <div className="flex gap-2">
-            <MaterialIcon name="warning" size={20} className="shrink-0 text-warning" />
+            <MaterialIcon name="warning" size={20} className="shrink-0 text-warning-text" />
             <div>
               <p className="text-sm font-medium text-on-surface">Action required</p>
               <ul className="mt-1 list-inside list-disc text-xs text-muted">
@@ -101,9 +101,9 @@ export function StepReviewSend() {
                   <p className="text-caption-xs text-muted">Require code to open</p>
                 </div>
                 <span
-                  className={`rounded px-2 py-1 text-[11px] font-medium uppercase tracking-wider ${
+                  className={`rounded px-2 py-1 text-xs font-medium uppercase tracking-wider ${
                     pdfPasswordProtectionEnabled
-                      ? 'bg-success-light text-success'
+                      ? 'bg-success-light text-success-text'
                       : 'bg-surface-container text-muted'
                   }`}
                 >
@@ -181,12 +181,12 @@ export function StepReviewSend() {
                             No fields placed for {displayName}
                           </div>
                         ) : (
-                          <div className="flex items-center rounded-full border border-border bg-white px-3 py-1 text-label-sm font-medium text-primary">
+                          <div className="flex items-center rounded-full border border-border bg-surface-container-lowest px-3 py-1 text-label-sm font-medium text-primary">
                             <MaterialIcon name="edit_square" size={16} className="mr-1" />
                             {fieldCount} field{fieldCount === 1 ? '' : 's'} placed
                           </div>
                         )}
-                        <div className="rounded-full border border-success/20 bg-success/10 px-3 py-1 text-label-sm font-medium text-success">
+                        <div className="rounded-full border border-success/20 bg-success/10 px-3 py-1 text-label-sm font-medium text-success-text">
                           Signer
                         </div>
                       </div>
@@ -215,7 +215,7 @@ export function StepReviewSend() {
           </section>
 
           <div className="flex items-start rounded-xl border border-warning/20 bg-warning-light p-4">
-            <MaterialIcon name="lightbulb" size={22} className="mr-3 mt-1 text-warning" />
+            <MaterialIcon name="lightbulb" size={22} className="mr-3 mt-1 text-warning-text" />
             <div>
               <p className="text-label-sm font-bold text-tertiary">Quick Tip</p>
               <p className="text-body-sm text-on-tertiary-container">

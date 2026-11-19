@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -14,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { FIELD_TYPE_LABELS } from '@/components/envelope/field-editor-themes'
+import { FieldTypeSettings } from '@/components/envelope/FieldTypeSettings'
 import { useEnvelopeWizard } from './envelope-wizard-context'
 
 const POPOVER_WIDTH = 288
@@ -150,140 +150,10 @@ export function FieldPropertiesPopover() {
         )}
 
         {!isSignature && (
-          <>
-            <div className="space-y-1">
-              <Label className="text-xs">Required</Label>
-              <div className="flex gap-2">
-                <Button
-                  variant={activeField.required ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleFieldPositionChange(activeField.id, { required: true })}
-                >
-                  Yes
-                </Button>
-                <Button
-                  variant={!activeField.required ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleFieldPositionChange(activeField.id, { required: false })}
-                >
-                  No
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Font family</Label>
-                <Select
-                  value={activeField.font_family || ''}
-                  onValueChange={(v) =>
-                    handleFieldPositionChange(activeField.id, { font_family: v })
-                  }
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select font" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Helvetica">Helvetica</SelectItem>
-                    <SelectItem value="Arial">Arial</SelectItem>
-                    <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                    <SelectItem value="Courier New">Courier New</SelectItem>
-                    <SelectItem value="Roboto">Roboto</SelectItem>
-                    <SelectItem value="Inter">Inter</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Font size</Label>
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  value={activeField.font_size ?? ''}
-                  onChange={(e) =>
-                    handleFieldPositionChange(activeField.id, {
-                      font_size: Number(e.target.value) || undefined,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Prefill value</Label>
-              <Input
-                className="h-8 text-xs"
-                value={activeField.prefill_value ?? ''}
-                onChange={(e) =>
-                  handleFieldPositionChange(activeField.id, { prefill_value: e.target.value })
-                }
-              />
-            </div>
-
-            {activeField.type === 'date' && (
-              <div>
-                <Label className="text-xs">Date format</Label>
-                <Select
-                  value={activeField.date_format || ''}
-                  onValueChange={(v) =>
-                    handleFieldPositionChange(activeField.id, { date_format: v })
-                  }
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                    <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                    <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {activeField.type === 'text' && (
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Placeholder</Label>
-                  <Input
-                    className="h-8 text-xs"
-                    value={activeField.placeholder || ''}
-                    onChange={(e) =>
-                      handleFieldPositionChange(activeField.id, { placeholder: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Max length</Label>
-                  <Input
-                    type="number"
-                    className="h-8 text-xs"
-                    value={activeField.max_length ?? ''}
-                    onChange={(e) =>
-                      handleFieldPositionChange(activeField.id, {
-                        max_length: Number(e.target.value) || undefined,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {activeField.type === 'designation' && (
-              <div>
-                <Label className="text-xs">Max length</Label>
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  value={activeField.max_length ?? ''}
-                  onChange={(e) =>
-                    handleFieldPositionChange(activeField.id, {
-                      max_length: Number(e.target.value) || undefined,
-                    })
-                  }
-                />
-              </div>
-            )}
-          </>
+          <FieldTypeSettings
+            field={activeField}
+            onChange={(patch) => handleFieldPositionChange(activeField.id, patch)}
+          />
         )}
         </div>
       </div>

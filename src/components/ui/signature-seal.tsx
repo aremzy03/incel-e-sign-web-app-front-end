@@ -72,7 +72,7 @@ const sizeConfig = {
 // ===== STATUS CONFIGURATIONS =====
 const statusConfig = {
   pending: {
-    color: 'text-warning border-warning-light',
+    color: 'text-warning-text border-warning-light',
     bg: 'bg-warning-50',
     icon: '⏳',
     label: 'Pending',
@@ -84,7 +84,7 @@ const statusConfig = {
     label: 'Signing',
   },
   signed: {
-    color: 'text-success border-success-400',
+    color: 'text-success-text border-success-400',
     bg: 'bg-success-50',
     icon: '✓',
     label: 'Signed',

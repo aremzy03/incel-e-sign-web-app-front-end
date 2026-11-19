@@ -43,6 +43,10 @@ export type SignEnvelopePayload = {
   y?: number
   width?: number
   height?: number
+  /** Signer's browser time zone and initials choice (see lib/fields/stamps). */
+  timezone?: string
+  initials_style?: string
+  initials_font?: string
 }
 
 export type SignEnvelopeResult =
@@ -88,6 +92,9 @@ export function buildSignEnvelopePayload(payload: SignEnvelopePayload): SignEnve
   if (payload.field_values) {
     cleaned.field_values = payload.field_values
   }
+  if (typeof payload.timezone === 'string' && payload.timezone) cleaned.timezone = payload.timezone
+  if (payload.initials_style) cleaned.initials_style = payload.initials_style
+  if (payload.initials_font) cleaned.initials_font = payload.initials_font
 
   if (typeof payload.page === 'number' && Number.isFinite(payload.page) && payload.page >= 1) {
     cleaned.page = payload.page
@@ -193,7 +200,24 @@ export async function signEnvelope(
   }
 }
 
-export async function getSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
+/**
+ * The sign page and the floating jobs widget both poll the job they are watching. Calls for
+ * the same job within this window share one request instead of each sending their own.
+ */
+const JOB_POLL_SHARE_MS = 1000
+const recentJobPolls = new Map<string, { at: number; promise: Promise<SigningJobDetail> }>()
+
+export function getSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
+  const key = `${jobId}:${token ?? ''}`
+  const recent = recentJobPolls.get(key)
+  if (recent && Date.now() - recent.at < JOB_POLL_SHARE_MS) return recent.promise
+  const promise = fetchSigningJob(jobId, token)
+  recentJobPolls.set(key, { at: Date.now(), promise })
+  promise.catch(() => recentJobPolls.delete(key))
+  return promise
+}
+
+async function fetchSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
   if (token) {
     const response = await apiClient.get(`/signatures/jobs/${jobId}/public/`, {
       params: { token },
@@ -408,6 +432,10 @@ export interface SelfSignRequest {
   signature_id?: string
   signature_image?: string
   pdf_password_protection_enabled?: boolean
+  /** Signer's browser time zone and initials choice (see lib/fields/stamps). */
+  timezone?: string
+  initials_style?: string
+  initials_font?: string
 }
 
 export interface SelfSignResponse {
@@ -478,6 +506,25 @@ export async function selfSignEnvelope(data: SelfSignRequest): Promise<SelfSignR
     }
     throw error
   }
+}
+
+export async function saveRecipientText(
+  envelopeId: string,
+  documentId: string,
+  ops: unknown[],
+  options?: { token?: string; baseFileUrl?: string },
+): Promise<{ file_url: string; revision_id: string | null }> {
+  const response = await apiClient.post(
+    `/signatures/${envelopeId}/documents/${documentId}/text/`,
+    {
+      ops,
+      token: options?.token,
+      base_file_url: options?.baseFileUrl,
+    },
+    { timeout: 120_000 },
+  )
+  const data = (response.data?.data ?? response.data) as { file_url: string; revision_id: string | null }
+  return data
 }
 
 

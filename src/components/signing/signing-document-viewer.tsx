@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { EnvelopeDocumentResponse, Position } from '@/lib/api/envelopes'
 import type { User } from '@/lib/api/users'
@@ -9,7 +9,6 @@ import { MaterialIcon } from '@/components/ui/material-icon'
 import { resolveSignatureImage } from '@/hooks/signing'
 import {
   formatSigningDate,
-  getInitialsFromName,
   positionToPixelStyle,
   type PageDimsByDoc,
   type SignerDocumentPositionEntry,
@@ -17,7 +16,13 @@ import {
   type SigningEnvelopeResponse,
 } from '@/hooks/signing/types'
 import { cn } from '@/lib/utils'
-import { documentUrlNeedsAuth } from '@/lib/url'
+import {
+  DEFAULT_INITIALS_CHOICE,
+  initialsFontStyle,
+  initialsText,
+  type InitialsChoice,
+} from '@/lib/fields/stamps'
+import { documentUrlNeedsAuth, getPdfJsDocumentOptions } from '@/lib/url'
 
 type ReactPdfModule = typeof import('react-pdf')
 type PdfComponents = Pick<ReactPdfModule, 'Document' | 'Page'> & { pdfjs: ReactPdfModule['pdfjs'] }
@@ -64,10 +69,13 @@ export interface SigningDocumentViewerProps {
   setSelected: React.Dispatch<React.SetStateAction<SignerDocumentPositionEntry | null>>
   onClearPreview: () => void
   zoom: number
+  /** How the signer's initials will be stamped (style and handwriting font). */
+  initialsChoice?: InitialsChoice
   focusedTargetId?: string | null
   selectedFieldKey?: string | null
   onPageIndicatorChange?: (currentPage: number, totalPages: number) => void
   documentSectionRefs?: React.MutableRefObject<Record<string, HTMLDivElement | null>>
+  renderPageOverlay?: (documentId: string, pageNo: number) => React.ReactNode
   className?: string
 }
 
@@ -116,15 +124,54 @@ export function SigningDocumentViewer({
   setSelected,
   onClearPreview,
   zoom,
+  initialsChoice = DEFAULT_INITIALS_CHOICE,
   focusedTargetId,
   selectedFieldKey,
   onPageIndicatorChange,
   documentSectionRefs,
+  renderPageOverlay,
   className,
 }: SigningDocumentViewerProps) {
   const [pdf, setPdf] = useState<PdfComponents | null>(null)
+  // react-pdf reloads a document when `options` changes identity, so keep one
+  // options object per URL for the life of the viewer.
+  const pdfOptionsCache = useRef<Record<string, ReturnType<typeof getPdfJsDocumentOptions>>>({})
+  const pdfOptionsFor = (url: string | undefined) => {
+    if (!url) return undefined
+    pdfOptionsCache.current[url] ??= getPdfJsDocumentOptions(url)
+    return pdfOptionsCache.current[url]
+  }
   const selectedSignatureImage = resolveSignatureImage(selectedSignature)
-  const scale = zoom / 100
+  // Pages fill the canvas width (like a browser PDF viewer); zoom multiplies that fit.
+  // `scale` is rendered CSS px per PDF point. Draft placement is kept in points.
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const pagesColumnRef = useRef<HTMLDivElement>(null)
+  const [availableWidth, setAvailableWidth] = useState(0)
+  useLayoutEffect(() => {
+    const scroller = scrollAreaRef.current
+    const column = pagesColumnRef.current
+    if (!scroller || !column) return
+    const measure = () => {
+      const styles = getComputedStyle(column)
+      const inner = scroller.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight)
+      setAvailableWidth((current) => (Math.abs(current - inner) < 1 ? current : Math.max(200, inner)))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(scroller)
+    return () => observer.disconnect()
+  }, [pdf])
+  const widestPagePt = useMemo(() => {
+    let widest = 0
+    for (const doc of Object.values(pageDims)) {
+      for (const [key, dims] of Object.entries(doc)) {
+        if (key !== 'numPages' && typeof dims === 'object' && dims?.widthPt) widest = Math.max(widest, dims.widthPt)
+      }
+    }
+    return widest || 612
+  }, [pageDims])
+  const fitScale = availableWidth > 0 ? availableWidth / widestPagePt : 1
+  const scale = fitScale * (zoom / 100)
   const positionCoordinateSpace: 'auto' | 'pdf-points' = 'auto'
 
   const totalPages = envelopeDocuments.reduce(
@@ -232,7 +279,7 @@ export function SigningDocumentViewer({
               isPreview && selectedSignatureImage ? (
                 <button
                   type="button"
-                  className="relative h-full w-full cursor-pointer rounded-md border-2 border-green-500 bg-white shadow-lg transition hover:border-green-600 group"
+                  className="relative h-full w-full cursor-pointer rounded-md border-2 border-success bg-white shadow-lg transition hover:border-success group"
                   onClick={() =>
                     isMe
                       ? onPlaceholderClick({ ...entry, document_id: docItem.id, position_index: idx })
@@ -245,16 +292,19 @@ export function SigningDocumentViewer({
                     alt="Signature preview"
                     className="h-full w-full select-none object-contain p-1"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-green-500/10 opacity-0 transition-opacity group-hover:opacity-100">
-                    <span className="rounded bg-white/90 px-2 py-1 text-xs font-semibold text-green-700">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-success/10 opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="rounded bg-white/90 px-2 py-1 text-xs font-semibold text-success-text">
                       Selected
                     </span>
                   </div>
                 </button>
               ) : (
-                <div className="relative h-full w-full">
+                // Container queries: labels appear only when the box is wide enough for them,
+                // so small pages (phones) don't spill text outside the field.
+                <div className="@container relative h-full w-full">
                   <button
                     type="button"
+                    aria-label={isSelected ? 'Selected signature field' : 'Place signature'}
                     onClick={() =>
                       onPlaceholderClick({ ...entry, document_id: docItem.id, position_index: idx })
                     }
@@ -266,14 +316,14 @@ export function SigningDocumentViewer({
                     )}
                     title="Place your signature here"
                   >
-                    <div className="flex items-center gap-2 text-status-your-turn">
+                    <div className="flex min-w-0 items-center gap-1 px-1 text-your-turn-text @[9rem]:gap-2">
                       <MaterialIcon name="history_edu" size={20} fill />
-                      <span className="font-label-sm text-label-sm font-bold">
+                      <span className="hidden truncate font-label-sm text-label-sm font-bold @[9rem]:inline">
                         {isSelected ? 'SELECTED' : 'PLACE SIGNATURE'}
                       </span>
                     </div>
                   </button>
-                  <div className="absolute -left-2 -top-3 rounded bg-status-your-turn px-2 py-0.5 text-[10px] font-bold text-white">
+                  <div className="absolute -left-2 -top-3 hidden rounded bg-your-turn-strong px-2 py-0.5 text-[10px] font-bold text-white @[7rem]:block">
                     REQUIRED
                   </div>
                 </div>
@@ -285,7 +335,7 @@ export function SigningDocumentViewer({
                 className="h-full w-full select-none object-contain"
               />
             ) : (
-              <div className="absolute inset-0 rounded-md border-2 border-green-400 bg-green-100" />
+              <div className="absolute inset-0 rounded-md border-2 border-success bg-success-light" />
             )}
           </div>
         )
@@ -313,9 +363,9 @@ export function SigningDocumentViewer({
       const dims = pageDims[docItem.id]?.[pageNo]
       const fieldsForPage = allFields.filter((f) => (f?.page || 0) === pageNo)
       const interactiveCls =
-        'group absolute inset-0 flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-status-your-turn bg-info-light/40 p-2 transition hover:bg-accent-light/60'
+        'group absolute inset-0 flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-status-your-turn bg-info-light/40 p-0.5 transition @[8rem]:p-2 hover:bg-accent-light/60'
       const disabledCls =
-        'absolute inset-0 flex cursor-not-allowed items-center justify-center rounded-md border border-outline-variant bg-gray-200/30 p-2'
+        'absolute inset-0 flex cursor-not-allowed items-center justify-center rounded-md border border-outline-variant bg-surface-container-high/30 p-0.5 @[8rem]:p-2'
 
       return fieldsForPage.map((f, idx) => {
         const key = f.id || `${docItem.id}-${pageNo}-${idx}`
@@ -329,14 +379,15 @@ export function SigningDocumentViewer({
         const isActive = activeFieldPreview === key
         const isFocused = focusedTargetId === targetId
         const fontFamily = f.font_family || 'Helvetica'
-        const fontSize = f.font_size || 12
+        // Field text is in points; scale it with the page like the PDF will.
+        const fontSize = (f.font_size || 12) * scale
         const requiredMark = f.required ? ' *' : ''
         const myName = currentUserId ? signerDetails[currentUserId]?.full_name : undefined
-        const initials = getInitialsFromName(myName)
+        const initials = initialsText(myName, initialsChoice.style)
         const today = formatSigningDate(new Date(), f.date_format)
 
         const header = (
-          <div className="absolute left-0 right-0 top-0 flex items-center justify-between px-1 pt-0.5 text-[10px] leading-none text-info/90">
+          <div className="absolute left-0 right-0 top-0 hidden items-center justify-between px-1 pt-0.5 text-[10px] leading-none text-info/90 @[8rem]:flex">
             <span className="max-w-[70%] truncate">
               {isMine ? signerDetails[f.assigned_signer || '']?.full_name || 'You' : 'Recipient'}
             </span>
@@ -355,25 +406,25 @@ export function SigningDocumentViewer({
             <div
               key={`nf-${docItem.id}-${idx}`}
               data-signing-target={targetId}
-              className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+              className={cn('@container absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
               style={style}
             >
               <div
                 className={
                   isMine
-                    ? 'absolute inset-0 flex items-center justify-center rounded-lg border-2 border-status-completed bg-success-light/30 px-4 transition'
+                    ? 'absolute inset-0 flex items-center justify-center rounded-lg border-2 border-status-completed bg-success-light/30 px-1 transition @[8rem]:px-4'
                     : disabledCls
                 }
                 title={`Date${requiredMark}`}
                 role={isMine ? 'button' : undefined}
                 onClick={handleClick}
               >
-                <div className="flex w-full items-center gap-2 text-status-completed">
-                  <MaterialIcon name="calendar_today" size={18} />
+                <div className="flex w-full min-w-0 items-center justify-center gap-2 text-success-text">
+                  <MaterialIcon name="calendar_today" size={18} className="hidden @[7rem]:inline-block" />
                   <span style={{ fontFamily, fontSize }} className="font-semibold">
                     {value}
                   </span>
-                  <MaterialIcon name="check_circle" size={18} className="ml-auto" />
+                  <MaterialIcon name="check_circle" size={18} className="ml-auto hidden @[9rem]:inline-block" />
                 </div>
               </div>
             </div>
@@ -386,7 +437,7 @@ export function SigningDocumentViewer({
             <div
               key={`nf-${docItem.id}-${idx}`}
               data-signing-target={targetId}
-              className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+              className={cn('@container absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
               style={style}
             >
               <div
@@ -396,11 +447,14 @@ export function SigningDocumentViewer({
                 onClick={handleClick}
               >
                 {header}
-                <div style={{ fontFamily, fontSize }} className="flex h-full w-full items-center justify-center text-on-surface">
+                <div
+                  style={value === initials ? { ...initialsFontStyle(initialsChoice.font), fontSize: '1.25em' } : { fontFamily, fontSize }}
+                  className="flex h-full w-full items-center justify-center truncate text-on-surface"
+                >
                   {value || '—'}
                 </div>
                 {isMine ? (
-                  <div className="absolute bottom-0.5 left-0 right-0 text-center text-[10px] text-secondary opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="absolute bottom-0.5 left-0 right-0 text-center hidden text-[10px] text-secondary opacity-0 transition-opacity group-hover:opacity-100 @[8rem]:block">
                     Click to preview
                   </div>
                 ) : null}
@@ -415,7 +469,7 @@ export function SigningDocumentViewer({
             <div
               key={`nf-${docItem.id}-${idx}`}
               data-signing-target={targetId}
-              className={cn('absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
+              className={cn('@container absolute', isFocused && 'ring-2 ring-status-your-turn ring-offset-1')}
               style={style}
             >
               <div
@@ -429,7 +483,7 @@ export function SigningDocumentViewer({
                   {value}
                 </div>
                 {isMine ? (
-                  <div className="absolute bottom-0.5 left-0 right-0 text-center text-[10px] text-secondary opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="absolute bottom-0.5 left-0 right-0 text-center hidden text-[10px] text-secondary opacity-0 transition-opacity group-hover:opacity-100 @[8rem]:block">
                     Click to preview
                   </div>
                 ) : null}
@@ -467,7 +521,7 @@ export function SigningDocumentViewer({
                 }}
               />
               {isMine ? (
-                <div className="absolute bottom-0.5 left-0 right-0 text-center text-[10px] text-secondary opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute bottom-0.5 left-0 right-0 text-center hidden text-[10px] text-secondary opacity-0 transition-opacity group-hover:opacity-100 @[8rem]:block">
                   Click to type
                 </div>
               ) : null}
@@ -482,8 +536,10 @@ export function SigningDocumentViewer({
       currentUserId,
       envelope.fields,
       fieldValues,
+      initialsChoice,
       pageDims,
       positionCoordinateSpace,
+      scale,
       setFieldValue,
       signerDetails,
       toggleFieldPreview,
@@ -526,25 +582,28 @@ export function SigningDocumentViewer({
         >
           {isThisDocAndPage && draftPlacement && selectedSignatureImage ? (
             <div
-              className="absolute cursor-move rounded-md border-2 border-status-your-turn bg-white/90 shadow"
+              className="absolute cursor-move touch-none select-none rounded-md border-2 border-status-your-turn bg-white/90 shadow"
               style={{
-                left: draftPlacement.x,
-                top: draftPlacement.y,
-                width: draftPlacement.width,
-                height: draftPlacement.height,
+                left: draftPlacement.x * scale,
+                top: draftPlacement.y * scale,
+                width: draftPlacement.width * scale,
+                height: draftPlacement.height * scale,
               }}
-              onMouseDown={(e) => {
+              // Pointer events cover mouse, touch and pen. Capture keeps the drag
+              // alive when a finger or cursor outruns the box; cancel/lost capture
+              // clear it so an interrupted gesture never leaves the box stuck.
+              onPointerDown={(e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return
                 e.stopPropagation()
+                e.currentTarget.setPointerCapture(e.pointerId)
                 setIsDraggingDraft(true)
-                const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+                const rect = e.currentTarget.getBoundingClientRect()
                 setDragOffset({
                   x: (e.clientX - rect.left) / scale,
                   y: (e.clientY - rect.top) / scale,
                 })
               }}
-              onMouseUp={() => setIsDraggingDraft(false)}
-              onMouseLeave={() => setIsDraggingDraft(false)}
-              onMouseMove={(e) => {
+              onPointerMove={(e) => {
                 if (!isDraggingDraft || !draftPlacement) return
                 const parentRect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect()
                 const newX = Math.max(
@@ -563,6 +622,11 @@ export function SigningDocumentViewer({
                 )
                 setDraftPlacement({ ...draftPlacement, x: newX, y: newY })
               }}
+              onPointerUp={() => setIsDraggingDraft(false)}
+              onPointerCancel={() => setIsDraggingDraft(false)}
+              onLostPointerCapture={() => setIsDraggingDraft(false)}
+              // The page layer re-places the box on click; a finished drag must not.
+              onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={selectedSignatureImage}
@@ -613,6 +677,7 @@ export function SigningDocumentViewer({
 
   return (
     <div
+      ref={scrollAreaRef}
       className={cn(
         'flex flex-1 flex-col overflow-y-auto bg-surface-container-low',
         'bg-[radial-gradient(#041534_1px,transparent_1px)] [background-size:20px_20px]',
@@ -630,7 +695,8 @@ export function SigningDocumentViewer({
     >
       {passwordDialog}
 
-      <div className="flex flex-col items-center gap-8 p-8">
+      {/* Start-aligned so a page zoomed wider than the canvas scrolls instead of clipping its left edge. */}
+      <div ref={pagesColumnRef} className="flex flex-col items-start gap-8 p-4 md:p-8">
         {envelopeDocuments.map((docItem, docIndex) => {
           const pagesBefore = envelopeDocuments
             .slice(0, docIndex)
@@ -664,7 +730,7 @@ export function SigningDocumentViewer({
               ref={(el) => {
                 if (documentSectionRefs) documentSectionRefs.current[docItem.id] = el
               }}
-              className="flex w-full max-w-[850px] flex-col items-center gap-8 scroll-mt-4"
+              className="flex w-max min-w-full flex-col items-center gap-8 scroll-mt-4"
               data-document-section={docItem.id}
             >
               {!pdfLoadedByDocId[docItem.id] ? (
@@ -672,8 +738,13 @@ export function SigningDocumentViewer({
               ) : null}
 
               <PdfDocument
+                // A new file (e.g. after saving added text) remounts the document and its
+                // pages; swapping it in place lets old pages render against a destroyed
+                // worker ("Cannot read properties of null (reading 'sendWithPromise')").
+                key={pdfFileByDocumentId[docItem.document]?.url ?? docItem.id}
                 className="flex w-full flex-col items-center gap-8"
                 file={pdfFileByDocumentId[docItem.document]}
+                options={pdfOptionsFor(pdfFileByDocumentId[docItem.document]?.url)}
                 onLoadSuccess={(info: { numPages: number }) => {
                   setPdfLoadedByDocId((prev) => ({ ...prev, [docItem.id]: true }))
                   setDocumentNumPages(docItem.id, info.numPages)
@@ -701,20 +772,17 @@ export function SigningDocumentViewer({
                 {Array.from({ length: pageDims[docItem.id]?.numPages || 1 }, (_, i) => i + 1).map((pageNo) => (
                   <div
                     key={`${docItem.id}-${pageNo}`}
-                    className="relative w-fit max-w-full scroll-mt-4"
+                    className="relative w-fit scroll-mt-4"
                     data-signing-page={pagesBefore + pageNo}
-                    style={{
-                      transform: `scale(${scale})`,
-                      transformOrigin: 'top center',
-                    }}
                     ref={setPageContainerRef(docItem.id, pageNo)}
                   >
                     <div className="relative overflow-hidden bg-white shadow-xl ring-1 ring-black/5">
                       <PdfPage
                         pageNumber={pageNo}
+                        scale={scale}
                         renderAnnotationLayer={false}
                         renderTextLayer={false}
-                        className="block w-fit max-w-full"
+                        className="block w-fit"
                         loading={<PdfLoadingIndicator size="sm" label="Loading page…" />}
                         data-page-key={`${docItem.id}-${pageNo}`}
                         onRenderSuccess={(page: {
@@ -739,6 +807,7 @@ export function SigningDocumentViewer({
                         {renderSignaturePlaceholders(docItem, pageNo)}
                         {renderFieldOverlays(docItem, pageNo)}
                         {renderDraftPlacement(docItem, pageNo)}
+                        {renderPageOverlay?.(docItem.document, pageNo)}
                       </div>
                     </div>
                   </div>

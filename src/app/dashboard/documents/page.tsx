@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
@@ -14,8 +14,6 @@ import { MaterialIcon } from '@/components/ui/material-icon'
 import type { MaterialIconName } from '@/components/ui/material-icon'
 import { DocumentPreviewModal } from '@/components/documents/DocumentPreviewModal'
 import {
-  PageHeader,
-  SegmentedControl,
   ViewToggle,
   DataTable,
   StatusBadge,
@@ -49,6 +47,14 @@ const formatDate = (dateString: string): string =>
     day: 'numeric',
   })
 
+function formatStatusLabel(status: string): string {
+  const words = status.replace(/[_-]+/g, ' ').trim()
+  if (!words) return 'Draft'
+  return words.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+const statusPillClass = 'normal-case tracking-normal py-0.5 font-semibold'
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'
@@ -56,29 +62,32 @@ function getInitials(name: string): string {
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase()
 }
 
-function getFileTypeDisplay(fileName: string): {
-  icon: MaterialIconName
-  bg: string
-  color: string
-  fill?: boolean
-} {
+function getFileTypeIcon(fileName: string): MaterialIconName {
   const ext = fileName.split('.').pop()?.toLowerCase()
-  if (ext === 'pdf') {
-    return { icon: 'picture_as_pdf', bg: 'bg-error-light', color: 'text-error', fill: true }
-  }
-  return { icon: 'description', bg: 'bg-info-light', color: 'text-info', fill: true }
+  return ext === 'pdf' ? 'picture_as_pdf' : 'description'
+}
+
+function FileTypeMark({ fileName, size = 20 }: { fileName: string; size?: number }) {
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-muted">
+      <MaterialIcon name={getFileTypeIcon(fileName)} size={size} />
+    </div>
+  )
 }
 
 function OwnerCell({ name }: { name: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-surface-container text-[10px] font-semibold text-muted">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-label-xs text-muted">
         {getInitials(name)}
       </div>
-      <span className="text-body-sm">{name}</span>
+      <span className="text-body-sm text-on-surface">{name}</span>
     </div>
   )
 }
+
+const outlineButtonClass =
+  'border border-outline-variant bg-surface-container-lowest text-primary hover:bg-surface'
 
 export default function DocumentsPage() {
   const { data: session } = useSession()
@@ -92,11 +101,23 @@ export default function DocumentsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const listStatus = activeStatus === 'all' ? undefined : activeStatus
+  // Set by global search's "See all documents" link (?search=…).
+  const [searchFilter, setSearchFilter] = useState('')
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('search')
+    if (fromUrl) setSearchFilter(fromUrl.trim())
+  }, [])
+  const clearSearchFilter = () => {
+    setSearchFilter('')
+    setPage(1)
+    window.history.replaceState(null, '', window.location.pathname)
+  }
 
   const { data, isLoading, error, refetch, isFetching } = useDocuments({
     page,
     pageSize: PAGE_SIZE,
     status: listStatus,
+    search: searchFilter || undefined,
   })
 
   const deleteDocumentMutation = useDeleteDocument()
@@ -161,21 +182,7 @@ export default function DocumentsPage() {
       key: 'type',
       header: 'Type',
       hideOnMobile: true,
-      render: (doc) => {
-        const fileType = getFileTypeDisplay(doc.file_name)
-        return (
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${fileType.bg}`}
-          >
-            <MaterialIcon
-              name={fileType.icon}
-              size={20}
-              fill={fileType.fill}
-              className={fileType.color}
-            />
-          </div>
-        )
-      },
+      render: (doc) => <FileTypeMark fileName={doc.file_name} />,
     },
     {
       key: 'name',
@@ -187,7 +194,7 @@ export default function DocumentsPage() {
             e.stopPropagation()
             handleDocumentClick(doc)
           }}
-          className="max-w-[240px] truncate text-left text-body-sm font-medium text-primary hover:underline"
+          className="max-w-[240px] truncate rounded-lg text-left text-body-sm font-medium text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
           title={doc.file_name}
         >
           {doc.file_name}
@@ -199,13 +206,19 @@ export default function DocumentsPage() {
       header: 'Size',
       hideOnMobile: true,
       render: (doc) => (
-        <span className="text-body-sm text-muted">{formatFileSize(doc.file_size)}</span>
+        <span className="text-body-sm tabular-nums text-muted">{formatFileSize(doc.file_size)}</span>
       ),
     },
     {
       key: 'status',
       header: 'Status',
-      render: (doc) => <StatusBadge status={doc.status || 'draft'} />,
+      render: (doc) => (
+        <StatusBadge
+          status={doc.status || 'draft'}
+          label={formatStatusLabel(doc.status || 'draft')}
+          className={statusPillClass}
+        />
+      ),
     },
     {
       key: 'owner',
@@ -217,7 +230,7 @@ export default function DocumentsPage() {
       key: 'created',
       header: 'Created Date',
       render: (doc) => (
-        <span className="text-body-sm text-muted">
+        <span className="text-body-sm tabular-nums text-muted">
           {doc.created_at ? formatDate(doc.created_at) : 'Unknown'}
         </span>
       ),
@@ -228,46 +241,74 @@ export default function DocumentsPage() {
     viewMode === 'table' && selectedIds.size >= 2 && !mergeDocumentsMutation.isPending
 
   return (
-    <div className="mx-auto max-w-max-content-width space-y-8">
-      <PageHeader
-        title="Documents"
-        subtitle="Manage and track your electronic signatures and legal documents."
-        actions={
-          <>
-            <Button
-              variant="outline"
-              disabled={!canMerge}
-              onClick={handleMergeSelected}
-              className="border-border px-6 py-2.5"
-            >
-              <MaterialIcon name="merge" size={18} className="mr-2" />
-              {mergeDocumentsMutation.isPending ? 'Merging…' : 'Merge Selected'}
-            </Button>
-            <Button asChild className="bg-secondary px-6 py-2.5 hover:bg-accent-hover">
-              <Link href="/dashboard/documents/upload">
-                <MaterialIcon name="upload" size={18} className="mr-2" />
-                Upload
-              </Link>
-            </Button>
-          </>
-        }
-      />
+    <div className="mx-auto max-w-max-content-width space-y-6">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          disabled={!canMerge}
+          onClick={handleMergeSelected}
+          className={outlineButtonClass}
+        >
+          <MaterialIcon name="merge" size={18} />
+          {mergeDocumentsMutation.isPending ? 'Merging…' : 'Merge Selected'}
+        </Button>
+        <Button asChild className="bg-secondary text-on-secondary hover:bg-accent-hover">
+          <Link href="/dashboard/documents/upload" prefetch={false}>
+            <MaterialIcon name="upload" size={18} />
+            Upload
+          </Link>
+        </Button>
+      </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-surface-container-lowest shadow-card">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border p-4">
-          <SegmentedControl
-            options={filterOptions}
-            value={activeStatus}
-            onChange={(v) => {
-              setActiveStatus(v as DocumentStatusTab)
-              setPage(1)
-            }}
-          />
-          <ViewToggle view={viewMode} onChange={setViewMode} />
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border p-6">
+          <div
+            className="inline-flex min-w-0 max-w-full gap-2 overflow-x-auto"
+            role="group"
+            aria-label="Filter documents by status"
+          >
+            {filterOptions.map((option) => {
+              const isActive = activeStatus === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setActiveStatus(option.value)
+                    setPage(1)
+                  }}
+                  className={`inline-flex h-10 shrink-0 items-center rounded-xl border bg-surface-container-lowest px-4 text-label-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2 ${
+                    isActive
+                      ? 'border-primary'
+                      : 'border-outline-variant hover:bg-surface'
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
+          <ViewToggle view={viewMode} onChange={setViewMode} className="shrink-0" />
         </div>
 
+        {searchFilter ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-container-low px-6 py-2">
+            <p className="text-body-sm text-on-surface">
+              Showing documents matching <span className="font-semibold">“{searchFilter}”</span>
+            </p>
+            <button
+              type="button"
+              onClick={clearSearchFilter}
+              className="rounded-lg px-2 py-1 text-label-sm font-medium text-your-turn-text hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : null}
+
         {isLoading && !data ? (
-          <div className="flex items-center justify-center py-16 text-muted">
+          <div className="flex items-center justify-center py-16 text-body-sm text-muted">
             <MaterialIcon name="progress_activity" size={24} className="animate-spin" />
             <span className="ml-2">Loading documents…</span>
           </div>
@@ -278,56 +319,50 @@ export default function DocumentsPage() {
               title="Failed to load documents"
               description="Please try refreshing the page."
               action={
-                <Button onClick={() => refetch()} variant="outline">
+                <Button onClick={() => refetch()} variant="outline" className={outlineButtonClass}>
                   Retry
                 </Button>
               }
             />
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 p-6 sm:grid-cols-2 lg:grid-cols-3">
             {documents.length === 0 ? (
-              <EmptyState
-                icon="description"
-                title="No documents found"
-                description="Upload your first document to get started."
-                action={
-                  <Button asChild>
-                    <Link href="/dashboard/documents/upload">Upload Your First Document</Link>
-                  </Button>
-                }
-              />
+              <div className="col-span-full">
+                <EmptyState
+                  icon="description"
+                  title="No documents found"
+                  description="Upload your first document to get started."
+                  action={
+                    <Button asChild className="bg-secondary text-on-secondary hover:bg-accent-hover">
+                      <Link href="/dashboard/documents/upload" prefetch={false}>Upload Your First Document</Link>
+                    </Button>
+                  }
+                />
+              </div>
             ) : (
-              documents.map((doc) => {
-                const fileType = getFileTypeDisplay(doc.file_name)
-                return (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => handleDocumentClick(doc)}
-                    className="rounded-xl border border-border bg-surface-container-low p-4 text-left transition-shadow hover:shadow-raised"
-                  >
-                    <div
-                      className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg ${fileType.bg}`}
-                    >
-                      <MaterialIcon
-                        name={fileType.icon}
-                        size={24}
-                        fill={fileType.fill}
-                        className={fileType.color}
-                      />
-                    </div>
-                    <p className="truncate font-medium text-primary">{doc.file_name}</p>
-                    <div className="mt-2">
-                      <StatusBadge status={doc.status || 'draft'} />
-                    </div>
-                  </button>
-                )
-              })
+              documents.map((doc) => (
+                <button
+                  key={doc.id}
+                  type="button"
+                  onClick={() => handleDocumentClick(doc)}
+                  className="rounded-xl p-4 text-left transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
+                >
+                  <FileTypeMark fileName={doc.file_name} />
+                  <p className="mt-3 truncate text-body-sm font-medium text-on-surface">{doc.file_name}</p>
+                  <div className="mt-2">
+                    <StatusBadge
+                      status={doc.status || 'draft'}
+                      label={formatStatusLabel(doc.status || 'draft')}
+                      className={statusPillClass}
+                    />
+                  </div>
+                </button>
+              ))
             )}
           </div>
         ) : documents.length > 0 ? (
-          <>
+          <div className="p-3 md:p-0">
             <DataTable
               columns={columns}
               data={documents}
@@ -340,8 +375,8 @@ export default function DocumentsPage() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 rounded-full p-0 text-muted hover:bg-surface-container-high"
+                      size="icon"
+                      className="text-muted hover:bg-surface"
                       aria-label="Row actions"
                     >
                       <MaterialIcon name="more_vert" size={18} />
@@ -351,6 +386,11 @@ export default function DocumentsPage() {
                     <DropdownMenuItem onClick={() => handleDocumentClick(doc)}>
                       View
                     </DropdownMenuItem>
+                    {doc.status === 'draft' ? (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/documents/${doc.id}/edit`}>Add text</Link>
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuItem onClick={() => handleDownloadDocument(doc.id)}>
                       Download
                     </DropdownMenuItem>
@@ -364,7 +404,7 @@ export default function DocumentsPage() {
                 </DropdownMenu>
               )}
             />
-          </>
+          </div>
         ) : (
           <div className="p-6">
             <EmptyState
@@ -377,8 +417,8 @@ export default function DocumentsPage() {
               }
               action={
                 activeStatus === 'all' ? (
-                  <Button asChild>
-                    <Link href="/dashboard/documents/upload">Upload Your First Document</Link>
+                  <Button asChild className="bg-secondary text-on-secondary hover:bg-accent-hover">
+                    <Link href="/dashboard/documents/upload" prefetch={false}>Upload Your First Document</Link>
                   </Button>
                 ) : undefined
               }
@@ -390,10 +430,10 @@ export default function DocumentsPage() {
           <div className="flex flex-col gap-4 border-t border-border p-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-body-sm text-muted">
               Showing{' '}
-              <span className="font-bold text-on-surface">
+              <span className="font-medium tabular-nums text-on-surface">
                 {rangeStart}-{rangeEnd}
               </span>{' '}
-              of <span className="font-bold text-on-surface">{totalCount}</span> documents
+              of <span className="font-medium tabular-nums text-on-surface">{totalCount}</span> documents
             </p>
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
@@ -404,11 +444,11 @@ export default function DocumentsPage() {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={!data?.previous && page <= 1}
                   aria-label="Previous page"
-                  className="rounded-lg"
+                  className={outlineButtonClass}
                 >
                   <MaterialIcon name="chevron_left" size={18} />
                 </Button>
-                <span className="flex h-10 min-w-10 items-center justify-center rounded-lg bg-secondary px-3 text-body-sm font-bold text-on-secondary">
+                <span className="flex h-10 min-w-10 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium tabular-nums text-primary">
                   {page}
                 </span>
                 <Button
@@ -418,7 +458,7 @@ export default function DocumentsPage() {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={!data?.next && page >= totalPages}
                   aria-label="Next page"
-                  className="rounded-lg"
+                  className={outlineButtonClass}
                 >
                   <MaterialIcon name="chevron_right" size={18} />
                 </Button>

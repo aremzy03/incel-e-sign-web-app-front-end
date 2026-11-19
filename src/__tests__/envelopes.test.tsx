@@ -7,6 +7,7 @@ import EnvelopeDetailPage from '@/app/dashboard/envelopes/[id]/page'
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useParams: jest.fn(() => ({ id: 'env-1' })),
+  usePathname: jest.fn(() => '/dashboard/envelopes/env-1'),
   useSearchParams: jest.fn(() => ({
     get: jest.fn(() => null),
     has: jest.fn(() => false),
@@ -140,7 +141,9 @@ describe('Envelopes Pages', () => {
 
   it('renders envelopes list page', () => {
     render(<EnvelopesPage />, { wrapper })
-    expect(screen.getByText('Envelopes')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Envelopes' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Manage your document envelopes and track their status')).not.toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search envelopes' })).toBeInTheDocument()
     expect(screen.getByText('Test Envelope')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sign yourself' })).toHaveAttribute(
       'href',

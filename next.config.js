@@ -140,6 +140,10 @@ const nextConfig = {
       },
     ]
 
+    // Dev-only allowance so impeccable live mode can load.
+    const __impeccableLiveDev =
+      process.env.NODE_ENV === "development" ? " http://localhost:8400" : "";
+
     // Content Security Policy
     // Allow images and XHR/WebSocket connections to the backend API origin (for profile photos, etc.)
     const imgSrc = "img-src 'self' data: blob: https:" + (apiOrigin ? ` ${apiOrigin}` : '')
@@ -154,14 +158,14 @@ const nextConfig = {
     }
 
     const connectSrc =
-      "connect-src 'self' blob:" +
+      `connect-src 'self' blob:${__impeccableLiveDev}` +
       (apiOrigin ? ` ${apiOrigin}` : '') +
       (cdnOrigin ? ` ${cdnOrigin}` : '')
 
     const cspHeader = [
       // Allow blob: for inline PDF blobs created on the frontend
       "default-src 'self' blob:",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed for PDF.js
+      `script-src 'self' 'unsafe-eval' 'unsafe-inline'${__impeccableLiveDev}`, // unsafe-eval needed for PDF.js
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       imgSrc,
@@ -186,6 +190,17 @@ const nextConfig = {
         // Apply security headers to all routes
         source: '/(.*)',
         headers: securityHeaders,
+      },
+      {
+        // pdf.js fetches this before it can paint. Cache it so Nigeria users
+        // don't download the worker from the US origin on every visit.
+        source: '/pdf.worker.min.mjs',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400',
+          },
+        ],
       },
     ]
 

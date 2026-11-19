@@ -59,7 +59,7 @@ export function FileDropzone({
         <div
           className={cn(
             'flex h-16 w-16 items-center justify-center rounded-full',
-            error ? 'bg-error-light text-error' : 'bg-surface-container text-secondary',
+            error ? 'bg-error-light text-error-text' : 'bg-surface-container text-secondary',
           )}
         >
           <MaterialIcon name={error ? 'error' : 'upload_file'} size={32} fill={!!error} />

@@ -73,15 +73,15 @@ const variantConfig = {
   },
   warning: {
     border: 'border-warning-light',
-    titleColor: 'text-warning',
+    titleColor: 'text-warning-text',
     icon: <AlertTriangle className="w-5 h-5" />,
-    iconBg: 'bg-warning-light text-warning',
+    iconBg: 'bg-warning-light text-warning-text',
   },
   success: {
     border: 'border-success-light',
-    titleColor: 'text-success',
+    titleColor: 'text-success-text',
     icon: <CheckCircle className="w-5 h-5" />,
-    iconBg: 'bg-success-light text-success',
+    iconBg: 'bg-success-light text-success-text',
   },
   info: {
     border: 'border-info-light',
@@ -144,7 +144,7 @@ const ModalContent = React.forwardRef<
         <motion.div
           className={cn(
             'fixed left-1/2 top-1/2 z-modal w-full -translate-x-1/2 -translate-y-1/2',
-            'bg-white rounded-lg shadow-authority border-2',
+            'bg-surface-container-lowest rounded-lg shadow-authority border-2',
             'focus:outline-none focus:ring-2 focus:ring-status-your-turn focus:ring-offset-2',
             sizeStyles,
             variantStyles.border,
@@ -437,8 +437,8 @@ export function SignatureConfirmationModal({
       title="Confirm Digital Signature"
       description={
         signerName && documentTitle
-          ? `${signerName}, you are about to digitally sign "${documentTitle}". This action is legally binding.`
-          : "You are about to apply your digital signature. This action is legally binding."
+          ? `${signerName}, you are about to sign "${documentTitle}" electronically. Your signature will be added to the document.`
+          : "You are about to sign this document electronically. Your signature will be added to the document."
       }
       confirmText="Sign Document"
       confirmVariant="authority"

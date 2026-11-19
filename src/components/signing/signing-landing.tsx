@@ -4,7 +4,6 @@ import type { Envelope } from '@/lib/api/envelopes'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Button } from '@/components/ui/button'
 import { SigningSignerTimeline } from './signing-signer-timeline'
-import { SigningTrustBadges } from './signing-trust-badges'
 
 interface SigningLandingProps {
   envelope: Envelope
@@ -76,7 +75,7 @@ export function SigningLanding({
                 <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container p-4">
                   <div className="flex items-center gap-3">
                     <MaterialIcon name="lock" fill size={20} className="text-primary" />
-                    <span className="font-label-sm text-label-sm text-on-surface">Secure & Legally Binding</span>
+                    <span className="font-label-sm text-label-sm text-on-surface">Each step is recorded in the audit trail</span>
                   </div>
                   <span className="font-caption-xs text-caption-xs text-muted">ID: {envelope.id}</span>
                 </div>
@@ -91,7 +90,7 @@ export function SigningLanding({
                 <Button
                   type="button"
                   onClick={onReviewSign}
-                  className="hidden h-12 w-full gap-2 bg-status-your-turn font-bold text-white shadow-md hover:bg-accent-hover md:flex"
+                  className="hidden h-12 w-full gap-2 bg-your-turn-strong font-bold text-white shadow-md hover:bg-your-turn-strong-hover md:flex"
                 >
                   <MaterialIcon name="edit_document" size={20} />
                   Review & Sign Document
@@ -123,14 +122,13 @@ export function SigningLanding({
           </div>
         </div>
 
-        <SigningTrustBadges />
       </div>
 
       <div className="fixed bottom-0 left-0 z-50 flex w-full flex-col gap-2 border-t border-outline-variant bg-surface-container-lowest p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] md:hidden">
         <Button
           type="button"
           onClick={onReviewSign}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-status-your-turn font-bold text-white shadow-lg"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-your-turn-strong font-bold text-white shadow-lg"
         >
           <MaterialIcon name="edit_document" size={20} />
           Review & Sign

@@ -92,7 +92,7 @@ export default function SignaturesPage() {
         <EmptyState
           icon="gesture"
           title="Create a signature to speed up signing"
-          description="Your saved signatures are encrypted and ready to use across all your enterprise legal agreements."
+          description="Save a signature once and reuse it whenever you sign."
           action={
             <div className="flex flex-wrap justify-center gap-3">
               <Button variant="outline" onClick={() => setModalOpen(true)}>
@@ -129,7 +129,7 @@ export default function SignaturesPage() {
             </div>
           </section>
 
-          <section className="mb-12 rounded-xl border border-border bg-white p-6 shadow-sm">
+          <section className="mb-12 rounded-xl border border-border bg-surface-container-lowest p-6 shadow-sm">
             <h3 className="mb-4 flex items-center gap-2 text-label-sm font-bold text-primary">
               <MaterialIcon name="gesture" size={20} className="text-secondary" />
               Active Signature Picker Preview
@@ -149,8 +149,8 @@ export default function SignaturesPage() {
                   }
                 >
                   {sig.is_default && (
-                    <span className="material-symbols-outlined absolute right-2 top-2 rounded-full bg-white text-secondary">
-                      check_circle
+                    <span className="absolute right-2 top-2 rounded-full bg-white text-secondary">
+                      <MaterialIcon name="check_circle" size={24} aria-label="Default signature" />
                     </span>
                   )}
                   {/* eslint-disable-next-line @next/next/no-img-element */}

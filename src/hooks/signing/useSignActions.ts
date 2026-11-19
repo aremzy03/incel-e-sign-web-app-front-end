@@ -10,7 +10,12 @@ import { SIGNING_API_TIMEOUT_MS, signEnvelope, type SignEnvelopePayload } from '
 import type { EnvelopeDocumentResponse, Position } from '@/lib/api/envelopes'
 import type { User } from '@/lib/api/users'
 import type { SigningEnvelopeField, SigningEnvelopeResponse } from './types'
-import { formatSigningDate, getInitialsFromName } from './types'
+import {
+  DEFAULT_INITIALS_CHOICE,
+  initialsText,
+  stampRequestOptions,
+  type InitialsChoice,
+} from '@/lib/fields/stamps'
 
 export type SignMutationResult =
   | { kind: 'queued'; jobId: string; envelopeId: string }
@@ -29,6 +34,8 @@ interface UseSignActionsOptions {
   supportsDecline?: boolean
   supportsFieldSave?: boolean
   token?: string
+  /** Signer's initials style and font, sent with the sign request. */
+  initialsChoice?: InitialsChoice
 }
 
 function resolveEnvelopeIdForSign(
@@ -71,6 +78,7 @@ export function useSignActions({
   supportsDecline = true,
   supportsFieldSave = true,
   token,
+  initialsChoice = DEFAULT_INITIALS_CHOICE,
 }: UseSignActionsOptions) {
   const queryClient = useQueryClient()
   const [declineMessage, setDeclineMessage] = useState('')
@@ -87,20 +95,9 @@ export function useSignActions({
       allFields.forEach((f) => {
         if (currentUserId && f.assigned_signer !== currentUserId) return
         if (!f.id) return
+        // Date and initials are filled by the server at signing time.
         let value = ''
         if (f.type === 'text') value = (fieldValues[f.id] ?? f.prefill_value ?? '').toString()
-        if (f.type === 'date') {
-          value =
-            f.prefill_value && f.prefill_value.trim() !== ''
-              ? f.prefill_value
-              : formatSigningDate(new Date(), f.date_format)
-        }
-        if (f.type === 'initials') {
-          value =
-            f.prefill_value && f.prefill_value.trim() !== ''
-              ? f.prefill_value
-              : getInitialsFromName(currentUserId ? signerDetails[currentUserId]?.full_name : undefined)
-        }
         if (f.type === 'designation') value = (f.prefill_value ?? '').toString()
         if (value !== '') items.push({ id: f.id, value })
       })
@@ -133,6 +130,7 @@ export function useSignActions({
         signature_id: mySignatureId,
         token,
         ...buildPlacementPayload(placement),
+        ...stampRequestOptions(initialsChoice),
       })
 
       if (result.kind === 'already_signed') {
@@ -200,23 +198,19 @@ export function useSignActions({
       if (!f.required) return false
       let v = ''
       if (f.type === 'text') v = (fieldValues[f.id ?? ''] ?? f.prefill_value ?? '').toString()
-      if (f.type === 'date') {
-        v =
-          f.prefill_value && f.prefill_value.trim() !== ''
-            ? f.prefill_value
-            : formatSigningDate(new Date(), f.date_format)
-      }
+      // The server stamps the signing date; it is never empty.
+      if (f.type === 'date') return false
       if (f.type === 'initials') {
         v =
           f.prefill_value && f.prefill_value.trim() !== ''
             ? f.prefill_value
-            : getInitialsFromName(signerDetails[currentUserId ?? '']?.full_name)
+            : initialsText(signerDetails[currentUserId ?? '']?.full_name, initialsChoice.style)
       }
       if (f.type === 'designation') v = (f.prefill_value ?? '').toString()
       return !v || v.trim() === ''
     })
     return emptyRequired
-  }, [currentUserId, envelope?.fields, fieldValues, signerDetails])
+  }, [currentUserId, envelope?.fields, fieldValues, signerDetails, initialsChoice.style])
 
   const approveAndSign = async (): Promise<SignMutationResult | null> => {
     try {

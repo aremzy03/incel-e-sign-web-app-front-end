@@ -22,9 +22,10 @@ export function NotificationFeedItem({ notification, onClick, className }: Notif
         if (!notification.is_read) onClick?.()
       }}
       className={cn(
-        'w-full rounded-xl border border-border border-l-4 bg-surface-container-lowest p-4 text-left shadow-card transition-opacity hover:bg-surface-container-low',
-        style.borderClass,
-        !isUnread && 'opacity-60',
+        'w-full rounded-xl border border-border p-4 text-left transition-colors hover:bg-surface-container-low',
+        // Unread items sit raised on the page; read items settle flat. Text keeps
+        // full contrast either way (fading the whole card made it fail AA).
+        isUnread ? 'bg-surface-container-lowest shadow-card' : 'bg-surface-container-low/60',
         className,
       )}
     >
@@ -49,7 +50,7 @@ export function NotificationFeedItem({ notification, onClick, className }: Notif
               </span>
             )}
             {isUnread && (
-              <span className="rounded-full bg-status-your-turn/10 px-2 py-0.5 text-caption-xs font-medium text-status-your-turn">
+              <span className="rounded-full bg-status-your-turn/10 px-2 py-0.5 text-caption-xs font-medium text-your-turn-text">
                 Unread
               </span>
             )}

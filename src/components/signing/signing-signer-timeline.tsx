@@ -93,10 +93,10 @@ export function SigningSignerTimeline({
 
               {isCompleted ? (
                 <div className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-success bg-success-light">
-                  <MaterialIcon name="check" size={18} className="font-bold text-success" />
+                  <MaterialIcon name="check" size={18} className="font-bold text-success-text" />
                 </div>
               ) : isCurrent ? (
-                <div className="pulse-teal z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-status-your-turn bg-white">
+                <div className="pulse-teal z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-status-your-turn bg-surface-container-lowest">
                   <div className="h-2.5 w-2.5 rounded-full bg-status-your-turn" />
                 </div>
               ) : (
@@ -110,15 +110,15 @@ export function SigningSignerTimeline({
                   <span
                     className={cn(
                       'font-label-sm text-label-sm',
-                      isCompleted && 'text-success',
-                      isCurrent && 'text-status-your-turn',
+                      isCompleted && 'text-success-text',
+                      isCurrent && 'text-your-turn-text',
                       !isCompleted && !isCurrent && 'text-on-surface-variant',
                     )}
                   >
                     {label}
                   </span>
                   {isYou && !isCurrent ? (
-                    <span className="rounded bg-primary-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-primary-container">
+                    <span className="rounded bg-primary-container px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-on-primary-container">
                       Upcoming
                     </span>
                   ) : null}
@@ -166,9 +166,9 @@ export function SigningSignerTimeline({
             <div
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-full',
-                signer.status === 'completed' && 'bg-success-light text-success',
-                signer.status === 'current' && 'bg-accent-light text-status-your-turn',
-                signer.status === 'rejected' && 'bg-error-light text-error',
+                signer.status === 'completed' && 'bg-success-light text-success-text',
+                signer.status === 'current' && 'bg-accent-light text-your-turn-text',
+                signer.status === 'rejected' && 'bg-error-light text-error-text',
                 signer.status === 'pending' && 'border-2 border-outline-variant bg-surface-container',
               )}
             >
@@ -186,8 +186,8 @@ export function SigningSignerTimeline({
               <p
                 className={cn(
                   'font-label-sm text-label-sm',
-                  signer.status === 'completed' && 'text-success',
-                  signer.status === 'current' && 'font-bold text-status-your-turn',
+                  signer.status === 'completed' && 'text-success-text',
+                  signer.status === 'current' && 'font-bold text-your-turn-text',
                   signer.status === 'pending' && 'text-on-surface',
                 )}
               >
@@ -214,7 +214,7 @@ export function SigningSignerTimeline({
             <div
               className={cn(
                 'absolute z-10 flex items-center justify-center rounded-full',
-                isCompleted && '-left-[26px] h-5 w-5 bg-status-completed text-white',
+                isCompleted && '-left-[26px] h-5 w-5 bg-success-strong text-white',
                 isCurrent && '-left-[30px] h-7 w-7',
                 !isCompleted && !isCurrent && '-left-[26px] h-5 w-5 border-2 border-outline-variant bg-surface-container',
               )}
@@ -231,13 +231,13 @@ export function SigningSignerTimeline({
               <div className="w-full rounded-lg border border-status-your-turn/30 bg-accent-light px-4 py-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-label-sm text-label-sm font-bold text-status-your-turn">
+                    <p className="font-label-sm text-label-sm font-bold text-your-turn-text">
                       {signer.name || `Signer ${i + 1}`}
                       {isYou ? ' (YOU)' : ''}
                     </p>
-                    <p className="font-caption-xs text-caption-xs text-status-your-turn">Your turn to sign</p>
+                    <p className="font-caption-xs text-caption-xs text-your-turn-text">Your turn to sign</p>
                   </div>
-                  <span className="rounded-full bg-status-your-turn px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                  <span className="rounded-full bg-your-turn-strong px-2 py-0.5 text-xs font-bold uppercase text-white">
                     Active
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export function SigningSignerTimeline({
                 <p
                   className={cn(
                     'font-label-sm text-label-sm',
-                    isCompleted ? 'text-status-completed' : 'text-on-surface',
+                    isCompleted ? 'text-success-text' : 'text-on-surface',
                   )}
                 >
                   {signer.name || `Signer ${i + 1}`}

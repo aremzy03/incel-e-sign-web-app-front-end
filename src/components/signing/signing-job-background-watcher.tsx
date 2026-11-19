@@ -52,7 +52,7 @@ function SigningJobItemPoller({ job, onSucceeded, onRemove }: SigningJobItemPoll
             name="check_circle"
             fill
             size={16}
-            className="shrink-0 text-status-completed animate-in zoom-in-75 fade-in duration-200"
+            className="shrink-0 text-success-text animate-in zoom-in-75 fade-in duration-200"
           />
         ) : isFailed ? (
           <MaterialIcon name="error" size={16} className="shrink-0 text-error" />

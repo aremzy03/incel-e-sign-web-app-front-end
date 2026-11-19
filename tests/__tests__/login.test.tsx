@@ -46,7 +46,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     
     expect(screen.getByText('Welcome Back')).toBeInTheDocument()
-    expect(screen.getByText('Sign in to your legal authority platform')).toBeInTheDocument()
+    expect(screen.getByText('Sign in to prepare and send agreements')).toBeInTheDocument()
   })
 
   it('renders email and password input fields', () => {

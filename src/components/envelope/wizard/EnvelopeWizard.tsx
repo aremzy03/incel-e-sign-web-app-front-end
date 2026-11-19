@@ -21,8 +21,8 @@ export function EnvelopeWizardContent() {
 
       {success && (
         <Alert className="mx-4 mt-4 border-success/30 bg-success-light md:mx-8">
-          <MaterialIcon name="check_circle" size={18} className="text-success" />
-          <AlertDescription className="text-success">{success}</AlertDescription>
+          <MaterialIcon name="check_circle" size={18} className="text-success-text" />
+          <AlertDescription className="text-success-text">{success}</AlertDescription>
         </Alert>
       )}
 

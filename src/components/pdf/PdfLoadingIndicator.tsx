@@ -118,7 +118,7 @@ export function PdfLoadingIndicator({
 
         {/* Center status pill */}
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-          <div className="flex items-center gap-2.5 rounded-full border border-border/80 bg-white/95 px-4 py-2 shadow-md backdrop-blur-sm">
+          <div className="flex items-center gap-2.5 rounded-full border border-border/80 bg-surface-container-lowest/95 px-4 py-2 shadow-md backdrop-blur-sm">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-secondary" />

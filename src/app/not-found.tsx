@@ -33,7 +33,7 @@ export default function NotFound() {
           </Link>
           <a
             href="mailto:support@incel-esign.com"
-            className="inline-flex items-center gap-2 rounded-xl border border-outline-variant bg-white px-8 py-3.5 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
+            className="inline-flex items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest px-8 py-3.5 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
           >
             <MaterialIcon name="contact_support" size={20} />
             Contact Support

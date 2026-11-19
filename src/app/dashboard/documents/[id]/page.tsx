@@ -5,9 +5,7 @@ import dynamic from 'next/dynamic'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { FileText, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { MaterialIcon } from '@/components/ui/material-icon'
 import { AsyncStatePanel } from '@/components/library'
 import { classifyError } from '@/lib/errors'
 import { getDocument } from '@/lib/api/documents'
@@ -19,11 +17,15 @@ import {
   SIGNING_ZOOM_MAX,
   SIGNING_ZOOM_MIN,
   SIGNING_ZOOM_STEP,
+  SigningToolbar,
 } from '@/components/signing/signing-toolbar'
 import type { DocumentPageInfo } from '@/components/envelope/VerticalPDFViewer'
 import { PdfLoadingIndicator } from '@/components/pdf/PdfLoadingIndicator'
 import { DocumentViewNavSidebar } from '@/components/documents/document-view-nav-sidebar'
-import { DocumentViewDetailsSidebar } from '@/components/documents/document-view-details-sidebar'
+import {
+  DocumentStatusBadge,
+  DocumentViewDetailsSidebar,
+} from '@/components/documents/document-view-details-sidebar'
 
 const VerticalPDFViewer = dynamic(
   () => import('@/components/envelope/VerticalPDFViewer').then((m) => m.VerticalPDFViewer),
@@ -85,22 +87,27 @@ export default function DocumentDetailPage() {
     }
   }, [documentId, documentData, downloadDocumentMutation])
 
+  const zoomIn = useCallback(() => {
+    setZoom((z) => Math.min(SIGNING_ZOOM_MAX, z + SIGNING_ZOOM_STEP))
+  }, [])
+
+  const zoomOut = useCallback(() => {
+    setZoom((z) => Math.max(SIGNING_ZOOM_MIN, z - SIGNING_ZOOM_STEP))
+  }, [])
+
   const noop = useCallback(() => {}, [])
 
   if (isLoading || authStatus === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center bg-surface">
-        <div className="flex items-center gap-2 text-muted">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading document...</span>
-        </div>
+      <div className="flex h-dvh items-center justify-center bg-bg px-4">
+        <AsyncStatePanel variant="loading" title="Loading document" />
       </div>
     )
   }
 
   if (documentError?.isNotFound) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
+      <div className="flex h-dvh flex-col items-center justify-center bg-bg px-4">
         <AsyncStatePanel
           variant="notFound"
           title="Document not found"
@@ -117,7 +124,7 @@ export default function DocumentDetailPage() {
 
   if (documentError) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
+      <div className="flex h-dvh flex-col items-center justify-center bg-bg px-4">
         <AsyncStatePanel
           variant="error"
           title="Unable to load document"
@@ -139,7 +146,7 @@ export default function DocumentDetailPage() {
 
   if (!documentData) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
+      <div className="flex h-dvh flex-col items-center justify-center bg-bg px-4">
         <AsyncStatePanel
           variant="notFound"
           title="Document unavailable"
@@ -155,65 +162,74 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-surface text-on-surface">
+    <div className="flex h-dvh flex-col overflow-hidden bg-bg text-on-surface">
+      <h1 className="sr-only">{documentDisplayTitle}</h1>
       <SelfSignEditorHeader
         documentTitle={documentDisplayTitle}
         zoom={zoom}
-        onZoomIn={() => setZoom((z) => Math.min(SIGNING_ZOOM_MAX, z + SIGNING_ZOOM_STEP))}
-        onZoomOut={() => setZoom((z) => Math.max(SIGNING_ZOOM_MIN, z - SIGNING_ZOOM_STEP))}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
         pageIndicator={pageIndicator}
         onExit={() => router.push('/dashboard/documents')}
       />
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div className="hidden md:flex">
-          <DocumentViewNavSidebar documentTitle={documentDisplayTitle} />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+        <div className="hidden h-full md:flex">
+          <DocumentViewNavSidebar documentTitle={documentDisplayTitle} documentId={documentData.id} />
         </div>
 
-        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface-container-low">
-          {mounted ? (
-            <VerticalPDFViewer
-              documents={viewerDocuments}
-              fieldPositions={{}}
-              recipients={[]}
-              activeFieldId={null}
-              onFieldSelect={noop}
-              onFieldPositionChange={noop}
-              onFieldDelete={noop}
-              onFieldDrop={noop}
-              pdfPassword={pdfPassword}
-              editorLayout
-              readOnly
-              viewerScale={zoom / 100}
-              onPagesChange={setDocumentPages}
-              activePageKey={activePageKey}
-              onActivePageKeyChange={setActivePageKey}
-            />
-          ) : null}
-        </main>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="shrink-0 border-b border-border bg-surface-container-lowest px-4 py-3 md:hidden">
+            <div className="flex items-center gap-3">
+              <p
+                className="min-w-0 flex-1 truncate text-label-sm text-on-surface"
+                title={documentDisplayTitle}
+                aria-hidden="true"
+              >
+                {documentDisplayTitle}
+              </p>
+              <DocumentStatusBadge status={documentData.status} />
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <SigningToolbar
+                className="min-w-max"
+                zoom={zoom}
+                onZoomIn={zoomIn}
+                onZoomOut={zoomOut}
+                pageIndicator={pageIndicator}
+              />
+            </div>
+          </div>
 
-        <div className="hidden md:flex">
-          <DocumentViewDetailsSidebar
-            document={documentData}
-            onDownload={handleDownload}
-            isDownloading={downloadDocumentMutation.isPending}
-          />
+          <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-bg">
+            {mounted ? (
+              <VerticalPDFViewer
+                documents={viewerDocuments}
+                fieldPositions={{}}
+                recipients={[]}
+                activeFieldId={null}
+                onFieldSelect={noop}
+                onFieldPositionChange={noop}
+                onFieldDelete={noop}
+                onFieldDrop={noop}
+                pdfPassword={pdfPassword}
+                editorLayout
+                readOnly
+                viewerScale={zoom / 100}
+                onPagesChange={setDocumentPages}
+                activePageKey={activePageKey}
+                onActivePageKeyChange={setActivePageKey}
+              />
+            ) : null}
+          </main>
         </div>
-      </div>
 
-      <div className="flex shrink-0 border-t border-border bg-surface-container-lowest p-4 md:hidden">
-        <Button
-          onClick={handleDownload}
-          disabled={downloadDocumentMutation.isPending}
-          className="flex w-full items-center justify-center gap-2"
-        >
-          {downloadDocumentMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <MaterialIcon name="download" size={18} />
-          )}
-          <span>Download</span>
-        </Button>
+        <DocumentViewDetailsSidebar
+          document={documentData}
+          onDownload={handleDownload}
+          isDownloading={downloadDocumentMutation.isPending}
+          editHref={documentData.status === 'draft' ? `/dashboard/documents/${documentData.id}/edit` : undefined}
+        />
       </div>
     </div>
   )

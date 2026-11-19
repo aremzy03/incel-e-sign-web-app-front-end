@@ -1,9 +1,17 @@
 export const PLACEHOLDER_TEXT = 'Type your text'
 
+/**
+ * Fonts for added text. Each list starts with faces that share one set of vertical metrics
+ * on every platform (Arial / Liberation Sans, Times New Roman / Liberation Serif, Courier
+ * New / Liberation Mono) and the same advance widths as the PDF core font the server draws
+ * with. The server places the baseline from those metrics (BASELINE_RATIOS in
+ * documents/services/pdf_text.py), so the saved text lands where the box shows it. Mac
+ * Helvetica, first in the old list, sits lower in its line box than Arial does.
+ */
 export const TEXT_FONTS = [
-  { id: 'Helvetica', label: 'Helvetica', css: 'Helvetica, Arial, sans-serif' },
-  { id: 'Times-Roman', label: 'Times Roman', css: "'Times New Roman', Times, serif" },
-  { id: 'Courier', label: 'Courier', css: "'Courier New', Courier, monospace" },
+  { id: 'Helvetica', label: 'Helvetica', css: "Arial, 'Liberation Sans', Helvetica, sans-serif" },
+  { id: 'Times-Roman', label: 'Times Roman', css: "'Times New Roman', 'Liberation Serif', Times, serif" },
+  { id: 'Courier', label: 'Courier', css: "'Courier New', 'Liberation Mono', Courier, monospace" },
 ] as const
 
 export type TextFontId = (typeof TEXT_FONTS)[number]['id']

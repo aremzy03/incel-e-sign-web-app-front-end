@@ -2,7 +2,6 @@ import apiClient from '@/lib/axios'
 import { logger } from '@/lib/logger'
 import { getCurrentFileUrl, getEnvelopeDocumentFileUrl } from '@/lib/url'
 import {
-  normalizeDocumentsWithPositionsForApi,
   normalizeSignerPositionEntries,
 } from '@/lib/utils/field-geometry'
 
@@ -404,12 +403,9 @@ export const createEnvelope = async (data: CreateEnvelopeRequest): Promise<Creat
   logger.debug('Creating envelope', { documentIds: data.document_ids?.length, signingOrder: data.signing_order?.length })
   
   try {
-    const payload: CreateEnvelopeRequest = {
-      ...data,
-      documents_with_positions:
-        normalizeDocumentsWithPositionsForApi(data.documents_with_positions) ??
-        data.documents_with_positions,
-    }
+    // Positions arrive in PDF points (buildEnvelopePayload converts the wizard's pixels).
+    // A second size-based guess here shrank signature boxes resized past ~160px by 1.2.
+    const payload: CreateEnvelopeRequest = data
     logger.api('POST', '/envelopes/create/', payload)
     
     // Direct to backend API
@@ -662,12 +658,8 @@ export const editEnvelope = async (
   logger.debug('Editing envelope', { id })
   
   try {
-    const payload: EditEnvelopeRequest = {
-      ...data,
-      documents_with_positions: normalizeDocumentsWithPositionsForApi(
-        data.documents_with_positions,
-      ),
-    }
+    // Already PDF points (see createEnvelope).
+    const payload: EditEnvelopeRequest = data
     logger.api('PATCH', `/envelopes/${id}/edit/`, payload)
     const response = await apiClient.patch(`/envelopes/${id}/edit/`, payload)
     logger.debug('Envelope edited successfully')

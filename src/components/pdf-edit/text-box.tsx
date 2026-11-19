@@ -52,7 +52,7 @@ function measureRenderedBox(
   mirror.style.fontWeight = style.bold ? '700' : '400'
   mirror.style.fontStyle = style.italic ? 'italic' : 'normal'
   mirror.style.lineHeight = '1.2'
-  mirror.style.padding = '0 4px'
+  mirror.style.padding = '0'
   mirror.style.width = 'max-content'
   mirror.textContent = text.length > 0 ? text : ' '
   document.body.appendChild(mirror)
@@ -69,7 +69,7 @@ function measureRenderedBox(
   mirror.remove()
   const widthPt = Math.min(maxWidthPt, Math.max(minWidthPt, widthPx / scaleX))
   const lineCount = Math.max(1, text.split('\n').length)
-  const heightPt = Math.max(heightPx / scaleY, lineCount * textLineHeight(fontSize)) + 2 / scaleY
+  const heightPt = Math.max(heightPx / scaleY, lineCount * textLineHeight(fontSize))
   return { width: widthPt, height: heightPt, widthPx: widthPt * scaleX, heightPx: heightPt * scaleY }
 }
 
@@ -108,7 +108,10 @@ const TextEditor = memo(function TextEditor({
       contentEditable
       suppressContentEditableWarning
       data-placeholder={PLACEHOLDER_TEXT}
-      className="h-full w-full overflow-visible border border-secondary bg-surface-container-lowest/80 px-1 text-on-surface outline-none empty:before:text-muted empty:before:content-[attr(data-placeholder)]"
+      // The text area is exactly the saved box: no border or padding inside it (the frame is a
+      // ring drawn outside). The server draws from the box's top-left in points; any screen-pixel
+      // inset here would make the saved text sit higher and further left than shown.
+      className="h-full w-full overflow-visible bg-surface-container-lowest/80 text-on-surface outline-none ring-1 ring-secondary empty:before:text-muted empty:before:content-[attr(data-placeholder)]"
       style={{
         fontFamily: family,
         fontSize: `${sizePx}px`,

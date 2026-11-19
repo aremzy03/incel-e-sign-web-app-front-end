@@ -36,6 +36,36 @@ export function useTextEditSession(documentId: string) {
   savedKeyRef.current = savedKey
   const baseChangedRef = useRef(baseChanged)
   baseChangedRef.current = baseChanged
+  /** The file this tab's edits are drawn on: the session's base, or the file a save just produced. */
+  const expectedBaseRef = useRef<string | null>(null)
+  if (session?.base_file_url && !expectedBaseRef.current) expectedBaseRef.current = session.base_file_url
+  const reopeningRef = useRef(false)
+
+  /**
+   * The server session closed under this tab (saved or discarded elsewhere, or reopening after
+   * a save failed). Open a new one and keep the user's edits: autosave then saves them to it.
+   * Only when the document is still the file they were editing; otherwise it's a base change.
+   */
+  const reopenClosedSession = useCallback(async () => {
+    if (reopeningRef.current) return
+    reopeningRef.current = true
+    try {
+      const reopened = await openTextEditSession(documentId)
+      if (expectedBaseRef.current && reopened.base_file_url !== expectedBaseRef.current) {
+        setBaseChanged(true)
+        setAutosaveError(textEditErrorCopy({ response: { data: { reason: 'base_changed' } } }).message)
+        return
+      }
+      expectedBaseRef.current = reopened.base_file_url
+      setSavedKey('[]') // the new session holds nothing yet: the current edits are unsaved
+      setSession(reopened)
+      setAutosaveError(null)
+    } catch {
+      setAutosaveError('Couldn’t save draft')
+    } finally {
+      reopeningRef.current = false
+    }
+  }, [documentId])
 
   const dirty = useMemo(() => opsKey(ops) !== savedKey, [ops, savedKey])
 
@@ -102,11 +132,15 @@ export function useTextEditSession(documentId: string) {
             setAutosaveError(copy.message)
             return
           }
+          if (copy.reason === 'session_closed') {
+            void reopenClosedSession()
+            return
+          }
           setAutosaveError('Couldn’t save draft')
         })
     }, 1000)
     return () => window.clearTimeout(handle)
-  }, [dirty, baseChanged, session, documentId, ops, restoreOffer])
+  }, [dirty, baseChanged, session, documentId, ops, restoreOffer, reopenClosedSession])
 
   useEffect(() => {
     const onLeave = (event: BeforeUnloadEvent) => {
@@ -151,7 +185,21 @@ export function useTextEditSession(documentId: string) {
   const commit = useCallback(async (override?: TextSessionOp[]) => {
     setSaving(true)
     try {
-      const result = await commitTextEdits(documentId, override ?? opsRef.current)
+      const ops = override ?? opsRef.current
+      let result
+      try {
+        result = await commitTextEdits(documentId, ops)
+      } catch (err) {
+        // The session closed under this tab: open a new one on the same file and save once more.
+        if (textEditErrorCopy(err).reason !== 'session_closed') throw err
+        const reopened = await openTextEditSession(documentId)
+        if (expectedBaseRef.current && reopened.base_file_url !== expectedBaseRef.current) {
+          setBaseChanged(true)
+          throw err
+        }
+        setSession(reopened)
+        result = await commitTextEdits(documentId, ops)
+      }
       setSavedKey(opsKey([]))
       setOps([])
       setSelectedId(null)
@@ -159,11 +207,21 @@ export function useTextEditSession(documentId: string) {
       redoStack.current = []
       // Commit closes the server session. Open a new one on the new file so the next
       // edit can autosave and save again in this visit (and gets that file's styles).
-      try {
-        setSession(await openTextEditSession(documentId))
+      // Edits from here on are drawn on the file this save produced.
+      expectedBaseRef.current = result.file_url
+      let reopened: TextEditSession | null = null
+      for (let attempt = 0; attempt < 2 && !reopened; attempt += 1) {
+        try {
+          reopened = await openTextEditSession(documentId)
+        } catch {
+          // A second try covers a brief failure; after that, the next autosave recovers
+          // (it gets session_closed and reopens).
+        }
+      }
+      if (reopened) {
+        expectedBaseRef.current = reopened.base_file_url
+        setSession(reopened)
         setRestoreOffer(null)
-      } catch {
-        // Keep the old session; the next save reports the problem.
       }
       return result
     } catch (err) {

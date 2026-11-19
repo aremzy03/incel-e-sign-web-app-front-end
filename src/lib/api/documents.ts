@@ -409,6 +409,7 @@ export function textEditErrorCopy(error: unknown): { reason: string; message: st
 }
 
 const TEXT_EDIT_REASON_COPY: Record<string, string> = {
+  session_closed: 'This editing session was closed. Reopen the document to keep editing.',
   rewrite_failed: 'Couldn’t replace the text on the page. The file was not changed.',
   box_covers_other_text: 'This edit would remove text on another line. Undo it and pick the word again.',
   rotated_text: 'Rotated text can’t be edited.',

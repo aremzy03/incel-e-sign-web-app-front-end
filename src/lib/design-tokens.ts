@@ -206,7 +206,8 @@ export const motion = {
     easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
     easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
     authorityEase: 'cubic-bezier(0.32, 0, 0.12, 1)',
-    sealBounce: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)',
+    // Settles without overshoot (ease-out-expo); the name is kept for existing imports.
+    sealBounce: 'cubic-bezier(0.16, 1, 0.3, 1)',
     modalSlide: 'cubic-bezier(0.16, 1, 0.3, 1)',
   },
   duration: {

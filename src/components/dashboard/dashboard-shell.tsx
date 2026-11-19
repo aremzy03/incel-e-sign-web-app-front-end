@@ -102,12 +102,12 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
 
   const mobileUserBlock = (
     <div className="space-y-3">
-      <p className="truncate text-sm font-medium text-on-primary">{displayUser.full_name}</p>
-      <p className="truncate text-xs text-on-primary-container">{displayUser.email}</p>
+      <p className="truncate text-sm font-medium text-on-panel">{displayUser.full_name}</p>
+      <p className="truncate text-xs text-on-panel-muted">{displayUser.email}</p>
       <button
         type="button"
         onClick={handleLogout}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-on-primary-container/30 px-4 py-2 text-sm text-on-primary hover:bg-primary-hover"
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-panel-border px-4 py-2 text-sm text-on-panel hover:bg-panel-hover"
       >
         <MaterialIcon name="logout" size={18} />
         Logout

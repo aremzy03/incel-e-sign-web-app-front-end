@@ -27,25 +27,23 @@ function MetricCard({
   label,
   value,
   icon,
-  iconBg,
   helper,
 }: {
   label: string
   value: string
   icon: MaterialIconName
-  iconBg: string
   helper?: string
 }) {
   return (
     <div className="rounded-xl border border-border bg-surface-container-lowest p-6 shadow-card">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-label-sm text-muted">{label}</p>
-          <p className="mt-2 text-headline-2xl font-bold text-on-surface">{value}</p>
-          {helper && <p className="mt-2 text-caption-xs text-muted">{helper}</p>}
+          <p className="mt-2 text-headline-xl text-on-surface tabular-nums">{value}</p>
+          {helper && <p className="mt-1.5 text-caption-xs text-muted">{helper}</p>}
         </div>
-        <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl', iconBg)}>
-          <MaterialIcon name={icon} size={22} />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+          <MaterialIcon name={icon} size={20} />
         </div>
       </div>
     </div>
@@ -76,10 +74,10 @@ function getActivityIcon(action: string): MaterialIconName {
 function getActivityIconClass(action: string): string {
   switch (action) {
     case 'SEND_ENVELOPE':
-      return 'text-info'
+      return 'text-muted'
     case 'SIGN_DOC':
     case 'SELF_SIGN_DOC':
-      return 'text-success'
+      return 'text-success-text'
     case 'REJECT_ENVELOPE':
     case 'DECLINE_SIGN':
       return 'text-error'
@@ -103,14 +101,16 @@ function QuickActionCard({
     <Link
       href={href}
       prefetch={false}
-      className="group flex items-start gap-3 rounded-xl border border-border bg-surface-container-lowest p-3 text-left shadow-card transition-all hover:border-secondary hover:shadow-raised active:scale-[0.99]"
+      className="flex items-start gap-4 rounded-xl border border-border bg-surface-container-lowest p-6 text-left shadow-card transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-secondary group-hover:text-on-secondary">
-        <MaterialIcon name={icon} size={18} className="text-inherit" />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+        <MaterialIcon name={icon} size={20} />
       </div>
-      <div>
-        <p className="text-sm font-semibold text-primary">{title}</p>
-        <p className="mt-1 text-xs leading-4 text-muted">{description}</p>
+      <div className="min-w-0">
+        <p className="text-body-base text-on-surface">
+          <span className="font-semibold">{title}</span>
+        </p>
+        <p className="mt-1.5 text-body-sm text-muted">{description}</p>
       </div>
     </Link>
   )
@@ -137,50 +137,44 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-headline-2xl font-bold text-on-surface">
-          {getGreeting()}, {userName}
-        </h1>
-        <p className="mt-1 text-body-sm text-muted">
+        <p className="text-body-base text-on-surface">
+          <span className="font-medium">{getGreeting()}, {userName}</span>
+        </p>
+        <p className="mt-1.5 text-body-sm text-muted">
           Here&apos;s what needs your attention today.
         </p>
       </div>
 
-      {/* Metrics */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Pending Signatures"
           value={isLoading ? '—' : String(metrics?.pending_signatures ?? 0)}
           icon="pending_actions"
-          iconBg="bg-warning-light text-warning"
           helper="Awaiting your signature"
         />
         <MetricCard
           label="Awaiting Others"
           value={isLoading ? '—' : String(metrics?.active_envelopes ?? 0)}
           icon="layers"
-          iconBg="bg-info-light text-info"
           helper="Out for signature"
         />
         <MetricCard
           label="Completed"
           value={isLoading ? '—' : String(metrics?.documents_signed ?? 0)}
           icon="check_circle"
-          iconBg="bg-success-light text-success"
           helper="Fully executed"
         />
         <MetricCard
           label="Drafts"
           value={isLoading ? '—' : String(dashboard?.counts.draft ?? 0)}
           icon="edit_square"
-          iconBg="bg-surface text-status-draft"
           helper="Not yet sent"
         />
       </div>
 
-      {/* Quick Actions */}
       <div>
-        <h2 className="mb-6 text-headline-lg font-semibold text-primary">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <h2 className="mb-4 text-headline-xl font-semibold text-on-surface">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <QuickActionCard
             href="/dashboard/documents/upload"
             icon="upload_file"
@@ -196,8 +190,8 @@ export default function DashboardPage() {
           <QuickActionCard
             href="/dashboard/envelopes/self-sign"
             icon="draw"
-            title="Sign Myself"
-            description="Add your digital signature to a document instantly."
+            title="Edit & Sign"
+            description="Edit a document, sign it yourself, or both."
           />
         </div>
       </div>
@@ -208,145 +202,151 @@ export default function DashboardPage() {
           title="Unable to load your dashboard"
           description={dashboardError.message}
           primaryAction={
-            <Button type="button" onClick={() => void refetch()}>
+            <Button type="button" variant="secondary" onClick={() => void refetch()}>
               Retry
             </Button>
           }
         />
       ) : null}
 
-      {/* Action Required + Recent Activity */}
       {!dashboardError || dashboard ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
-        <div className="lg:col-span-6">
-          <div className="overflow-hidden rounded-xl border border-border bg-surface-container-lowest shadow-card">
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <h2 className="text-headline-lg font-semibold text-primary">Action Required</h2>
-              <span className="rounded-full bg-error-light px-2.5 py-1 text-label-xs font-bold text-error">
-                Urgent
-              </span>
-            </div>
-            <div className="divide-y divide-border">
-              {isLoading ? (
-                <div className="p-6 text-sm text-muted">Loading...</div>
-              ) : actionRequired.length === 0 ? (
-                <div className="flex flex-col items-center py-12 text-center">
-                  <MaterialIcon name="task_alt" size={40} className="text-success" />
-                  <p className="mt-3 text-body-sm text-muted">You&apos;re all caught up!</p>
-                </div>
-              ) : (
-                actionRequired.map((env) => (
-                  <div
-                    key={env.id}
-                    className="flex flex-col gap-4 p-6 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
+          <div className="lg:col-span-6">
+            <div className="h-full overflow-hidden rounded-xl border border-border bg-surface-container-lowest shadow-card">
+              <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+                <h2 className="text-headline-xl font-semibold text-on-surface">Action Required</h2>
+                {actionRequired.length > 0 ? (
+                  <span
+                    className="shrink-0 text-label-sm tabular-nums text-muted"
+                    aria-label={`${actionRequired.length} ${actionRequired.length === 1 ? 'item needs' : 'items need'} your signature`}
                   >
-                    <div className="flex min-w-0 items-center gap-4">
-                      <div className="pulse-teal flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-your-turn text-white shadow-lg shadow-secondary/20">
-                        <MaterialIcon name="edit_square" size={20} className="text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-primary">
-                          {env.name || 'Untitled Envelope'}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-body-sm text-muted">
-                          <span>{env.creator_name || env.creator?.full_name || 'Unknown sender'}</span>
-                          <span className="h-1 w-1 rounded-full bg-border" />
-                          <span>{formatSentDate(env.sent_at || env.created_at)}</span>
+                    {actionRequired.length}
+                  </span>
+                ) : null}
+              </div>
+              <div className="divide-y divide-border">
+                {isLoading ? (
+                  <div className="p-6 text-body-sm text-muted">Loading...</div>
+                ) : actionRequired.length === 0 ? (
+                  <div className="flex flex-col items-center px-6 py-12 text-center">
+                    <MaterialIcon name="task_alt" size={28} className="text-success-text" />
+                    <p className="mt-3 text-body-sm text-muted">You&apos;re all caught up!</p>
+                  </div>
+                ) : (
+                  actionRequired.map((env) => (
+                    <div
+                      key={env.id}
+                      className="flex flex-col gap-4 p-6 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+                          <MaterialIcon name="edit_square" size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-body-base text-on-surface">
+                            <span className="font-semibold">{env.name || 'Untitled Envelope'}</span>
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-body-sm text-muted">
+                            <span>{env.creator_name || env.creator?.full_name || 'Unknown sender'}</span>
+                            <span className="h-1 w-1 rounded-full bg-border" />
+                            <span>{formatSentDate(env.sent_at || env.created_at)}</span>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex shrink-0 items-center gap-3 sm:ml-4">
+                        <span className="badge-status-your-turn inline-flex items-center rounded-full px-2.5 py-0.5 text-label-xs">
+                          <span className="font-semibold">Your Turn</span>
+                        </span>
+                        <Button asChild variant="authority" className="shrink-0">
+                          <Link
+                            href={`/dashboard/envelopes/${env.id}/sign`}
+                            prefetch={false}
+                          >
+                            Sign Now
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-4 sm:ml-4">
-                      <span className="hidden items-center gap-1 text-label-xs font-bold uppercase tracking-wider text-status-your-turn md:inline-flex">
-                        <span className="h-2 w-2 rounded-full bg-status-your-turn" />
-                        Your Turn
-                      </span>
-                      <Link
-                        href={`/dashboard/envelopes/${env.id}/sign`}
-                        prefetch={false}
-                        className="rounded-lg bg-secondary px-6 py-2 text-label-sm font-bold text-on-secondary shadow-sm transition-all hover:bg-accent-hover"
-                      >
-                        Sign Now
-                      </Link>
-                    </div>
-                  </div>
-                ))
+                  ))
+                )}
+              </div>
+              {actionRequired.length > 0 && (
+                <div className="border-t border-border bg-surface px-6 py-4 text-center">
+                  <Link
+                    href="/dashboard/envelopes"
+                    prefetch={false}
+                    className="inline-flex min-h-10 items-center rounded-xl text-label-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
+                  >
+                    View all pending actions
+                  </Link>
+                </div>
               )}
             </div>
-            {actionRequired.length > 0 && (
-              <div className="border-t border-border bg-surface px-6 py-4 text-center">
-                <Link
-                  href="/dashboard/envelopes"
-                  prefetch={false}
-                  className="text-label-sm font-bold text-secondary hover:underline"
-                >
-                  View all pending actions
-                </Link>
-              </div>
-            )}
           </div>
-        </div>
 
-        <div className="lg:col-span-4">
-          <div className="rounded-xl border border-border bg-surface-container-lowest shadow-card">
-            <div className="border-b border-border px-6 py-4">
-              <h2 className="text-headline-lg font-semibold text-on-surface">Recent Activity</h2>
-            </div>
-            <div className="space-y-0 p-4">
-              {isLoading ? (
-                <div className="p-2 text-sm text-muted">Loading...</div>
-              ) : recentActivity.length === 0 ? (
-                <p className="py-8 text-center text-body-sm text-muted">No recent activity</p>
-              ) : (
-                recentActivity.map((entry, i) => {
-                  const content = (
-                    <>
+          <div className="lg:col-span-4">
+            <div className="h-full rounded-xl border border-border bg-surface-container-lowest shadow-card">
+              <div className="border-b border-border px-6 py-4">
+                <h2 className="text-headline-xl font-semibold text-on-surface">Recent Activity</h2>
+              </div>
+              <div className="p-6">
+                {isLoading ? (
+                  <div className="text-body-sm text-muted">Loading...</div>
+                ) : recentActivity.length === 0 ? (
+                  <p className="py-8 text-center text-body-sm text-muted">No recent activity</p>
+                ) : (
+                  recentActivity.map((entry, i) => {
+                    const content = (
+                      <>
+                        <div className="relative z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-lg border border-border bg-surface-container-lowest">
+                          <MaterialIcon
+                            name={getActivityIcon(entry.action)}
+                            size={12}
+                            className={getActivityIconClass(entry.action)}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-body-sm text-on-surface group-hover:underline">
+                            {entry.message || entry.envelope_name || 'Envelope activity'}
+                          </p>
+                          <p className="text-caption-xs text-muted">
+                            {entry.created_at
+                              ? new Date(entry.created_at).toLocaleString()
+                              : 'Recently'}
+                          </p>
+                        </div>
+                      </>
+                    )
+
+                    return (
                       <div
+                        key={entry.id}
                         className={cn(
-                          'relative z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 border-border bg-surface-container-lowest',
+                          'relative flex gap-3',
+                          i < recentActivity.length - 1 ? 'pb-6' : 'pb-0',
                         )}
                       >
-                        <MaterialIcon
-                          name={getActivityIcon(entry.action)}
-                          size={12}
-                          className={getActivityIconClass(entry.action)}
-                        />
+                        {i < recentActivity.length - 1 && (
+                          <div className="absolute left-[11px] top-6 h-full w-px -translate-x-1/2 bg-border" />
+                        )}
+                        {entry.envelope_id ? (
+                          <Link
+                            href={`/dashboard/envelopes/${entry.envelope_id}`}
+                            prefetch={false}
+                            className="group relative flex min-w-0 flex-1 gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2"
+                          >
+                            {content}
+                          </Link>
+                        ) : (
+                          <div className="relative flex min-w-0 flex-1 gap-3">{content}</div>
+                        )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-body-sm font-medium text-on-surface">
-                          {entry.message || entry.envelope_name || 'Envelope activity'}
-                        </p>
-                        <p className="text-caption-xs text-muted">
-                          {entry.created_at
-                            ? new Date(entry.created_at).toLocaleString()
-                            : 'Recently'}
-                        </p>
-                      </div>
-                    </>
-                  )
-
-                  return (
-                    <div key={entry.id} className="relative flex gap-3 pb-6 pl-2">
-                      {i < recentActivity.length - 1 && (
-                        <div className="absolute left-[11px] top-6 h-full w-px bg-border" />
-                      )}
-                      {entry.envelope_id ? (
-                        <Link
-                          href={`/dashboard/envelopes/${entry.envelope_id}`}
-                          prefetch={false}
-                          className="relative flex min-w-0 flex-1 gap-3 transition-colors hover:text-secondary"
-                        >
-                          {content}
-                        </Link>
-                      ) : (
-                        <div className="relative flex min-w-0 flex-1 gap-3">{content}</div>
-                      )}
-                    </div>
-                  )
-                })
-              )}
+                    )
+                  })
+                )}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       ) : null}
     </div>

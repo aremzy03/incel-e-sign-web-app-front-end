@@ -12,8 +12,9 @@ export const easing = {
   // Authority easing - slow-in, fast-out for legal confidence
   authority: [0.32, 0, 0.12, 1] as const,
   
-  // Seal bounce for signature confirmation
-  sealBounce: [0.68, -0.6, 0.32, 1.6] as const,
+  // Signature confirmation: settles without overshoot (ease-out-expo).
+  // The name is kept for existing imports.
+  sealBounce: [0.16, 1, 0.3, 1] as const,
   
   // Modal slide with weight feeling
   modalSlide: [0.16, 1, 0.3, 1] as const,

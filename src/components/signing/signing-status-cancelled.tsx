@@ -12,7 +12,7 @@ interface SigningStatusCancelledProps {
 export function SigningStatusCancelled({ envelopeId, dashboardHref }: SigningStatusCancelledProps) {
   return (
     <div className="bento-pattern flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-6">
-      <main className="relative w-full max-w-[640px]">
+      <div className="relative w-full max-w-[640px]">
         <section className="relative z-10 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl">
           <div className="flex items-center justify-between border-b border-surface-container px-8 pb-4 pt-8">
             <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export function SigningStatusCancelled({ envelopeId, dashboardHref }: SigningSta
             ) : null}
           </div>
         </section>
-      </main>
+      </div>
     </div>
   )
 }

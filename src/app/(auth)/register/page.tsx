@@ -282,21 +282,6 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      {/* Trust badges - desktop only */}
-      <div className="pointer-events-none fixed bottom-8 left-1/2 hidden -translate-x-1/2 items-center gap-8 lg:flex">
-        <div className="flex items-center gap-2 text-caption-xs text-muted">
-          <MaterialIcon name="verified" size={16} className="text-success" />
-          SOC 2 Compliant
-        </div>
-        <div className="flex items-center gap-2 text-caption-xs text-muted">
-          <MaterialIcon name="security" size={16} className="text-success" />
-          AES-256 Encryption
-        </div>
-        <div className="flex items-center gap-2 text-caption-xs text-muted">
-          <MaterialIcon name="encrypted" size={16} className="text-success" />
-          eIDAS Ready
-        </div>
-      </div>
     </AuthCenteredLayout>
   )
 }

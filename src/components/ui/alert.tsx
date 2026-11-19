@@ -12,9 +12,9 @@ const alertVariants = cva(
         destructive:
           "border-error/50 text-error bg-error-light [&>svg]:text-error",
         success:
-          "border-success/50 text-success bg-success-light [&>svg]:text-success",
+          "border-success/50 text-success-text bg-success-light [&>svg]:text-success-text",
         warning:
-          "border-warning/50 text-warning bg-warning-light [&>svg]:text-warning",
+          "border-warning/50 text-warning-text bg-warning-light [&>svg]:text-warning-text",
         info:
           "border-info/50 text-info bg-info-light [&>svg]:text-info",
       },

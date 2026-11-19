@@ -42,16 +42,16 @@ export function DashboardMobileNav({
       <div
         ref={panelRef}
         className={cn(
-          'absolute inset-y-0 left-0 flex w-sidebar-width flex-col bg-primary shadow-modal dark:bg-primary-container',
+          'absolute inset-y-0 left-0 flex w-sidebar-width flex-col bg-panel shadow-modal',
           'animate-slide-in-right'
         )}
       >
-        <div className="flex items-center justify-between border-b border-primary-hover px-4 py-3">
-          <span className="text-sm font-semibold text-on-primary">Menu</span>
+        <div className="flex items-center justify-between border-b border-panel-border px-4 py-3">
+          <span className="text-sm font-semibold text-on-panel">Menu</span>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-on-primary-container hover:bg-primary-hover"
+            className="rounded-lg p-2 text-on-panel-muted hover:bg-panel-hover hover:text-on-panel"
             aria-label="Close menu"
           >
             <MaterialIcon name="close" size={22} />
@@ -60,7 +60,7 @@ export function DashboardMobileNav({
         <div className="flex flex-1 flex-col overflow-hidden">
           <DashboardSidebar navItems={navItems} onNavigate={onClose} className="w-full flex-1 border-0" />
           {userBlock && (
-            <div className="border-t border-primary-hover bg-primary-container p-4">{userBlock}</div>
+            <div className="border-t border-panel-border bg-panel-raised p-4">{userBlock}</div>
           )}
         </div>
       </div>

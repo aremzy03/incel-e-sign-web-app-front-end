@@ -102,7 +102,7 @@ export default function UserManagementPage() {
     return (
       <Badge 
         variant={status === 'Active' ? 'default' : 'destructive'}
-        className={status === 'Active' ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}
+        className={status === 'Active' ? 'bg-success-light text-success-text hover:bg-success-light' : ''}
       >
         {status}
       </Badge>
@@ -112,7 +112,7 @@ export default function UserManagementPage() {
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -127,10 +127,10 @@ export default function UserManagementPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-error-text mx-auto mb-4" />
               <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
               <p className="text-muted mb-4">
                 You don&apos;t have permission to view user management. Admin access required.
@@ -151,7 +151,7 @@ export default function UserManagementPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Page Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-surface-container-lowest rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-on-surface mb-2 flex items-center gap-2">
@@ -163,14 +163,14 @@ export default function UserManagementPage() {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-sm font-medium text-red-600">Admin Access</span>
+            <span className="text-sm font-medium text-error-text">Admin Access</span>
           </div>
         </div>
       </div>
 
       {/* Search and Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -183,13 +183,13 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-success-text">
               {users.filter(user => user.status === 'Active').length}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -198,13 +198,13 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Blocked Users</CardTitle>
             <UserX className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-error-text">
               {users.filter(user => user.status === 'Blocked').length}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -213,7 +213,7 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Admin Users</CardTitle>
             <IncelLogo className="h-4 w-4 text-muted-foreground" />
@@ -230,7 +230,7 @@ export default function UserManagementPage() {
       </div>
 
       {/* User Management Table */}
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-surface-container-lowest shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -295,8 +295,8 @@ export default function UserManagementPage() {
                             onClick={() => toggleUserStatus(user.id)}
                             className={
                               user.status === 'Active'
-                                ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                                : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                                ? 'text-error-text hover:text-error hover:bg-error-light'
+                                : 'text-success-text hover:text-success hover:bg-success-light'
                             }
                           >
                             {user.status === 'Active' ? (
@@ -315,7 +315,7 @@ export default function UserManagementPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteUser(user)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-error-text hover:text-error hover:bg-error-light"
                           >
                             <Trash2 className="h-4 w-4 mr-1" />
                             Delete
@@ -352,7 +352,7 @@ export default function UserManagementPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteUser}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-error hover:bg-error/90"
             >
               Delete User
             </AlertDialogAction>

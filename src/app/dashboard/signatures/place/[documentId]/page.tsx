@@ -127,7 +127,7 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Document Preview - Left Side (3/4 width) */}
         <div className="lg:col-span-3">
-          <Card className="bg-white shadow-sm">
+          <Card className="bg-surface-container-lowest shadow-sm">
             <CardHeader>
               <CardTitle>Document Preview</CardTitle>
               <CardDescription>
@@ -192,7 +192,7 @@ export default function SignaturePlacementPage({ params }: { params: Promise<{ d
 
         {/* Signature Toolbox - Right Side (1/4 width) */}
         <div className="lg:col-span-1">
-          <Card className="bg-white shadow-sm">
+          <Card className="bg-surface-container-lowest shadow-sm">
             <CardHeader>
               <CardTitle>My Signatures</CardTitle>
               <CardDescription>

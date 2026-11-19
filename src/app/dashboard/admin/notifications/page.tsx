@@ -210,7 +210,7 @@ export default function NotificationsCenter() {
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -225,10 +225,10 @@ export default function NotificationsCenter() {
   if (!isAdmin) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-error-text mx-auto mb-4" />
               <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
               <p className="text-muted mb-4">
                 You don&apos;t have permission to view notifications center. Admin access required.
@@ -255,7 +255,7 @@ export default function NotificationsCenter() {
     >
       {/* Page Header */}
       <motion.div 
-        className="bg-white rounded-lg shadow-sm p-6"
+        className="bg-surface-container-lowest rounded-lg shadow-sm p-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -271,7 +271,7 @@ export default function NotificationsCenter() {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-sm font-medium text-red-600">Admin Access</span>
+            <span className="text-sm font-medium text-error-text">Admin Access</span>
           </div>
         </div>
       </motion.div>
@@ -282,7 +282,7 @@ export default function NotificationsCenter() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -329,7 +329,7 @@ export default function NotificationsCenter() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    className="w-full pl-8 pr-3 py-2 border border-field-border bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
                     {statusFilters.map((filter) => (
                       <option key={filter.value} value={filter.value}>
@@ -350,7 +350,7 @@ export default function NotificationsCenter() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -378,7 +378,7 @@ export default function NotificationsCenter() {
                       className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
                         notification.status === 'unread' 
                           ? 'bg-info-light border-info-light' 
-                          : 'bg-white border-border'
+                          : 'bg-surface-container-lowest border-border'
                       }`}
                       onClick={() => toggleNotificationStatus(notification.id)}
                     >

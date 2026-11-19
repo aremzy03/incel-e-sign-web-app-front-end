@@ -91,7 +91,7 @@ export function SignatureModal({ open, onOpenChange, onUpload, isUploading }: Si
                 id="sig-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface-container-lowest px-3 py-2 text-body-sm"
+                className="w-full rounded-lg border border-field-border bg-surface-container-lowest px-3 py-2 text-body-sm"
                 placeholder="My signature"
               />
             </div>

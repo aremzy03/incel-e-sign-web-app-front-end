@@ -18,7 +18,7 @@ export function SigningFrozenEnvelopeAlert({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-xl border border-border bg-surface-container-lowest p-6 shadow-lg">
-        <div className="mb-4 flex items-center gap-3 text-status-your-turn">
+        <div className="mb-4 flex items-center gap-3 text-your-turn-text">
           <MaterialIcon name="lock" size={24} />
           <h2 className="font-headline-sm text-headline-sm">Envelope unavailable</h2>
         </div>

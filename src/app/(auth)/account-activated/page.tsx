@@ -14,7 +14,7 @@ export default function AccountActivatedPage() {
 
       <div className="auth-card rounded-xl border border-border bg-surface-container-lowest p-8 text-center md:p-12">
         <div className="success-checkmark-bounce mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success-light">
-          <MaterialIcon name="check_circle" fill size={48} className="text-success" />
+          <MaterialIcon name="check_circle" fill size={48} className="text-success-text" />
         </div>
 
         <h1 className="text-headline-2xl font-bold text-on-surface">Account activated!</h1>
@@ -32,17 +32,6 @@ export default function AccountActivatedPage() {
             Contact support
           </a>
         </p>
-      </div>
-
-      <div className="mt-8 flex items-center justify-center gap-6">
-        <div className="flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-caption-xs text-muted">
-          <MaterialIcon name="lock" size={14} className="text-success" />
-          TLS Encrypted
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-caption-xs text-muted">
-          <MaterialIcon name="verified_user" size={14} className="text-success" />
-          SOC 2
-        </div>
       </div>
     </AuthCenteredLayout>
   )

@@ -13,7 +13,7 @@ export function ViewToggle({ view, onChange, className }: ViewToggleProps) {
   return (
     <div
       className={cn(
-        'inline-flex rounded-lg border border-border bg-surface-container-low p-0.5',
+        'inline-flex rounded-xl border border-border bg-surface p-1',
         className,
       )}
       role="group"
@@ -23,10 +23,10 @@ export function ViewToggle({ view, onChange, className }: ViewToggleProps) {
         type="button"
         onClick={() => onChange('table')}
         className={cn(
-          'rounded-md p-2 transition-colors',
+          'rounded-lg p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-status-your-turn',
           view === 'table'
-            ? 'bg-surface text-secondary shadow-sm'
-            : 'text-muted hover:text-on-surface',
+            ? 'bg-surface-container-lowest text-primary'
+            : 'text-muted hover:text-primary',
         )}
         aria-label="Table view"
         aria-pressed={view === 'table'}
@@ -37,10 +37,10 @@ export function ViewToggle({ view, onChange, className }: ViewToggleProps) {
         type="button"
         onClick={() => onChange('grid')}
         className={cn(
-          'rounded-md p-2 transition-colors',
+          'rounded-lg p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-status-your-turn',
           view === 'grid'
-            ? 'bg-surface-container-lowest text-on-surface shadow-sm'
-            : 'text-muted hover:text-on-surface',
+            ? 'bg-surface-container-lowest text-primary'
+            : 'text-muted hover:text-primary',
         )}
         aria-label="Grid view"
         aria-pressed={view === 'grid'}

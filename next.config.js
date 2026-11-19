@@ -140,6 +140,10 @@ const nextConfig = {
       },
     ]
 
+    // Dev-only allowance so impeccable live mode can load.
+    const __impeccableLiveDev =
+      process.env.NODE_ENV === "development" ? " http://localhost:8400" : "";
+
     // Content Security Policy
     // Allow images and XHR/WebSocket connections to the backend API origin (for profile photos, etc.)
     const imgSrc = "img-src 'self' data: blob: https:" + (apiOrigin ? ` ${apiOrigin}` : '')
@@ -154,14 +158,14 @@ const nextConfig = {
     }
 
     const connectSrc =
-      "connect-src 'self' blob:" +
+      `connect-src 'self' blob:${__impeccableLiveDev}` +
       (apiOrigin ? ` ${apiOrigin}` : '') +
       (cdnOrigin ? ` ${cdnOrigin}` : '')
 
     const cspHeader = [
       // Allow blob: for inline PDF blobs created on the frontend
       "default-src 'self' blob:",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed for PDF.js
+      `script-src 'self' 'unsafe-eval' 'unsafe-inline'${__impeccableLiveDev}`, // unsafe-eval needed for PDF.js
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       imgSrc,

@@ -11,7 +11,8 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { useQuery } from '@tanstack/react-query'
 import { listAuditLogs, type AuditLogItem } from '@/lib/api/audit'
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
+// Brand chart series: ink navy, seal teal, pending amber, draft slate
+const COLORS = ['#041534', '#006a61', '#F59E0B', '#94A3B8']
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -110,7 +111,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -125,10 +126,10 @@ export default function AdminDashboard() {
   if (!isAdmin) {
     return (
       <div className="max-w-6xl mx-auto">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <IncelLogo className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <IncelLogo className="h-12 w-12 text-error-text mx-auto mb-4" />
               <h3 className="text-lg font-medium text-on-surface mb-2">Access Denied</h3>
               <p className="text-muted mb-4">
                 You don&apos;t have permission to view admin dashboard. Admin access required.
@@ -149,7 +150,7 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Admin Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-surface-container-lowest rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-on-surface mb-2 flex items-center gap-2">
@@ -161,7 +162,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-sm font-medium text-red-600">Admin Access</span>
+            <span className="text-sm font-medium text-error-text">Admin Access</span>
           </div>
         </div>
       </div>
@@ -169,7 +170,7 @@ export default function AdminDashboard() {
       {/* System Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Users */}
-        <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -183,7 +184,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Total Documents */}
-        <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -197,7 +198,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Envelopes - Draft */}
-        <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Draft Envelopes</CardTitle>
             <Mail className="h-4 w-4 text-muted-foreground" />
@@ -211,13 +212,13 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Envelopes - Sent */}
-        <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sent Envelopes</CardTitle>
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{logsLoading ? '—' : derived.envelopes.sent}</div>
+            <div className="text-2xl font-bold text-warning-text">{logsLoading ? '—' : derived.envelopes.sent}</div>
             <p className="text-xs text-muted-foreground">
               Awaiting signatures
             </p>
@@ -227,7 +228,7 @@ export default function AdminDashboard() {
 
       {/* Additional Envelope Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
@@ -235,12 +236,12 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">{logsLoading ? '—' : derived.envelopes.completed}</div>
+            <div className="text-3xl font-bold text-success-text">{logsLoading ? '—' : derived.envelopes.completed}</div>
             <p className="text-sm text-muted-foreground">Successfully completed</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
@@ -248,7 +249,7 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{logsLoading ? '—' : derived.envelopes.rejected}</div>
+            <div className="text-3xl font-bold text-error-text">{logsLoading ? '—' : derived.envelopes.rejected}</div>
             <p className="text-sm text-muted-foreground">Rejected or failed</p>
           </CardContent>
         </Card>
@@ -257,7 +258,7 @@ export default function AdminDashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Envelope Status Pie Chart */}
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
@@ -278,7 +279,7 @@ export default function AdminDashboard() {
                     labelLine={false}
                     label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill="#006a61"
                     dataKey="value"
                   >
                     {derived.envelopeStatusData.map((entry, index) => (
@@ -293,7 +294,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Documents Per Month Bar Chart */}
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-surface-container-lowest shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
@@ -311,7 +312,7 @@ export default function AdminDashboard() {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="documents" fill="#8884d8" />
+                  <Bar dataKey="documents" fill="#006a61" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -324,7 +325,7 @@ export default function AdminDashboard() {
         <h2 className="text-2xl font-bold text-on-surface mb-6">Quick Links</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Manage Users */}
-          <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+          <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-secondary" />
@@ -345,10 +346,10 @@ export default function AdminDashboard() {
           </Card>
 
           {/* View Logs */}
-          <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+          <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5 text-green-600" />
+                <Eye className="h-5 w-5 text-success-text" />
                 View Logs
               </CardTitle>
               <CardDescription>
@@ -366,10 +367,10 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Settings */}
-          <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+          <Card className="bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-purple-600" />
+                <Settings className="h-5 w-5 text-primary" />
                 Settings
               </CardTitle>
               <CardDescription>

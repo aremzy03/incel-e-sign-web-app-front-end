@@ -94,7 +94,7 @@ export default function SettingsPage() {
                         <MaterialIcon name={s.device} size={20} className="text-muted" />
                         <span className="font-medium text-on-surface">{s.name}</span>
                         {s.current && (
-                          <span className="flex items-center gap-1 text-caption-xs text-status-completed">
+                          <span className="flex items-center gap-1 text-caption-xs text-success-text">
                             <span className="h-1.5 w-1.5 rounded-full bg-status-completed" />
                             Current
                           </span>

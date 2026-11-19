@@ -1,15 +1,17 @@
 'use client'
 
+import { defaultFieldSettings } from '@/lib/fields/stamps'
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { Document, mergeDocuments } from '@/lib/api/documents'
 import { buildEnvelopePayload } from '@/lib/envelope/build-envelope-payload'
@@ -26,6 +28,7 @@ import {
 import { useCreateEnvelope, useEditEnvelope, useSendEnvelope } from '@/hooks/useEnvelopes'
 import { useEnvelopeUserValidation } from '@/hooks/useUsers'
 import { resolveSigningInProgressMessage } from '@/lib/api/signing-errors'
+import { readWizardTextEditResume, clearWizardTextEditResume } from '@/lib/pdf-edit/wizard-resume'
 import {
   FieldPosition,
   FieldPositions,
@@ -78,6 +81,8 @@ interface EnvelopeWizardContextValue {
   setDescription: (v: string) => void
   pdfPasswordProtectionEnabled: boolean
   setPdfPasswordProtectionEnabled: (v: boolean) => void
+  allowRecipientText: boolean
+  setAllowRecipientText: (v: boolean) => void
 
   addDocument: (document: Document) => void
   removeDocument: (documentId: string) => void
@@ -122,6 +127,8 @@ interface EnvelopeWizardContextValue {
 
   isHydrating: boolean
   draftEnvelopeId: string | null
+  nextFieldId: number
+  nextRecipientId: number
 
   hydrateState: (data: {
     uploadedDocuments: Document[]
@@ -132,6 +139,7 @@ interface EnvelopeWizardContextValue {
     envelopeName: string
     description: string
     pdfPasswordProtectionEnabled?: boolean
+    allowRecipientText?: boolean
   }) => void
 }
 
@@ -145,6 +153,7 @@ export function EnvelopeWizardProvider({
   isHydrating = false,
 }: EnvelopeWizardProviderProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const { mutateAsync: createAsync, isPending: creating } = useCreateEnvelope()
   const { mutateAsync: editAsync, isPending: saving } = useEditEnvelope()
@@ -174,15 +183,37 @@ export function EnvelopeWizardProvider({
   const [envelopeName, setEnvelopeName] = useState('')
   const [description, setDescription] = useState('')
   const [pdfPasswordProtectionEnabled, setPdfPasswordProtectionEnabled] = useState(false)
+  const [allowRecipientText, setAllowRecipientText] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  const resumed = useRef(false)
+
+  useEffect(() => {
+    if (resumed.current || isHydrating) return
+    if (searchParams?.get('resume') !== '1') return
+    const snapshot = readWizardTextEditResume()
+    if (!snapshot || snapshot.mode !== mode) return
+    resumed.current = true
+    clearWizardTextEditResume()
+    setUploadedDocuments(snapshot.uploadedDocuments)
+    setRecipients(snapshot.recipients)
+    setFieldPositions(snapshot.fieldPositions)
+    setNextFieldId(snapshot.nextFieldId)
+    setNextRecipientId(snapshot.nextRecipientId)
+    setEnvelopeName(snapshot.envelopeName)
+    setDescription(snapshot.description)
+    setPdfPasswordProtectionEnabled(snapshot.pdfPasswordProtectionEnabled)
+    setAllowRecipientText(Boolean(snapshot.allowRecipientText))
+    setCurrentStepState(snapshot.currentStep)
+    router.replace(pathname || snapshot.returnPath)
+  }, [isHydrating, mode, pathname, router, searchParams])
   const [activeDragFieldType, setActiveDragFieldType] = useState<string | null>(null)
   const [isMerging, setIsMerging] = useState(false)
 
   const validationInput = useMemo(
-    () => ({ uploadedDocuments, recipients, fieldPositions }),
-    [uploadedDocuments, recipients, fieldPositions],
+    () => ({ uploadedDocuments, recipients, fieldPositions, allowRecipientText }),
+    [uploadedDocuments, recipients, fieldPositions, allowRecipientText],
   )
 
   const sendValidationErrors = useMemo(
@@ -339,6 +370,7 @@ export function EnvelopeWizardProvider({
         height: 44,
         assignedTo: activeRecipientId != null ? String(activeRecipientId) : null,
         documentId,
+        ...defaultFieldSettings(fieldType as FieldPosition['type']),
       }
       setFieldPositions((prev) => ({
         ...prev,
@@ -433,6 +465,7 @@ export function EnvelopeWizardProvider({
           envelopeName,
           description,
           pdfPasswordProtectionEnabled,
+          allowRecipientText,
         },
         { mode: payloadMode, validateRecipients },
       )
@@ -444,6 +477,7 @@ export function EnvelopeWizardProvider({
       envelopeName,
       description,
       pdfPasswordProtectionEnabled,
+      allowRecipientText,
       validateRecipients,
     ],
   )
@@ -571,6 +605,7 @@ export function EnvelopeWizardProvider({
       envelopeName: string
       description: string
       pdfPasswordProtectionEnabled?: boolean
+      allowRecipientText?: boolean
     }) => {
       setUploadedDocuments(data.uploadedDocuments)
       setRecipients(data.recipients)
@@ -581,6 +616,9 @@ export function EnvelopeWizardProvider({
       setDescription(data.description)
       if (data.pdfPasswordProtectionEnabled !== undefined) {
         setPdfPasswordProtectionEnabled(data.pdfPasswordProtectionEnabled)
+      }
+      if (data.allowRecipientText !== undefined) {
+        setAllowRecipientText(data.allowRecipientText)
       }
     },
     [],
@@ -608,6 +646,8 @@ export function EnvelopeWizardProvider({
     setDescription,
     pdfPasswordProtectionEnabled,
     setPdfPasswordProtectionEnabled,
+    allowRecipientText,
+    setAllowRecipientText,
     addDocument,
     removeDocument,
     reorderDocument,
@@ -640,6 +680,8 @@ export function EnvelopeWizardProvider({
     setShowKeyboardShortcuts,
     isHydrating,
     draftEnvelopeId,
+    nextFieldId,
+    nextRecipientId,
     hydrateState,
   }
 

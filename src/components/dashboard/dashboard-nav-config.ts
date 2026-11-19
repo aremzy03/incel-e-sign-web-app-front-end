@@ -40,9 +40,35 @@ export function getDashboardNavItems(isAdmin: boolean): DashboardNavItem[] {
   return [...primaryDashboardNav, ...adminDashboardNav]
 }
 
+/** Dashboard sections that have pages but no sidebar link. */
+const OTHER_SECTIONS: { href: string; name: string }[] = [
+  { href: '/dashboard/profile', name: 'Profile' },
+  { href: '/dashboard/notifications', name: 'Notifications' },
+  { href: '/dashboard/audit', name: 'Audit Logs' },
+  { href: '/dashboard/admin', name: 'Admin' },
+]
+
+function inSection(pathname: string, href: string): boolean {
+  // The dashboard home is its own section only when it is the page itself.
+  if (href === '/dashboard') return pathname === href
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+/**
+ * The sidebar item whose section holds this page: /dashboard/envelopes/<id> belongs to
+ * Envelopes. Longest match wins, so nested sections can have their own items.
+ */
+export function getActiveNavItem(pathname: string, navItems: DashboardNavItem[]): DashboardNavItem | undefined {
+  return navItems
+    .filter((item) => inSection(pathname, item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0]
+}
+
 export function getPageTitle(pathname: string, navItems: DashboardNavItem[]): string {
-  const match = navItems.find((item) => item.href === pathname)
-  return match?.name ?? 'Dashboard'
+  const item = getActiveNavItem(pathname, navItems)
+  if (item) return item.name
+  const other = OTHER_SECTIONS.find((section) => inSection(pathname, section.href))
+  return other?.name ?? 'Dashboard'
 }
 
 export const NEW_DOCUMENT_HREF = '/dashboard/documents/upload'

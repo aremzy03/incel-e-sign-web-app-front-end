@@ -155,6 +155,13 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalConfig = error.config as InternalAxiosRequestConfig | undefined
 
+    // A request sent without a login (a signer on a public link, before any session exists)
+    // has no session to refresh or end: the caller handles the 401. Sending the visitor to
+    // the login page here would throw a token signer out of the signing page.
+    if (error.response?.status === 401 && originalConfig && !originalConfig.__hadAuthHeader) {
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 401 && shouldAttemptSilentRefresh(originalConfig)) {
       const previousAccessToken = getCachedAccessToken()
       const newAccessToken = await refreshSessionAccessToken()

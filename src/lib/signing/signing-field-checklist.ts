@@ -94,8 +94,10 @@ export function getActiveFieldId(items: SigningFieldChecklistItem[]): string | u
   return items.find((item) => !item.completed)?.id
 }
 
-export function scrollToSigningTarget(targetId: string): void {
-  if (typeof document === 'undefined') return
+/** Scrolls the field into view; false when it isn't on screen yet (its page hasn't rendered). */
+export function scrollToSigningTarget(targetId: string): boolean {
+  if (typeof document === 'undefined') return false
   const el = document.querySelector(`[data-signing-target="${targetId}"]`)
   el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  return Boolean(el)
 }

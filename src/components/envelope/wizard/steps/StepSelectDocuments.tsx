@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useDocuments } from '@/hooks/useDocuments'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
@@ -11,6 +12,7 @@ import { RecipientSearch } from '@/components/contacts/RecipientSearch'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { WizardDocumentUpload } from '../WizardDocumentUpload'
 import { useEnvelopeWizard } from '../envelope-wizard-context'
+import { saveWizardTextEditResume } from '@/lib/pdf-edit/wizard-resume'
 import {
   formatFileSize,
   getDefaultEnvelopeNamePreview,
@@ -36,7 +38,15 @@ export function StepSelectDocuments() {
     setDescription,
     pdfPasswordProtectionEnabled,
     setPdfPasswordProtectionEnabled,
+    mode,
+    envelopeId,
+    currentStep,
+    fieldPositions,
+    nextFieldId,
+    nextRecipientId,
+    allowRecipientText,
   } = useEnvelopeWizard()
+  const router = useRouter()
 
   const [mergeEnabled, setMergeEnabled] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -152,7 +162,7 @@ export function StepSelectDocuments() {
                           </div>
                         </div>
                         {badge && (
-                          <span className="rounded bg-surface-container px-2 py-1 text-[10px] font-bold uppercase text-on-surface-variant">
+                          <span className="rounded bg-surface-container px-2 py-1 text-xs font-bold uppercase text-on-surface-variant">
                             {badge}
                           </span>
                         )}
@@ -211,6 +221,35 @@ export function StepSelectDocuments() {
                         {formatFileSize(doc.file_size)}
                       </div>
                     </div>
+                    {doc.status === 'draft' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const returnPath = mode === 'edit' && envelopeId
+                            ? `/dashboard/envelopes/${envelopeId}/edit`
+                            : '/dashboard/envelopes/create'
+                          saveWizardTextEditResume({
+                            mode,
+                            envelopeId,
+                            returnPath,
+                            uploadedDocuments,
+                            recipients,
+                            fieldPositions,
+                            nextFieldId,
+                            nextRecipientId,
+                            envelopeName,
+                            description,
+                            pdfPasswordProtectionEnabled,
+                            allowRecipientText,
+                            currentStep,
+                          })
+                          router.push(`/dashboard/documents/${doc.id}/edit?from=wizard`)
+                        }}
+                        className="mr-1 rounded-lg px-2 py-1 text-caption-xs text-secondary hover:bg-surface-container"
+                      >
+                        Add text
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => removeDocument(doc.id)}
@@ -231,7 +270,7 @@ export function StepSelectDocuments() {
                     <span className="text-label-sm font-medium text-primary">
                       Merge into single PDF
                     </span>
-                    <span className="text-[11px] text-on-surface-variant">
+                    <span className="text-xs text-on-surface-variant">
                       Signers receive one document
                     </span>
                   </div>

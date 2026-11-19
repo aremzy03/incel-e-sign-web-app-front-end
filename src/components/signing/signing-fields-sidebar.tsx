@@ -1,5 +1,7 @@
 'use client'
 
+import { InitialsPicker } from '@/components/signing/initials-picker'
+import type { InitialsChoice } from '@/lib/fields/stamps'
 import Link from 'next/link'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { resolveSignatureImage } from '@/hooks/signing'
@@ -19,6 +21,12 @@ interface SigningFieldsSidebarProps {
   isUploading?: boolean
   manageHref?: string
   className?: string
+  /** Shown when the signer has initials fields. */
+  initials?: {
+    fullName: string | null | undefined
+    choice: InitialsChoice
+    onChange: (next: InitialsChoice) => void
+  } | null
 }
 
 export function SigningFieldsSidebar({
@@ -34,6 +42,7 @@ export function SigningFieldsSidebar({
   isUploading = false,
   manageHref,
   className,
+  initials,
 }: SigningFieldsSidebarProps) {
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const selectedId =
@@ -85,7 +94,7 @@ export function SigningFieldsSidebar({
                 <MaterialIcon
                   name={item.completed ? 'check_circle' : 'pending'}
                   size={20}
-                  className={item.completed ? 'text-status-completed' : 'text-status-your-turn'}
+                  className={item.completed ? 'text-success-text' : 'text-your-turn-text'}
                   fill={item.completed}
                 />
                 <span
@@ -111,7 +120,7 @@ export function SigningFieldsSidebar({
         <div className="flex items-center justify-between">
           <h4 className="font-label-sm text-label-sm font-bold uppercase text-primary">Saved Signatures</h4>
           {manageHref ? (
-            <Link href={manageHref} className="font-label-xs text-label-xs text-status-your-turn hover:underline">
+            <Link href={manageHref} className="font-label-xs text-label-xs text-your-turn-text hover:underline">
               Manage
             </Link>
           ) : null}
@@ -173,10 +182,19 @@ export function SigningFieldsSidebar({
           </button>
         </div>
 
+        {initials ? (
+          <section aria-labelledby="signing-initials-title" className="space-y-3">
+            <h4 id="signing-initials-title" className="font-label-sm text-label-sm font-bold uppercase text-primary">
+              Your initials
+            </h4>
+            <InitialsPicker fullName={initials.fullName} value={initials.choice} onChange={initials.onChange} />
+          </section>
+        ) : null}
+
         <div className="mt-auto">
           <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
             <p className="font-caption-xs text-caption-xs text-on-surface-variant">
-              By signing, you agree this is a legally binding signature under the ESIGN Act and UETA.
+              By signing, you agree to sign this document electronically.
             </p>
           </div>
         </div>

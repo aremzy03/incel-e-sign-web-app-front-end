@@ -64,7 +64,7 @@ export function SigningProcessingOverlay({
           </>
         ) : phase === 'timeout' ? (
           <>
-            <div className="mb-4 flex items-center gap-3 text-status-your-turn">
+            <div className="mb-4 flex items-center gap-3 text-your-turn-text">
               <MaterialIcon name="schedule" size={24} />
               <h2 id="signing-processing-title" className="font-headline-sm text-headline-sm">
                 Still processing…

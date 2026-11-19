@@ -9,6 +9,15 @@ import { cn } from '@/lib/utils'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { FIELD_EDITOR_THEMES, FIELD_TYPE_LABELS } from '@/components/envelope/field-editor-themes'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
+import {
+  DEFAULT_INITIALS_CHOICE,
+  TEXT_FIELD_RETIRED_MESSAGE,
+  fieldTextFontCss,
+  formatSigningDate,
+  initialsFontStyle,
+  initialsText,
+  type InitialsChoice,
+} from '@/lib/fields/stamps'
 
 interface FieldBoxProps {
   field: FieldPosition
@@ -20,6 +29,8 @@ interface FieldBoxProps {
   maxWidth?: number
   maxHeight?: number
   variant?: 'default' | 'editor'
+  /** How the signer's initials will look; defaults to the server default. */
+  initialsChoice?: InitialsChoice
 }
 
 export function FieldBox({
@@ -32,6 +43,7 @@ export function FieldBox({
   maxWidth,
   maxHeight,
   variant = 'default',
+  initialsChoice = DEFAULT_INITIALS_CHOICE,
 }: FieldBoxProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
@@ -46,32 +58,11 @@ export function FieldBox({
   const theme = FIELD_EDITOR_THEMES[field.type]
   const fieldColor = assignedRecipient?.color || '#6B7280'
 
-  const formatDate = (d: Date, pattern?: string) => {
-    const yyyy = d.getFullYear()
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mmm = d.toLocaleString('en', { month: 'short' })
-    switch (pattern) {
-      case 'MM/DD/YYYY':
-        return `${mm}/${dd}/${yyyy}`
-      case 'DD/MM/YYYY':
-        return `${dd}/${mm}/${yyyy}`
-      case 'YYYY/MM/DD':
-        return `${yyyy}/${mm}/${dd}`
-      case 'DD-MMM-YYYY':
-        return `${dd}-${mmm}-${yyyy}`
-      case 'YYYY-MM-DD':
-      default:
-        return `${yyyy}-${mm}-${dd}`
-    }
-  }
-
-  const getInitials = (name?: string) => {
-    if (!name) return 'AB'
-    const parts = name.trim().split(/\s+/)
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-  }
+  // Previews of what the server stamps at signing time (see lib/fields/stamps).
+  const datePreview = formatSigningDate(new Date(), field.date_format)
+  const initialsPreview = initialsText(assignedRecipient?.name || assignedRecipient?.email, initialsChoice.style) || 'AA'
+  const initialsStyle = initialsFontStyle(initialsChoice.font)
+  const textFontFamily = fieldTextFontCss(field.font_family)
 
   const handleDragStart = useCallback(() => {
     setIsDragging(true)
@@ -89,8 +80,9 @@ export function FieldBox({
   )
 
   const handleResizeStart = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       e.stopPropagation()
+      e.preventDefault()
       setIsResizing(true)
       onSelect(field.id)
     },
@@ -98,7 +90,7 @@ export function FieldBox({
   )
 
   const handleResize = useCallback(
-    (e: React.MouseEvent) => {
+    (e: PointerEvent) => {
       if (!isResizing || !nodeRef.current) return
       e.preventDefault()
       e.stopPropagation()
@@ -129,11 +121,13 @@ export function FieldBox({
 
   React.useEffect(() => {
     if (isResizing) {
-      document.addEventListener('mousemove', handleResize as unknown as EventListener)
-      document.addEventListener('mouseup', handleResizeEnd)
+      document.addEventListener('pointermove', handleResize)
+      document.addEventListener('pointerup', handleResizeEnd)
+      document.addEventListener('pointercancel', handleResizeEnd)
       return () => {
-        document.removeEventListener('mousemove', handleResize as unknown as EventListener)
-        document.removeEventListener('mouseup', handleResizeEnd)
+        document.removeEventListener('pointermove', handleResize)
+        document.removeEventListener('pointerup', handleResizeEnd)
+        document.removeEventListener('pointercancel', handleResizeEnd)
       }
     }
   }, [isResizing, handleResize, handleResizeEnd])
@@ -164,32 +158,39 @@ export function FieldBox({
     }
 
     if (field.type === 'date') {
-      if (field.prefill_value && field.prefill_value.trim() !== '') {
-        return (
-          <span className={cn('truncate px-1 text-label-sm', theme.label)}>
-            {field.prefill_value}
-          </span>
-        )
-      }
-      return labelRow
-    }
-
-    if (field.type === 'initials') {
-      const value =
-        field.prefill_value && field.prefill_value.trim() !== ''
-          ? field.prefill_value
-          : getInitials(assignedRecipient?.name || assignedRecipient?.email)
       return (
-        <span className={cn('truncate px-1 text-label-sm font-medium', theme.label)}>{value}</span>
+        <span className={cn('truncate px-1 text-label-sm', theme.label)} style={{ fontFamily: textFontFamily }}>
+          {datePreview}
+        </span>
       )
     }
 
-    if (field.type === 'designation' || field.type === 'text') {
+    if (field.type === 'initials') {
+      return (
+        <span className={cn('truncate px-1 text-lg leading-none', theme.label)} style={initialsStyle}>
+          {initialsPreview}
+        </span>
+      )
+    }
+
+    if (field.type === 'text') {
+      return (
+        <span className="truncate px-1 text-label-sm font-medium text-error-text" title={TEXT_FIELD_RETIRED_MESSAGE}>
+          {FIELD_TYPE_LABELS.text}
+        </span>
+      )
+    }
+
+    if (field.type === 'designation') {
       const value =
         field.prefill_value && field.prefill_value.trim() !== ''
           ? field.prefill_value
           : field.placeholder || FIELD_TYPE_LABELS[field.type]
-      return <span className={cn('truncate px-2 text-label-sm', theme.label)}>{value}</span>
+      return (
+        <span className={cn('truncate px-2 text-label-sm', theme.label)} style={{ fontFamily: textFontFamily }}>
+          {value}
+        </span>
+      )
     }
 
     return labelRow
@@ -200,18 +201,18 @@ export function FieldBox({
       return <span className="text-[11px] opacity-60">Assign recipient</span>
     }
     if (field.type === 'date') {
-      const value =
-        field.prefill_value && field.prefill_value.trim() !== ''
-          ? field.prefill_value
-          : formatDate(new Date(), field.date_format || 'YYYY-MM-DD')
-      return <span className="w-full truncate px-1 text-center">{value}</span>
+      return (
+        <span className="w-full truncate px-1 text-center" style={{ fontFamily: textFontFamily }}>
+          {datePreview}
+        </span>
+      )
     }
     if (field.type === 'initials') {
-      const value =
-        field.prefill_value && field.prefill_value.trim() !== ''
-          ? field.prefill_value
-          : getInitials(assignedRecipient?.name || assignedRecipient?.email)
-      return <span className="w-full truncate px-1 text-center">{value || '—'}</span>
+      return (
+        <span className="w-full truncate px-1 text-center text-lg leading-none" style={initialsStyle}>
+          {initialsPreview}
+        </span>
+      )
     }
     if (field.type === 'designation') {
       const value =
@@ -230,18 +231,11 @@ export function FieldBox({
         </div>
       )
     }
-    const placeholder = field.placeholder || 'Sample text'
-    const value = field.prefill_value && field.prefill_value.trim() !== '' ? field.prefill_value : ''
+    // Retired text field from an older draft.
     return (
-      <input
-        type="text"
-        defaultValue={value}
-        placeholder={placeholder}
-        maxLength={field.max_length || undefined}
-        className="h-[70%] w-full bg-transparent text-center outline-none"
-        style={{ fontFamily: field.font_family || 'Helvetica', fontSize: field.font_size || 12 }}
-        readOnly
-      />
+      <span className="w-full truncate px-1 text-center text-error-text" title={TEXT_FIELD_RETIRED_MESSAGE}>
+        {FIELD_TYPE_LABELS.text}
+      </span>
     )
   }
 
@@ -282,7 +276,7 @@ export function FieldBox({
                 'hover:shadow-md hover:z-50',
                 isActive ? 'z-50' : 'z-40',
                 isDragging && 'cursor-grabbing shadow-lg scale-105 z-50',
-                unassigned && 'border-dashed bg-yellow-100 opacity-75 animate-pulse',
+                unassigned && 'border-dashed bg-warning-light opacity-75 animate-pulse',
               ),
         )}
         style={
@@ -291,9 +285,9 @@ export function FieldBox({
             : {
                 width: field.width,
                 height: field.height,
-                borderColor: unassigned ? '#F59E0B' : fieldColor,
-                backgroundColor: unassigned ? '#FEF3C7' : `${fieldColor}20`,
-                color: unassigned ? '#92400E' : fieldColor,
+                borderColor: unassigned ? 'var(--color-status-pending)' : fieldColor,
+                backgroundColor: unassigned ? 'var(--color-warning-light)' : `${fieldColor}20`,
+                color: unassigned ? 'var(--color-warning-text)' : fieldColor,
               }
         }
         onClick={handleClick}
@@ -367,18 +361,18 @@ export function FieldBox({
 
         <div
           className={cn(
-            'absolute bottom-0 right-0 h-3 w-3 cursor-se-resize border-b-2 border-r-2 border-current opacity-40 hover:opacity-100',
+            'absolute bottom-0 right-0 h-3 w-3 cursor-se-resize touch-none before:absolute before:-inset-2 border-b-2 border-r-2 border-current opacity-40 hover:opacity-100',
             isEditor && 'opacity-0 group-hover:opacity-60',
           )}
           data-no-drag="true"
-          onMouseDown={handleResizeStart}
+          onPointerDown={handleResizeStart}
           style={{ borderColor: isEditor ? undefined : fieldColor }}
         />
 
         {showRecipientSelect && (
           <div
             data-no-drag="true"
-            className="absolute bottom-full left-0 z-30 mb-1 min-w-48 rounded-md border border-outline-variant bg-white shadow-xl"
+            className="absolute bottom-full left-0 z-30 mb-1 min-w-48 rounded-md border border-outline-variant bg-surface-container-lowest shadow-xl"
           >
             <div data-no-drag="true" className="p-2">
               <div className="mb-2 text-xs font-medium text-body">Assign to recipient:</div>

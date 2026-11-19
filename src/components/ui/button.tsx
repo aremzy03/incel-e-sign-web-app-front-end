@@ -76,7 +76,7 @@ const buttonVariants = cva(
         
         // Success - For completed actions
         success: [
-          "bg-success text-white shadow-md",
+          "bg-success-strong text-white shadow-md",
           "hover:bg-success/90 hover:shadow-lg hover:-translate-y-0.5",
           "active:translate-y-0",
           "focus-visible:ring-success focus-visible:ring-offset-2",

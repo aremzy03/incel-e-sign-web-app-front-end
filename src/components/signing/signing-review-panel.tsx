@@ -4,7 +4,6 @@ import type { Envelope } from '@/lib/api/envelopes'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { Button } from '@/components/ui/button'
 import { SigningSignerTimeline } from './signing-signer-timeline'
-import { SigningTrustBadges } from './signing-trust-badges'
 
 interface SigningReviewPanelProps {
   envelope: Envelope
@@ -62,7 +61,7 @@ export function SigningReviewPanel({
 
           <div className="mb-8 flex items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-container p-4">
             <MaterialIcon name="lock" fill size={20} className="text-primary" />
-            <span className="font-label-sm text-label-sm text-on-surface">Secure and legally binding</span>
+            <span className="font-label-sm text-label-sm text-on-surface">Each step is recorded in the audit trail</span>
             <span className="ml-auto font-caption-xs text-caption-xs text-muted">ID: {envelope.id}</span>
           </div>
 
@@ -77,7 +76,7 @@ export function SigningReviewPanel({
             <Button
               type="button"
               onClick={onContinue}
-              className="h-12 flex-1 gap-2 bg-status-your-turn font-bold text-white hover:bg-accent-hover"
+              className="h-12 flex-1 gap-2 bg-your-turn-strong font-bold text-white hover:bg-your-turn-strong-hover"
             >
               <MaterialIcon name="edit_document" size={20} />
               Continue to sign
@@ -101,7 +100,6 @@ export function SigningReviewPanel({
           ) : null}
         </div>
 
-        <SigningTrustBadges />
       </div>
     </div>
   )

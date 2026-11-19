@@ -38,7 +38,9 @@ export default function EnvelopeDetailPage() {
   const { mutateAsync: sendAsync, isPending: sending } = useSendEnvelope()
   const { mutateAsync: rejectAsync, isPending: rejecting } = useRejectEnvelope()
   const { mutateAsync: deleteAsync, isPending: deleting } = useDeleteEnvelope()
-  const envelopeError = error ? classifyError(error, 'Failed to load envelope') : null
+  const envelopeError = error
+    ? classifyError(error, 'Failed to load envelope')
+    : null
 
   const creatorId = envelope?.creator?.id
   const creatorLabelFromEnvelope =
@@ -58,26 +60,22 @@ export default function EnvelopeDetailPage() {
     isLoading: isLoadingDocs,
     error: envelopeDocumentsError,
     refetch: refetchEnvelopeDocuments,
-  } = useEnvelopeDocuments(
-    id,
-    envelope?.documents,
-    Boolean(envelope),
-  )
+  } = useEnvelopeDocuments(id, envelope?.documents, Boolean(envelope))
   const envelopeDocumentsErrorState = envelopeDocumentsError
     ? classifyError(envelopeDocumentsError, 'Failed to load envelope documents')
     : null
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-max-content-width space-y-6">
+      <div className="max-w-max-content-width mx-auto w-full space-y-6">
         <Skeleton className="h-10 w-2/3" />
         <Skeleton className="h-6 w-1/3" />
         <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-12 space-y-6 lg:col-span-5">
+          <div className="col-span-12 space-y-6 xl:col-span-5">
             <Skeleton className="h-40 w-full rounded-xl" />
             <Skeleton className="h-48 w-full rounded-xl" />
           </div>
-          <div className="col-span-12 space-y-6 lg:col-span-7">
+          <div className="col-span-12 space-y-6 xl:col-span-7">
             <Skeleton className="h-64 w-full rounded-xl" />
             <Skeleton className="h-40 w-full rounded-xl" />
           </div>
@@ -88,13 +86,17 @@ export default function EnvelopeDetailPage() {
 
   if (envelopeError && envelopeError.isNotFound) {
     return (
-      <div className="mx-auto w-full max-w-max-content-width">
+      <div className="max-w-max-content-width mx-auto w-full">
         <AsyncStatePanel
           variant="notFound"
           title="Envelope not found"
           description="The requested envelope could not be found or you may no longer have access to it."
           secondaryAction={
-            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/envelopes')}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/envelopes')}
+            >
               Back to Envelopes
             </Button>
           }
@@ -105,7 +107,7 @@ export default function EnvelopeDetailPage() {
 
   if (envelopeError) {
     return (
-      <div className="mx-auto w-full max-w-max-content-width">
+      <div className="max-w-max-content-width mx-auto w-full">
         <AsyncStatePanel
           variant="error"
           title="Unable to load envelope"
@@ -116,7 +118,11 @@ export default function EnvelopeDetailPage() {
             </Button>
           }
           secondaryAction={
-            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/envelopes')}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/envelopes')}
+            >
               Back to Envelopes
             </Button>
           }
@@ -127,13 +133,17 @@ export default function EnvelopeDetailPage() {
 
   if (!envelope) {
     return (
-      <div className="mx-auto w-full max-w-max-content-width">
+      <div className="max-w-max-content-width mx-auto w-full">
         <AsyncStatePanel
           variant="notFound"
           title="Envelope unavailable"
           description="We couldn't find the envelope requested for this view."
           secondaryAction={
-            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/envelopes')}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/envelopes')}
+            >
               Back to Envelopes
             </Button>
           }
@@ -157,13 +167,13 @@ export default function EnvelopeDetailPage() {
       envelope.recipients?.some((r) => {
         const recipientId = r?.id || (r as { user_id?: string }).user_id
         return recipientId === currentUserId
-      }),
+      })
   )
 
   const isCompleted = (envelope.status ?? '').toLowerCase().includes('complete')
 
   return (
-    <div className="mx-auto w-full max-w-max-content-width">
+    <div className="max-w-max-content-width mx-auto w-full">
       <EnvelopeTrackingHeader
         envelope={envelope}
         isSelfSign={isSelfSign}
@@ -176,12 +186,16 @@ export default function EnvelopeDetailPage() {
           }
         }}
         onReject={async () => {
-          if (window.confirm('Are you sure you want to cancel this envelope?')) {
+          if (
+            window.confirm('Are you sure you want to cancel this envelope?')
+          ) {
             await rejectAsync(envelope.id)
           }
         }}
         onDelete={async () => {
-          if (window.confirm('Are you sure you want to delete this envelope?')) {
+          if (
+            window.confirm('Are you sure you want to delete this envelope?')
+          ) {
             await deleteAsync(envelope.id)
             router.push('/dashboard/envelopes')
           }
@@ -192,7 +206,7 @@ export default function EnvelopeDetailPage() {
       />
 
       <div className="grid grid-cols-12 gap-8">
-        <div className="col-span-12 space-y-6 lg:col-span-5">
+        <div className="col-span-12 space-y-6 xl:col-span-5">
           <EnvelopeDetailsCard description={envelope.description} />
           <EnvelopeDocumentsCard
             documents={envelopeDocuments ?? []}
@@ -200,7 +214,11 @@ export default function EnvelopeDetailPage() {
             errorMessage={envelopeDocumentsErrorState?.message ?? null}
             errorAction={
               envelopeDocumentsErrorState ? (
-                <Button type="button" variant="outline" onClick={() => void refetchEnvelopeDocuments()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void refetchEnvelopeDocuments()}
+                >
                   Retry
                 </Button>
               ) : undefined
@@ -211,9 +229,15 @@ export default function EnvelopeDetailPage() {
           <EnvelopeSettingsCard envelope={envelope} />
         </div>
 
-        <div className="col-span-12 space-y-6 lg:col-span-7">
-          <EnvelopeSignerTimelinePanel envelope={envelope} currentUserId={currentUserId} />
-          <EnvelopeActivityFeed envelope={envelope} creatorName={creatorDisplay} />
+        <div className="col-span-12 space-y-6 xl:col-span-7">
+          <EnvelopeSignerTimelinePanel
+            envelope={envelope}
+            currentUserId={currentUserId}
+          />
+          <EnvelopeActivityFeed
+            envelope={envelope}
+            creatorName={creatorDisplay}
+          />
         </div>
       </div>
 

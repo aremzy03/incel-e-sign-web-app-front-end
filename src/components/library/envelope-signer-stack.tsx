@@ -25,7 +25,7 @@ const statusStyles: Record<
 > = {
   completed: {
     bg: 'bg-success-light',
-    text: 'text-status-completed',
+    text: 'text-success-text',
   },
   current: {
     bg: 'bg-accent-light',
@@ -38,7 +38,7 @@ const statusStyles: Record<
   },
   rejected: {
     bg: 'bg-error-light',
-    text: 'text-status-rejected',
+    text: 'text-error-text',
   },
 }
 
@@ -58,7 +58,7 @@ export function EnvelopeSignerStack({
           <div
             key={user.id}
             className={cn(
-              'relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface-container-lowest text-[10px] font-semibold',
+              'relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface-container-lowest text-xs font-semibold',
               style.bg,
               style.text,
               i > 0 && '-ml-2',
@@ -73,7 +73,7 @@ export function EnvelopeSignerStack({
       })}
       {overflow > 0 && (
         <div
-          className="-ml-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface-container-lowest bg-surface-container-high text-[10px] font-medium text-muted"
+          className="-ml-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface-container-lowest bg-surface-container-high text-xs font-medium text-muted"
           style={{ zIndex: 0 }}
         >
           +{overflow}

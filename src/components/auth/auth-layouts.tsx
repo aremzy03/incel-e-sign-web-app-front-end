@@ -19,8 +19,8 @@ export function AuthBrandHeader({
     <div className={cn('flex items-center gap-3', className)}>
       <BrandMark size={40} tile={onDark ? 'always' : 'dark-mode'} />
       <div className="flex flex-col">
-        <span className="text-lg font-bold text-primary">INCEL E-Sign</span>
-        <span className="text-xs font-medium text-muted">{subtitle}</span>
+        <span className={cn('text-lg font-bold', onDark ? 'text-on-panel' : 'text-primary')}>INCEL E-Sign</span>
+        <span className={cn('text-xs font-medium', onDark ? 'text-on-panel-muted' : 'text-muted')}>{subtitle}</span>
       </div>
     </div>
   )
@@ -35,39 +35,39 @@ export function AuthSplitLayout({ children, brandPanel }: AuthSplitLayoutProps) 
   return (
     <main className="flex min-h-screen overflow-hidden bg-surface-bright">
       {/* Left branding panel */}
-      <section className="relative hidden w-1/2 flex-col bg-primary p-8 text-on-primary dark:bg-primary-container md:p-16 lg:flex">
+      <section className="relative hidden w-1/2 flex-col bg-panel p-8 text-on-panel md:p-16 lg:flex">
         {brandPanel ?? (
           <>
-            <AuthBrandHeader onDark className="text-on-primary [&_span]:text-on-primary [&_.text-muted]:text-on-primary-container" />
+            <AuthBrandHeader onDark />
             <div className="mt-16 flex flex-1 flex-col justify-center">
-              <h1 className="text-headline-3xl font-bold leading-tight text-on-primary">
+              <h1 className="text-headline-3xl font-bold leading-tight text-on-panel">
                 Get Incel Group agreements signed
               </h1>
-              <p className="mt-4 max-w-md text-body-base text-on-primary-container">
+              <p className="mt-4 max-w-md text-body-base text-on-panel-muted">
                 Prepare a document, send it to signers in order, and track it until every signature is in.
               </p>
               <div className="mt-12 space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-hover">
-                    <MaterialIcon name="format_list_numbered" size={20} className="text-accent-light" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-panel-hover">
+                    <MaterialIcon name="format_list_numbered" size={20} className="text-on-panel-active" />
                   </div>
                   <div>
-                    <p className="font-semibold text-on-primary">Signing in order</p>
-                    <p className="text-sm text-on-primary-container">Each signer acts in the order you set</p>
+                    <p className="font-semibold text-on-panel">Signing in order</p>
+                    <p className="text-sm text-on-panel-muted">Each signer acts in the order you set</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-hover">
-                    <MaterialIcon name="timeline" size={20} className="text-accent-light" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-panel-hover">
+                    <MaterialIcon name="timeline" size={20} className="text-on-panel-active" />
                   </div>
                   <div>
-                    <p className="font-semibold text-on-primary">Full audit trail</p>
-                    <p className="text-sm text-on-primary-container">Complete signing history & timestamps</p>
+                    <p className="font-semibold text-on-panel">Full audit trail</p>
+                    <p className="text-sm text-on-panel-muted">Complete signing history & timestamps</p>
                   </div>
                 </div>
               </div>
             </div>
-            <p className="text-xs text-on-primary-container">
+            <p className="text-xs text-on-panel-muted">
               © {new Date().getFullYear()} Incel Group
             </p>
           </>
@@ -95,9 +95,6 @@ export function AuthCenteredLayout({
 }: AuthCenteredLayoutProps) {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center bg-bg p-6">
-      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-60" />
-      <div className="pointer-events-none absolute -left-32 top-20 h-64 w-64 rounded-full bg-secondary-container/30 blur-3xl" />
-      <div className="pointer-events-none absolute -right-32 bottom-20 h-64 w-64 rounded-full bg-primary-light blur-3xl" />
 
       <div className={cn('relative z-10 w-full', maxWidth === 'lg' ? 'max-w-[480px]' : 'max-w-md')}>
         {showBrand && (

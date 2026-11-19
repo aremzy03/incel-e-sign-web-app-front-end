@@ -329,7 +329,7 @@ export default function NotificationsCenter() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    className="w-full pl-8 pr-3 py-2 border border-field-border bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
                     {statusFilters.map((filter) => (
                       <option key={filter.value} value={filter.value}>

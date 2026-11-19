@@ -31,10 +31,14 @@ export function validateDocumentUploadFile(file: File): string | null {
 function getUploadErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'response' in err) {
     const axiosErr = err as {
-      response?: { data?: { detail?: string; message?: string } }
+      response?: { data?: { detail?: string; message?: string; errors?: { file?: unknown } } }
       message?: string
     }
+    // The reason ("This PDF is password-protected…") beats the envelope message ("Invalid file data").
+    const fileErrors = axiosErr.response?.data?.errors?.file
+    const fileError = Array.isArray(fileErrors) ? fileErrors.find((e) => typeof e === 'string') : undefined
     return (
+      fileError ||
       axiosErr.response?.data?.detail ||
       axiosErr.response?.data?.message ||
       axiosErr.message ||

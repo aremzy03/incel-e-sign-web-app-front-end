@@ -22,6 +22,18 @@
   --color-on-primary-fixed-variant: #384668;
   --color-inverse-primary: #b7c6ee;
 
+  /* Brand panel: the navy chrome (sidebar, mobile nav, auth side panel). Navy in both
+     themes; unlike primary, it does not flip to a light fill in dark mode. */
+  --color-panel: #041534;
+  --color-panel-hover: #243656;
+  --color-panel-active: #243656;
+  --color-panel-raised: #1b2a4a;
+  --color-panel-border: #243656;
+  --color-on-panel: #ffffff;
+  --color-on-panel-muted: #8392b7;
+  --color-on-panel-active: #CCFBF1;
+  --color-panel-indicator: #2dd4bf;
+
   /* Secondary / CTA teal */
   --color-secondary: #006a61;
   --color-on-secondary: #ffffff;
@@ -82,6 +94,9 @@
   --color-inverse-on-surface: #f2f0f3;
   --color-outline: #75777f;
   --color-outline-variant: #c5c6cf;
+  /* Form field boundaries: ≥3:1 against every surface a field sits on (WCAG 1.4.11).
+     outline-variant stays light for dividers; fields need to be findable. */
+  --color-field-border: #7e889a;
 
   /* Document status */
   --color-status-draft: #94A3B8;
@@ -235,73 +250,102 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --border: 214 32% 91%;
-  --input: 214 32% 91%;
+  --input: 218 11% 55%;
   --ring: 175 84% 32%;
   --radius: 8px;
 }
 
+/* Dark theme: navy ink.
+   One family for everything: surfaces are the brand navy (hue ~220) at low chroma, from the
+   deepest (panel) to the highest raised layer, each step a little lighter. Cards sit above the
+   page, not below it. Brand teal carries action and state; primary flips to a pale ink fill
+   so filled buttons keep the light theme's "strongest control" meaning.
+   Contrast (WCAG): on-surface ≥10:1, on-surface-variant ≥6.4:1, muted ≥4.6:1 on every
+   surface; status text ≥8.7:1 on its mist. */
 .dark {
-  --background: 240 3% 7%;
-  --foreground: 270 6% 95%;
-  --card: 218 30% 12%;
-  --card-foreground: 270 6% 95%;
-  --popover: 218 30% 12%;
-  --popover-foreground: 270 6% 95%;
-  --primary: 224 58% 83%;
-  --primary-foreground: 218 89% 11%;
-  --secondary: 174 58% 64%;
-  --secondary-foreground: 174 100% 7%;
-  --muted: 240 3% 14%;
-  --muted-foreground: 240 4% 65%;
-  --accent: 240 3% 14%;
-  --accent-foreground: 270 6% 95%;
-  --destructive: 0 63% 31%;
+  color-scheme: dark;
+
+  --background: 218 35% 9%;
+  --foreground: 218 25% 92%;
+  --card: 219 32% 12%;
+  --card-foreground: 218 25% 92%;
+  --popover: 218 30% 16%;
+  --popover-foreground: 218 25% 92%;
+  --primary: 221 54% 87%;
+  --primary-foreground: 220 70% 13%;
+  --secondary: 173 58% 56%;
+  --secondary-foreground: 174 100% 6%;
+  --muted: 218 30% 16%;
+  --muted-foreground: 217 15% 65%;
+  --accent: 218 28% 20%;
+  --accent-foreground: 218 25% 92%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 3% 22%;
-  --input: 240 3% 22%;
-  --ring: 175 84% 32%;
+  --border: 219 28% 21%;
+  --input: 219 15% 49%;
+  --ring: 173 80% 40%;
 
-  /* Brand tokens are rebalanced for dark surfaces */
-  --color-primary: #b7c6ee;
+  /* Brand */
+  --color-primary: #cdd8f0;
   --color-on-primary: #0a1a3a;
-  --color-primary-container: #1b2a4a;
-  --color-on-primary-container: #d9e2ff;
-  --color-primary-hover: #d9e2ff;
-  --color-secondary: #89f5e7;
+  --color-primary-container: #1e2a42;
+  --color-on-primary-container: #c9d4ec;
+  --color-primary-hover: #e1e7f5;
+  --color-primary-light: #19243a;
+  --color-primary-fixed: #d9e2ff;
+  --color-primary-fixed-dim: #b7c6ee;
+  --color-inverse-primary: #041534;
+  --color-secondary: #4fd1c1;
   --color-on-secondary: #00201d;
-  --color-secondary-container: #134e4a;
-  --color-on-secondary-container: #89f5e7;
-  --color-accent-hover: #6bd8cb;
+  --color-secondary-container: #123b38;
+  --color-on-secondary-container: #8ee9de;
+  --color-accent: #14b8a6;
+  --color-accent-hover: #7fe0d4;
+  --color-accent-light: #0f2c2b;
 
-  /* M3 dark surface tokens */
-  --color-bg: #121214;
-  --color-background: #121214;
-  --color-on-background: #e4e2e5;
-  --color-body: #e4e2e5;
-  --color-muted: #9a9aa3;
-  --color-border: #45464e;
+  /* Brand panel: the deepest layer, so the sidebar recedes as it does in light mode */
+  --color-panel: #0a0f19;
+  --color-panel-hover: #151d2c;
+  --color-panel-active: #13243a;
+  --color-panel-raised: #111827;
+  --color-panel-border: #1a2333;
+  --color-on-panel: #e5e9f0;
+  --color-on-panel-muted: #8e9ab2;
+  --color-on-panel-active: #99f0e4;
+  --color-panel-indicator: #2dd4bf;
+
+  /* Surfaces, lowest-to-highest elevation. surface-container-lowest is the card (white in
+     light), so it sits just above the page here. */
+  --color-bg: #0f1520;
+  --color-background: #0f1520;
+  --color-on-background: #e5e9f0;
+  --color-body: #e5e9f0;
+  --color-muted: #96a1b3;
+  --color-border: #263043;
   --color-white: #ffffff;
-  --color-surface: #303033;
-  --color-surface-dim: #121214;
-  --color-surface-bright: #38383c;
-  --color-surface-container-lowest: #0d0d0f;
-  --color-surface-container-low: #1b1b1e;
-  --color-surface-container: #212124;
-  --color-surface-container-high: #2b2b2f;
-  --color-surface-container-highest: #36363a;
-  --color-on-surface: #e4e2e5;
-  --color-on-surface-variant: #c5c6cf;
-  --color-surface-variant: #45464e;
-  --color-inverse-surface: #e4e2e5;
-  --color-inverse-on-surface: #303033;
-  --color-outline: #8f9099;
-  --color-outline-variant: #45464e;
-  --color-primary-light: #1b2a4a;
-  --color-success-light: #064e3b;
-  --color-warning-light: #78350f;
-  --color-error-light: #7f1d1d;
-  --color-info-light: #1e3a8a;
-  --color-accent-light: #134e4a;
+  --color-surface: #1d2636;
+  --color-surface-dim: #0b1019;
+  --color-surface-bright: #0f1520;
+  --color-surface-container-lowest: #151c29;
+  --color-surface-container-low: #19212f;
+  --color-surface-container: #1d2636;
+  --color-surface-container-high: #242e40;
+  --color-surface-container-highest: #2b364a;
+  --color-on-surface: #e5e9f0;
+  --color-on-surface-variant: #b4bdcc;
+  --color-surface-variant: #2b364a;
+  --color-surface-tint: #cdd8f0;
+  --color-inverse-surface: #e5e9f0;
+  --color-inverse-on-surface: #1d2636;
+  --color-outline: #6b778c;
+  --color-outline-variant: #2f3a4e;
+  --color-field-border: #6b7891;
+
+  /* Mists: quiet tinted grounds for badges and notices, not saturated blocks */
+  --color-success-light: #0f2b25;
+  --color-warning-light: #2f230f;
+  --color-error-light: #321719;
+  --color-info-light: #142443;
 
   /* Status text on dark surfaces and dark mists */
   --color-status-draft-text: #CBD5E1;
@@ -309,8 +353,24 @@
   --color-success-text: #6EE7B7;
   --color-your-turn-text: #5EEAD4;
   --color-error-text: #FCA5A5;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --color-error-container: #3a1618;
+  --color-on-error-container: #fecaca;
+
+  /* Depth: dark shadows read only when deep; a hairline top light separates raised layers */
+  --shadow-card: 0 1px 2px rgba(2, 6, 14, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  --shadow-raised: 0 6px 16px -4px rgba(2, 6, 14, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-modal: 0 16px 40px -8px rgba(2, 6, 14, 0.8);
+  --shadow-authority: 0 8px 28px -8px rgba(2, 6, 14, 0.8), 0 2px 6px -2px rgba(2, 6, 14, 0.6);
+  --shadow-seal: 0 4px 16px -4px rgba(45, 212, 191, 0.25), 0 1px 4px -1px rgba(45, 212, 191, 0.15);
+}
+
+.dark ::selection {
+  background: rgba(45, 212, 191, 0.32);
+  color: #ffffff;
+}
+
+.dark * {
+  scrollbar-color: #2f3a4e transparent;
 }
 
 @layer base {
@@ -437,20 +497,14 @@
     box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
   }
 
-  .bg-grid-pattern {
-    background-image:
-      linear-gradient(to right, rgba(4, 21, 52, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(4, 21, 52, 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-
   .auth-card {
     box-shadow: 0 4px 24px rgba(4, 21, 52, 0.08), 0 1px 4px rgba(4, 21, 52, 0.04);
   }
 
+  /* A plain card on the page (it sits on a flat background, so a frosted blur showed nothing).
+     Token colours, so it follows the theme. */
   .glass-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
+    background: var(--color-surface-container-lowest);
     border: 1px solid var(--color-border);
   }
 
@@ -488,7 +542,7 @@
   }
 
   .dark .paper-texture {
-    background-color: #2b2b2f;
+    background-color: #1d2636;
     background-image:
       linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);

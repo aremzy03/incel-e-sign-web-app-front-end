@@ -495,25 +495,37 @@ function SignFlowPageInner({ isDashboard }: SignFlowPageProps) {
     }
   }, [envelopeDocuments, envelopeId, refetchEnvelope, textOps, token])
 
+  // One sign at a time: a double click must neither save the added text twice nor send a
+  // second sign request (which the server refuses once the link is used).
+  const signInFlightRef = useRef(false)
   const handleSignDocument = useCallback(async () => {
+    if (signInFlightRef.current || signingSubmit.phase === 'polling' || signingSubmit.phase === 'succeeded') return
     if (!progress.canComplete) {
       toast.error(`Complete ${progress.remainingCount} remaining field${progress.remainingCount === 1 ? '' : 's'}`)
       return
     }
-    if (textOps.some((op) => isSavedText(op.text))) {
-      const saved = await saveSignerText()
-      if (!saved) return
+    signInFlightRef.current = true
+    try {
+      if (textOps.some((op) => isSavedText(op.text))) {
+        const saved = await saveSignerText()
+        if (!saved) return
+      }
+      await signingSubmit.submitSign()
+    } finally {
+      signInFlightRef.current = false
     }
-    await signingSubmit.submitSign()
   }, [progress.canComplete, progress.remainingCount, saveSignerText, signingSubmit, textOps])
 
   const handleFieldSelect = useCallback((item: SigningFieldChecklistItem) => {
     setFocusedTargetId(item.id)
-    scrollToSigningTarget(item.id)
+    const found = scrollToSigningTarget(item.id)
     if (item.target?.documentId) {
       setActiveDocumentId(item.target.documentId)
-      const section = documentSectionRefs.current[item.target.documentId]
-      section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // Only when the field isn't rendered yet: scrolling the section too would cancel the field scroll.
+      if (!found) {
+        const section = documentSectionRefs.current[item.target.documentId]
+        section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
   }, [])
 

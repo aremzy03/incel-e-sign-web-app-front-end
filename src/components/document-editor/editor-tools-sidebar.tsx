@@ -35,8 +35,8 @@ export const secondaryActionClass = cn(
 export interface EditorToolsSidebarProps {
   /** Add text. `null` hides the group; a string explains why editing is unavailable. */
   edit: {
-    placing: boolean
-    onTogglePlacing: () => void
+    /** Add a box to the page being viewed. Clicking empty page space adds one too. */
+    onAddText: () => void
     unavailableReason?: string | null
     /** Present when existing text can be rewritten (plan-full-text-rewrite). */
     rewrite?: {
@@ -193,29 +193,18 @@ export function EditorToolsSidebar({
                 ) : null}
                 <button
                   type="button"
-                  aria-pressed={edit.placing}
-                  onClick={edit.onTogglePlacing}
+                  onClick={edit.onAddText}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-xl border p-4 text-left shadow-card transition-colors',
-                    edit.placing
-                      ? 'border-primary bg-primary text-on-primary'
-                      : 'border-border bg-surface-container-lowest hover:border-secondary',
+                    'flex w-full items-center gap-3 rounded-xl border border-border bg-surface-container-lowest p-4 text-left shadow-card transition-colors hover:border-secondary',
                     focusRing,
                   )}
                 >
-                  <span
-                    className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-lg',
-                      edit.placing ? 'bg-primary-hover' : 'bg-surface-container text-on-surface-variant',
-                    )}
-                  >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-on-surface-variant">
                     <MaterialIcon name="text_fields" size={22} />
                   </span>
                   <span>
-                    <span className="block font-label-sm">Add text</span>
-                    <span className={cn('block text-xs', edit.placing ? 'text-on-primary/80' : 'text-muted')}>
-                      {edit.placing ? 'Click the page to place a box' : 'Type anywhere on the page'}
-                    </span>
+                    <span className="block font-label-sm text-on-surface">Add text</span>
+                    <span className="block text-xs text-muted">Or click any empty space on the page</span>
                   </span>
                 </button>
               </>

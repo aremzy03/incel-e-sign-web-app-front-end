@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useSession } from 'next-auth/react'
 import { useUser } from '@/hooks/useUsers'
 import { cn } from '@/lib/utils'
 
@@ -32,8 +33,10 @@ export function UserAvatar({
   className,
   fallbackClassName,
 }: UserAvatarProps) {
-  // Always fetch user data if we have userId but no profilePhotoUrl, to ensure we get the profile picture
-  const shouldFetchUser = userId && !profilePhotoUrl
+  // Fetch the profile picture when we only have an id. Not without a login: the profile
+  // endpoint needs one (e.g. a signer opening an e-mailed link), and the initials suffice.
+  const { status: sessionStatus } = useSession()
+  const shouldFetchUser = userId && !profilePhotoUrl && sessionStatus === 'authenticated'
   const { data: fetchedUser, isLoading } = useUser(userId || '', !!shouldFetchUser)
 
   // Determine the actual values to use

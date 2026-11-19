@@ -104,7 +104,8 @@ const TextEditor = memo(function TextEditor({
       role="textbox"
       aria-label="Added text"
       aria-multiline="true"
-      contentEditable={selected}
+      // Always editable: one click focuses it and drops the caret where you clicked (focus selects the box).
+      contentEditable
       suppressContentEditableWarning
       data-placeholder={PLACEHOLDER_TEXT}
       className="h-full w-full overflow-visible border border-secondary bg-surface-container-lowest/80 px-1 text-on-surface outline-none empty:before:text-muted empty:before:content-[attr(data-placeholder)]"
@@ -329,7 +330,8 @@ export function TextBox({
     >
       {selected ? <TextEditToolbar op={op} onChange={onChange} onDelete={onDelete} /> : null}
       <div
-        className="absolute inset-x-0 -top-1 h-3 cursor-move touch-none before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
+        // Drag strip: the gap above the box and its top border, clear of the text so a click there types.
+        className="absolute inset-x-0 -top-2 z-10 h-2.5 cursor-move touch-none"
         onPointerDown={onPointerDown('move')}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

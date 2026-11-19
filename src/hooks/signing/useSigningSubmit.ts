@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSigningJobPoller } from './useSigningJobPoller'
 import type { useSignActions } from './useSignActions'
 import type { SignMutationResult } from './useSignActions'
@@ -59,9 +59,21 @@ export function useSigningSubmit({
     signActions.signMutation.isPending ||
     signActions.saveValuesMutation.isPending
 
+  // A double click lands both clicks before React re-renders the button as disabled; the
+  // second request would be refused ("already signed with this link") and toast an error
+  // while the first is signing fine.
+  const submittingRef = useRef(false)
+
   const submitSign = useCallback(async (): Promise<SignMutationResult | null> => {
+    if (submittingRef.current) return null
+    submittingRef.current = true
     setPhase('submitting')
-    const result = await signActions.approveAndSign()
+    let result: SignMutationResult | null
+    try {
+      result = await signActions.approveAndSign()
+    } finally {
+      submittingRef.current = false
+    }
     if (!result) {
       setPhase('idle')
       return null

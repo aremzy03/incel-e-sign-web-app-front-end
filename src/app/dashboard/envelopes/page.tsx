@@ -155,7 +155,12 @@ export default function EnvelopesPage() {
       </div>
 
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-2" role="group" aria-label="Envelope quick filters">
+        {/* One row: it scrolls sideways when narrow instead of wrapping into a ragged second line. */}
+        <div
+          className="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          role="group"
+          aria-label="Envelope quick filters"
+        >
           {quickFilterOptions.map((option) => {
             const isActive = quickFilter === option.value
             return (
@@ -168,7 +173,7 @@ export default function EnvelopesPage() {
                   setPage(1)
                 }}
                 className={cn(
-                  'inline-flex h-10 items-center rounded-xl px-4 text-label-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2',
+                  'inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-xl px-3.5 text-label-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-your-turn focus-visible:ring-offset-2',
                   isActive
                     ? 'bg-primary text-on-primary'
                     : 'border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface',
@@ -182,11 +187,11 @@ export default function EnvelopesPage() {
 
         <SearchField
           aria-label="Search envelopes"
-          placeholder="Search envelopes, signers, or documents…"
+          placeholder="Search name, signer, file…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          containerClassName="w-full sm:w-72 xl:shrink-0"
-          className="h-10 rounded-xl border-outline-variant bg-transparent py-0 !text-body-base text-on-surface placeholder:text-muted/60"
+          containerClassName="w-full sm:w-64 xl:shrink-0"
+          className="h-10 rounded-xl bg-transparent py-0 !text-body-base text-on-surface placeholder:text-muted"
         />
       </div>
 

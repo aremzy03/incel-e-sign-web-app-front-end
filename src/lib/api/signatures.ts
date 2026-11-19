@@ -200,7 +200,24 @@ export async function signEnvelope(
   }
 }
 
-export async function getSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
+/**
+ * The sign page and the floating jobs widget both poll the job they are watching. Calls for
+ * the same job within this window share one request instead of each sending their own.
+ */
+const JOB_POLL_SHARE_MS = 1000
+const recentJobPolls = new Map<string, { at: number; promise: Promise<SigningJobDetail> }>()
+
+export function getSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
+  const key = `${jobId}:${token ?? ''}`
+  const recent = recentJobPolls.get(key)
+  if (recent && Date.now() - recent.at < JOB_POLL_SHARE_MS) return recent.promise
+  const promise = fetchSigningJob(jobId, token)
+  recentJobPolls.set(key, { at: Date.now(), promise })
+  promise.catch(() => recentJobPolls.delete(key))
+  return promise
+}
+
+async function fetchSigningJob(jobId: string, token?: string): Promise<SigningJobDetail> {
   if (token) {
     const response = await apiClient.get(`/signatures/jobs/${jobId}/public/`, {
       params: { token },

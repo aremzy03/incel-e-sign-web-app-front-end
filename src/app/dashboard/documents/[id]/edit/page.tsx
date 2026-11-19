@@ -37,6 +37,7 @@ import {
 import { FIELD_TYPE_LABELS } from '@/components/envelope/field-editor-themes'
 import type { DocumentPageInfo, PageOverlayInfo } from '@/components/envelope/VerticalPDFViewer'
 import { useTextEditSession } from '@/components/pdf-edit/use-text-edit-session'
+import { getDocumentFileUrlForViewer, isExternalDocumentUrl } from '@/lib/url'
 import { useTextRuns } from '@/components/pdf-edit/use-text-runs'
 import { TextRunLayer } from '@/components/pdf-edit/text-run-layer'
 import { FindReplacePanel } from '@/components/pdf-edit/find-replace-panel'
@@ -70,7 +71,15 @@ import {
 import { listUserSignatures } from '@/lib/api/signatures'
 import { FrozenEnvelopeError } from '@/lib/api/signing-errors'
 import { classifyError } from '@/lib/errors'
-import { isSavedText, textIsDrawable } from '@/lib/pdf-edit/fonts'
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_TEXT_WIDTH,
+  defaultTextOp,
+  isSavedText,
+  textIsDrawable,
+  textLineHeight,
+} from '@/lib/pdf-edit/fonts'
+import { clampPdfFrame } from '@/lib/pdf-edit/geometry'
 import { patchWizardResumeDocument, readWizardTextEditResume } from '@/lib/pdf-edit/wizard-resume'
 import { saveSigningJob } from '@/lib/signing/signing-job-storage'
 import { RECIPIENT_COLORS, type CreatableFieldType, type RecipientInput } from '@/types/envelope'
@@ -130,6 +139,21 @@ function DocumentEditor() {
   })
 
   const text = useTextEditSession(documentId)
+
+  // The viewer mounts once the edit session has opened. Start the PDF (and the viewer's
+  // code) downloading now, alongside the session request, so the browser cache answers the
+  // viewer instead of the download starting only then. Signed CDN URLs only: they need no
+  // auth header and are cacheable (Cache-Control on the object).
+  const prefetchUrl = documentData ? getDocumentFileUrlForViewer(documentData) : ''
+  useEffect(() => {
+    if (!prefetchUrl) return
+    void import('@/components/envelope/VerticalPDFViewer')
+    if (!isExternalDocumentUrl(prefetchUrl)) return
+    // Same request mode and credentials as pdf.js, so its request matches this cache entry.
+    void fetch(prefetchUrl, { mode: 'cors', credentials: 'same-origin' })
+      .then((response) => response.arrayBuffer())
+      .catch(() => {})
+  }, [prefetchUrl])
   const fieldState = useSelfSignFields(documentId)
   const [initialsChoice, setInitialsChoice] = useInitialsChoice()
   const { mutateAsync: selfSignAsync } = useSelfSignEnvelope()
@@ -148,7 +172,6 @@ function DocumentEditor() {
   const [renderScale, setRenderScale] = useState(1.2)
   const [documentPages, setDocumentPages] = useState<DocumentPageInfo[]>([])
   const [activePageKey, setActivePageKey] = useState<string | null>(null)
-  const [placingText, setPlacingText] = useState(false)
   const [phase, setPhase] = useState<Phase>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [frozenMessage, setFrozenMessage] = useState<string | null>(null)
@@ -234,7 +257,6 @@ function DocumentEditor() {
       setOps((list) => [...list, op], false)
       setSelectedTextId(op.opId)
       setActiveFieldId(null)
-      setPlacingText(false)
     },
     [record, setOps, setSelectedTextId, setActiveFieldId],
   )
@@ -289,6 +311,57 @@ function DocumentEditor() {
     },
     [record, setOps, setSelectedTextId],
   )
+
+  // Click-to-add. A click on empty page space adds a box there, unless something was
+  // selected or being edited: then the click only puts it down (as in any editor), so
+  // finishing one edit doesn't scatter empty boxes. Read on pointerdown, before the
+  // edit's blur clears the selection.
+  const hadSelectionRef = useRef(false)
+  const noteSelectionBeforeClick = useCallback(() => {
+    hadSelectionRef.current = !!(selectedTextId || activeRunId || fieldState.activeFieldId)
+  }, [selectedTextId, activeRunId, fieldState.activeFieldId])
+
+  const addTextAtClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>, page: PageOverlayInfo) => {
+      if (event.target !== event.currentTarget) return
+      const hadSelection = hadSelectionRef.current
+      hadSelectionRef.current = false
+      if (hadSelection) {
+        setSelectedTextId(null)
+        setActiveRunId(null)
+        setActiveFieldId(null)
+        return
+      }
+      // The page's own words aren't clickable until they've been read: wait, rather than drop a box on them.
+      if (rewriteEnabled && !textRuns.pages[page.pageNumber]) return
+      const rect = event.currentTarget.getBoundingClientRect()
+      const width = page.widthPt
+      const height = page.heightPt
+      const points = clampPdfFrame(
+        {
+          x: ((event.clientX - rect.left) / rect.width) * width,
+          // Centre the first line on the click, so the caret lands where the user pointed.
+          y: ((event.clientY - rect.top) / rect.height) * height - textLineHeight(DEFAULT_FONT_SIZE) / 2,
+          width: DEFAULT_TEXT_WIDTH,
+          height: textLineHeight(DEFAULT_FONT_SIZE),
+        },
+        width,
+        height,
+      )
+      createText(defaultTextOp({ page: page.pageNumber, x: points.x, y: points.y, pageWidth: width, pageHeight: height }))
+    },
+    [rewriteEnabled, textRuns.pages, createText, setSelectedTextId, setActiveFieldId],
+  )
+
+  // An added box that is put down still empty was a stray click: remove it.
+  const previousSelectedTextId = useRef<string | null>(null)
+  useEffect(() => {
+    const previous = previousSelectedTextId.current
+    previousSelectedTextId.current = selectedTextId
+    if (!previous || previous === selectedTextId) return
+    const left = addOps.find((op) => op.opId === previous)
+    if (left && !left.text.trim()) setOps((list) => list.filter((op) => op.opId !== previous), false)
+  }, [selectedTextId, addOps, setOps])
 
   // --- Find & replace (plan §4.3, §9) -------------------------------------------------
   const allRuns = useMemo(() => runsInReadingOrder(textRuns.pages), [textRuns.pages])
@@ -421,7 +494,6 @@ function DocumentEditor() {
       record()
       fieldState.addField(type, page, centerX, centerY, size.width, size.height)
       setSelectedTextId(null)
-      setPlacingText(false)
     },
     [fieldState, pageSizePt, record, setSelectedTextId],
   )
@@ -440,6 +512,22 @@ function DocumentEditor() {
     },
     [addFieldAtPt, currentPage, pageSizePt, fields],
   )
+
+  /** The sidebar's Add text: a box on the page being viewed, a little above the middle. */
+  const addTextToCurrentPage = useCallback(() => {
+    const size = pageSizePt(currentPage)
+    const onPage = addOps.filter((op) => op.page === currentPage).length
+    const y = Math.min(size.height * 0.4 + (onPage % 8) * 24, size.height - 40)
+    createText(
+      defaultTextOp({
+        page: currentPage,
+        x: Math.max(0, size.width / 2 - DEFAULT_TEXT_WIDTH / 2),
+        y,
+        pageWidth: size.width,
+        pageHeight: size.height,
+      }),
+    )
+  }, [addOps, createText, currentPage, pageSizePt])
 
   /** The viewer reports geometry in screen px; fields are stored in points. */
   const changeField = useCallback(
@@ -668,7 +756,6 @@ function DocumentEditor() {
       if (event.key === 'Escape') {
         setActiveRunId(null)
         if (showShortcuts) setShowShortcuts(false)
-        else if (placingText) setPlacingText(false)
         else {
           setActiveFieldId(null)
           setSelectedTextId(null)
@@ -704,7 +791,7 @@ function DocumentEditor() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [undo, redo, deleteField, fieldState.activeFieldId, placingText, showShortcuts, setActiveFieldId, setSelectedTextId, rewriteEnabled])
+  }, [undo, redo, deleteField, fieldState.activeFieldId, showShortcuts, setActiveFieldId, setSelectedTextId, rewriteEnabled])
 
   // --- Viewer wiring -----------------------------------------------------------------
   const selfRecipient: RecipientInput = useMemo(
@@ -740,6 +827,19 @@ function DocumentEditor() {
   const renderTextLayer = useCallback(
     (page: PageOverlayInfo) => (
       <>
+        {/*
+          Bottom layer: a click that reaches it hit no existing text, added box or field
+          (those sit above and take their own clicks), so it adds a text box there.
+        */}
+        {editAvailable ? (
+          <div
+            aria-hidden
+            data-testid="add-text-surface"
+            className="pointer-events-auto absolute inset-0 cursor-text"
+            onPointerDown={noteSelectionBeforeClick}
+            onClick={(event) => addTextAtClick(event, page)}
+          />
+        ) : null}
         {/* Existing text sits under added-text boxes, so an added box wins a click. */}
         {textRuns.pages[page.pageNumber]?.runs ? (
           <TextRunLayer
@@ -751,7 +851,7 @@ function DocumentEditor() {
             failedOpIds={failedOpIds}
             matchRunIds={matchRunIds}
             currentMatchId={currentMatch?.runId ?? null}
-            interactive={rewriteEnabled && !placingText}
+            interactive={rewriteEnabled}
             onStartEdit={startEdit}
             onChangeEdit={changeEdit}
             onFinishEdit={finishEdit}
@@ -763,7 +863,7 @@ function DocumentEditor() {
         ops={addOps.filter((op) => op.page === page.pageNumber)}
         dims={{ widthPt: page.widthPt, heightPt: page.heightPt, widthPx: page.widthPx, heightPx: page.heightPx }}
         selectedId={selectedTextId}
-        placing={placingText && editAvailable}
+        placing={false}
         pointerScale={1}
         onSelect={(opId) => {
           setSelectedTextId(opId)
@@ -778,7 +878,6 @@ function DocumentEditor() {
     [
       addOps,
       selectedTextId,
-      placingText,
       editAvailable,
       setSelectedTextId,
       setActiveFieldId,
@@ -795,6 +894,9 @@ function DocumentEditor() {
       startEdit,
       changeEdit,
       finishEdit,
+      fontSource,
+      addTextAtClick,
+      noteSelectionBeforeClick,
     ],
   )
 
@@ -854,11 +956,7 @@ function DocumentEditor() {
   const busyLabel = phase === 'saving-text' ? 'Saving your text…' : phase === 'signing' ? 'Signing…' : null
   const sidebarProps: EditorToolsSidebarProps = {
     edit: {
-      placing: placingText,
-      onTogglePlacing: () => {
-        setPlacingText((v) => !v)
-        setActiveFieldId(null)
-      },
+      onAddText: addTextToCurrentPage,
       unavailableReason: editAvailable ? null : text.error?.message || 'This document can’t be edited.',
       rewrite: rewriteEnabled
         ? {

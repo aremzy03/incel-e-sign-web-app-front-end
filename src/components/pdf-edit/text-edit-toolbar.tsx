@@ -23,7 +23,7 @@ export function TextEditToolbar({ op, onChange, onDelete }: TextEditToolbarProps
         id={`font-${op.opId}`}
         value={op.font}
         onChange={(event) => onChange({ font: event.target.value as AddTextOp['font'] })}
-        className="h-9 rounded-md border border-border bg-surface px-2 text-body-sm text-on-surface"
+        className="h-9 rounded-md border border-field-border bg-surface px-2 text-body-sm text-on-surface"
       >
         {TEXT_FONTS.map((font) => (
           <option key={font.id} value={font.id}>

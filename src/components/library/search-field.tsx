@@ -16,7 +16,7 @@ export function SearchField({ className, containerClassName, ...props }: SearchF
       <input
         type="search"
         className={cn(
-          'w-full rounded-lg border border-border bg-surface-container-lowest py-2.5 pl-10 pr-4 text-body-sm text-on-surface placeholder:text-muted focus:border-status-your-turn focus:outline-none focus:ring-2 focus:ring-status-your-turn/20',
+          'w-full rounded-lg border border-field-border bg-surface-container-lowest py-2.5 pl-10 pr-4 text-body-sm text-on-surface placeholder:text-muted focus:border-status-your-turn focus:outline-none focus:ring-2 focus:ring-status-your-turn/20',
           className,
         )}
         {...props}

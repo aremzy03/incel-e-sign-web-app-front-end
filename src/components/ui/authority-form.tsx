@@ -152,7 +152,7 @@ const inputSizeConfig = {
 
 const inputVariantConfig = {
   default: {
-    base: 'border-outline-variant focus:border-status-your-turn focus:ring-status-your-turn',
+    base: 'border-field-border focus:border-status-your-turn focus:ring-status-your-turn',
     valid: 'border-success-500 focus:border-success-600 focus:ring-success-500',
     invalid: 'border-error-500 focus:border-error-600 focus:ring-error-500',
   },

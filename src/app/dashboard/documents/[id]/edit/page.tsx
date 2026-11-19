@@ -37,6 +37,18 @@ import {
 import { FIELD_TYPE_LABELS } from '@/components/envelope/field-editor-themes'
 import type { DocumentPageInfo, PageOverlayInfo } from '@/components/envelope/VerticalPDFViewer'
 import { useTextEditSession } from '@/components/pdf-edit/use-text-edit-session'
+import { useTextRuns } from '@/components/pdf-edit/use-text-runs'
+import { TextRunLayer } from '@/components/pdf-edit/text-run-layer'
+import { FindReplacePanel } from '@/components/pdf-edit/find-replace-panel'
+import {
+  REPLACE_ALL_LIMIT,
+  containsQuery,
+  findMatches,
+  replaceInText,
+  runsInReadingOrder,
+} from '@/lib/pdf-edit/find-replace'
+import type { TextRun } from '@/lib/pdf-edit/text-runs'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { useAuthReady } from '@/hooks/useAuthReady'
 import { useSelfSignEnvelope } from '@/hooks/useEnvelopes'
 import { useInitialsChoice } from '@/hooks/signing/useInitialsChoice'
@@ -46,7 +58,15 @@ import {
   useSelfSignFields,
   type FieldMap,
 } from '@/hooks/useSelfSignFields'
-import { getDocument, type AddTextOp } from '@/lib/api/documents'
+import {
+  getDocument,
+  isAddTextOp,
+  isEditTextOp,
+  textEditErrorCopy,
+  type AddTextOp,
+  type EditTextOp,
+  type TextSessionOp,
+} from '@/lib/api/documents'
 import { listUserSignatures } from '@/lib/api/signatures'
 import { FrozenEnvelopeError } from '@/lib/api/signing-errors'
 import { classifyError } from '@/lib/errors'
@@ -64,7 +84,26 @@ const HISTORY_LIMIT = 50
 /** Keystrokes in the same box (or setting) within this window undo as one step. */
 const COALESCE_MS = 800
 
-type Snapshot = { ops: AddTextOp[]; fields: FieldMap }
+type Snapshot = { ops: TextSessionOp[]; fields: FieldMap }
+
+/** A new edit_text op for a run, starting from its current text. */
+function editOpForRun(run: TextRun): EditTextOp {
+  return {
+    opId: run.runId,
+    op: 'edit_text',
+    page: run.page,
+    text: run.text,
+    fontSize: run.fontSize,
+    // From the server's reading of the PDF; the save re-reads it from the original letters.
+    color: run.color,
+    fontName: run.fontName,
+    baseline: run.baseline,
+    remove: run.remove,
+    originalText: run.text,
+    fallbackFont: null,
+    ...(run.fit ? { fit: run.fit } : {}),
+  }
+}
 type Phase = 'saving-text' | 'signing' | null
 
 function isTypingTarget(target: EventTarget | null) {
@@ -116,6 +155,15 @@ function DocumentEditor() {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [draggingType, setDraggingType] = useState<string | null>(null)
+  const [pdfProxy, setPdfProxy] = useState<PDFDocumentProxy | null>(null)
+  const [activeRunId, setActiveRunId] = useState<string | null>(null)
+  const [failedOpIds, setFailedOpIds] = useState<ReadonlySet<string>>(new Set())
+  const [findOpen, setFindOpen] = useState(false)
+  const [findQuery, setFindQuery] = useState('')
+  const [findReplacement, setFindReplacement] = useState('')
+  const [matchCase, setMatchCase] = useState(false)
+  const [matchIndex, setMatchIndex] = useState(-1)
+  const [findStatus, setFindStatus] = useState<string | null>(null)
   // A drag starts after 6px of movement, so a plain click on a tool still adds it.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -126,6 +174,19 @@ function DocumentEditor() {
   const { fields, setFields, setActiveFieldId } = fieldState
   const editAvailable = !!text.session
   const showSignTools = !fromWizard
+  // Rewriting existing text needs the server engine (session.rewrite) and an editable document.
+  const rewriteEnabled = editAvailable && text.session?.rewrite !== false
+  const textRuns = useTextRuns(pdfProxy, rewriteEnabled, text.session?.text_styles, text.session?.text_rules)
+  const baseFileUrl = text.session?.base_file_url
+  // Embedded fonts belong to the session's file; a save starts a new session on a new file.
+  const fontSource = useMemo(
+    () => (baseFileUrl ? { documentId, fileUrl: baseFileUrl } : undefined),
+    [documentId, baseFileUrl],
+  )
+  const addOps = useMemo(() => ops.filter(isAddTextOp), [ops])
+  const editOps = useMemo(() => ops.filter(isEditTextOp), [ops])
+  // An edit undone back to its original text (or not changed yet) isn't a change.
+  const changedEditOps = useMemo(() => editOps.filter((op) => op.text !== op.originalText), [editOps])
 
   // --- One undo history for text and fields --------------------------------------
   const past = useRef<Snapshot[]>([])
@@ -181,10 +242,44 @@ function DocumentEditor() {
   const changeText = useCallback(
     (opId: string, patch: Partial<AddTextOp>) => {
       record(`text:${opId}`)
-      setOps((list) => list.map((op) => (op.opId === opId ? { ...op, ...patch } : op)), false)
+      setOps(
+        (list) => list.map((op) => (op.opId === opId && isAddTextOp(op) ? { ...op, ...patch } : op)),
+        false,
+      )
     },
     [record, setOps],
   )
+
+  // --- Existing text (edit_text) ----------------------------------------------------
+  const startEdit = useCallback(
+    (run: TextRun) => {
+      setSelectedTextId(null)
+      setActiveFieldId(null)
+      setActiveRunId(run.runId)
+      if (current.current.ops.some((op) => op.opId === run.runId)) return
+      record()
+      setOps((list) => [...list, editOpForRun(run)], false)
+    },
+    [record, setOps, setSelectedTextId, setActiveFieldId],
+  )
+
+  const changeEdit = useCallback(
+    (opId: string, value: string) => {
+      record(`edit:${opId}`)
+      setFailedOpIds((ids) => (ids.has(opId) ? new Set([...ids].filter((id) => id !== opId)) : ids))
+      setOps((list) => list.map((op) => (op.opId === opId && isEditTextOp(op) ? { ...op, text: value } : op)), false)
+    },
+    [record, setOps],
+  )
+
+  /** Leaving a run: an edit that ended up identical to the original is dropped, not sent. */
+  const finishEdit = useCallback(() => {
+    setActiveRunId(null)
+    setOps(
+      (list) => list.filter((op) => !(isEditTextOp(op) && op.text === op.originalText)),
+      false,
+    )
+  }, [setOps])
 
   const deleteText = useCallback(
     (opId: string) => {
@@ -194,6 +289,114 @@ function DocumentEditor() {
     },
     [record, setOps, setSelectedTextId],
   )
+
+  // --- Find & replace (plan §4.3, §9) -------------------------------------------------
+  const allRuns = useMemo(() => runsInReadingOrder(textRuns.pages), [textRuns.pages])
+  const editsById = useMemo(() => {
+    const map: Record<string, EditTextOp> = {}
+    for (const op of editOps) map[op.opId] = op
+    return map
+  }, [editOps])
+  const findOptions = useMemo(() => ({ matchCase }), [matchCase])
+  const matches = useMemo(
+    () =>
+      findOpen
+        ? findMatches(allRuns, (run) => editsById[run.runId]?.text ?? run.text, findQuery, findOptions)
+        : [],
+    [findOpen, allRuns, editsById, findQuery, findOptions],
+  )
+  const matchRunIds = useMemo(() => new Set(matches.map((run) => run.runId)), [matches])
+  const currentMatch = matchIndex >= 0 ? matches[matchIndex] ?? null : null
+
+  // A new query starts from the top.
+  useEffect(() => {
+    setMatchIndex(-1)
+    setFindStatus(null)
+  }, [findQuery, matchCase])
+
+  const scrollToRun = useCallback((runId: string) => {
+    window.requestAnimationFrame(() =>
+      document.querySelector(`[data-run-id="${runId}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }),
+    )
+  }, [])
+
+  const findNext = useCallback(() => {
+    if (matches.length === 0) return
+    const next = matchIndex + 1
+    if (next >= matches.length) {
+      // Stops at the end rather than wrapping silently; the next press starts again.
+      setMatchIndex(-1)
+      setFindStatus('No more matches. Press Find next to start from the top.')
+      return
+    }
+    setFindStatus(null)
+    setMatchIndex(next)
+    scrollToRun(matches[next].runId)
+  }, [matches, matchIndex, scrollToRun])
+
+  /** Replace the query inside these runs: one edit_text op per run, updated if it already has one. */
+  const applyReplacement = useCallback(
+    (runs: TextRun[]) => {
+      const byId = new Map(runs.map((run) => [run.runId, run]))
+      setOps((list) => {
+        const seen = new Set<string>()
+        const next: TextSessionOp[] = []
+        for (const op of list) {
+          const run = byId.get(op.opId)
+          if (run && isEditTextOp(op)) {
+            seen.add(op.opId)
+            const text = replaceInText(op.text, findQuery, findReplacement, findOptions)
+            // Replaced back to the original: no change left to send.
+            if (text !== op.originalText) next.push({ ...op, text })
+            continue
+          }
+          next.push(op)
+        }
+        for (const run of runs) {
+          if (seen.has(run.runId)) continue
+          const text = replaceInText(run.text, findQuery, findReplacement, findOptions)
+          if (text !== run.text) next.push({ ...editOpForRun(run), text })
+        }
+        return next
+      }, false)
+    },
+    [setOps, findQuery, findReplacement, findOptions],
+  )
+
+  const replaceCurrent = useCallback(() => {
+    const index = matchIndex >= 0 ? matchIndex : 0
+    const run = matches[index]
+    if (!run) return
+    record()
+    applyReplacement([run])
+    setFindStatus('Replaced 1. Not saved yet.')
+    // Move on to the next match. The replaced run drops out of the list unless the
+    // replacement still contains the query, so the same index then already points at the next one.
+    const upcoming = matches[index + 1]
+    const stillMatches = containsQuery(findReplacement, findQuery, findOptions)
+    setMatchIndex(upcoming ? (stillMatches ? index + 1 : index) : -1)
+    if (upcoming) scrollToRun(upcoming.runId)
+  }, [matches, matchIndex, record, applyReplacement, findReplacement, findQuery, findOptions, scrollToRun])
+
+  const replaceAll = useCallback(() => {
+    if (!textRuns.done) {
+      setFindStatus('Still reading the document’s text. Try again in a moment.')
+      return
+    }
+    if (matches.length > REPLACE_ALL_LIMIT) {
+      setFindStatus(
+        `${matches.length} matches. Replace all handles up to ${REPLACE_ALL_LIMIT}; search for something more specific.`,
+      )
+      return
+    }
+    // One snapshot: a single undo restores the whole replace-all.
+    record()
+    applyReplacement(matches)
+    setMatchIndex(-1)
+    setFindStatus(
+      `Replaced ${matches.length} ${matches.length === 1 ? 'match' : 'matches'}. Not saved yet; one undo restores them all.`,
+    )
+  }, [textRuns.done, matches, record, applyReplacement])
 
   // --- Fields ----------------------------------------------------------------------
   const pageSizePt = useCallback(
@@ -303,20 +506,33 @@ function DocumentEditor() {
 
   // --- Saving and signing ----------------------------------------------------------
   // Text autosaves as a server draft but is only in the PDF once committed (which clears ops).
-  const hasUnsavedText = ops.some((op) => isSavedText(op.text))
+  const hasUnsavedText = addOps.some((op) => isSavedText(op.text)) || changedEditOps.length > 0
 
   /** Writes the added text into the PDF. Returns false (after telling the user) on failure. */
   const saveText = useCallback(async (): Promise<boolean> => {
-    const invalid = ops.find((op) => op.text.trim() && !textIsDrawable(op.text))
+    // Added text is drawn in Helvetica/Times/Courier; replacements get a real font on the server.
+    const invalid = addOps.find((op) => op.text.trim() && !textIsDrawable(op.text))
     if (invalid) {
       setSelectedTextId(invalid.opId)
       toast.error('This font can’t draw one of the characters in a text box.')
       return false
     }
+    setActiveRunId(null)
     try {
-      const result = await text.commit()
+      // Unchanged edits would only redraw the same words; leave them out.
+      const result = await text.commit(ops.filter((op) => !isEditTextOp(op) || op.text !== op.originalText))
       past.current = []
       future.current = []
+      setFailedOpIds(new Set())
+      const replaced = result.warnings?.filter((w) => w.code === 'font_replaced') ?? []
+      if (replaced.length > 0) {
+        toast('Original font replaced. It was missing characters you typed.', { icon: 'ℹ️' })
+      } else if (result.warnings?.some((w) => w.code === 'style_replaced')) {
+        toast('Bold or italic wasn’t available for a replacement, so regular was used.', { icon: 'ℹ️' })
+      }
+      if (result.warnings?.some((w) => w.code === 'text_overflows')) {
+        toast('Some text didn’t fit its space and may overlap the words after it.', { icon: 'ℹ️' })
+      }
       if (fromWizard) {
         patchWizardResumeDocument(documentId, {
           file_url: result.file_url,
@@ -328,11 +544,13 @@ function DocumentEditor() {
       await refetch()
       return true
     } catch (err) {
-      const copy = classifyError(err, 'Couldn’t save your text')
-      toast.error(copy.message)
+      const copy = textEditErrorCopy(err)
+      // Rewrite failures name the edits; outline them so the user can undo or retry.
+      if (copy.opIds.length > 0) setFailedOpIds(new Set(copy.opIds))
+      toast.error(copy.reason === 'unknown' ? classifyError(err, 'Couldn’t save your text').message : copy.message)
       return false
     }
-  }, [ops, text, fromWizard, documentId, queryClient, refetch, setSelectedTextId])
+  }, [addOps, ops, text, fromWizard, documentId, queryClient, refetch, setSelectedTextId])
 
   const handleSaveText = useCallback(async () => {
     setPhase('saving-text')
@@ -448,6 +666,7 @@ function DocumentEditor() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        setActiveRunId(null)
         if (showShortcuts) setShowShortcuts(false)
         else if (placingText) setPlacingText(false)
         else {
@@ -456,9 +675,15 @@ function DocumentEditor() {
         }
         return
       }
+      const mod = event.metaKey || event.ctrlKey
+      if (mod && event.key.toLowerCase() === 'f' && rewriteEnabled) {
+        // Find in the document's own text instead of the browser's page search.
+        event.preventDefault()
+        setFindOpen(true)
+        return
+      }
       // Inside a text box or input, undo/delete belong to the text being typed.
       if (isTypingTarget(event.target)) return
-      const mod = event.metaKey || event.ctrlKey
       if (mod && event.key.toLowerCase() === 'z') {
         event.preventDefault()
         if (event.shiftKey) redo()
@@ -479,7 +704,7 @@ function DocumentEditor() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [undo, redo, deleteField, fieldState.activeFieldId, placingText, showShortcuts, setActiveFieldId, setSelectedTextId])
+  }, [undo, redo, deleteField, fieldState.activeFieldId, placingText, showShortcuts, setActiveFieldId, setSelectedTextId, rewriteEnabled])
 
   // --- Viewer wiring -----------------------------------------------------------------
   const selfRecipient: RecipientInput = useMemo(
@@ -506,11 +731,36 @@ function DocumentEditor() {
   )
   const viewerDocuments = useMemo(() => (documentData ? [documentData] : []), [documentData])
 
+  const editsByPage = useMemo(() => {
+    const map: Record<number, Record<string, EditTextOp>> = {}
+    for (const op of editOps) (map[op.page] ??= {})[op.opId] = op
+    return map
+  }, [editOps])
+
   const renderTextLayer = useCallback(
     (page: PageOverlayInfo) => (
-      <SigningPageTextLayer
+      <>
+        {/* Existing text sits under added-text boxes, so an added box wins a click. */}
+        {textRuns.pages[page.pageNumber]?.runs ? (
+          <TextRunLayer
+            runs={textRuns.pages[page.pageNumber].runs!}
+            edits={editsByPage[page.pageNumber] ?? {}}
+            view={textRuns.pages[page.pageNumber].view}
+            scale={page.widthPx / page.widthPt}
+            activeRunId={activeRunId}
+            failedOpIds={failedOpIds}
+            matchRunIds={matchRunIds}
+            currentMatchId={currentMatch?.runId ?? null}
+            interactive={rewriteEnabled && !placingText}
+            onStartEdit={startEdit}
+            onChangeEdit={changeEdit}
+            onFinishEdit={finishEdit}
+            fontSource={fontSource}
+          />
+        ) : null}
+        <SigningPageTextLayer
         pageNo={page.pageNumber}
-        ops={ops.filter((op) => op.page === page.pageNumber)}
+        ops={addOps.filter((op) => op.page === page.pageNumber)}
         dims={{ widthPt: page.widthPt, heightPt: page.heightPt, widthPx: page.widthPx, heightPx: page.heightPx }}
         selectedId={selectedTextId}
         placing={placingText && editAvailable}
@@ -523,8 +773,29 @@ function DocumentEditor() {
         onChange={changeText}
         onDelete={deleteText}
       />
+      </>
     ),
-    [ops, selectedTextId, placingText, editAvailable, setSelectedTextId, setActiveFieldId, createText, changeText, deleteText],
+    [
+      addOps,
+      selectedTextId,
+      placingText,
+      editAvailable,
+      setSelectedTextId,
+      setActiveFieldId,
+      createText,
+      changeText,
+      deleteText,
+      textRuns.pages,
+      editsByPage,
+      activeRunId,
+      failedOpIds,
+      matchRunIds,
+      currentMatch,
+      rewriteEnabled,
+      startEdit,
+      changeEdit,
+      finishEdit,
+    ],
   )
 
   const pageIndicator = useMemo(() => {
@@ -589,6 +860,45 @@ function DocumentEditor() {
         setActiveFieldId(null)
       },
       unavailableReason: editAvailable ? null : text.error?.message || 'This document can’t be edited.',
+      rewrite: rewriteEnabled
+        ? {
+            reading: !textRuns.done,
+            changeCount: changedEditOps.length,
+            noEditableText:
+              textRuns.done &&
+              // Same sample as Sejda: no runs on the first 10 pages means a scan (plan §4.1).
+              Object.entries(textRuns.pages)
+                .filter(([number]) => Number(number) <= 10)
+                .every(([, page]) => !page.runs || page.runs.length === 0),
+            tooManyPiecesPages: Object.entries(textRuns.pages)
+              .filter(([, page]) => page.runs === null)
+              .map(([number]) => Number(number)),
+            findOpen,
+            onToggleFind: () => setFindOpen(true),
+            findPanel: (
+              <FindReplacePanel
+                query={findQuery}
+                replacement={findReplacement}
+                matchCase={matchCase}
+                matchCount={matches.length}
+                currentIndex={matchIndex}
+                reading={!textRuns.done}
+                status={findStatus}
+                onQueryChange={setFindQuery}
+                onReplacementChange={setFindReplacement}
+                onMatchCaseChange={setMatchCase}
+                onFindNext={findNext}
+                onReplace={replaceCurrent}
+                onReplaceAll={replaceAll}
+                onClose={() => {
+                  setFindOpen(false)
+                  setMatchIndex(-1)
+                  setFindStatus(null)
+                }}
+              />
+            ),
+          }
+        : null,
     },
     sign: showSignTools
       ? {
@@ -675,6 +985,7 @@ function DocumentEditor() {
               renderPageOverlay={renderTextLayer}
               fitToWidth
               onScaleChange={setRenderScale}
+              onDocumentProxy={(_id, pdf) => setPdfProxy(pdf)}
             />
           </main>
 
@@ -759,6 +1070,9 @@ function DocumentEditor() {
             </div>
             <dl className="space-y-3 text-body-sm">
               {[
+                ['Edit a word', 'Click it'],
+                ['Find & replace', 'Ctrl+F'],
+                ['Finish editing a word', 'Enter'],
                 ['Undo', 'Ctrl+Z'],
                 ['Redo', 'Ctrl+Shift+Z'],
                 ['Delete selected field', 'Delete'],

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AsyncStatePanel } from '@/components/library'
 import { cn } from '@/lib/utils'
 import { ChevronUp, ChevronDown } from 'lucide-react'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { InitialsChoice } from '@/lib/fields/stamps'
 import { FieldBox } from './FieldBox'
 import { FieldPosition, RecipientInput } from '@/types/envelope'
@@ -70,6 +71,11 @@ interface VerticalPDFViewerProps {
   fitToWidth?: boolean
   /** Rendered CSS px per PDF point, reported whenever it changes. */
   onScaleChange?: (scale: number) => void
+  /**
+   * The pdf.js document once it has loaded (and again whenever the file changes),
+   * so callers can read text without loading the file a second time.
+   */
+  onDocumentProxy?: (documentId: string, pdf: PDFDocumentProxy) => void
 }
 
 export interface PageOverlayInfo {
@@ -142,6 +148,7 @@ export function VerticalPDFViewer({
   renderPageOverlay,
   fitToWidth = false,
   onScaleChange,
+  onDocumentProxy,
 }: VerticalPDFViewerProps) {
   const { data: session } = useSession()
   const password = usePdfPasswordDialog()
@@ -488,7 +495,10 @@ export function VerticalPDFViewer({
           const needsAuth = documentUrlNeedsAuth(documentUrl)
           const canLoadPdf = Boolean(documentUrl) && (!needsAuth || accessToken)
           const numPages = documentPages[document.id]
-          const docLoadKey = `${document.id}:${pdfOptionsKey}:${document.updated_at ?? ''}:${retryNonce}`
+          // The file URL is in the key: a new file (e.g. after saving edits) remounts the
+          // Document and its pages. Swapping it in place lets old pages render against a
+          // destroyed worker ("Cannot read properties of null (reading 'sendWithPromise')").
+          const docLoadKey = `${document.id}:${pdfOptionsKey}:${documentUrl}:${document.updated_at ?? ''}:${retryNonce}`
 
           const handleDocumentLoadError = (loadError: Error) => {
             if (shouldFallbackToPreviewApi(directUrl, usesPreviewFallback, document.id)) {
@@ -517,7 +527,10 @@ export function VerticalPDFViewer({
             <PDFDocument
               key={docLoadKey}
               file={documentUrl}
-              onLoadSuccess={(pdf) => onDocumentLoadSuccess(document.id, pdf.numPages)}
+              onLoadSuccess={(pdf) => {
+                onDocumentLoadSuccess(document.id, pdf.numPages)
+                onDocumentProxy?.(document.id, pdf as unknown as PDFDocumentProxy)
+              }}
               onLoadError={handleDocumentLoadError}
               onPassword={password.onPassword as any}
               loading=""

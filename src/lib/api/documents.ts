@@ -1,4 +1,5 @@
 import apiClient from '@/lib/axios'
+import type { TextFit } from '@/lib/pdf-edit/text-fit'
 import { getCachedAccessToken } from '@/lib/auth-session-cache'
 
 export interface Document {
@@ -291,13 +292,56 @@ export interface AddTextOp {
   align: 'left' | 'center' | 'right'
 }
 
+/**
+ * Replace (or, with empty `text`, delete) a run of text already in the PDF.
+ * Geometry is PDF user space with a bottom-left origin (plan-full-text-rewrite §5).
+ */
+export interface EditTextOp {
+  opId: string
+  op: 'edit_text'
+  page: number
+  text: string
+  fontSize: number
+  color: string
+  /** The run's font name as the PDF names it (subset prefix allowed), informational. */
+  fontName: string
+  baseline: { x: number; y: number }
+  /** The tight glyph box the server deletes. */
+  remove: { x: number; y: number; width: number; height: number }
+  originalText: string
+  fallbackFont: 'LiberationSans' | 'LiberationSerif' | 'LiberationMono' | null
+  /** The slot the replacement is fitted into (shrunk, wrapped or realigned); absent on older drafts. */
+  fit?: TextFit
+}
+
+export type TextSessionOp = AddTextOp | EditTextOp
+
+export const isEditTextOp = (op: TextSessionOp): op is EditTextOp => op.op === 'edit_text'
+export const isAddTextOp = (op: TextSessionOp): op is AddTextOp => op.op === 'add_text'
+
 export interface TextEditSession {
   session_id: string
   base_file_url: string
   page_count: number
   pages: PdfPageSize[]
-  ops: AddTextOp[]
+  ops: TextSessionOp[]
   updated_at: string | null
+  /** False when the server can't rewrite existing text: offer add-text only. */
+  rewrite?: boolean
+  limits?: { max_runs_per_page: number; min_font_size: number }
+  /** Per page (index 0 = page 1): the colour and style of each text span, for the editor preview. */
+  text_styles?: TextStyleSpan[][] | null
+  /** Per page: borders as [0, x, y0, y1] (vertical) or [1, y, x0, x1] (horizontal), user space. */
+  text_rules?: [number, number, number, number][][] | null
+}
+
+/** [x0, y0, x1, y1, '#rrggbb', bold, italic, fontName, previewFontId]: box in PDF user space (bottom-left origin). */
+export type TextStyleSpan = [number, number, number, number, string, boolean, boolean, string, (string | null)?]
+
+export interface TextEditWarning {
+  opId: string
+  code: 'font_replaced' | 'style_replaced' | string
+  font?: string
 }
 
 export interface TextEditCommitResult {
@@ -306,6 +350,7 @@ export interface TextEditCommitResult {
   file_size: number
   revision_id: string | null
   session_id: string
+  warnings?: TextEditWarning[]
 }
 
 function unwrapData<T>(payload: unknown): T {
@@ -313,17 +358,29 @@ function unwrapData<T>(payload: unknown): T {
   return (record?.data ?? payload) as T
 }
 
+/**
+ * One embedded font program from the document's current file (TrueType/OpenType bytes),
+ * for previewing typed text. `version` (the file URL) keys the browser cache: ids change on save.
+ */
+export const fetchTextEditFont = async (id: string, fontId: string, version: string): Promise<ArrayBuffer> => {
+  const response = await apiClient.get<ArrayBuffer>(`/documents/${id}/text-edits/fonts/${encodeURIComponent(fontId)}/`, {
+    params: { v: version },
+    responseType: 'arraybuffer',
+  })
+  return response.data
+}
+
 export const openTextEditSession = async (id: string): Promise<TextEditSession> => {
   const response = await apiClient.post(`/documents/${id}/text-edits/`, {}, { timeout: 60_000 })
   return unwrapData<TextEditSession>(response.data)
 }
 
-export const saveTextEditSession = async (id: string, ops: AddTextOp[]): Promise<TextEditSession> => {
+export const saveTextEditSession = async (id: string, ops: TextSessionOp[]): Promise<TextEditSession> => {
   const response = await apiClient.put(`/documents/${id}/text-edits/`, { ops })
   return unwrapData<TextEditSession>(response.data)
 }
 
-export const commitTextEdits = async (id: string, ops: AddTextOp[]): Promise<TextEditCommitResult> => {
+export const commitTextEdits = async (id: string, ops: TextSessionOp[]): Promise<TextEditCommitResult> => {
   const response = await apiClient.post(`/documents/${id}/text-edits/commit/`, { ops }, { timeout: 120_000 })
   return unwrapData<TextEditCommitResult>(response.data)
 }
@@ -332,11 +389,31 @@ export const discardTextEditSession = async (id: string): Promise<void> => {
   await apiClient.delete(`/documents/${id}/text-edits/`)
 }
 
-export function textEditErrorCopy(error: unknown): { reason: string; message: string } {
-  const data = (error as { response?: { data?: { reason?: string; message?: string } } })?.response?.data
-  const reason = data?.reason || 'unknown'
+export function textEditErrorCopy(error: unknown): { reason: string; message: string; opIds: string[] } {
+  const data = (
+    error as {
+      response?: {
+        data?: { reason?: string; message?: string; opIds?: string[]; errors?: Array<{ opId?: string | null; reason?: string }> }
+      }
+    }
+  )?.response?.data
+  // Validation failures come back as a list of {opId, reason}.
+  const firstError = data?.errors?.[0]
+  const reason = data?.reason || firstError?.reason || 'unknown'
+  const opIds = data?.opIds ?? (data?.errors ?? []).map((e) => e.opId).filter((id): id is string => !!id)
   return {
     reason,
-    message: data?.message || 'Couldn’t save the text. Try again.',
+    message: data?.message || TEXT_EDIT_REASON_COPY[reason] || 'Couldn’t save the text. Try again.',
+    opIds,
   }
+}
+
+const TEXT_EDIT_REASON_COPY: Record<string, string> = {
+  rewrite_failed: 'Couldn’t replace the text on the page. The file was not changed.',
+  box_covers_other_text: 'This edit would remove text on another line. Undo it and pick the word again.',
+  rotated_text: 'Rotated text can’t be edited.',
+  unsupported_character: 'No available font can draw one of the characters you typed.',
+  boxes_overlap: 'Two edits overlap. Undo one of them.',
+  invalid_fit: 'An edit’s layout is invalid. Undo it and edit the text again.',
+  rewrite_unavailable: 'Editing existing text isn’t available right now.',
 }

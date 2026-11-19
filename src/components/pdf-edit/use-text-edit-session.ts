@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AddTextOp,
+  TextSessionOp,
   commitTextEdits,
   discardTextEditSession,
   openTextEditSession,
@@ -13,13 +13,13 @@ import {
 
 const UNDO_LIMIT = 50
 
-function opsKey(ops: AddTextOp[]) {
+function opsKey(ops: TextSessionOp[]) {
   return JSON.stringify([...ops].sort((a, b) => a.opId.localeCompare(b.opId)))
 }
 
 export function useTextEditSession(documentId: string) {
   const [session, setSession] = useState<TextEditSession | null>(null)
-  const [ops, setOps] = useState<AddTextOp[]>([])
+  const [ops, setOps] = useState<TextSessionOp[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<{ reason: string; message: string } | null>(null)
@@ -28,8 +28,8 @@ export function useTextEditSession(documentId: string) {
   const [autosaveError, setAutosaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [baseChanged, setBaseChanged] = useState(false)
-  const undoStack = useRef<AddTextOp[][]>([])
-  const redoStack = useRef<AddTextOp[][]>([])
+  const undoStack = useRef<TextSessionOp[][]>([])
+  const redoStack = useRef<TextSessionOp[][]>([])
   const opsRef = useRef(ops)
   opsRef.current = ops
   const savedKeyRef = useRef(savedKey)
@@ -39,7 +39,7 @@ export function useTextEditSession(documentId: string) {
 
   const dirty = useMemo(() => opsKey(ops) !== savedKey, [ops, savedKey])
 
-  const replaceOps = useCallback((next: AddTextOp[] | ((current: AddTextOp[]) => AddTextOp[]), recordHistory = true) => {
+  const replaceOps = useCallback((next: TextSessionOp[] | ((current: TextSessionOp[]) => TextSessionOp[]), recordHistory = true) => {
     setOps((current) => {
       const resolved = typeof next === 'function' ? next(current) : next
       if (recordHistory) {
@@ -87,7 +87,12 @@ export function useTextEditSession(documentId: string) {
         .then((updated) => {
           if (opsKey(opsRef.current) !== opsKey(snapshot)) return
           setSavedKey(opsKey(snapshot))
-          setSession(updated)
+          // Autosave responses don't repeat the page styles read when the session opened.
+          setSession((previous) => ({
+            ...updated,
+            text_styles: updated.text_styles ?? previous?.text_styles,
+            text_rules: updated.text_rules ?? previous?.text_rules,
+          }))
           setAutosaveError(null)
         })
         .catch((err) => {
@@ -142,15 +147,24 @@ export function useTextEditSession(documentId: string) {
     })
   }, [])
 
-  const commit = useCallback(async () => {
+  /** Commit the session's ops, or `override` when the caller has pruned them. */
+  const commit = useCallback(async (override?: TextSessionOp[]) => {
     setSaving(true)
     try {
-      const result = await commitTextEdits(documentId, opsRef.current)
+      const result = await commitTextEdits(documentId, override ?? opsRef.current)
       setSavedKey(opsKey([]))
       setOps([])
       setSelectedId(null)
       undoStack.current = []
       redoStack.current = []
+      // Commit closes the server session. Open a new one on the new file so the next
+      // edit can autosave and save again in this visit (and gets that file's styles).
+      try {
+        setSession(await openTextEditSession(documentId))
+        setRestoreOffer(null)
+      } catch {
+        // Keep the old session; the next save reports the problem.
+      }
       return result
     } catch (err) {
       // The caller reports the failure; `error` is reserved for "couldn't open".

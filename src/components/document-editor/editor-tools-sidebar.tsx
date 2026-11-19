@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { MaterialIcon } from '@/components/ui/material-icon'
 import { FieldTypeSettings } from '@/components/envelope/FieldTypeSettings'
 import { FIELD_TYPE_LABELS } from '@/components/envelope/field-editor-themes'
@@ -33,7 +34,23 @@ export const secondaryActionClass = cn(
 
 export interface EditorToolsSidebarProps {
   /** Add text. `null` hides the group; a string explains why editing is unavailable. */
-  edit: { placing: boolean; onTogglePlacing: () => void; unavailableReason?: string | null } | null
+  edit: {
+    placing: boolean
+    onTogglePlacing: () => void
+    unavailableReason?: string | null
+    /** Present when existing text can be rewritten (plan-full-text-rewrite). */
+    rewrite?: {
+      reading: boolean
+      changeCount: number
+      noEditableText: boolean
+      /** Pages whose text is in too many pieces to edit. */
+      tooManyPiecesPages: number[]
+      findOpen: boolean
+      onToggleFind: () => void
+      /** The find & replace panel, rendered under the tools while open. */
+      findPanel: ReactNode
+    } | null
+  } | null
   /** Sign tools. `null` hides the group (e.g. preparing a document in the envelope wizard). */
   sign: {
     onAddField: (type: CreatableFieldType) => void
@@ -122,6 +139,58 @@ export function EditorToolsSidebar({
               </p>
             ) : (
               <>
+                {edit.rewrite ? (
+                  <div className="flex w-full items-start gap-3 rounded-xl border border-border bg-surface-container-lowest p-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-on-surface-variant">
+                      <MaterialIcon name="edit" size={22} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-label-sm text-on-surface">Edit text</span>
+                      <span className="block text-xs text-muted">
+                        {edit.rewrite.reading
+                          ? 'Reading the document’s text…'
+                          : edit.rewrite.noEditableText
+                            ? 'No editable text found. You can still add text.'
+                            : 'Click any word on the page to change or delete it.'}
+                      </span>
+                      {edit.rewrite.changeCount > 0 ? (
+                        <span className="mt-1 block text-xs font-medium text-your-turn-text">
+                          {edit.rewrite.changeCount} text {edit.rewrite.changeCount === 1 ? 'change' : 'changes'} not saved yet
+                        </span>
+                      ) : null}
+                      {edit.rewrite.tooManyPiecesPages.length > 0 ? (
+                        <span className="mt-1 block text-xs text-warning-text">
+                          {edit.rewrite.tooManyPiecesPages.length === 1
+                            ? `Page ${edit.rewrite.tooManyPiecesPages[0]} has`
+                            : `Pages ${edit.rewrite.tooManyPiecesPages.join(', ')} have`}{' '}
+                          too many text pieces to edit. You can still add text there.
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                ) : null}
+                {edit.rewrite && !edit.rewrite.noEditableText ? (
+                  edit.rewrite.findOpen ? (
+                    edit.rewrite.findPanel
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={edit.rewrite.onToggleFind}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-xl border border-border bg-surface-container-lowest p-4 text-left shadow-card transition-colors hover:border-secondary',
+                        focusRing,
+                      )}
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-on-surface-variant">
+                        <MaterialIcon name="search" size={22} />
+                      </span>
+                      <span>
+                        <span className="block font-label-sm text-on-surface">Find & replace</span>
+                        <span className="block text-xs text-muted">Change a word everywhere it appears</span>
+                      </span>
+                    </button>
+                  )
+                ) : null}
                 <button
                   type="button"
                   aria-pressed={edit.placing}

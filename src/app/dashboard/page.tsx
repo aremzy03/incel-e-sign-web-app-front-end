@@ -190,8 +190,8 @@ export default function DashboardPage() {
           <QuickActionCard
             href="/dashboard/envelopes/self-sign"
             icon="draw"
-            title="Add Text & Sign"
-            description="Add text to a document, sign it yourself, or both."
+            title="Edit & Sign"
+            description="Edit a document, sign it yourself, or both."
           />
         </div>
       </div>

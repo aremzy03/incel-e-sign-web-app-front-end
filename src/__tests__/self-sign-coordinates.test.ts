@@ -6,7 +6,7 @@
  */
 import apiClient from '@/lib/axios'
 import { selfSignEnvelope } from '@/lib/api/signatures'
-import { buildSelfSignPayload } from '@/hooks/useSelfSignFields'
+import { buildSelfSignPayload, type FieldMap } from '@/hooks/useSelfSignFields'
 
 jest.mock('@/lib/axios', () => ({
   __esModule: true,
@@ -38,8 +38,12 @@ describe('self-sign coordinates', () => {
       b: field('date', 239.33, 466.6, 133.33, 30),
       c: field('signature', 247.67, 500.7, 140, 44),
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload = buildSelfSignPayload(fields as any, { documentId: 'doc-1', signatureId: 'sig-1', initialsChoice: { style: 'first_last', font: 'great_vibes' } as any })
+    type PayloadInput = Parameters<typeof buildSelfSignPayload>[1]
+    const payload = buildSelfSignPayload(fields as unknown as FieldMap, {
+      documentId: 'doc-1',
+      signatureId: 'sig-1',
+      initialsChoice: { style: 'first_last', font: 'great_vibes' } as unknown as PayloadInput['initialsChoice'],
+    })
 
     await selfSignEnvelope(payload).catch(() => undefined)
 
